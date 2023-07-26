@@ -1,0 +1,31 @@
+name: llm-qa-frontend
+type: service
+ports:
+  - host: <host for frontend>
+    port: 8000
+    expose: true
+    protocol: TCP
+    app_protocol: http
+env:
+  JOB_FQN: <job fqn for indexer>
+  ML_REPO: <ml repo>
+  TF_API_KEY: <tf api key>
+  BACKEND_URL: <backend url eg http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000/>
+  MODEL_CATALOGUE_ENDPOINT: <model catalogue endpoint eg https://tenant.truefoundry.cloud/llm-playground/api/models-enabled>
+image:
+  type: build
+  build_spec:
+    type: dockerfile
+    dockerfile_path: ./frontend/Dockerfile
+    build_context_path: ./frontend/
+  build_source:
+    type: local
+    local_build: false
+replicas: 1
+resources:
+  cpu_request: 0.5
+  cpu_limit: 0.5
+  memory_request: 1000
+  memory_limit: 1000
+  ephemeral_storage_request: 2000
+  ephemeral_storage_limit: 2000

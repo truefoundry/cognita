@@ -1,0 +1,60 @@
+name: llm-qa-indexer
+type: job
+env:
+  ML_REPO: <ml repo>
+  QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
+image:
+  type: build
+  build_spec:
+    type: dockerfile
+    command: >-
+      python -m backend.train.train --ml_repo {{ml_repo}} --chunk_size
+      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}}
+      --dry_run {{dry_run}} --embedder {{embedder}} --embedder-config
+      {{embedder_config}} --repo_creds {{repo_creds}} --parsers_map
+      {{parsers_map}}
+    dockerfile_path: ./backend/train/Dockerfile
+    build_context_path: ./
+  build_source:
+    type: local
+    local_build: false
+params:
+  - name: ml_repo
+    default: docs-qa-llm
+    param_type: ml_repo
+  - name: chunk_size
+    param_type: string
+  - name: repo_name
+    param_type: string
+  - name: source_uri
+    param_type: string
+  - name: dry_run
+    default: "False"
+    param_type: string
+  - name: embedder
+    default: OpenAI
+    param_type: string
+  - name: embedder_config
+    default: "{}"
+    param_type: string
+  - name: repo_creds
+    default: '""'
+    param_type: string
+  - name: parsers_map
+    default: >-
+      {".md": "MarkdownParser", ".pdf": "PdfParserFast", ".txt": "TextParser"}
+    param_type: string
+    description: Map of file type to parsers
+retries: 0
+trigger:
+  type: manual
+resources:
+  node:
+    type: node_selector
+    capacity_type: on_demand
+  cpu_request: 2
+  cpu_limit: 4
+  memory_request: 2000
+  memory_limit: 4000
+  ephemeral_storage_request: 4000
+  ephemeral_storage_limit: 8000

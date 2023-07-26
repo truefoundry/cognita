@@ -1,0 +1,31 @@
+name: llm-qa-backend
+type: service
+env:
+  ML_REPO: <ml repo>
+  QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
+  TF_API_KEY: <tf api key>
+  LLM_ENDPOINT: <llm endpoint eg https://tenant.truefoundry.cloud/llm-playground/api/inference/text>
+ports:
+  - host: <host for backend>
+    port: 8000
+    expose: true
+    protocol: TCP
+    app_protocol: http
+image:
+  type: build
+  build_spec:
+    type: dockerfile
+    command: uvicorn --host 0.0.0.0 --port 8000 backend.serve.app:app
+    dockerfile_path: ./backend/serve/Dockerfile
+    build_context_path: ./
+  build_source:
+    type: local
+    local_build: false
+replicas: 1
+resources:
+  cpu_request: 0.5
+  cpu_limit: 0.5
+  memory_request: 1500
+  memory_limit: 2000
+  ephemeral_storage_request: 2000
+  ephemeral_storage_limit: 2000

@@ -1,0 +1,18 @@
+name: qdrant
+type: helm
+source:
+  type: helm-repo
+  chart: qdrant
+  version: 0.2.9
+  repo_url: https://qdrant.github.io/qdrant-helm
+values:
+  resources:
+    limits:
+      cpu: 0.7
+      memory: 4G
+    requests:
+      cpu: 0.7
+      memory: 2G
+  persistence:
+    size: 10G
+  replicaCount: 5
