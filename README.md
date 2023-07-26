@@ -7,7 +7,9 @@ The user provides a repo_name, and the source of the documents and the indexing 
 
 To run the training job, use the command below:
 
-`python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo`
+```
+python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
+```
 
 You can also provide the embedder and the embedder parameters as part of the command above. The code can later be extended to support all the embedders along with their respective embedding configuration as provided in the Langchain library (https://python.langchain.com/en/latest/reference/modules/embeddings.html)
 
@@ -22,11 +24,17 @@ The code comprises of the following concepts:
 
 We have already added dataloaders for local_dir, github_repo and mlfoundry_artifact. The commands to trigger the indexing job for each of them are:
 
-` python -m backend.train.train --chunk_size 800 --source_uri mlfoundry://artifact:truefoundry/code-search-qa/calyx-docs:1 --repo_name test-repo`
+```
+python -m backend.train.train --chunk_size 800 --source_uri mlfoundry://artifact:truefoundry/code-search-qa/calyx-docs:1 --repo_name test-repo
+```
 
-`python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo`
+```
+python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
+```
 
-`python -m backend.train.train --chunk_size 800 --source_uri local://examples/calyx-docs --repo_name test-repo`
+```
+python -m backend.train.train --chunk_size 800 --source_uri local://examples/calyx-docs --repo_name test-repo
+```
 
 ### Fastapi search server
 
@@ -41,17 +49,23 @@ The fastapi server provides the apis to search through the docs which the user p
 
 Streamlit app provides an interface to connect data, upload and trigger its training, and then allows asking questions.
 
-### Deploying on Truefoundry
+# Deploying on Truefoundry
 
 1. Install **servicefoundry**
-    `pip install servicefoundry`
+    ```
+   pip install servicefoundry
+    ```
 
-2. Login at TrueFoundry
-    `sfy login`
+3. Login at TrueFoundry
+    ```
+   sfy login
+    ```
 
-3. Create a workspace **docs-qa-llm** and a ml_repo **docs-qa** , then assign ml_repo access to the workspace
+5. Create a workspace **docs-qa-llm** and a ml_repo **docs-qa** , then assign ml_repo access to the workspace
     
-    ```sfy create workspace docs-qa-llm --cluster_name <cluster_name>```
+    ```
+   sfy create workspace docs-qa-llm --cluster_name <cluster_name>
+    ```
     
     ###### create_ml_repo.py
     ```
@@ -63,11 +77,13 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
     ```
 
 
-2. Deploy Qdrant via Helm
+2. Deploy Qdrant
     
-    ```servicefoundry deploy --workspace_fqn <paste your workspace fqn here> --file qdrant.yaml --no-wait```
+    ```
+   servicefoundry deploy --workspace_fqn <paste your workspace fqn here> --file qdrant.yaml --no-wait
+    ```
 
-3. Indexing Job in `backend/train/`
+4. Indexing Job in `backend/train/`
 
     * Edit the indexer.yaml and add following environment variables
         
@@ -79,10 +95,12 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
 
     * Deploy the job
         
-        ```sfy deploy --workspace_fqn <paste your workspace fqn here> --file indexer.yaml```
+        ```
+      sfy deploy --workspace_fqn <paste your workspace fqn here> --file indexer.yaml
+        ```
 
 
-4. Backend Service in `backend/serve/`
+5. Backend Service in `backend/serve/`
 
     * Edit serve.yaml and add the values of environment variables
         
@@ -97,9 +115,11 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
 
     * Deploy using python sdk
     
-        ```sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml```
+        ```
+      sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml
+        ```
 
-5. Streamlit Frontend in `frontend/`
+6. Streamlit Frontend in `frontend/`
 
     * Edit frontend.yaml and add the value of host for your frontend
 
@@ -123,4 +143,6 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
 
     *  Deploy using python sdk
         
-        ```sfy deploy --workspace_fqn <paste your workspace fqn here>```
+        ```
+       sfy deploy --workspace_fqn <paste your workspace fqn here>
+        ```
