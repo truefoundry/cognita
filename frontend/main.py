@@ -168,9 +168,9 @@ def main():
             with st.spinner("Fetching list of available models..."):
                 try:
                     st.session_state["model_response"] = requests.get(
-                        os.environ["MODEL_CATALOGUE_ENDPOINT"],
+                        f'{os.environ.get("TFY_HOST",)}/llm-playground/api/models-enabled',
                         headers={
-                            "Authorization": f"Bearer {os.environ.get('TF_API_KEY')}",
+                            "Authorization": f"Bearer {os.environ.get('TFY_API_KEY')}",
                         },
                     )
                     st.experimental_rerun()
@@ -367,9 +367,9 @@ def main():
     with st.spinner("Fetching list of available models..."):
         if "model_response" not in st.session_state:
             st.session_state["model_response"] = requests.get(
-                os.environ["MODEL_CATALOGUE_ENDPOINT"],
+                f'{os.environ.get("TFY_HOST",)}/llm-playground/api/models-enabled',
                 headers={
-                    "Authorization": f"Bearer {os.environ.get('TF_API_KEY')}",
+                    "Authorization": f"Bearer {os.environ.get('TFY_API_KEY')}",
                 },
             )
 
