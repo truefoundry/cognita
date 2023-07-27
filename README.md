@@ -2,39 +2,15 @@
 
 The repository follows the architecture below:
 
-### Indexing Job
-The user provides a repo_name, and the source of the documents and the indexing parameters. This triggers the train.py script in the train folder. 
-
-To run the training job, use the command below:
-
-```
-python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
-```
-
-You can also provide the embedder and the embedder parameters as part of the command above. The code can later be extended to support all the embedders along with their respective embedding configuration as provided in the Langchain library (https://python.langchain.com/en/latest/reference/modules/embeddings.html)
-
-The code has been written using async so that multiple documents can be indexed parallely. 
+### Indexer
+Indexer is a script used for indexing your documents and then pushing the data to Qdrant. The code has been written using async so that multiple documents can be indexed parallely. 
 
 The code comprises of the following concepts:
 
 1. **DataLoaders**: They are supposed to download the docs from a certain source and place it in the dest dir.
 2. **Parsers**: One parser works for one kind of document. It is supposed to parse the document, split it and then return the chunks.
 3. **Embedders**: They follow the same structure as provided in the langchain library.
-4. **Qdrant**: We use Qdrant as the vector database to store the embeddings.  
-
-We have already added dataloaders for local_dir, github_repo and mlfoundry_artifact. The commands to trigger the indexing job for each of them are:
-
-```
-python -m backend.train.train --chunk_size 800 --source_uri mlfoundry://artifact:truefoundry/code-search-qa/calyx-docs:1 --repo_name test-repo
-```
-
-```
-python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
-```
-
-```
-python -m backend.train.train --chunk_size 800 --source_uri local://examples/calyx-docs --repo_name test-repo
-```
+4. **Qdrant**: We use Qdrant as the vector database to store the embeddings.
 
 ### Fastapi search server
 
@@ -89,7 +65,6 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
         
         ```
         env:
-            ML_REPO: <ml repo>
             QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
         ```
 

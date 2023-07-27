@@ -1,7 +1,6 @@
 name: llm-qa-indexer
 type: job
 env:
-  ML_REPO: <ml repo>
   QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
 image:
   type: build
