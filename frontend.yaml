@@ -9,9 +9,9 @@ ports:
 env:
   JOB_FQN: <job fqn for indexer>
   ML_REPO: <ml repo>
-  TF_API_KEY: <tf api key>
+  TFY_API_KEY: <tfy api key>
   BACKEND_URL: <backend url eg http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000/>
-  MODEL_CATALOGUE_ENDPOINT: <model catalogue endpoint eg https://tenant.truefoundry.cloud/llm-playground/api/models-enabled>
+  TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
 image:
   type: build
   build_spec:

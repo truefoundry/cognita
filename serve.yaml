@@ -3,8 +3,8 @@ type: service
 env:
   ML_REPO: <ml repo>
   QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
-  TF_API_KEY: <tf api key>
-  LLM_ENDPOINT: <llm endpoint eg https://tenant.truefoundry.cloud/llm-playground/api/inference/text>
+  TFY_API_KEY: <tf api key>
+  TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
 ports:
   - host: <host for backend>
     port: 8000

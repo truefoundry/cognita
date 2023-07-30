@@ -98,8 +98,8 @@ async def search(request: SearchQuery):
             provider=request.model_configuration.provider,
             tag=request.model_configuration.tag,
             parameters=request.model_configuration.parameters,
-            api_key=os.environ["TF_API_KEY"],
-            endpoint_url=os.environ["LLM_ENDPOINT"],
+            api_key=os.environ["TFY_API_KEY"],
+            endpoint_url=f'{os.environ.get("TFY_HOST")}{os.environ.get("LLM_ENDPOINT_PATH","/llm-playground")}/api/inference/text',
         )
         # model = fetch_model(**model_configuration)
         # retrieval QA chain

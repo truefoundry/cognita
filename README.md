@@ -108,8 +108,8 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
         env:
             ML_REPO: <ml repo>
             QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
-            TF_API_KEY: <tf api key>
-            LLM_ENDPOINT: <llm endpoint eg https://tenant.truefoundry.cloud/llm-playground/api/inference/text>
+            TFY_API_KEY: <tfy api key>
+            TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
         ...
         ```
 
@@ -135,9 +135,9 @@ Streamlit app provides an interface to connect data, upload and trigger its trai
         env:
             JOB_FQN: <tfy_llm_qa_in>
             ML_REPO: <ml_repo_name>
-            TF_API_KEY: <secret_fqn>
+            TFY_API_KEY: <secret_fqn>
             BACKEND_URL: <tfy_llm_qa_backend_url>
-            MODEL_CATALOGUE_ENDPOINT: <control_plane_url>/llm-playground/api/models-enabled
+            TFY_HOST: <control_plane_url>
         ...
         ```
 
