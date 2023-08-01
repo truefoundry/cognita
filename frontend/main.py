@@ -42,7 +42,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.sidebar.markdown(
-    f"<span style='position: fixed; bottom: 3rem; font-size: large;'><strong><a style='text-decoration: none;' href='https://github.com/truefoundry/tfy-rag.git'>Deploy on your own cloud</strong></span>",
+    f"<span style='position: fixed; bottom: 3rem; font-size: large;'><strong><a style='text-decoration: none;' href='https://github.com/truefoundry/docs-qa-playground.git'>Deploy on your own cloud</strong></span>",
     unsafe_allow_html=True,
 )
 
@@ -160,7 +160,7 @@ def main():
         st.sidebar.image(Image.open('./assets/logo.png'))
     elif os.path.exists('frontend/assets/logo.png'):
         st.sidebar.image(Image.open('frontend/assets/logo.png'))
-    
+
     # choose the project worflow type
     sidebar_option = st.sidebar.radio(
         "Choose your option: ",
@@ -327,7 +327,7 @@ def main():
 
                 elif embedder == "TruefoundryEmbeddings":
                     embedder_config = {
-                        "endpoint_url": os.environ.get("TRUEFOUNDRY_EMBEDDINGS_ENDPOINT","https://llm-embedder.example.domain.com"),
+                        "endpoint_url": os.environ.get("TRUEFOUNDRY_EMBEDDINGS_ENDPOINT", "https://llm-embedder.example.domain.com"),
                     }
                     embedder_config = json.dumps(embedder_config, indent=4)
 
@@ -432,7 +432,7 @@ def main():
 
     if (st.session_state.get("repo_name", "")) or (
         st.session_state.get("query_repo_name", "")
-    ):  
+    ):
         with st.chat_message("assistant"):
             col1, col2 = st.columns([6, 4])
             col1.write(
