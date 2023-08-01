@@ -67,7 +67,6 @@ class TfyPlaygroundLLM(LLM):
                 },
             )
             response.raise_for_status()
-            print(response)
             data = response.json()
             return data[0].get("text")
         except Exception as e:

@@ -68,20 +68,13 @@ def fastapi_request(payload, BACKEND_URL):
 
 
 def print_repo_details(logged_params):
-    st.sidebar.markdown(
-        "<strong><span style='color: darkgrey; text-decoration:'>Source URI:</span></strong>",
-        unsafe_allow_html=True,
-    )
-    st.sidebar.markdown(
-        f"<pre>{logged_params['source_uri']}</pre>", unsafe_allow_html=True
-    )
     st.sidebar.text("")
     st.sidebar.markdown(
-        f"<strong><span style='color: darkgrey; text-decoration:'>Embedding Model:</span></strong> <span style='color: white;'>  {logged_params['embedder']}</span>",
+        f"<strong><span style='text-decoration:'>Embedding Model:</span></strong> <span>  {logged_params['embedder']}</span>",
         unsafe_allow_html=True,
     )
     st.sidebar.markdown(
-        f"<strong><span style='color: darkgrey; text-decoration:'>Embedding Chunk Size:</span></strong> <span style='color: white;'>  {logged_params['chunk_size']}</span>",
+        f"<strong><span style='text-decoration:'>Embedding Chunk Size:</span></strong> <span>  {logged_params['chunk_size']}</span>",
         unsafe_allow_html=True,
     )
 

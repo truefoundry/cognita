@@ -3,6 +3,7 @@ type: service
 ports:
   - host: <host for frontend>
     port: 8000
+    path: /app/
     expose: true
     protocol: TCP
     app_protocol: http

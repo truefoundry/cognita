@@ -2,9 +2,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import tqdm
-import numpy as np
 from langchain.embeddings.base import Embeddings
-from typing import List, Dict, Any
+from typing import List, Any
 import concurrent.futures
 import math
 
@@ -16,20 +15,32 @@ def _requests_retry_session(
     method_whitelist=frozenset({"GET", "POST"}),
     session=None,
 ):
-    # Taken from https://www.peterbe.com/plog/best-practice-with-retries-with-requests
+    """
+    Returns a `requests` session with retry capabilities for certain HTTP status codes.
+
+    Args:
+        retries (int): The number of retries for HTTP requests.
+        backoff_factor (float): The backoff factor for exponential backoff during retries.
+        status_forcelist (tuple): A tuple of HTTP status codes that should trigger a retry.
+        method_whitelist (frozenset): The set of HTTP methods that should be retried.
+        session (requests.Session, optional): An optional existing requests session to use.
+
+    Returns:
+        requests.Session: A session with retry capabilities.
+    """
+    # Implementation taken from https://www.peterbe.com/plog/best-practice-with-retries-with-requests
     session = session or requests.Session()
     retry = Retry(
-        total=retries,  # how many overall errors can we tolerate
-        read=retries,  # how many read errors can we tolerate
-        connect=retries,  # how many connection failures we can tolerate
-        status=retries,  # how many failures from `status_forcelist` we can tolerate
-        backoff_factor=backoff_factor,  # Sleep for backoff_factor * (2 ^ (try_count - 1))
+        total=retries,
+        read=retries,
+        connect=retries,
+        status=retries,
+        backoff_factor=backoff_factor,
         allowed_methods=method_whitelist,
         status_forcelist=status_forcelist,
         respect_retry_after_header=True,
     )
     adapter = HTTPAdapter(max_retries=retry)
-    # noinspection HttpUrlsUsage
     session.mount("http://", adapter)
     session.mount("https://", adapter)
     return session
@@ -47,6 +58,16 @@ class TruefoundryEmbeddings(Embeddings):
         parallel_workers: int = PARALLEL_WORKERS,
         **kwargs: Any,
     ):
+        """
+        Initializes the TruefoundryEmbeddings.
+
+        Args:
+            endpoint_url (str): The URL of the deployed embedding model on Truefoundry.
+            batch_size (int, optional): The batch size for processing embeddings in parallel.
+            parallel_workers (int, optional): The number of parallel worker threads for embedding.
+        Returns:
+            None
+        """
         try:
             session = _requests_retry_session(
                 retries=3,
@@ -76,9 +97,27 @@ class TruefoundryEmbeddings(Embeddings):
         )
 
     def __del__(self):
+        """
+        Destructor method to clean up the executor when the object is deleted.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self._executor.shutdown()
 
     def _remote_embed(self, texts, query_mode=False):
+        """
+        Perform remote embedding using a HTTP POST request to a designated endpoint.
+
+        Args:
+            texts (List[str]): A list of text strings to be embedded.
+            query_mode (bool): A flag to indicate if running in query mode or in embed mode (indexing).
+        Returns:
+            List[List[float]]: A list of embedded representations of the input texts.
+        """
         session = _requests_retry_session(
             retries=5,
             backoff_factor=3,
@@ -93,6 +132,15 @@ class TruefoundryEmbeddings(Embeddings):
         return embeddings
 
     def _embed(self, texts: List[str], query_mode: bool):
+        """
+        Perform embedding on a list of texts using remote embedding in chunks.
+
+        Args:
+            texts (List[str]): A list of text strings to be embedded.
+            query_mode (bool): A flag to indicate if running in query mode or in embed mode (indexing).
+        Returns:
+            List[List[float]]: A list of embedded representations of the input texts.
+        """
         embeddings = []
 
         def _feeder():
@@ -109,7 +157,25 @@ class TruefoundryEmbeddings(Embeddings):
         return [item for batch in embeddings for item in batch]
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Embed a list of text documents.
+
+        Args:
+            texts (List[str]): A list of text documents to be embedded.
+
+        Returns:
+            List[List[float]]: A list of embedded representations of the input documents.
+        """
         return self._embed(texts, query_mode=False)
 
     def embed_query(self, text: str) -> List[float]:
+        """
+        Embed a query text.
+
+        Args:
+            text (str): The query text to be embedded.
+
+        Returns:
+            List[float]: The embedded representation of the input query text.
+        """
         return self._embed([text], query_mode=True)[0]

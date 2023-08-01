@@ -11,11 +11,8 @@ examples/*/.servicefoundry
 .servicefoundry
 venv
 .vscode/
-venv39
 repo-data/
 **/.env*
 tempDir/
 !**/.env.example
-!**/.env.calyx-prod
-!**/.env.tf-devtest
 .ipynb_checkpoints/
