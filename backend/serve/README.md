@@ -45,17 +45,3 @@ uvicorn --host 0.0.0.0 --port 8000 backend.serve.app:app --reload
 ```
 
 6. Check out the APIs on the browser at `http://localhost:8000`
-
-### Deploying on Truefoundry
-
-Go to root directory of this repository and type:
-
-```
-sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml
-```
-
-> To figure out how to get workspace fqn, please check: [here](../../GETTING_STARTED.md)
-
-### Extending and modifying the code
-
-You probably don't need to modify the fastapi code.

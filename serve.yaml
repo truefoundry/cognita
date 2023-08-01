@@ -1,15 +1,14 @@
 name: llm-qa-backend
 type: service
 env:
-  ML_REPO: <ml repo>
-  QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
-  TFY_API_KEY: <tf api key>
-  TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
-  OPENAI_API_KEY: <openai api key>
+  OPENAI_API_KEY: <OpenAI API Key>
+  ML_REPO: <paste your ML_Repo name>
+  QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
+  TFY_API_KEY: <TFY_API_KEY>
+  TFY_HOST: <TFY_HOST>
 ports:
-  - host: <host for backend>
-    port: 8000
-    expose: true
+  - port: 8000
+    expose: false
     protocol: TCP
     app_protocol: http
 image:

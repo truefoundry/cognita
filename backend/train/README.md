@@ -52,8 +52,6 @@ To see other options you can customize, you can type:
 python -m backend.train.train -h
 ```
 
-### Deploying on Truefoundry
-
 ### Extending the code for your own datasets
 
 This can be relevant if you plan to edit the code to suit your own usecases. You can also try to run the
