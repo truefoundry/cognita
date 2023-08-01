@@ -1,17 +1,15 @@
 name: llm-qa-indexer
 type: job
 env:
-  ML_REPO: <ml repo>
   OPENAI_API_KEY: <openai api key>
-  QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
+  QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
 image:
   type: build
   build_spec:
     type: dockerfile
     command: >-
       python -m backend.train.train --ml_repo {{ml_repo}} --chunk_size
-      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}}
-      --dry_run {{dry_run}} --embedder {{embedder}} --embedder-config
+      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}} --embedder {{embedder}} --embedder-config
       {{embedder_config}} --repo_creds {{repo_creds}} --parsers_map
       {{parsers_map}}
     dockerfile_path: ./backend/train/Dockerfile
@@ -28,9 +26,6 @@ params:
   - name: repo_name
     param_type: string
   - name: source_uri
-    param_type: string
-  - name: dry_run
-    default: "False"
     param_type: string
   - name: embedder
     default: OpenAI
