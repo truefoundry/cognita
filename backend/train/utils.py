@@ -77,6 +77,8 @@ async def get_all_chunks_from_dir(
     docs_to_embed = []
     index = 0
     last_log_time = 0
+    last_index = 0
+    last_docs_size = 0
     for dirpath, dirnames, filenames in os.walk(dest_dir):
         for file in filenames:
             if file.startswith("."):
@@ -114,7 +116,17 @@ async def get_all_chunks_from_dir(
                         step=index,
                     )
                     last_log_time = curr_time
+                    last_index = index
+                    last_docs_size = len(docs_to_embed)
             index += 1
+    if last_index < index-1:
+        mlfoundry_run.log_metrics(
+            metric_dict={
+                "processing_time": time.time() - last_log_time,
+                "num_chunks": len(docs_to_embed) - last_docs_size,
+            },
+            step=index-1,
+        )
     return docs_to_embed
 
 
