@@ -40,68 +40,68 @@ Truefoundry, a Kubernetes-based platform, simplifies the deployment of ML traini
 
 To be able to use **Ask Questions** on your own documents, follow the steps below:
 
-1. Register at TrueFoundry, follow: https://docs.truefoundry.com/docs/installation-and-setup
+1.  Register at TrueFoundry, follow: https://docs.truefoundry.com/docs/installation-and-setup
 
-   - Fill up the form and register as an organization (let's say <org_name>)
-   - On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
-   - Complete your email verification
-   - Login to the platform at your dashboard endpoint ie. https://<org_name>.truefoundry.cloud
+    - Fill up the form and register as an organization (let's say <org_name>)
+    - On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
+    - Complete your email verification
+    - Login to the platform at your dashboard endpoint ie. https://<org_name>.truefoundry.cloud
 
-   `Note: Keep your dashboard endpoint handy, we will refer it as "TFY_HOST" and it should have structure like "https://<org_name>.truefoundry.cloud"`
+    `Note: Keep your dashboard endpoint handy, we will refer it as "TFY_HOST" and it should have structure like "https://<org_name>.truefoundry.cloud"`
 
-2. Setup a cluster, use TrueFoundry managed for quick setup
+2.  Setup a cluster, use TrueFoundry managed for quick setup
 
-   - Give a unique name to your **[Cluster](https://docs.truefoundry.com/docs/workspace)** and click on **Launch Cluster**
-   - It will take few minutes to provision a cluster for you
-   - On **Configure Host Domain** section, click `Register` for the pre-filled IP
-   - Next, `Add` a **Docker Registry** to push your docker images to.
-   - Next, **Deploy a Model**, you can choose to `Skip` this step
+    - Give a unique name to your **[Cluster](https://docs.truefoundry.com/docs/workspace)** and click on **Launch Cluster**
+    - It will take few minutes to provision a cluster for you
+    - On **Configure Host Domain** section, click `Register` for the pre-filled IP
+    - Next, `Add` a **Docker Registry** to push your docker images to.
+    - Next, **Deploy a Model**, you can choose to `Skip` this step
 
-3. Add a **Storage Integration**
+3.  Add a **Storage Integration**
 
-4. Create a **ML Repo**
+4.  Create a **ML Repo**
 
-   - Navigate to **ML Repo** tab
-   - Click on `+ New ML Repo` button on top-right
-   - Give a unique name to your **ML Repo** (say 'docs-qa-llm')
-   - Select **Storage Integration**
-   - On `Submit`, your **ML Repo** will be created
+    - Navigate to **ML Repo** tab
+    - Click on `+ New ML Repo` button on top-right
+    - Give a unique name to your **ML Repo** (say 'docs-qa-llm')
+    - Select **Storage Integration**
+    - On `Submit`, your **ML Repo** will be created
 
-   For more details: [link](https://docs.truefoundry.com/docs/creating-ml-repo-via-ui)
+      For more details: [link](https://docs.truefoundry.com/docs/creating-ml-repo-via-ui)
 
-5. Create a **Workspace**
+5.  Create a **Workspace**
 
-   - Navigate to **Workspace** tab
-   - Click on `+ New Workspace` button on top-right
-   - Select your **Cluster**
-   - Give a name to your **Workspace** (say 'docs-qa-llm')
-   - Enable **ML Repo Access** and `Add ML Repo Access`
-   - Select your **ML Repo** and role as **Project Admin**
-   - On `Submit`, a new **Workspace** will be created. You can copy the **Workspace FQN** by clicking on **FQN**.
+    - Navigate to **Workspace** tab
+    - Click on `+ New Workspace` button on top-right
+    - Select your **Cluster**
+    - Give a name to your **Workspace** (say 'docs-qa-llm')
+    - Enable **ML Repo Access** and `Add ML Repo Access`
+    - Select your **ML Repo** and role as **Project Admin**
+    - On `Submit`, a new **Workspace** will be created. You can copy the **Workspace FQN** by clicking on **FQN**.
 
-   For more details: [link](https://docs.truefoundry.com/docs/installation-and-setup#5-creating-workspaces)
+    For more details: [link](https://docs.truefoundry.com/docs/installation-and-setup#5-creating-workspaces)
 
-6. Generate an **API Key**
+6.  Generate an **API Key**
 
-   - Navigate to **Settings > API Keys** tab
-   - Click on `Create New API Key`
-   - Give any name to the **API Key**
-   - On `Generate`, **API Key** will be gererated.
-   - **Please save the value or download it**
+    - Navigate to **Settings > API Keys** tab
+    - Click on `Create New API Key`
+    - Give any name to the **API Key**
+    - On `Generate`, **API Key** will be gererated.
+    - **Please save the value or download it**
 
-`Note: we will refer it as "TFY_API_KEY"`
+      `Note: we will refer it as "TFY_API_KEY"`
 
-For more details: https://docs.truefoundry.com/docs/generate-api-key
+      For more details: https://docs.truefoundry.com/docs/generate-api-key
 
-7. In order to use default OpenAI embedder. Please get an **OpenAI API Key**. You can get your API Key [here](https://platform.openai.com/account/api-keys)
+7.  In order to use default OpenAI embedder. Please get an **OpenAI API Key**. You can get your API Key [here](https://platform.openai.com/account/api-keys)
 
-8. Open your Terminal on parent folder
+8.  Open your Terminal on parent folder
 
-9. Install our **servicefoundry** cli
+9.  Install our **servicefoundry** cli
 
-   ```
-   pip install servicefoundry
-   ```
+    ```
+    pip install servicefoundry
+    ```
 
 10. Login from cli
 
@@ -133,7 +133,7 @@ For more details: https://docs.truefoundry.com/docs/generate-api-key
       sfy deploy --workspace_fqn <paste your Workspace FQN here> --file indexer.yaml --no-wait
       ```
 
-    For more details: [link](https://docs.truefoundry.com/docs/introduction-to-job)
+      For more details: [link](https://docs.truefoundry.com/docs/introduction-to-job)
 
 14. Deploy `Backend` service
 
