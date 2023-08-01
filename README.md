@@ -99,41 +99,39 @@ For more details: https://docs.truefoundry.com/docs/generate-api-key
 
 9. Install our **servicefoundry** cli
 
-```
-
-pip install servicefoundry
-
-```
+   ```
+   pip install servicefoundry
+   ```
 
 10. Login from cli
 
-```
-sfy login --host <paste your TFY_HOST here>
-```
+    ```
+    sfy login --host <paste your TFY_HOST here>
+    ```
 
 11. Fetch your **Workspace FQN** for the workspace we created at **Step 5**
 
 12. Setup `Vector DB`, in our case we will deploy `QDrant`
 
-```
-servicefoundry deploy --workspace_fqn <paste your Workspace FQN here> --file qdrant.yaml --no-wait
-```
+    ```
+    servicefoundry deploy --workspace_fqn <paste your Workspace FQN here> --file qdrant.yaml --no-wait
+    ```
 
 13. Deploy `Indexer` Job
 
     - Edit the `indexer.yaml` and add following environment variables (**Please replace your workspace name with the placeholder**)
 
-    ```
-    env:
-        OPENAI_API_KEY: <OpenAI API Key>
-        QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
-    ```
+      ```
+      env:
+          OPENAI_API_KEY: <OpenAI API Key>
+          QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
+      ```
 
     - Deploy the `Indexer` job
 
-    ```
-    sfy deploy --workspace_fqn <paste your Workspace FQN here> --file indexer.yaml --no-wait
-    ```
+      ```
+      sfy deploy --workspace_fqn <paste your Workspace FQN here> --file indexer.yaml --no-wait
+      ```
 
     For more details: [link](https://docs.truefoundry.com/docs/introduction-to-job)
 
@@ -141,54 +139,56 @@ servicefoundry deploy --workspace_fqn <paste your Workspace FQN here> --file qdr
 
     - Edit `serve.yaml` and add the values of environment variables (**Please fill in the placeholders with required information**)
 
-    ```
-    env:
-        OPENAI_API_KEY: <OpenAI API Key>
-        ML_REPO: <paste your ML_Repo name>
-        QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
-        TFY_API_KEY: <TFY_API_KEY>
-        TFY_HOST: <TFY_HOST>
-    ...
-    ```
+      ```
+      env:
+          OPENAI_API_KEY: <OpenAI API Key>
+          ML_REPO: <paste your ML_Repo name>
+          QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
+          TFY_API_KEY: <TFY_API_KEY>
+          TFY_HOST: <TFY_HOST>
+      ...
+      ```
 
     - Deploy the `Backend` service
 
-    ```
-    sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml --no-wait
-    ```
+      ```
+      sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml --no-wait
+      ```
 
 15. Deploy `Frontend` service
 
     - Fetch `host` for your frontend: navigate to **Integrations > Clusters**, copy the `Base Domain URL` from your cluster card
+
     - Edit frontend.yaml and add `host`
 
-    ```
-    ports:
-    - host: <host>
-    ...
-    ```
+      ```
+      ports:
+      - host: <host>
+      ...
+      ```
 
     - Fetch `JOB_FQN`: navigate to **Deployments > Jobs**, click on your job `llm-qa-indexer` and copy the `Application FQN` from the details
 
     - Edit `frontend.yaml` and add the values of environment variables (**Please fill in the placeholders with required information**)
 
-    ```
-    env:
-        JOB_FQN: <JOB_FQN>
-        ML_REPO: <ML_Repo name>
-        TFY_API_KEY: <TFY_API_KEY>
-        BACKEND_URL: http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000
-        TFY_HOST: <TFY_HOST>
-    ...
-    ```
+      ```
+      env:
+          JOB_FQN: <JOB_FQN>
+          ML_REPO: <ML_Repo name>
+          TFY_API_KEY: <TFY_API_KEY>
+          BACKEND_URL: http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000
+          TFY_HOST: <TFY_HOST>
+      ...
+      ```
 
     - Deploy the `Frontend` service
 
-    ```
-    sfy deploy --workspace_fqn <paste your Workspace FQN here> --file frontend.yaml --no-wait
-    ```
+      ```
+      sfy deploy --workspace_fqn <paste your Workspace FQN here> --file frontend.yaml --no-wait
+      ```
 
 16. Visit your QnA playground
 
     - Navigate to **Deployments > Services**
+
     - Click on the `Endpoint` for your service
