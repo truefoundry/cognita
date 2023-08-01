@@ -158,7 +158,3 @@ sfy deploy --workspace_fqn <paste your Workspace FQN here> --file frontend.yaml 
 ```
 Note: It may take few minutes for the `Endpoint` to be available
 ```
-
-```
-
-```
