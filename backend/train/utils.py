@@ -55,9 +55,9 @@ def get_mlfoundry_run(repo_name, run_name):
     Returns the mlfoundry run given repo_name and run_name.
     """
     client = mlfoundry.get_client()
-    ml_repo = client.create_ml_repo(repo_name)
-    run = client.create_run(ml_repo=ml_repo.name, run_name=run_name)
-    return run, ml_repo.tenant_name
+    client.create_ml_repo(repo_name)
+    run = client.create_run(ml_repo=repo_name, run_name=run_name)
+    return run, ""
 
 
 async def get_all_chunks_from_dir(
@@ -102,17 +102,18 @@ async def get_all_chunks_from_dir(
 
             logger.info("%s -> %s chunks", filepath, len(chunks))
             end_time = time.time()
-            # if dry_run != "True":
-            #     # log the update once every 5 seconds
-            #     if time.time() - last_log_time > 5000:
-            #         mlfoundry_run.log_metrics(
-            #             metric_dict={
-            #                 "processing_time": end_time - start_time,
-            #                 "num_chunks": len(chunks),
-            #             },
-            #             step=index,
-            #         )
-            #         last_log_time = time.time()
+            if dry_run != True:
+                # log the update once every 5 seconds
+                curr_time = time.time()
+                if curr_time - last_log_time > 5:
+                    mlfoundry_run.log_metrics(
+                        metric_dict={
+                            "processing_time": end_time - start_time,
+                            "num_chunks": len(chunks),
+                        },
+                        step=index,
+                    )
+                    last_log_time = curr_time
             index += 1
     return docs_to_embed
 

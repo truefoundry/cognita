@@ -5,6 +5,7 @@ env:
   QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
   TFY_API_KEY: <tf api key>
   TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
+  OPENAI_API_KEY: <openai api key>
 ports:
   - host: <host for backend>
     port: 8000

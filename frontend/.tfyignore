@@ -1,0 +1,10 @@
+deploy.py
+.idea/
+.vscode/
+.ipynb_checkpoints/
+*.py[cod]
+.DS_Store
+__MACOSX/*
+.envs/
+.metrics/
+*.env*

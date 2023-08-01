@@ -1,148 +1,41 @@
-# QA on Docs
+# Docs QA Playground
 
-The repository follows the architecture below:
+## Architecture
 
-### Indexing Job
-The user provides a repo_name, and the source of the documents and the indexing parameters. This triggers the train.py script in the train folder. 
+To deploy the complete workflow, we need to set up various components. Here's an overview of the architecture:
 
-To run the training job, use the command below:
+### Document Store:
 
-```
-python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
-```
+The Document Store is where your documents will be stored. Common options include AWS S3, Google Storage Buckets, or Azure Blob Storage. In some cases, data might come in from APIs, such as Confluence docs.
 
-You can also provide the embedder and the embedder parameters as part of the command above. The code can later be extended to support all the embedders along with their respective embedding configuration as provided in the Langchain library (https://python.langchain.com/en/latest/reference/modules/embeddings.html)
+### Indexer Job:
 
-The code has been written using async so that multiple documents can be indexed parallely. 
+The Indexer Job takes the documents as input, splits them into chunks, calls the embedding model to embed the chunks, and stores the vectors in the VectorDB. The embedding model can be loaded in the job itself or accessed via an API to ensure scalability.
 
-The code comprises of the following concepts:
+### Embedding Model:
 
-1. **DataLoaders**: They are supposed to download the docs from a certain source and place it in the dest dir.
-2. **Parsers**: One parser works for one kind of document. It is supposed to parse the document, split it and then return the chunks.
-3. **Embedders**: They follow the same structure as provided in the langchain library.
-4. **Qdrant**: We use Qdrant as the vector database to store the embeddings.  
+If you're using OpenAI or an externally hosted model, you don't need to host a model. However, if you opt for an open-source model, you'll have to deploy it in your cloud environment.
 
-We have already added dataloaders for local_dir, github_repo and mlfoundry_artifact. The commands to trigger the indexing job for each of them are:
+### LLM Model:
 
-```
-python -m backend.train.train --chunk_size 800 --source_uri mlfoundry://artifact:truefoundry/code-search-qa/calyx-docs:1 --repo_name test-repo
-```
+For OpenAI or hosted model APIs like Cohere and Anthropic, there's no need for additional deployment. Otherwise, you'll need to set up an open-source LLM.
 
-```
-python -m backend.train.train --chunk_size 800 --source_uri github://https://github.com/domoritz/streamlit-docker --repo_name test-repo
-```
+### Query Service:
 
-```
-python -m backend.train.train --chunk_size 800 --source_uri local://examples/calyx-docs --repo_name test-repo
-```
+A FastAPI service provides an API to list all indexed document collections and allows users to query over these collections. It also supports triggering new indexing jobs for additional document collections.
 
-### Fastapi search server
+### VectorDB:
 
-The fastapi server provides the apis to search through the docs which the user previously indexed. Every indexing job has a repo_name and the user will provide a repo_name to refer to which repo they want to search through. The key apis exposed in the fastapi server are:
+You can use a hosted solution like PineCone or host an open-source VectorDB like Qdrant or Milvus to efficiently retrieve similar document chunks.
 
-1. List indexed repos
-2. Submit repo to index
-3. Get status of submitted indexing job.
-4. Search through the indexed repo
+### Metadata Store:
 
-### Streamlit Frontend
+This store is essential for managing links to indexed documents and storing the configuration used to embed the chunks in those documents.
 
-Streamlit app provides an interface to connect data, upload and trigger its training, and then allows asking questions.
+## Setup with Truefoundry:
 
-# Deploying on Truefoundry
+Truefoundry, a Kubernetes-based platform, simplifies the deployment of ML training jobs and services at an optimal cost. You can deploy all the components mentioned above on your own cloud account using Truefoundry. The final deployment will be a streamlined and powerful system ready to handle your question-answering needs.
 
-1. Install **servicefoundry**
-    ```
-   pip install servicefoundry
-    ```
+## Deploy on TrueFoundry
 
-3. Login at TrueFoundry
-    ```
-   sfy login
-    ```
-
-5. Create a workspace **docs-qa-llm** and a ml_repo **docs-qa** , then assign ml_repo access to the workspace
-    
-    ```
-   sfy create workspace docs-qa-llm --cluster_name <cluster_name>
-    ```
-    
-    ###### create_ml_repo.py
-    ```
-    import mlfoundry as mlf
-
-    client = mlfoundry.get_client()
-
-    ml_repo = client.create_ml_repo(ml_repo="docs-qa")
-    ```
-
-
-2. Deploy Qdrant
-    
-    ```
-   servicefoundry deploy --workspace_fqn <paste your workspace fqn here> --file qdrant.yaml --no-wait
-    ```
-
-4. Indexing Job in `backend/train/`
-
-    * Edit the indexer.yaml and add following environment variables
-        
-        ```
-        env:
-            ML_REPO: <ml repo>
-            QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
-        ```
-
-    * Deploy the job
-        
-        ```
-      sfy deploy --workspace_fqn <paste your workspace fqn here> --file indexer.yaml
-        ```
-
-
-5. Backend Service in `backend/serve/`
-
-    * Edit serve.yaml and add the values of environment variables
-        
-        ```
-        env:
-            ML_REPO: <ml repo>
-            QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
-            TFY_API_KEY: <tfy api key>
-            TFY_HOST: <dashboard URL eg https://tenant.truefoundry.cloud>
-        ...
-        ```
-
-    * Deploy using python sdk
-    
-        ```
-      sfy deploy --workspace_fqn <paste your workspace fqn here> --file serve.yaml
-        ```
-
-6. Streamlit Frontend in `frontend/`
-
-    * Edit frontend.yaml and add the value of host for your frontend
-
-        ```
-        ports:
-        - host: <host for frontend>
-        ...
-        ```
-
-    * Edit frontend.yaml and add the values of environment variables mentioned in .env.example
-        
-        ```
-        env:
-            JOB_FQN: <tfy_llm_qa_in>
-            ML_REPO: <ml_repo_name>
-            TFY_API_KEY: <secret_fqn>
-            BACKEND_URL: <tfy_llm_qa_backend_url>
-            TFY_HOST: <control_plane_url>
-        ...
-        ```
-
-    *  Deploy using python sdk
-        
-        ```
-       sfy deploy --workspace_fqn <paste your workspace fqn here>
-        ```
+If you want to quick start and deploy on TrueFoundry, follow [here](./GETTING_STARTED.md).

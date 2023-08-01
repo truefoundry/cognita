@@ -1,6 +1,7 @@
 import os
 import grpc
 import mlflow
+import time
 
 import mlfoundry
 from dotenv import load_dotenv
@@ -8,9 +9,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain import PromptTemplate
 from langchain.chains import RetrievalQA
+from langchain.vectorstores import Qdrant
 from langchain.chains.question_answering import load_qa_chain
 from servicefoundry import trigger_job
 from servicefoundry.lib.dao.application import get_job_run
+from servicefoundry.langchain import TruefoundryPlaygroundLLM
 
 from backend.common.logger import logger
 from backend.serve.base import RepoModel, SearchQuery
@@ -18,14 +21,19 @@ from backend.serve.tfy_playground_llm import TfyPlaygroundLLM
 from backend.common.embedder import get_embedder
 from backend.common.db.qdrant import (
     delete_qdrant_collection_if_exists,
-    get_qdrant_langchain_client,
+    get_qdrant_client,
 )
 
 # load environment variables
 load_dotenv()
 
 # FastAPI Initialization
-app = FastAPI(root_path=os.getenv("TFY_SERVICE_ROOT_PATH"), docs_url="/")
+app = FastAPI(
+    title="QA for your own documents",
+    summary="Deadpool's favorite app. Nuff said.",
+    root_path=os.getenv("TFY_SERVICE_ROOT_PATH"),
+    docs_url="/",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +50,7 @@ if not ML_REPO:
 
 print("Started server")
 mlfoundry_client = mlfoundry.get_client()
+qdrant_client = get_qdrant_client()
 
 
 @app.get("/")
@@ -55,6 +64,7 @@ async def search(request: SearchQuery):
     mlfoundry_run = None
     # Check if mlfoundry repo exists
     try:
+        logger.info("Getting mlfoundry run")
         mlfoundry_run = mlfoundry_client.get_run_by_name(ML_REPO, request.repo_name)
     except mlflow.exceptions.RestException as exp:
         if exp.error_code == "RESOURCE_DOES_NOT_EXIST":
@@ -64,10 +74,11 @@ async def search(request: SearchQuery):
     except Exception as exp:
         logger.exception(str(exp))
         raise HTTPException(status_code=500, detail=str(exp))
-    
+
     if mlfoundry_run is None:
         raise HTTPException(status_code=400, detail="Repo not found")
 
+    logger.info("Getting mlfoundry params")
     logged_params = mlfoundry_run.get_params()
     DOCUMENT_PROMPT = PromptTemplate(
         input_variables=["page_content"],
@@ -79,30 +90,31 @@ async def search(request: SearchQuery):
     )
     try:
         # get the embedders
+        logger.info("Getting embedding")
         embeddings = get_embedder(logged_params.get("embedder"), logged_params)
         # initialize the indexed collection
         # qdrandb parameters
-        qdrant_db = get_qdrant_langchain_client(request.repo_name, embeddings)
+        qdrant_db = Qdrant(
+            client=qdrant_client,
+            collection_name=request.repo_name,
+            embeddings=embeddings,
+        )
         retriever = qdrant_db.as_retriever()
         retriever.search_kwargs["distance_metric"] = "cos"
-        retriever.search_kwargs["fetch_k"] = 20
-        retriever.search_kwargs[
-            "maximal_marginal_relevance"
-        ] = request.maximal_marginal_relevance
+        retriever.search_kwargs["fetch_k"] = request.fetch_k
+        retriever.search_kwargs["maximal_marginal_relevance"] = request.mmr
         retriever.search_kwargs["k"] = request.k
 
         # load LLM model
         # model_config = json.loads(request.model_configuration)
-        model = TfyPlaygroundLLM(
-            name=request.model_configuration.name,
+        model = TruefoundryPlaygroundLLM(
+            model_name=request.model_configuration.name,
             provider=request.model_configuration.provider,
-            tag=request.model_configuration.tag,
             parameters=request.model_configuration.parameters,
             api_key=os.environ["TFY_API_KEY"],
-            endpoint_url=f'{os.environ.get("TFY_HOST")}{os.environ.get("LLM_ENDPOINT_PATH","/llm-playground")}/api/inference/text',
         )
-        # model = fetch_model(**model_configuration)
         # retrieval QA chain
+        logger.info("Loading QA chain")
         qa = RetrievalQA(
             combine_documents_chain=load_qa_chain(
                 llm=model,
@@ -116,8 +128,7 @@ async def search(request: SearchQuery):
             return_source_documents=True,
             verbose=True,
         )
-        logger.info("Making request to LLM: " + request.query)
-        logger.info("Making request to LLM")
+        logger.info("Making query chain")
         outputs = qa({"query": request.query})
 
         # prepare the final prompt for debug
@@ -164,7 +175,6 @@ async def submit_repo_to_index(repo: RepoModel):
         params={
             "chunk_size": repo.chunk_size,
             "source_uri": repo.source_uri,
-            "dry_run": "False",
             "ml_repo": ML_REPO,
             "repo_name": repo.repo_name,
             "repo_creds": repo.repo_creds,
@@ -237,6 +247,7 @@ async def repo_status(jobrun_name: str, job_fqn: str):
 
 @app.get("/repos")
 async def repos():
+    start_time = time.time()
     runs = mlfoundry_client.search_runs(
         ml_repo=ML_REPO,
         filter_string="params.dry_run ='False' and params.source_uri !=''",
@@ -244,6 +255,7 @@ async def repos():
     repo_names = []
     for run in runs:
         repo_names.append(run.run_name)
+    print("Time taken: " + str(time.time() - start_time))
     return {"output": repo_names}
 
 

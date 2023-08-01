@@ -2,6 +2,7 @@ name: llm-qa-indexer
 type: job
 env:
   ML_REPO: <ml repo>
+  OPENAI_API_KEY: <openai api key>
   QDRANT_URL: <qdrant host eg qdrant.<workspace_name>.svc.cluster.local>
 image:
   type: build

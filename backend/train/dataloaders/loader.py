@@ -1,20 +1,29 @@
 from abc import ABC, abstractmethod
 from backend.common.logger import logger
 
+# A global registry to store all available loaders.
 LOADER_REGISTRY = {}
 
 
 def register(cls):
     """
     Registers all the available loaders using `BaseLoader` class
+
+    Args:
+        cls: The loader class to be registered.
+
+    Returns:
+        None
     """
     global LOADER_REGISTRY
     name = cls.name
     logger.debug("Loading loader: " + str(name))
     supported_protocol = cls.supported_protocol
+
+    # Validate and add the loader to the registry.
     if not name:
         raise ValueError(
-            f"static attribute `name` needs to be non empty string on class {cls.__name__}"
+            f"static attribute `name` needs to be a non-empty string on class {cls.__name__}"
         )
     if name in LOADER_REGISTRY:
         raise ValueError(
@@ -25,7 +34,12 @@ def register(cls):
 
 def get_loader(name, *args, **kwargs):
     """
-    Return object of loader class for given name
+    Returns the object of the loader class for given name
+
+    Args:
+        name (str): The name of the loader.
+    Returns:
+        BaseLoader: An instance of the specified loader class.
     """
     global LOADER_REGISTRY
     if name not in LOADER_REGISTRY:
@@ -35,7 +49,10 @@ def get_loader(name, *args, **kwargs):
 
 def get_loaders_map():
     """
-    Returns a mapping of protocol and name of loader
+    Returns a mapping of supported protocols to the names of the registered loaders.
+
+    Returns:
+        dict: A mapping of protocol (str) to loader name (str).
     """
     global LOADER_REGISTRY
     protocol_to_loaders_map = {}
@@ -53,13 +70,17 @@ class BaseLoader(ABC):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        # Register the subclass automatically when it is defined.
         register(cls)
 
     @property
     @abstractmethod
     def name(self) -> str:
         """
-        Name of the loader
+        Name of the loader.
+
+        Returns:
+            str: The name of the loader (must be a non-empty string).
         """
         pass
 
@@ -67,16 +88,24 @@ class BaseLoader(ABC):
     @abstractmethod
     def supported_protocol(self) -> str:
         """
-        Supported protocol of the loader eg "github://", "local://", "mlfoundry://"
+        Supported protocol of the loader, e.g., "github://", "local://", "mlfoundry://".
+
+        Returns:
+            str: The supported protocol of the loader (must be a non-empty string).
         """
         pass
 
     @abstractmethod
     def load_data(self, source_uri, dest_dir, credentials):
         """
-        Load data function that downloads the data at destination
-         `source_uri`: source uri with protocol `supported_protocol`
-         `dest_dir`: destination directory
-         `credentials`: credentials needed to download the data
+        Load data function that downloads the data from the source URI and stores it in the destination directory.
+
+        Args:
+            source_uri (str): Source URI with protocol `supported_protocol`.
+            dest_dir (str): Destination directory where the data will be stored.
+            credentials (dict): Credentials needed to download the data (currently not used).
+
+        Returns:
+            None
         """
         pass
