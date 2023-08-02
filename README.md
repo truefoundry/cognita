@@ -40,7 +40,7 @@ Truefoundry, a Kubernetes-based platform, simplifies the deployment of ML traini
 
 To be able to use **Ask Questions** on your own documents, follow the steps below:
 
-1.  Register at TrueFoundry, follow: https://docs.truefoundry.com/docs/installation-and-setup
+1.  Register at TrueFoundry, follow [here](https://www.truefoundry.com/register)
 
     - Fill up the form and register as an organization (let's say <org_name>)
     - On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
