@@ -24,7 +24,7 @@ class SearchQuery(BaseModel):
     # Name of the document repo on which to run the query
     repo_name: str = Field(
         default=None,
-        title="""Document repo name on which to search. This name should be in the 
+        title="""Document repo name on which to search. This name should be in the
                            list of already indexed repositories""",
     )
     k: int = Field(
@@ -32,9 +32,9 @@ class SearchQuery(BaseModel):
     )
     mmr: Optional[bool] = Field(
         default=True,
-        title="""If true, then use Maximal Marginal Relevance(mmr), else use similarity search. 
-        In similarity search, it selects text chunk vectors that are most similar to the question vector. 
-        search_type="mmr" uses the maximum marginal relevance search where it optimizes for similarity to 
+        title="""If true, then use Maximal Marginal Relevance(mmr), else use similarity search.
+        In similarity search, it selects text chunk vectors that are most similar to the question vector.
+        search_type="mmr" uses the maximum marginal relevance search where it optimizes for similarity to
         query AND diversity among selected documents.""",
     )
     fetch_k: Optional[int] = Field(

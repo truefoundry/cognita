@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.10 
+FROM --platform=linux/amd64 python:3.10
 
 # Install Python 3.8 and create a virtual environment
 RUN apt-get update && \

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from backend.common.logger import logger
 
 # A global registry to store all available loaders.

@@ -3,7 +3,7 @@ import typing
 
 from langchain.docstore.document import Document
 from langchain.document_loaders import TextLoader
-from langchain.text_splitter import SpacyTextSplitter, NLTKTextSplitter
+from langchain.text_splitter import NLTKTextSplitter, SpacyTextSplitter
 
 from .parser import BaseParser
 

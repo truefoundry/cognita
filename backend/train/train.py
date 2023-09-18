@@ -8,11 +8,11 @@ import time
 
 from dotenv import load_dotenv
 
+from backend.common.db.qdrant import put_embeddings_in_vectordb
+from backend.common.embedder import get_embedder
 from backend.common.logger import logger
 from backend.train import utils
-from backend.common.db.qdrant import put_embeddings_in_vectordb
 from backend.train.utils import get_parsers_configurations
-from backend.common.embedder import get_embedder
 
 # load environment variables
 load_dotenv()
