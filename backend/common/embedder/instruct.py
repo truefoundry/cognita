@@ -1,4 +1,5 @@
 from typing import Any, List, Optional
+
 import requests
 from langchain.embeddings.base import Embeddings
 
@@ -12,7 +13,7 @@ class RemoteHuggingFaceInstructEmbeddings(Embeddings):
         self,
         id_: Optional[str] = None,
         embedding_configuration: dict = None,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         """
         Initialize the RemoteHuggingFaceInstructEmbeddings.

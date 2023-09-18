@@ -257,13 +257,15 @@ async def repos():
         repo_names.append(run.run_name)
         tags = run.get_tags()
         params = run.get_params()
-        repo_details.append({
-            "repo_name": run.run_name,
-            "job_name": tags.get("TFY_INTERNAL_JOB_RUN_NAME"),
-            "source_uri": params.get("source_uri"),
-            "embedder": params.get("embedder"),
-            "chunk_size": params.get("chunk_size"),
-        })
+        repo_details.append(
+            {
+                "repo_name": run.run_name,
+                "job_name": tags.get("TFY_INTERNAL_JOB_RUN_NAME"),
+                "source_uri": params.get("source_uri"),
+                "embedder": params.get("embedder"),
+                "chunk_size": params.get("chunk_size"),
+            }
+        )
     logger.debug("Time taken: " + str(timer() - start_time))
     return {"output": repo_names, "repos": repo_details}
 

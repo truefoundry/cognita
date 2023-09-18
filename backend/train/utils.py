@@ -2,9 +2,9 @@ import os
 import time
 
 import mlfoundry
+
 from backend.common.logger import logger
 from backend.train.dataloaders.loader import get_loader, get_loaders_map
-
 from backend.train.parsers.parser import get_parser, get_parsers_map
 
 
@@ -119,13 +119,13 @@ async def get_all_chunks_from_dir(
                     last_index = index
                     last_docs_size = len(docs_to_embed)
             index += 1
-    if last_index < index-1:
+    if last_index < index - 1:
         mlfoundry_run.log_metrics(
             metric_dict={
                 "processing_time": time.time() - last_log_time,
                 "num_chunks": len(docs_to_embed) - last_docs_size,
             },
-            step=index-1,
+            step=index - 1,
         )
     return docs_to_embed
 

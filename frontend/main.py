@@ -4,29 +4,21 @@ import shutil
 import time
 import uuid
 from urllib.parse import urljoin
+
 import mlfoundry
 import requests
 import streamlit as st
 from dotenv import load_dotenv
 from PIL import Image
-
-from utils import (
-    fastapi_request,
-    handle_uploaded_file,
-    print_repo_details,
-)
+from utils import fastapi_request, handle_uploaded_file, print_repo_details
 
 # load environment variables
 load_dotenv()
 
-st.set_page_config(
-    page_title='QnA Playground',
-    layout='wide',
-    page_icon=':rocket:'
-)
+st.set_page_config(page_title="QnA Playground", layout="wide", page_icon=":rocket:")
 
 st.markdown(
-    f'''
+    f"""
             <style>
                 .block-container {{
                     padding-top: 2rem;
@@ -38,7 +30,7 @@ st.markdown(
                     padding: 1rem 1rem 1.5rem;
                 }}
             </style>
-            ''',
+            """,
     unsafe_allow_html=True,
 )
 st.sidebar.markdown(
@@ -112,7 +104,7 @@ def ask_question(repo_name, model_name, prompt):
             "stopSequences": [],
             "frequencyPenalty": 0,
             "maximumLength": max_new_tokens,
-        }
+        },
     }
 
     payload = {
@@ -132,8 +124,7 @@ def ask_question(repo_name, model_name, prompt):
         llm_response = llm_response.json()
         # extracting pages information
         pages = [
-            doc.get("metadata").get("page_num")
-            for doc in llm_response.get("docs")
+            doc.get("metadata").get("page_num") for doc in llm_response.get("docs")
         ]
         pages = list(dict.fromkeys(pages))[:5]
         pages = sorted([i for i in pages if i is not None])
@@ -156,10 +147,10 @@ def main():
     # Initialise session state variables
     initialize_session_variables()
 
-    if os.path.exists('./assets/logo.png'):
-        st.sidebar.image(Image.open('./assets/logo.png'))
-    elif os.path.exists('frontend/assets/logo.png'):
-        st.sidebar.image(Image.open('frontend/assets/logo.png'))
+    if os.path.exists("./assets/logo.png"):
+        st.sidebar.image(Image.open("./assets/logo.png"))
+    elif os.path.exists("frontend/assets/logo.png"):
+        st.sidebar.image(Image.open("frontend/assets/logo.png"))
 
     # choose the project worflow type
     sidebar_option = st.sidebar.radio(
@@ -181,14 +172,11 @@ def main():
                     repo_resp = requests.get(fetch_repos_url)
                     repo_resp = repo_resp.json()
                     if repo_resp.get("detail") == "Not Found":
-                        raise Exception(
-                            "Backend /repos API is not accessible.")
+                        raise Exception("Backend /repos API is not accessible.")
                     else:
-                        st.session_state["repo_indexes"] = repo_resp.get(
-                            "output")
+                        st.session_state["repo_indexes"] = repo_resp.get("output")
                 except Exception:
-                    st.error(
-                        "Unable to fetch available repos. Verify the backend API.")
+                    st.error("Unable to fetch available repos. Verify the backend API.")
                     st.stop()
 
         # choose your repo from sidebar
@@ -216,33 +204,28 @@ def main():
 
         # repo operations
         # delete - for removing the repo
-        delete_btn = st.sidebar.button(
-            "Delete Project", on_click=cleanup_history)
+        delete_btn = st.sidebar.button("Delete Project", on_click=cleanup_history)
         if delete_btn:
             if len(st.session_state.get("repo_indexes", [])) > 0:
                 st.session_state["query_repo_name"] = ""  # clear out LLM repo
                 with st.spinner("Deleting the repo..."):
-                    remove_url = repo_removel_url.format(
-                        st.session_state["repo_name"])
+                    remove_url = repo_removel_url.format(st.session_state["repo_name"])
                     repo_del_response = requests.delete(
                         remove_url,
                         timeout=20,
                     )
                     repo_del_response = repo_del_response.json()
                     if repo_del_response.get("status") == "ok":
-                        st.sidebar.success(
-                            "Successfully deleted project repo.")
+                        st.sidebar.success("Successfully deleted project repo.")
 
                 with st.spinner("Fetching newly added repos..."):
                     try:
                         repo_resp = requests.get(fetch_repos_url)
                         repo_resp = repo_resp.json()
                         if repo_resp.get("detail") == "Not Found":
-                            raise Exception(
-                                "Backend /repos API is not accessible.")
+                            raise Exception("Backend /repos API is not accessible.")
                         else:
-                            st.session_state["repo_indexes"] = repo_resp.get(
-                                "output")
+                            st.session_state["repo_indexes"] = repo_resp.get("output")
                             st.experimental_rerun()
                     except Exception:
                         st.error(
@@ -259,11 +242,9 @@ def main():
                         repo_resp = requests.get(fetch_repos_url)
                         repo_resp = repo_resp.json()
                         if repo_resp.get("detail") == "Not Found":
-                            raise Exception(
-                                "Backend /repos API is not accessible.")
+                            raise Exception("Backend /repos API is not accessible.")
                         else:
-                            st.session_state["repo_indexes"] = repo_resp.get(
-                                "output")
+                            st.session_state["repo_indexes"] = repo_resp.get("output")
                             st.experimental_rerun()
                     except Exception:
                         st.error(
@@ -293,13 +274,11 @@ def main():
             # create an expander for initializing embedder indexing
             expanded_status = st.session_state.get("expanded", True)
             with st.expander("Embedder Indexer", expanded=expanded_status):
-
                 # create multi-column for menu items
                 col_ex, col_ey = st.columns((2, 2), gap="large")
 
                 uploaded_file = col_ey.file_uploader(
-                    "Choose file or a zip to upload",
-                    type=["pdf", "zip", "txt", "md"]
+                    "Choose file or a zip to upload", type=["pdf", "zip", "txt", "md"]
                 )
 
                 # Embedding configuration ()
@@ -327,7 +306,10 @@ def main():
 
                 elif embedder == "TruefoundryEmbeddings":
                     embedder_config = {
-                        "endpoint_url": os.environ.get("TRUEFOUNDRY_EMBEDDINGS_ENDPOINT", "https://llm-embedder.example.domain.com"),
+                        "endpoint_url": os.environ.get(
+                            "TRUEFOUNDRY_EMBEDDINGS_ENDPOINT",
+                            "https://llm-embedder.example.domain.com",
+                        ),
                     }
                     embedder_config = json.dumps(embedder_config, indent=4)
 
@@ -343,16 +325,14 @@ def main():
                     with st.spinner("Uploading data..."):
                         try:
                             files_dir = f"{repo_name}_" + str(uuid.uuid4())
-                            upload_mask = handle_uploaded_file(
-                                uploaded_file)
+                            upload_mask = handle_uploaded_file(uploaded_file)
                             # upload the files to mlfoundry artifacts
                             artifact_version = mlfoundry_client.log_artifact(
                                 ml_repo=ML_REPO,
                                 name=files_dir,
                                 artifact_paths=[
                                     mlfoundry.ArtifactPath(
-                                        os.path.join(
-                                            os.getcwd(), "tempDir")
+                                        os.path.join(os.getcwd(), "tempDir")
                                     )
                                 ],
                             )
@@ -413,8 +393,7 @@ def main():
                                     st.stop()
                                 if status == "Running":
                                     progress_bar.progress(
-                                        repo_status_response.get(
-                                            "progress") / 100
+                                        repo_status_response.get("progress") / 100
                                     )
                             # wait every two seconds for status pull
                             time.sleep(2)
@@ -435,31 +414,35 @@ def main():
     ):
         with st.chat_message("assistant"):
             col1, col2 = st.columns([6, 4])
-            col1.write(
-                "Welcome to QnA Playground. Ask questions on your documents."
-            )
+            col1.write("Welcome to QnA Playground. Ask questions on your documents.")
             model_response = st.session_state["model_response"]
             if model_response.status_code != 200:
                 st.error("Unable to fetch the list of models.")
                 st.stop()
             model_list = list(model_response.json().keys())
             st.session_state["selected_model"] = col2.selectbox(
-                "Model Name: ", model_list, index=0, label_visibility="collapsed")
+                "Model Name: ", model_list, index=0, label_visibility="collapsed"
+            )
 
         prompt = st.chat_input("Ask your question here")
         if prompt:
             st.session_state["question"] = prompt
             with st.chat_message("user"):
-                st.markdown(
-                    st.session_state["question"], unsafe_allow_html=True)
+                st.markdown(st.session_state["question"], unsafe_allow_html=True)
             with st.spinner("Generating response..."):
-                ask_question(st.session_state["repo_name"]
-                             if sidebar_option == "Existing Project"
-                             else st.session_state["query_repo_name"], st.session_state["selected_model"], prompt)
+                ask_question(
+                    st.session_state["repo_name"]
+                    if sidebar_option == "Existing Project"
+                    else st.session_state["query_repo_name"],
+                    st.session_state["selected_model"],
+                    prompt,
+                )
             if st.session_state["response"]:
                 with st.chat_message("assistant"):
-                    st.markdown(st.session_state["response"].get(
-                        "answer"), unsafe_allow_html=True)
+                    st.markdown(
+                        st.session_state["response"].get("answer"),
+                        unsafe_allow_html=True,
+                    )
 
         # clear everything
         if sidebar_option == "New Project":

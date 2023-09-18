@@ -1,7 +1,7 @@
+import nltk
 import pdfplumber
 from langchain.docstore.document import Document
 from langchain.text_splitter import SpacyTextSplitter
-import nltk
 
 from .parser import BaseParser
 
