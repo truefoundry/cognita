@@ -1,28 +1,27 @@
 import os
+from timeit import default_timer as timer
+
 import grpc
 import mlflow
-import time
-
 import mlfoundry
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain.vectorstores import Qdrant
 from langchain.chains.question_answering import load_qa_chain
+from langchain.vectorstores import Qdrant
 from servicefoundry import trigger_job
-from servicefoundry.lib.dao.application import get_job_run
 from servicefoundry.langchain import TruefoundryPlaygroundLLM
+from servicefoundry.lib.dao.application import get_job_run
 
-from backend.common.logger import logger
-from backend.serve.base import RepoModel, SearchQuery
-from backend.serve.tfy_playground_llm import TfyPlaygroundLLM
-from backend.common.embedder import get_embedder
 from backend.common.db.qdrant import (
     delete_qdrant_collection_if_exists,
     get_qdrant_client,
 )
+from backend.common.embedder import get_embedder
+from backend.common.logger import logger
+from backend.serve.base import RepoModel, SearchQuery
 
 # load environment variables
 load_dotenv()
@@ -247,16 +246,26 @@ async def repo_status(jobrun_name: str, job_fqn: str):
 
 @app.get("/repos")
 async def repos():
-    start_time = time.time()
+    start_time = timer()
     runs = mlfoundry_client.search_runs(
         ml_repo=ML_REPO,
         filter_string="params.dry_run ='False' and params.source_uri !=''",
     )
     repo_names = []
+    repo_details = []
     for run in runs:
         repo_names.append(run.run_name)
-    print("Time taken: " + str(time.time() - start_time))
-    return {"output": repo_names}
+        tags = run.get_tags()
+        params = run.get_params()
+        repo_details.append({
+            "repo_name": run.run_name,
+            "job_name": tags.get("TFY_INTERNAL_JOB_RUN_NAME"),
+            "source_uri": params.get("source_uri"),
+            "embedder": params.get("embedder"),
+            "chunk_size": params.get("chunk_size"),
+        })
+    logger.debug("Time taken: " + str(timer() - start_time))
+    return {"output": repo_names, "repos": repo_details}
 
 
 @app.delete("/repo/{repo_name}")
