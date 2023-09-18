@@ -1,5 +1,5 @@
 #azure-core==1.27.0
-GitPython==3.1.31
+GitPython==3.1.35
 PyYAML==6.0
 astor==0.8.1
 boto3==1.26.76
