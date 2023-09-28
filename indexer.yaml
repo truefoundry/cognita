@@ -9,7 +9,7 @@ image:
     type: dockerfile
     command: >-
       python -m backend.train.train --ml_repo {{ml_repo}} --chunk_size
-      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}} --embedder {{embedder}} --embedder-config
+      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}} --embedder {{embedder}} --embedder_config
       {{embedder_config}} --repo_creds {{repo_creds}} --parsers_map
       {{parsers_map}}
     dockerfile_path: ./backend/train/Dockerfile
