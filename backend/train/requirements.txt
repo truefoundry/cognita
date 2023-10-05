@@ -8,7 +8,7 @@ fastapi==0.93.0
 grpcio-tools==1.48.2
 grpcio==1.54.2
 https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0-py3-none-any.whl
-langchain==0.0.228
+langchain==0.0.308
 langchainplus-sdk==0.0.20
 mlfoundry==0.9.8
 nltk==3.8.1
