@@ -2,7 +2,7 @@ boto3==1.26.76
 fastapi==0.93.0
 grpcio-tools==1.48.2
 grpcio==1.54.2
-langchain==0.0.228
+langchain==0.0.329
 langchainplus-sdk==0.0.20
 mlfoundry==0.9.8
 openai==0.27.8
