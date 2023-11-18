@@ -39,6 +39,7 @@ pip install -r backend/requirements.txt
 
 Copy the file .env.example to .env and set the values for the following variables. This is assuming we will be using OpenAI for the embeddings and LLM initially.
 
+Note: To run the indexer job too locally, add `DEBUG_MODE=true` as env
 
 5. Run the Server
 

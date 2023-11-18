@@ -8,7 +8,14 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from servicefoundry import trigger_job
-from backend.base import VectorDBConfig, CreateCollection, AddDocuments, SearchQuery
+from backend.indexer import trigger_job_locally
+from backend.base import (
+    VectorDBConfig,
+    CreateCollection,
+    AddDocuments,
+    SearchQuery,
+    IndexConfig,
+)
 from backend.logger import logger
 from backend.modules.embedder import get_embedder
 from backend.modules.vector_db import get_vector_db_client
@@ -97,18 +104,31 @@ async def add_documents_to_collection(
             ),
         )
 
-        trigger_job(
-            application_fqn=settings.JOB_FQN,
-            params={
-                "collection_name": collection_name,
-                "indexer_job_run_name": indexer_job_run.name,
-                "knowledge_source": json.dumps(request.knowledge_source.dict()),
-                "chunk_size": str(request.chunk_size),
-                "embedder_config": json.dumps(collection.embedder_config.dict()),
-                "parser_config": json.dumps(request.parser_config.dict()),
-                "vector_db_config": json.dumps(VECTOR_DB_CONFIG.dict()),
-            },
-        )
+        if settings.DEBUG_MODE:
+            await trigger_job_locally(
+                inputs=IndexConfig(
+                    collection_name=collection_name,
+                    indexer_job_run_name=indexer_job_run.name,
+                    knowledge_source=request.knowledge_source,
+                    chunk_size=request.chunk_size,
+                    embedder_config=collection.embedder_config,
+                    parser_config=request.parser_config,
+                    vector_db_config=VECTOR_DB_CONFIG,
+                )
+            )
+        else:
+            trigger_job(
+                application_fqn=settings.JOB_FQN,
+                params={
+                    "collection_name": collection_name,
+                    "indexer_job_run_name": indexer_job_run.name,
+                    "knowledge_source": json.dumps(request.knowledge_source.dict()),
+                    "chunk_size": str(request.chunk_size),
+                    "embedder_config": json.dumps(collection.embedder_config.dict()),
+                    "parser_config": json.dumps(request.parser_config.dict()),
+                    "vector_db_config": json.dumps(VECTOR_DB_CONFIG.dict()),
+                },
+            )
         return JSONResponse(
             status_code=201, content={"indexer_job_run": indexer_job_run.dict()}
         )

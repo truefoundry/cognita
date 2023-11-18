@@ -112,3 +112,7 @@ async def index_collection(inputs: IndexConfig):
             status=CollectionIndexerJobRunStatus.FAILED,
         )
         raise e
+
+
+async def trigger_job_locally(inputs: IndexConfig):
+    await index_collection(inputs)

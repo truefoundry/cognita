@@ -5,6 +5,7 @@ import enum
 import json
 import abc
 import logging
+import warnings
 from backend.modules.metadata_store.models import (
     CollectionCreate,
     Collection,
@@ -103,6 +104,7 @@ class Tags(BaseModel):
 class MLFoundryDB(BaseMetadataStore):
     def __init__(self):
         logging.getLogger("mlfoundry").setLevel(logging.ERROR)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.ml_repo_name = os.getenv("ML_REPO_NAME")
         if not self.ml_repo_name:
             raise Exception("ML_REPO_NAME environment variable is not set.")
