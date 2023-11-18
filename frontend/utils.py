@@ -6,8 +6,9 @@ from zipfile import ZipFile
 import requests
 import streamlit as st
 
-TEXT_TEMPLATE = """Given a list of documents, answer the given question precisely and accurately. Copying from the list of documents to form an answer is encouraged. Answer only from the information found in the documents. Paraphrasing is allowed but do not change any of the facts. Once you answer the question, stop immediately. If the given documents do not contain a relevant answer, say "I am not sure" and stop. Do not make up an answer.
 
+TEXT_TEMPLATE = """Given a list of documents, answer the given question precisely and accurately. Copying from the list of documents to form an answer is encouraged. Answer only from the information found in the documents. Paraphrasing is allowed but do not change any of the facts. Once you answer the question, stop immediately. If the given documents do not contain a relevant answer, say "I am not sure" and stop. Do not make up an answer.
+    
     DOCUMENTS:
     {context}
 
@@ -51,31 +52,46 @@ def validate_github(link):
     return False
 
 
-def fastapi_request(payload, BACKEND_URL):
-    url = urljoin(BACKEND_URL, "/repo")
-    response = requests.post(url, json=payload)
-    print(response)
+def create_collection_and_add_docs(
+    url: str,
+    collection_name: str,
+    source_uri: str,
+    embedder_config: dict,
+    chunk_size: int,
+):
+    print("Creating collection", collection_name, embedder_config)
+    response = requests.post(
+        f"{url}/collections",
+        json={"name": collection_name, "embedder_config": embedder_config},
+    )
+    response.raise_for_status()
+    print("Adding docs to collection", collection_name, source_uri, chunk_size)
+    add_docs_response = requests.post(
+        f"{url}/collections/{collection_name}/add_docs",
+        json={
+            "collection_name": collection_name,
+            "knowledge_source": {"type": "mlfoundry", "config": {"uri": source_uri}},
+            "chunk_size": chunk_size,
+            "parser_config": {
+                ".md": "MarkdownParser",
+                ".pdf": "PdfParserFast",
+                ".txt": "TextParser",
+            },
+        },
+    )
+    add_docs_response.raise_for_status()
 
-    if response.status_code == 200:
-        run_name = response.json()
-    else:
-        run_name = None
-        st.error("Error from indexing endpoint:")
-        st.error(response.text)
 
-    return run_name
-
-
-def print_repo_details(logged_params):
+def print_repo_details(repo):
     st.sidebar.text("")
     st.sidebar.markdown(
-        f"<strong><span style='text-decoration:'>Embedding Model:</span></strong> <span>  {logged_params['embedder']}</span>",
+        f"<strong><span style='text-decoration:'>Embedding Model:</span></strong> <span>  {repo.get('embedder_config',{}).get('provider','')}</span>",
         unsafe_allow_html=True,
     )
-    st.sidebar.markdown(
-        f"<strong><span style='text-decoration:'>Embedding Chunk Size:</span></strong> <span>  {logged_params['chunk_size']}</span>",
-        unsafe_allow_html=True,
-    )
+    # st.sidebar.markdown(
+    #     f"<strong><span style='text-decoration:'>Embedding Chunk Size:</span></strong> <span>  {logged_params['chunk_size']}</span>",
+    #     unsafe_allow_html=True,
+    # )
 
 
 def print_llm_help():
@@ -109,3 +125,25 @@ def print_llm_help():
         """
 
         st.markdown(faq_html, unsafe_allow_html=True)
+
+
+def fetch_modelnames(models: list, filters=[]):
+    model_names = []
+    for model in models:
+        model_names.append(f"{model['provider_account_name']}/{model['name']}")
+
+    if filters:
+        updated_model_names = []
+        for name in model_names:
+            if any(i for i in filters if i in name.lower()):
+                updated_model_names.append(name)
+        return updated_model_names
+    return model_names
+
+
+def fetch_prompts(model_name):
+    if "llama-2" in model_name.lower():
+        prompt = """<s>[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Your role is to provide clear, comprehensive and accurate answers based on the context given. If a question is unclear or lacks factual coherence, kindly explain why instead of providing an incorrect response. If you are uncertain about the answer to a question, please respond with 'I do not know.'\n<</SYS>>\n\n\nAnalyse the below context and provide clear, comprehensive and accurate answer to the question at the bottom.\n\nHere is the context for the question:\n```\n{context}\n```\n\nQuestion: {question} [/INST]"""
+    else:
+        prompt = """Use the context below given in triple single quotes to answer question at the end. Keep the answer clear, comprehensive and concise. If you don't know the answer, just say that you don't know. Don't try to make up an answer.\n\n\nHere is the context for the question:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:"""
+    return prompt

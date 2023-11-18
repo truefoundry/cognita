@@ -4,13 +4,19 @@ import shutil
 import time
 import uuid
 from urllib.parse import urljoin
-
 import mlfoundry
 import requests
 import streamlit as st
 from dotenv import load_dotenv
 from PIL import Image
-from utils import fastapi_request, handle_uploaded_file, print_repo_details
+from settings import settings
+from utils import (
+    create_collection_and_add_docs,
+    handle_uploaded_file,
+    print_repo_details,
+    fetch_modelnames,
+    fetch_prompts,
+)
 
 # load environment variables
 load_dotenv()
@@ -39,9 +45,8 @@ st.sidebar.markdown(
 )
 
 # initialize global variables
-BACKEND_URL = os.environ["BACKEND_URL"]
-ML_REPO = os.environ["ML_REPO"]
-JOB_FQN = os.environ["JOB_FQN"]
+BACKEND_URL = settings.BACKEND_URL
+ML_REPO = settings.ML_REPO_NAME
 mlfoundry_client = mlfoundry.get_client()  # initialize mlfoundry client
 
 
@@ -89,38 +94,31 @@ def ask_question(repo_name, model_name, prompt):
         st.warning("Please select a repository")
         return
     # model payload
-    max_new_tokens = 1024
-    k = 15
-    provider, model_name = model_name.split(":", maxsplit=1)
+    max_new_tokens = 500
+    k = 7
     model_config = {
         "name": model_name,
-        "provider": provider,
-        "tag": model_name,
         "parameters": {
-            "temperature": 0.75,
-            "topP": 0.95,
-            "topK": 5,
-            "repetitionPenalty": 1,
-            "stopSequences": [],
-            "frequencyPenalty": 0,
             "maximumLength": max_new_tokens,
         },
     }
 
+    # prompt template setup
+    prompt_template = fetch_prompts(model_name)
+
     payload = {
-        "repo_name": repo_name,
-        "k": k,
-        "maximal_marginal_relevance": False,
+        "collection_name": repo_name,
         "query": prompt,
         "model_configuration": model_config,
+        "prompt_template": prompt_template,
     }
 
-    # backend URL for fetch response
-    query_url = urljoin(BACKEND_URL, "/search")
-    # request
-    llm_response = requests.post(query_url, json=payload)
-    # check status code for the response
-    if llm_response.status_code == 200:
+    try:
+        # backend URL for fetch response
+        query_url = urljoin(BACKEND_URL, "/search")
+        # request
+        llm_response = requests.post(query_url, json=payload)
+        llm_response.raise_for_status()
         llm_response = llm_response.json()
         # extracting pages information
         pages = [
@@ -132,7 +130,8 @@ def ask_question(repo_name, model_name, prompt):
         pages = "(" + ", ".join(pages) + ")"
         # storing the llm response
         st.session_state["response"] = llm_response
-    else:
+    except Exception as err:
+        print(err)
         st.error(
             f"Unable to fetch answer from the model. Verify endpoint/payload details. Error: {llm_response.text}"
         )
@@ -161,8 +160,8 @@ def main():
     )
 
     # initialize all backend url endpoints
-    fetch_repos_url = urljoin(BACKEND_URL, f"/repos")
-    repo_removel_url = urljoin(BACKEND_URL, "/repo/{}")
+    fetch_repos_url = urljoin(BACKEND_URL, f"/collections")
+    repo_removel_url = urljoin(BACKEND_URL, "/collections/{}")
 
     if sidebar_option == "Existing Project":
         # fetch available repos else throw exception
@@ -170,19 +169,18 @@ def main():
             with st.spinner("Initializing things..."):
                 try:
                     repo_resp = requests.get(fetch_repos_url)
-                    repo_resp = repo_resp.json()
-                    if repo_resp.get("detail") == "Not Found":
-                        raise Exception("Backend /repos API is not accessible.")
-                    else:
-                        st.session_state["repo_indexes"] = repo_resp.get("output")
-                except Exception:
+                    repo_resp.raise_for_status()
+                    repos = repo_resp.json()
+                    st.session_state["repo_indexes"] = repos.get("collections")
+                except Exception as err:
+                    print(err)
                     st.error("Unable to fetch available repos. Verify the backend API.")
                     st.stop()
 
         # choose your repo from sidebar
         st.session_state["repo_name"] = st.sidebar.selectbox(
             "Choose your Project: ",
-            st.session_state["repo_indexes"],
+            [collection["name"] for collection in st.session_state["repo_indexes"]],
             on_change=cleanup_history,
         )
 
@@ -192,13 +190,18 @@ def main():
         if st.session_state.get("repo_name", ""):
             try:
                 # fetch the selected repo details
-                mlfoundry_run = mlfoundry_client.get_run_by_name(
-                    ML_REPO, st.session_state["repo_name"]
+                repo = next(
+                    (
+                        collection
+                        for collection in st.session_state["repo_indexes"]
+                        if collection.get("name") == st.session_state["repo_name"]
+                    ),
+                    None,
                 )
-                logged_params = mlfoundry_run.get_params()
                 # print the repo details on the sidebar for the selected Project Name
-                print_repo_details(logged_params)
-            except:
+                print_repo_details(repo)
+            except Exception as err:
+                print(err)
                 st.error("Unable to fetch project details.")
                 st.stop()
 
@@ -221,16 +224,12 @@ def main():
                 with st.spinner("Fetching newly added repos..."):
                     try:
                         repo_resp = requests.get(fetch_repos_url)
-                        repo_resp = repo_resp.json()
-                        if repo_resp.get("detail") == "Not Found":
-                            raise Exception("Backend /repos API is not accessible.")
-                        else:
-                            st.session_state["repo_indexes"] = repo_resp.get("output")
-                            st.experimental_rerun()
-                    except Exception:
-                        st.error(
-                            "Unable to fetch available repos. Verify the backend API."
-                        )
+                        repo_resp.raise_for_status()
+                        repos = repo_resp.json()
+                        st.session_state["repo_indexes"] = repos.get("collections")
+                    except Exception as err:
+                        print(err)
+                        st.error("Unable to fetch available repos. Verify the backend API.")
                         st.stop()
 
         # refresh - fetching any newly added repo
@@ -240,29 +239,27 @@ def main():
                 with st.spinner("Fetching newly added repos..."):
                     try:
                         repo_resp = requests.get(fetch_repos_url)
-                        repo_resp = repo_resp.json()
-                        if repo_resp.get("detail") == "Not Found":
-                            raise Exception("Backend /repos API is not accessible.")
-                        else:
-                            st.session_state["repo_indexes"] = repo_resp.get("output")
-                            st.experimental_rerun()
-                    except Exception:
-                        st.error(
-                            "Unable to fetch available repos. Verify the backend API."
-                        )
+                        repo_resp.raise_for_status()
+                        repos = repo_resp.json()
+                        st.session_state["repo_indexes"] = repos.get("collections")
+                    except Exception as err:
+                        print(err)
+                        st.error("Unable to fetch available repos. Verify the backend API.")
                         st.stop()
 
             # fetch list of models available in the playground
             with st.spinner("Fetching list of available models..."):
                 try:
-                    st.session_state["model_response"] = requests.get(
-                        f'{os.environ.get("TFY_HOST",)}/llm-playground/api/models-enabled',
+                    model_response = requests.get(
+                       settings.LLM_GATEWAY_ENDPOINT + "/api/model/?enabled_only=true",
                         headers={
-                            "Authorization": f"Bearer {os.environ.get('TFY_API_KEY')}",
+                            "Authorization": f"Bearer {settings.TFY_API_KEY}",
                         },
                     )
+                    st.session_state["model_response"] = model_response.json()
                     st.experimental_rerun()
-                except Exception:
+                except Exception as err:
+                    print(err)
                     st.error("Unable to fetch updated model list.")
                     st.stop()
 
@@ -281,6 +278,10 @@ def main():
                     "Choose file or a zip to upload", type=["pdf", "zip", "txt", "md"]
                 )
 
+                col_ey.warning(
+                    "Disclaimer: Please do not upload any sensitive data as this playground will be publicly available."
+                )
+
                 # Embedding configuration ()
                 with col_ex:
                     # enter the repo run name
@@ -292,7 +293,7 @@ def main():
                     # create a dropdown menu for embedder model
                     embedder = sub_colx.selectbox(
                         "Embedder Model",
-                        ("OpenAI", "TruefoundryEmbeddings"),
+                        ("OpenAI", "E5-large-v2"),
                         index=1,
                     )
                     # embedder model chunk size
@@ -300,18 +301,16 @@ def main():
 
                 if embedder == "OpenAI":
                     embedder_config = {
-                        "model": "text-embedding-ada-002",
+                        "provider": "OpenAI",
+                        "config": {"model": "text-embedding-ada-002"}
                     }
-                    embedder_config = json.dumps(embedder_config, indent=4)
 
-                elif embedder == "TruefoundryEmbeddings":
+                elif embedder == "E5-large-v2":
                     embedder_config = {
-                        "endpoint_url": os.environ.get(
-                            "TRUEFOUNDRY_EMBEDDINGS_ENDPOINT",
-                            "https://llm-embedder.example.domain.com",
-                        ),
+                        "provider": "TruefoundryEmbeddings",
+                        "config":{"endpoint_url": settings.TRUEFOUNDRY_EMBEDDINGS_ENDPOINT
+                        }
                     }
-                    embedder_config = json.dumps(embedder_config, indent=4)
 
                 submit_btn = col_ex.button("Process", key="submit_btn")
                 if submit_btn:
@@ -337,9 +336,7 @@ def main():
                                 ],
                             )
                             if upload_mask:
-                                st.session_state["artifact_fqn"] = (
-                                    "mlfoundry://" + artifact_version.fqn
-                                )
+                                st.session_state["artifact_fqn"] = artifact_version.fqn
                                 st.session_state["uploaded"] = True
                             else:
                                 st.error("Unable to upload file.")
@@ -349,52 +346,46 @@ def main():
                             st.stop()
 
                     with st.spinner("Indexing job going on..."):
-                        emb_payload = {
-                            "repo_name": repo_name,
-                            "ml_repo": ML_REPO,
-                            "job_fqn": JOB_FQN,
-                            "source_uri": st.session_state["artifact_fqn"],
-                            "embedder": embedder,
-                            "chunk_size": chunk_size,
-                            "embedder_config": embedder_config,
-                        }
-                        jobrun_name = fastapi_request(emb_payload, BACKEND_URL)
-                        if jobrun_name is None:
+                        try:
+                            create_collection_and_add_docs(url=BACKEND_URL,collection_name=repo_name,source_uri=st.session_state["artifact_fqn"],embedder_config=embedder_config,chunk_size=chunk_size)
+                        except Exception as err:
+                            print(err)
                             st.error("Unable to index the documents.")
                             st.stop()
 
-                        # indexing job
-                        repo_status_url = urljoin(
-                            BACKEND_URL, f"/repo-status/{jobrun_name}?job_fqn={JOB_FQN}"
-                        )
                         placeholder = st.empty()
                         progress_bar = st.progress(0)
                         while True:
-                            response_status = requests.get(repo_status_url)
-                            if response_status.status_code == 200:
+                            try:
+                                response_status = requests.get(f"{BACKEND_URL}/collections/{repo_name}/status")
+                                response_status.raise_for_status()
                                 repo_status_response = response_status.json()
-                                if repo_status_response is None:
-                                    st.error("Unable to index the documents.")
-                                    st.stop()
                                 status = repo_status_response.get("status")
                                 placeholder.text(f"Status: {status}")
-                                if status == "Finished":
+                                if status == "COMPLETED":
+                                    progress_bar.progress(
+                                        100 / 100
+                                    )
                                     st.session_state[
                                         "query_repo_name"
-                                    ] = repo_status_response.get("repo_name")
+                                    ] = repo_name
                                     st.text("Success.")
                                     st.success(
                                         "Successfully completed indexing job. You can start asking questions now."
                                     )
                                     st.session_state["expanded"] = False
                                     break
-                                if status == "Failed":
+                                if status == "FAILED":
                                     st.error("Unable to index the documents.")
                                     st.stop()
-                                if status == "Running":
+                                if status == "RUNNING" or status == "MISSING" or status=="INITIALIZED":
                                     progress_bar.progress(
-                                        repo_status_response.get("progress") / 100
+                                        50 / 100
                                     )
+                            except Exception as err:
+                                print(err)
+                                st.error("Unable to index the documents.")
+                                st.stop()
                             # wait every two seconds for status pull
                             time.sleep(2)
 
@@ -402,12 +393,19 @@ def main():
 
     with st.spinner("Fetching list of available models..."):
         if "model_response" not in st.session_state:
-            st.session_state["model_response"] = requests.get(
-                f'{os.environ.get("TFY_HOST",)}/llm-playground/api/models-enabled',
-                headers={
-                    "Authorization": f"Bearer {os.environ.get('TFY_API_KEY')}",
-                },
-            )
+            try:
+
+                response = requests.get(
+                    settings.LLM_GATEWAY_ENDPOINT + "/api/model/?enabled_only=true",
+                    headers={
+                        "Authorization": f"Bearer {settings.TFY_API_KEY}",
+                    },
+                )
+                st.session_state["model_response"] = response.json()
+            except Exception as err:
+                print(err)
+                st.error("Unable to fetch model list.")
+                st.stop()
 
     if (st.session_state.get("repo_name", "")) or (
         st.session_state.get("query_repo_name", "")
@@ -416,10 +414,10 @@ def main():
             col1, col2 = st.columns([6, 4])
             col1.write("Welcome to QnA Playground. Ask questions on your documents.")
             model_response = st.session_state["model_response"]
-            if model_response.status_code != 200:
-                st.error("Unable to fetch the list of models.")
-                st.stop()
-            model_list = list(model_response.json().keys())
+            model_list = fetch_modelnames(
+                model_response,
+                filters=[],
+            )
             st.session_state["selected_model"] = col2.selectbox(
                 "Model Name: ", model_list, index=0, label_visibility="collapsed"
             )

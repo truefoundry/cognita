@@ -2,45 +2,42 @@ name: llm-qa-indexer
 type: job
 env:
   OPENAI_API_KEY: <openai api key>
-  QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
+  ML_REPO_NAME: <ml repo name>
 image:
   type: build
   build_spec:
     type: dockerfile
     command: >-
-      python -m backend.train.train --ml_repo {{ml_repo}} --chunk_size
-      {{chunk_size}} --repo_name {{repo_name}} --source_uri  {{source_uri}} --embedder {{embedder}} --embedder_config
-      {{embedder_config}} --repo_creds {{repo_creds}} --parsers_map
-      {{parsers_map}}
-    dockerfile_path: ./backend/train/Dockerfile
+      python -m backend.indexer_job --collection_name {{collection_name}} --chunk_size {{chunk_size}} --indexer_job_run_name {{indexer_job_run_name}} --knowledge_source  {{knowledge_source}} --embedder_config {{embedder_config}} --parser_config {{parser_config}} --vector_db_config {{vector_db_config}}
+    dockerfile_path: ./backend/Dockerfile
     build_context_path: ./
   build_source:
     type: local
     local_build: false
 params:
-  - name: ml_repo
+  - name: collection_name
     default: docs-qa-llm
-    param_type: ml_repo
+    param_type: string
   - name: chunk_size
     param_type: string
-  - name: repo_name
+  - name: indexer_job_run_name
     param_type: string
-  - name: source_uri
-    param_type: string
-  - name: embedder
-    default: OpenAI
+  - name: knowledge_source
     param_type: string
   - name: embedder_config
-    default: "{}"
+    default: >-
+      {"provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}
     param_type: string
-  - name: repo_creds
-    default: '""'
-    param_type: string
-  - name: parsers_map
+  - name: parser_config
     default: >-
       {".md": "MarkdownParser", ".pdf": "PdfParserFast", ".txt": "TextParser"}
     param_type: string
     description: Map of file type to parsers
+  - name: vector_db_config
+    default: >-
+        {"provider": "weaviate", "url": ""}
+    param_type: string
+    description: Vector database config
 retries: 0
 trigger:
   type: manual

@@ -1,11 +1,15 @@
 name: llm-qa-backend
 type: service
 env:
-  OPENAI_API_KEY: <OpenAI API Key>
-  ML_REPO: <paste your ML_Repo name>
-  QDRANT_URL: qdrant.<workspace_name>.svc.cluster.local
+  OPENAI_API_KEY: <OPENAI_API_KEY>
+  ML_REPO_NAME: <ML_REPO_NAME>
+  VECTOR_DB_CONFIG: <VECTOR_DB_CONFIG>
+  METADATA_STORE_TYPE: <METADATA_STORE_TYPE>
+  TFY_SERVICE_ROOT_PATH: <TFY_SERVICE_ROOT_PATH>
+  JOB_FQN: <JOB_FQN>
   TFY_API_KEY: <TFY_API_KEY>
   TFY_HOST: <TFY_HOST>
+  LLM_GATEWAY_ENDPOINT: <LLM_GATEWAY_ENDPOINT>
 ports:
   - port: 8000
     expose: false
@@ -15,8 +19,8 @@ image:
   type: build
   build_spec:
     type: dockerfile
-    command: uvicorn --host 0.0.0.0 --port 8000 backend.serve.app:app
-    dockerfile_path: ./backend/serve/Dockerfile
+    command: uvicorn --host 0.0.0.0 --port 8000 backend.app:app
+    dockerfile_path: ./backend/Dockerfile
     build_context_path: ./
   build_source:
     type: local

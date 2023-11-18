@@ -8,11 +8,12 @@ ports:
     protocol: TCP
     app_protocol: http
 env:
-  JOB_FQN: <JOB_FQN>
-  ML_REPO: <ML_Repo name>
+  ML_REPO_NAME: <ML_REPO_NAME>
   TFY_API_KEY: <TFY_API_KEY>
-  BACKEND_URL: http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000
   TFY_HOST: <TFY_HOST>
+  BACKEND_URL: http://llm-qa-backend.<workspace_name>.svc.cluster.local:8000
+  LLM_GATEWAY_ENDPOINT: <LLM_GATEWAY_ENDPOINT>
+  TRUEFOUNDRY_EMBEDDINGS_ENDPOINT: <TRUEFOUNDRY_EMBEDDINGS_ENDPOINT>
 image:
   type: build
   build_spec:

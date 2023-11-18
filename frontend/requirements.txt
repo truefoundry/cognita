@@ -1,5 +1,5 @@
-streamlit==1.24.0
+streamlit==1.28.2
 python-dotenv==1.0.0
-mlfoundry==0.9.4
-servicefoundry==0.9.9
+mlfoundry==0.10.2
+servicefoundry==0.9.24
 streamlit-chat==0.1.1

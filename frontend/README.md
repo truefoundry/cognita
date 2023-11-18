@@ -28,15 +28,16 @@ pip install -r frontend/requirements.txt
 4. Set environment variables
 
 ```
-export ML_REPO=
-export JOB_FQN=
+export ML_REPO_NAME=
 export BACKEND_URL=<server url>
 export TFY_API_KEY=
 export TFY_HOST="https://<organization>.truefoundry.cloud"
+export LLM_GATEWAY_ENDPOINT = <>
+export TRUEFOUNDRY_EMBEDDINGS_ENDPOINT = <>
 ```
 
 4. Run the script
 
 ```
-streamlit run --server.port 8000 frontend/main.py
+streamlit run --server.port 5003 frontend/main.py
 ```

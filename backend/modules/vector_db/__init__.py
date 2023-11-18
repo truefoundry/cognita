@@ -1,0 +1,15 @@
+from backend.modules.vector_db.weaviate import WeaviateVectorDB
+from backend.modules.vector_db.qdrant import QdrantVectorDB
+from backend.modules.vector_db.base import BaseVectorDB
+from backend.base import VectorDBConfig
+
+SUPPORTED_VECTOR_DBS = {"qdrant": QdrantVectorDB, "weaviate": WeaviateVectorDB}
+
+
+def get_vector_db_client(config: VectorDBConfig, collection_name: str) -> BaseVectorDB:
+    if config.provider in SUPPORTED_VECTOR_DBS:
+        return SUPPORTED_VECTOR_DBS[config.provider](
+            config=config, collection_name=collection_name
+        )
+    else:
+        raise ValueError(f"Unknown vector db provider: {config.provider}")
