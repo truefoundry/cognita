@@ -1,8 +1,8 @@
-from backend.modules.metadata_store.mlfoundry import MLFoundryDB
+from backend.modules.metadata_store.mlfoundry import MLFoundry
 from backend.modules.metadata_store.base import BaseMetadataStore
 
 SUPPORTED_METADATA_STORES = {
-    "mlfoundry": MLFoundryDB,
+    "mlfoundry": MLFoundry,
 }
 
 

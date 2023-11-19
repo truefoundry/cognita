@@ -35,7 +35,7 @@ class BaseParams(abc.ABC, BaseModel):
         raise NotImplementedError()
 
 
-class CollectionParams(BaseParams):
+class CollectionMetadata(BaseParams):
     type: Literal[MLRunTypes.COLLECTION] = MLRunTypes.COLLECTION
     description: str | None = None
     embedder_config: EmbedderConfig
@@ -49,7 +49,7 @@ class CollectionParams(BaseParams):
 
     @classmethod
     def from_mlfoundry_params(cls, params):
-        return CollectionParams(
+        return CollectionMetadata(
             description=params.get("description"),
             embedder_config=EmbedderConfig.parse_obj(
                 json.loads(params.get("embedder_config"))
@@ -101,7 +101,7 @@ class Tags(BaseModel):
         use_enum_values = True
 
 
-class MLFoundryDB(BaseMetadataStore):
+class MLFoundry(BaseMetadataStore):
     def __init__(self):
         logging.getLogger("mlfoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -134,7 +134,7 @@ class MLFoundryDB(BaseMetadataStore):
             ).dict(),
         )
         created_collection.log_params(
-            CollectionParams(
+            CollectionMetadata(
                 description=collection.description,
                 embedder_config=collection.embedder_config,
             ).to_mlfoundry_params()
@@ -152,7 +152,7 @@ class MLFoundryDB(BaseMetadataStore):
         ml_run = self.client.get_run_by_name(
             ml_repo=self.ml_repo_name, run_name=collection_name
         )
-        collection_params = CollectionParams.from_mlfoundry_params(
+        collection_params = CollectionMetadata.from_mlfoundry_params(
             params=ml_run.get_params()
         )
         collection = Collection(
@@ -173,7 +173,7 @@ class MLFoundryDB(BaseMetadataStore):
         )
         collections = []
         for ml_run in ml_runs:
-            collection_params = CollectionParams.from_mlfoundry_params(
+            collection_params = CollectionMetadata.from_mlfoundry_params(
                 params=ml_run.get_params()
             )
             collection = Collection(
