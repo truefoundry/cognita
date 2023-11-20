@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from servicefoundry import trigger_job
-from backend.indexer import trigger_job_locally
+from backend.indexer.indexer import trigger_job_locally
 from backend.utils.base import (
     VectorDBConfig,
     CreateCollection,

@@ -9,7 +9,7 @@ from backend.utils.base import (
     VectorDBConfig,
     IndexConfig,
 )
-from backend.indexer import index_collection
+from backend.indexer.indexer import index_collection
 
 # load environment variables
 load_dotenv()
