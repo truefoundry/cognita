@@ -128,8 +128,12 @@ def print_llm_help():
 
 
 def fetch_modelnames(models: list, filters=[]):
+    models_arr = []
+    for key in models:
+        for k in models[key]:
+            models_arr.extend(models[key][k])
     model_names = []
-    for model in models:
+    for model in models_arr:
         model_names.append(f"{model['provider_account_name']}/{model['name']}")
 
     if filters:

@@ -229,7 +229,9 @@ def main():
                         st.session_state["repo_indexes"] = repos.get("collections")
                     except Exception as err:
                         print(err)
-                        st.error("Unable to fetch available repos. Verify the backend API.")
+                        st.error(
+                            "Unable to fetch available repos. Verify the backend API."
+                        )
                         st.stop()
 
         # refresh - fetching any newly added repo
@@ -244,14 +246,16 @@ def main():
                         st.session_state["repo_indexes"] = repos.get("collections")
                     except Exception as err:
                         print(err)
-                        st.error("Unable to fetch available repos. Verify the backend API.")
+                        st.error(
+                            "Unable to fetch available repos. Verify the backend API."
+                        )
                         st.stop()
 
             # fetch list of models available in the playground
             with st.spinner("Fetching list of available models..."):
                 try:
                     model_response = requests.get(
-                       settings.LLM_GATEWAY_ENDPOINT + "/api/model/?enabled_only=true",
+                        settings.LLM_GATEWAY_ENDPOINT + "/api/model/?enabled_only=true",
                         headers={
                             "Authorization": f"Bearer {settings.TFY_API_KEY}",
                         },
@@ -302,14 +306,15 @@ def main():
                 if embedder == "OpenAI":
                     embedder_config = {
                         "provider": "OpenAI",
-                        "config": {"model": "text-embedding-ada-002"}
+                        "config": {"model": "text-embedding-ada-002"},
                     }
 
                 elif embedder == "E5-large-v2":
                     embedder_config = {
                         "provider": "TruefoundryEmbeddings",
-                        "config":{"endpoint_url": settings.TRUEFOUNDRY_EMBEDDINGS_ENDPOINT
-                        }
+                        "config": {
+                            "endpoint_url": settings.TRUEFOUNDRY_EMBEDDINGS_ENDPOINT
+                        },
                     }
 
                 submit_btn = col_ex.button("Process", key="submit_btn")
@@ -347,7 +352,13 @@ def main():
 
                     with st.spinner("Indexing job going on..."):
                         try:
-                            create_collection_and_add_docs(url=BACKEND_URL,collection_name=repo_name,source_uri=st.session_state["artifact_fqn"],embedder_config=embedder_config,chunk_size=chunk_size)
+                            create_collection_and_add_docs(
+                                url=BACKEND_URL,
+                                collection_name=repo_name,
+                                source_uri=st.session_state["artifact_fqn"],
+                                embedder_config=embedder_config,
+                                chunk_size=chunk_size,
+                            )
                         except Exception as err:
                             print(err)
                             st.error("Unable to index the documents.")
@@ -357,18 +368,16 @@ def main():
                         progress_bar = st.progress(0)
                         while True:
                             try:
-                                response_status = requests.get(f"{BACKEND_URL}/collections/{repo_name}/status")
+                                response_status = requests.get(
+                                    f"{BACKEND_URL}/collections/{repo_name}/status"
+                                )
                                 response_status.raise_for_status()
                                 repo_status_response = response_status.json()
                                 status = repo_status_response.get("status")
                                 placeholder.text(f"Status: {status}")
                                 if status == "COMPLETED":
-                                    progress_bar.progress(
-                                        100 / 100
-                                    )
-                                    st.session_state[
-                                        "query_repo_name"
-                                    ] = repo_name
+                                    progress_bar.progress(100 / 100)
+                                    st.session_state["query_repo_name"] = repo_name
                                     st.text("Success.")
                                     st.success(
                                         "Successfully completed indexing job. You can start asking questions now."
@@ -378,10 +387,12 @@ def main():
                                 if status == "FAILED":
                                     st.error("Unable to index the documents.")
                                     st.stop()
-                                if status == "RUNNING" or status == "MISSING" or status=="INITIALIZED":
-                                    progress_bar.progress(
-                                        50 / 100
-                                    )
+                                if (
+                                    status == "RUNNING"
+                                    or status == "MISSING"
+                                    or status == "INITIALIZED"
+                                ):
+                                    progress_bar.progress(50 / 100)
                             except Exception as err:
                                 print(err)
                                 st.error("Unable to index the documents.")
@@ -394,13 +405,13 @@ def main():
     with st.spinner("Fetching list of available models..."):
         if "model_response" not in st.session_state:
             try:
-
                 response = requests.get(
-                    settings.LLM_GATEWAY_ENDPOINT + "/api/model/?enabled_only=true",
+                    settings.LLM_GATEWAY_ENDPOINT + "/api/model/enabled",
                     headers={
                         "Authorization": f"Bearer {settings.TFY_API_KEY}",
                     },
                 )
+                response.raise_for_status()
                 st.session_state["model_response"] = response.json()
             except Exception as err:
                 print(err)
