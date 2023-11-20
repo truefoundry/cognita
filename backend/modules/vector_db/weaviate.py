@@ -3,7 +3,7 @@ import os
 from langchain.vectorstores.weaviate import Weaviate
 from langchain.embeddings.base import Embeddings
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.base import VectorDBConfig
+from backend.utils.base import VectorDBConfig
 
 
 class WeaviateVectorDB(BaseVectorDB):

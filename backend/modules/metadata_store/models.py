@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 import enum
-from backend.base import EmbedderConfig, KnowledgeSource, ParserConfig
+from backend.utils.base import EmbedderConfig, KnowledgeSource, ParserConfig
 from typing import Optional
 from datetime import datetime
 

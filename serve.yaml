@@ -19,7 +19,7 @@ image:
   type: build
   build_spec:
     type: dockerfile
-    command: uvicorn --host 0.0.0.0 --port 8000 backend.app:app
+    command: uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app
     dockerfile_path: ./backend/Dockerfile
     build_context_path: ./
   build_source:

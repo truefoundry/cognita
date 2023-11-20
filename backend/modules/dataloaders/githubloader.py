@@ -1,6 +1,6 @@
 import re
 from git import Repo
-from backend.logger import logger
+from backend.utils.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
 
 

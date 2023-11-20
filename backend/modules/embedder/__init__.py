@@ -1,7 +1,7 @@
 from langchain.embeddings.openai import OpenAIEmbeddings
 from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
 from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
-from backend.base import EmbedderConfig
+from backend.utils.base import EmbedderConfig
 
 # A dictionary mapping embedder names to their respective classes.
 SUPPORTED_EMBEDDERS = {

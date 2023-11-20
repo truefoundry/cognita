@@ -3,7 +3,7 @@ from qdrant_client import QdrantClient
 from langchain.vectorstores.qdrant import Qdrant
 from langchain.embeddings.base import Embeddings
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.base import VectorDBConfig
+from backend.utils.base import VectorDBConfig
 
 
 class QdrantVectorDB(BaseVectorDB):
