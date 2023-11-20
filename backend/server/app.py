@@ -9,14 +9,14 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from servicefoundry import trigger_job
 from backend.indexer import trigger_job_locally
-from backend.base import (
+from backend.utils.base import (
     VectorDBConfig,
     CreateCollection,
     AddDocuments,
     SearchQuery,
     IndexConfig,
 )
-from backend.logger import logger
+from backend.utils.logger import logger
 from backend.modules.embedder import get_embedder
 from backend.modules.vector_db import get_vector_db_client
 from backend.modules.metadata_store import get_metadata_store_client

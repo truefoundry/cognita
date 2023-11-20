@@ -15,7 +15,7 @@ from backend.modules.metadata_store.models import (
 )
 from typing import Literal
 from pydantic import BaseModel
-from backend.base import EmbedderConfig, ParserConfig, KnowledgeSource
+from backend.utils.base import EmbedderConfig, ParserConfig, KnowledgeSource
 from backend.modules.metadata_store.base import BaseMetadataStore
 
 

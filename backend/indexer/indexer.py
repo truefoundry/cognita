@@ -1,7 +1,7 @@
 import os
 import tempfile
-from backend.logger import logger
-from backend.base import IndexConfig
+from backend.utils.logger import logger
+from backend.utils.base import IndexConfig
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus

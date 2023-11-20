@@ -8,7 +8,7 @@ image:
   build_spec:
     type: dockerfile
     command: >-
-      python -m backend.indexer_job --collection_name {{collection_name}} --chunk_size {{chunk_size}} --indexer_job_run_name {{indexer_job_run_name}} --knowledge_source  {{knowledge_source}} --embedder_config {{embedder_config}} --parser_config {{parser_config}} --vector_db_config {{vector_db_config}}
+      python -m backend.indexer.main --collection_name {{collection_name}} --chunk_size {{chunk_size}} --indexer_job_run_name {{indexer_job_run_name}} --knowledge_source  {{knowledge_source}} --embedder_config {{embedder_config}} --parser_config {{parser_config}} --vector_db_config {{vector_db_config}}
     dockerfile_path: ./backend/Dockerfile
     build_context_path: ./
   build_source:

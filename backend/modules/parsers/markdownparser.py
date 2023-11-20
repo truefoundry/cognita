@@ -3,7 +3,7 @@ import typing
 from langchain.docstore.document import Document
 from langchain.text_splitter import MarkdownHeaderTextSplitter
 
-from backend.logger import logger
+from backend.utils.logger import logger
 from backend.modules.parsers.parser import BaseParser
 
 

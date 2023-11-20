@@ -1,6 +1,6 @@
 import os
 import shutil
-from backend.logger import logger
+from backend.utils.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
 
 

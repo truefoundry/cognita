@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import orjson
 from dotenv import load_dotenv
-from backend.base import (
+from backend.utils.base import (
     KnowledgeSource,
     EmbedderConfig,
     ParserConfig,
