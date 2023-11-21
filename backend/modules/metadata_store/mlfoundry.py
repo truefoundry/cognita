@@ -150,6 +150,7 @@ class MLFoundry(BaseMetadataStore):
             name=collection.name,
             description=collection.description,
             embedder_config=collection.embedder_config,
+            chunk_size=collection.chunk_size,
         )
 
     def get_collection_by_name(
