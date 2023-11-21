@@ -45,13 +45,13 @@ class CreateCollection(BaseModel):
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration",
     )
+    chunk_size: int = Field(title="Chunk Size for indexing", ge=1)
 
 
 class AddDocuments(BaseModel):
     knowledge_source: KnowledgeSource = Field(
         title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
     )
-    chunk_size: int = Field(default=1000, title="chunk size for indexing", ge=1)
 
     parser_config: ParserConfig = Field(
         default={

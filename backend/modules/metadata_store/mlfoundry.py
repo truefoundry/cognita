@@ -18,6 +18,8 @@ from pydantic import BaseModel
 from backend.utils.base import EmbedderConfig, ParserConfig, KnowledgeSource
 from backend.modules.metadata_store.base import BaseMetadataStore
 
+DEFAULT_CHUNK_SIZE = 500
+
 
 class MLRunTypes(str, enum.Enum):
     COLLECTION = "COLLECTION"
@@ -39,21 +41,24 @@ class CollectionMetadata(BaseParams):
     type: Literal[MLRunTypes.COLLECTION] = MLRunTypes.COLLECTION
     description: str | None = None
     embedder_config: EmbedderConfig
+    chunk_size: int
 
     def to_mlfoundry_params(self):
         return {
             "type": self.type.value,
             "description": self.description,
             "embedder_config": json.dumps(self.embedder_config.dict()),
+            "chunk_size": str(self.chunk_size),
         }
 
     @classmethod
-    def from_mlfoundry_params(cls, params):
+    def from_mlfoundry_params(cls, params: dict[str, str]):
         return CollectionMetadata(
             description=params.get("description"),
             embedder_config=EmbedderConfig.parse_obj(
                 json.loads(params.get("embedder_config"))
             ),
+            chunk_size=int(params.get("chunk_size", DEFAULT_CHUNK_SIZE)),
         )
 
     class Config:
@@ -77,7 +82,7 @@ class RunParams(BaseParams):
         }
 
     @classmethod
-    def from_mlfoundry_params(cls, params):
+    def from_mlfoundry_params(cls, params: dict[str, str]):
         return RunParams(
             collection_name=params.get("collection_name"),
             parser_config=ParserConfig.parse_obj(
@@ -137,6 +142,7 @@ class MLFoundry(BaseMetadataStore):
             CollectionMetadata(
                 description=collection.description,
                 embedder_config=collection.embedder_config,
+                chunk_size=collection.chunk_size,
             ).to_mlfoundry_params()
         )
         created_collection.end()
@@ -159,6 +165,7 @@ class MLFoundry(BaseMetadataStore):
             name=ml_run.run_name,
             description=collection_params.description,
             embedder_config=collection_params.embedder_config,
+            chunk_size=collection_params.chunk_size,
         )
         if include_runs:
             collection.indexer_job_runs = self.get_collection_indexer_job_runs(
@@ -180,6 +187,7 @@ class MLFoundry(BaseMetadataStore):
                 name=ml_run.run_name,
                 description=collection_params.description,
                 embedder_config=collection_params.embedder_config,
+                chunk_size=collection_params.chunk_size,
             )
             if include_runs:
                 collection.indexer_job_runs = self.get_collection_indexer_job_runs(

@@ -31,6 +31,7 @@ class CollectionBase(BaseModel):
     name: str
     description: str | None = None
     embedder_config: EmbedderConfig
+    chunk_size: int
 
 
 class CollectionCreate(CollectionBase):

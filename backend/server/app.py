@@ -71,6 +71,7 @@ async def create_collection(request: CreateCollection):
                 name=request.name,
                 description=request.description,
                 embedder_config=request.embedder_config,
+                chunk_size=request.chunk_size,
             )
         )
         vector_db_client = get_vector_db_client(
@@ -110,7 +111,7 @@ async def add_documents_to_collection(
                     collection_name=collection_name,
                     indexer_job_run_name=indexer_job_run.name,
                     knowledge_source=request.knowledge_source,
-                    chunk_size=request.chunk_size,
+                    chunk_size=collection.chunk_size,
                     embedder_config=collection.embedder_config,
                     parser_config=request.parser_config,
                     vector_db_config=VECTOR_DB_CONFIG,
@@ -123,7 +124,7 @@ async def add_documents_to_collection(
                     "collection_name": collection_name,
                     "indexer_job_run_name": indexer_job_run.name,
                     "knowledge_source": json.dumps(request.knowledge_source.dict()),
-                    "chunk_size": str(request.chunk_size),
+                    "chunk_size": str(collection.chunk_size),
                     "embedder_config": json.dumps(collection.embedder_config.dict()),
                     "parser_config": json.dumps(request.parser_config.dict()),
                     "vector_db_config": json.dumps(VECTOR_DB_CONFIG.dict()),

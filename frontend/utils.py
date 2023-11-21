@@ -62,7 +62,11 @@ def create_collection_and_add_docs(
     print("Creating collection", collection_name, embedder_config)
     response = requests.post(
         f"{url}/collections",
-        json={"name": collection_name, "embedder_config": embedder_config},
+        json={
+            "name": collection_name,
+            "embedder_config": embedder_config,
+            "chunk_size": chunk_size,
+        },
     )
     response.raise_for_status()
     print("Adding docs to collection", collection_name, source_uri, chunk_size)
@@ -71,7 +75,6 @@ def create_collection_and_add_docs(
         json={
             "collection_name": collection_name,
             "knowledge_source": {"type": "mlfoundry", "config": {"uri": source_uri}},
-            "chunk_size": chunk_size,
             "parser_config": {
                 ".md": "MarkdownParser",
                 ".pdf": "PdfParserFast",
