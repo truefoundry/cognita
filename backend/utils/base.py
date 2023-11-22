@@ -14,7 +14,7 @@ class SourceConfig(BaseModel):
 
 
 class KnowledgeSource(BaseModel):
-    type: Literal["mlfoundry", "github"]
+    type: Literal["mlfoundry", "github", "local"]
     credentials: Optional[dict] = None
     config: SourceConfig
 
@@ -63,7 +63,7 @@ class AddDocuments(BaseModel):
     )
 
 
-class IndexConfig(BaseModel):
+class IndexerConfig(BaseModel):
     collection_name: str = Field(
         title="a unique name to your collection",
     )

@@ -7,7 +7,7 @@ from backend.utils.base import (
     EmbedderConfig,
     ParserConfig,
     VectorDBConfig,
-    IndexConfig,
+    IndexerConfig,
 )
 from backend.indexer.indexer import index_collection
 
@@ -15,7 +15,7 @@ from backend.indexer.indexer import index_collection
 load_dotenv()
 
 
-def parse_args() -> IndexConfig:
+def parse_args() -> IndexerConfig:
     parser = argparse.ArgumentParser(
         prog="train",
         usage="%(prog)s [options]",
@@ -73,7 +73,7 @@ def parse_args() -> IndexConfig:
     )
     args = parser.parse_args()
 
-    return IndexConfig(
+    return IndexerConfig(
         collection_name=args.collection_name,
         indexer_job_run_name=args.indexer_job_run_name,
         knowledge_source=KnowledgeSource.parse_obj(orjson.loads(args.knowledge_source)),

@@ -1,7 +1,7 @@
 import os
 import tempfile
 from backend.utils.logger import logger
-from backend.utils.base import IndexConfig
+from backend.utils.base import IndexerConfig
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
@@ -63,19 +63,15 @@ async def get_all_chunks_from_dir(
     return docs_to_embed
 
 
-async def index_collection(inputs: IndexConfig):
+async def index_collection(inputs: IndexerConfig):
     parsers_map = get_parsers_configurations(inputs.parser_config)
-    embeddings = get_embedder(inputs.embedder_config)
     metadata_store_client = get_metadata_store_client(METADATA_STORE_TYPE)
-    vector_db_client = get_vector_db_client(
-        config=inputs.vector_db_config, collection_name=inputs.collection_name
-    )
 
     # Set the status of the collection run to running
-    metadata_store_client.update_indexer_job_run_status(
-        collection_inderer_job_run_name=inputs.indexer_job_run_name,
-        status=CollectionIndexerJobRunStatus.RUNNING,
-    )
+    # metadata_store_client.update_indexer_job_run_status(
+    #     collection_inderer_job_run_name=inputs.indexer_job_run_name,
+    #     status=CollectionIndexerJobRunStatus.RUNNING,
+    # )
 
     try:
         # Create a temp dir to store the data
@@ -97,7 +93,12 @@ async def index_collection(inputs: IndexConfig):
             parsers_map,
         )
 
-        # Index all the chunks
+        # Create vectors of all the chunks
+        embeddings = get_embedder(inputs.embedder_config)
+        vector_db_client = get_vector_db_client(
+            config=inputs.vector_db_config, 
+            collection_name=inputs.collection_name
+        )
         vector_db_client.upsert_documents(documents=chunks, embeddings=embeddings)
 
         metadata_store_client.update_indexer_job_run_status(
@@ -114,5 +115,5 @@ async def index_collection(inputs: IndexConfig):
         raise e
 
 
-async def trigger_job_locally(inputs: IndexConfig):
+async def trigger_job_locally(inputs: IndexerConfig):
     await index_collection(inputs)

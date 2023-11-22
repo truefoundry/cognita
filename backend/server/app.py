@@ -14,7 +14,7 @@ from backend.utils.base import (
     CreateCollection,
     AddDocuments,
     SearchQuery,
-    IndexConfig,
+    IndexerConfig,
 )
 from backend.utils.logger import logger
 from backend.modules.embedder import get_embedder
@@ -107,7 +107,7 @@ async def add_documents_to_collection(
 
         if settings.DEBUG_MODE:
             await trigger_job_locally(
-                inputs=IndexConfig(
+                inputs=IndexerConfig(
                     collection_name=collection_name,
                     indexer_job_run_name=indexer_job_run.name,
                     knowledge_source=request.knowledge_source,
