@@ -1,22 +1,24 @@
-import mlfoundry
-import mlflow
-import os
+import abc
 import enum
 import json
-import abc
 import logging
+import os
 import warnings
+from typing import Literal
+
+import mlflow
+import mlfoundry
+from pydantic import BaseModel
+
+from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
     Collection,
-    CollectionIndexerJobRunCreate,
+    CollectionCreate,
     CollectionIndexerJobRun,
+    CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
-from typing import Literal
-from pydantic import BaseModel
-from backend.utils.base import EmbedderConfig, ParserConfig, KnowledgeSource
-from backend.modules.metadata_store.base import BaseMetadataStore
+from backend.utils.base import EmbedderConfig, KnowledgeSource, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
 

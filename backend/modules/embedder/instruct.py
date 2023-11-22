@@ -1,4 +1,5 @@
 from typing import Any, List, Optional
+
 import requests
 from langchain.embeddings.base import Embeddings
 

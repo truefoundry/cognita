@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStoreRetriever
 
@@ -25,8 +26,8 @@ class BaseVectorDB(ABC):
         """
         raise NotImplementedError()
 
-    def get_retriver(self, embeddings: Embeddings) -> VectorStoreRetriever:
+    def get_retriever(self, embeddings: Embeddings) -> VectorStoreRetriever:
         """
-        Get a retriver for the collection
+        Get a retriever for the collection
         """
         raise NotImplementedError()

@@ -1,31 +1,33 @@
 import json
+
 import orjson
-from langchain.prompts import PromptTemplate
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains import RetrievalQA
-from backend.settings import settings
 from fastapi import FastAPI, HTTPException, Path
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from langchain.chains.question_answering import load_qa_chain
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
 from servicefoundry import trigger_job
+
 from backend.indexer.indexer import trigger_job_locally
-from backend.utils.base import (
-    VectorDBConfig,
-    CreateCollection,
-    AddDocuments,
-    SearchQuery,
-    IndexerConfig,
-)
-from backend.utils.logger import logger
 from backend.modules.embedder import get_embedder
-from backend.modules.vector_db import get_vector_db_client
+from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
+from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
     CollectionCreate,
     CollectionIndexerJobRunCreate,
 )
-from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
-
+from backend.modules.vector_db import get_vector_db_client
+from backend.settings import settings
+from backend.utils.base import (
+    AddDocuments,
+    CreateCollection,
+    IndexerConfig,
+    SearchQuery,
+    VectorDBConfig,
+)
+from backend.utils.logger import logger
 
 VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
 metadata_store_client = get_metadata_store_client(settings.METADATA_STORE_TYPE)
@@ -195,24 +197,42 @@ async def search(request: SearchQuery):
         vector_db_client = get_vector_db_client(
             config=VECTOR_DB_CONFIG, collection_name=request.collection_name
         )
-        retriever = vector_db_client.get_retriver(
+        retriever = vector_db_client.get_retriever(
             get_embedder(collection.embedder_config)
         )
-        # retriever.search_kwargs["distance_metric"] = "cos"
-        # retriever.search_kwargs["fetch_k"] = request.fetch_k
-        # retriever.search_kwargs["maximal_marginal_relevance"] = request.mmr
-        retriever.search_kwargs["k"] = request.k
 
-        # load LLM model
-        # model_config = json.loads(request.model_configuration)
-        model = TfyPlaygroundLLM(
-            model_name=request.model_configuration.name,
-            parameters=request.model_configuration.parameters,
-            api_key=settings.TFY_API_KEY,
-        )
+        model_name = request.model_configuration.name
+        if "openai" in request.model_configuration.name:
+            model_name = model_name.split("/")[-1]
+            model_mapper = {
+                "gpt-3-5-turbo": "gpt-3.5-turbo-1106",
+                "gpt-4": "gpt-4-1106-preview",
+                "text-davinci-003": "gpt-3.5-turbo-1106",
+                "text-curie-001": "gpt-3.5-turbo-1106",
+                "text-babbage-001": "gpt-3.5-turbo-1106",
+            }
+            model_name = model_mapper.get(model_name, None)
+            model = ChatOpenAI(
+                api_key=settings.OPENAI_API_KEY,
+                max_tokens=request.model_configuration.parameters.get("maximumLength"),
+                model=model_name,
+                streaming=True,
+                timeout=30,
+            )
+            logger.info(f"Loaded OpenAI model: {model_name}")
+        else:
+            model = TfyPlaygroundLLM(
+                model_name=request.model_configuration.name,
+                parameters=request.model_configuration.parameters,
+                api_key=settings.TFY_API_KEY,
+            )
+            logger.info(
+                f"Loaded TrueFoundry LLM model {request.model_configuration.name}"
+            )
+
         # retrieval QA chain
         logger.info("Loading QA chain")
-        qa = RetrievalQA(
+        qa = CustomRetrievalQA(
             combine_documents_chain=load_qa_chain(
                 llm=model,
                 chain_type="stuff",
@@ -225,6 +245,8 @@ async def search(request: SearchQuery):
             return_source_documents=True,
             verbose=True,
         )
+        qa.k = request.k
+        qa.model_openai = model
         logger.info("Making query chain")
         outputs = qa({"query": request.query})
 

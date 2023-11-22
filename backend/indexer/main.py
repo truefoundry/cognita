@@ -1,15 +1,17 @@
 import argparse
 import asyncio
+
 import orjson
 from dotenv import load_dotenv
+
+from backend.indexer.indexer import index_collection
 from backend.utils.base import (
-    KnowledgeSource,
     EmbedderConfig,
+    IndexerConfig,
+    KnowledgeSource,
     ParserConfig,
     VectorDBConfig,
-    IndexerConfig,
 )
-from backend.indexer.indexer import index_collection
 
 # load environment variables
 load_dotenv()

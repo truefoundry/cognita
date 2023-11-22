@@ -1,4 +1,6 @@
+from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
+
 from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
 from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
 from backend.utils.base import EmbedderConfig
@@ -8,6 +10,7 @@ SUPPORTED_EMBEDDERS = {
     "OpenAI": OpenAIEmbeddings,
     "HuggingFaceInstruct": RemoteHuggingFaceInstructEmbeddings,
     "TruefoundryEmbeddings": TruefoundryEmbeddings,
+    "Cohere": CohereEmbeddings,
 }
 
 

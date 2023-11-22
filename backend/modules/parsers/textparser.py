@@ -2,8 +2,7 @@ import os
 import typing
 
 from langchain.docstore.document import Document
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import SpacyTextSplitter, NLTKTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from .parser import BaseParser
 
@@ -20,17 +19,13 @@ class TextParser(BaseParser):
     name = "TextParser"
     supported_file_extensions = [".txt"]
 
-    def __init__(self, chunk_size, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Initializes the TextParser object.
-
-        Parameters:
-            chunk_size (int): Maximum size for each chunk.
         """
-        # Initialize the NLTKTextSplitter for splitting the text into chunks
-        self.text_splitter = NLTKTextSplitter(chunk_size=chunk_size)
+        pass
 
-    async def get_chunks(self, filepath) -> typing.List[Document]:
+    async def get_chunks(self, filepath, max_chunk_size=1000) -> typing.List[Document]:
         """
         Asynchronously loads the text from a text file and returns it in chunks.
 
@@ -40,14 +35,17 @@ class TextParser(BaseParser):
         Returns:
             List[Document]: A list of Document objects, each representing a chunk of the text.
         """
-        # Load the text from the text file using the TextLoader
-        loader = TextLoader(filepath)
-        loader_data = loader.load()
+        content = None
+        with open(filepath, "r") as f:
+            content = f.read()
+        if not content:
+            print("Error reading file: " + filepath)
+            return []
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=max_chunk_size)
+        texts = text_splitter.split_text(content)
 
-        # Set the file path as metadata for the Document
-        loader_data[0].metadata = {"filepath": os.path.basename(filepath)}
+        docs = [
+            Document(page_content=text, metadata={"type": "text"}) for text in texts
+        ]
 
-        # Split the document into chunks using the NLTKTextSplitter
-        loader_data = self.text_splitter.split_documents(loader_data)
-
-        return loader_data
+        return docs

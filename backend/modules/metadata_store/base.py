@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
+
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
     Collection,
-    CollectionIndexerJobRunCreate,
+    CollectionCreate,
     CollectionIndexerJobRun,
+    CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
 

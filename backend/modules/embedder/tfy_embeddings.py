@@ -1,11 +1,12 @@
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-import tqdm
-from langchain.embeddings.base import Embeddings
-from typing import List, Any
 import concurrent.futures
 import math
+from typing import Any, List
+
+import requests
+import tqdm
+from langchain.embeddings.base import Embeddings
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 def _requests_retry_session(

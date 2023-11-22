@@ -1,7 +1,9 @@
-import weaviate
 import os
-from langchain.vectorstores.weaviate import Weaviate
+
+import weaviate
 from langchain.embeddings.base import Embeddings
+from langchain.vectorstores.weaviate import Weaviate
+
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
 
@@ -35,7 +37,7 @@ class WeaviateVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.weaviate_client.schema.delete_class(self.collection_name)
 
-    def get_retriver(self, embeddings: Embeddings):
+    def get_retriever(self, embeddings: Embeddings):
         return Weaviate(
             client=self.weaviate_client,
             embedding=embeddings,

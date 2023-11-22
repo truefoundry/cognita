@@ -1,7 +1,8 @@
 import os
 import shutil
-from backend.utils.logger import logger
+
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.utils.logger import logger
 
 
 class LocalDirLoader(BaseLoader):

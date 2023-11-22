@@ -1,5 +1,6 @@
 import typing
 from abc import ABC, abstractmethod
+
 from langchain.docstore.document import Document
 
 PARSER_REGISTRY = {}
@@ -29,19 +30,6 @@ class BaseParser(ABC):
     BaseParser is an Abstract Base Class (ABC) that serves as a template for all parser objects.
     It contains the common attributes and methods that each parser should implement.
     """
-
-    def __init__(self, max_chunk_size, dry_run=True, *args, **kwargs):
-        """
-        Initializes the BaseParser object.
-
-        Parameters:
-            max_chunk_size (int): Maximum size for each chunk.
-            dry_run (bool): If True, the parser operates in 'dry run' mode.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-        """
-        self.max_chunk_size = max_chunk_size
-        self.dry_run = dry_run
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -76,7 +64,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    async def get_chunks(self, filepath) -> typing.List[Document]:
+    async def get_chunks(self, filepath, max_chunk_size) -> typing.List[Document]:
         """
         Abstract method. This should asynchronously read a file and return its content in chunks.
 

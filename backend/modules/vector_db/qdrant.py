@@ -1,7 +1,9 @@
 import os
-from qdrant_client import QdrantClient
-from langchain.vectorstores.qdrant import Qdrant
+
 from langchain.embeddings.base import Embeddings
+from langchain.vectorstores.qdrant import Qdrant
+from qdrant_client import QdrantClient
+
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
 
@@ -32,7 +34,7 @@ class QdrantVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.qdrant_client.delete_collection(collection_name="{collection_name}")
 
-    def get_retriver(self, embeddings: Embeddings):
+    def get_retriever(self, embeddings: Embeddings):
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,

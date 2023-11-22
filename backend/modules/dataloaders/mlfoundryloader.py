@@ -1,8 +1,10 @@
 import os
+
 import mlfoundry
-from backend.utils.utils import unzip_file
-from backend.utils.logger import logger
+
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.utils.logger import logger
+from backend.utils.utils import unzip_file
 
 
 class MlFoundryLoader(BaseLoader):
