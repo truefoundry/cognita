@@ -4,19 +4,15 @@ import shutil
 import time
 import uuid
 from urllib.parse import urljoin
+
 import mlfoundry
 import requests
 import streamlit as st
 from dotenv import load_dotenv
 from PIL import Image
 from settings import settings
-from utils import (
-    create_collection_and_add_docs,
-    handle_uploaded_file,
-    print_repo_details,
-    fetch_modelnames,
-    fetch_prompts,
-)
+from utils import (create_collection_and_add_docs, fetch_modelnames,
+                   fetch_prompts, handle_uploaded_file, print_repo_details)
 
 # load environment variables
 load_dotenv()
@@ -111,6 +107,7 @@ def ask_question(repo_name, model_name, prompt):
         "query": prompt,
         "model_configuration": model_config,
         "prompt_template": prompt_template,
+        "k": k,
     }
 
     try:
