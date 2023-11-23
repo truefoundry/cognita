@@ -1,10 +1,7 @@
 import typing
 
 from langchain.docstore.document import Document
-from langchain.text_splitter import (
-    MarkdownHeaderTextSplitter,
-    RecursiveCharacterTextSplitter,
-)
+from langchain.text_splitter import MarkdownHeaderTextSplitter, MarkdownTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
 
@@ -51,21 +48,38 @@ class MarkdownParser(BaseParser):
             ("####", "Header4"),
         ]
         chunks_arr = self._recurse_split(
-            content, 0, headers_to_split_on, max_chunk_size
+            content, {}, 0, headers_to_split_on, max_chunk_size
         )
         return chunks_arr
 
-    def _recurse_split(self, content, i, headers_to_split_on, max_chunk_size):
+    def _include_headers_in_content(self, content: str, metadata: dict):
+        if "Header4" in metadata:
+            content = "#### " + metadata["Header4"] + "\n" + content
+        if "Header3" in metadata:
+            content = "### " + metadata["Header3"] + "\n" + content
+        if "Header2" in metadata:
+            content = "## " + metadata["Header2"] + "\n" + content
+        if "Header1" in metadata:
+            content = "# " + metadata["Header1"] + "\n" + content
+        return content
+
+    def _recurse_split(self, content, metadata, i, headers_to_split_on, max_chunk_size):
         if i >= len(headers_to_split_on):
-            # Use recursive text splitter in this case
-            text_splitter = RecursiveCharacterTextSplitter(
+            # Use Markdown Text Splitter in this case
+            text_splitter = MarkdownTextSplitter(
                 chunk_size=max_chunk_size,
                 chunk_overlap=0,
                 length_function=len,
             )
-            texts = text_splitter.create_documents([content])
-            print("Total texts: " + str(len(texts)))
-            return texts
+            texts = text_splitter.split_text(content)
+            chunks_arr = [
+                Document(
+                    page_content=self._include_headers_in_content(text, metadata),
+                    metadata=metadata,
+                )
+                for text in texts
+            ]
+            return chunks_arr
 
         markdown_splitter = MarkdownHeaderTextSplitter(
             headers_to_split_on=headers_to_split_on[i : i + 1]
@@ -73,13 +87,25 @@ class MarkdownParser(BaseParser):
         md_header_splits = markdown_splitter.split_text(content)
         chunks_arr = []
         for document in md_header_splits:
+            document.metadata.update(metadata)
             chunk_length = len(document.page_content)
             if chunk_length <= max_chunk_size:
-                chunks_arr.append(document)
+                chunks_arr.append(
+                    Document(
+                        page_content=self._include_headers_in_content(
+                            document.page_content, metadata
+                        ),
+                        metadata=metadata,
+                    )
+                )
                 continue
             chunks_arr.extend(
                 self._recurse_split(
-                    document.page_content, i + 1, headers_to_split_on, max_chunk_size
+                    document.page_content,
+                    document.metadata,
+                    i + 1,
+                    headers_to_split_on,
+                    max_chunk_size,
                 )
             )
         return chunks_arr

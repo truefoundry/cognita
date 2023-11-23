@@ -1,16 +1,15 @@
 import os
 import tempfile
 
+from langchain.docstore.document import Document
+
 from backend.modules.dataloaders.loader import get_loader_for_knowledge_source
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
-from backend.modules.parsers.parser import (
-    get_parser,
-    get_parser_for_file,
-    get_parsers_configurations,
-    get_parsers_map,
-)
+from backend.modules.parsers.parser import (get_parser, get_parser_for_file,
+                                            get_parsers_configurations,
+                                            get_parsers_map)
 from backend.modules.vector_db import get_vector_db_client
 from backend.utils.base import IndexerConfig, KnowledgeSource
 from backend.utils.logger import logger
@@ -59,7 +58,7 @@ async def get_all_chunks_from_dir(
             # Loop over all the Documents and add them to the docs_to_embed
             # array
             for doc in docs:
-                doc.metadata["filepath"] = filepath
+                doc.metadata["filepath"] = os.path.relpath(filepath, dest_dir)  
                 doc.metadata["source"] = source.config.uri
                 doc.metadata["source_type"] = source.type
                 docs_to_embed.append(doc)
@@ -79,35 +78,33 @@ async def index_collection(inputs: IndexerConfig):
     )
 
     try:
+        chunks: list[Document]
         # Create a temp dir to store the data
-        dest_dir = tempfile.mkdtemp()
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            # Load the data from the source to the dest dir
+            get_loader_for_knowledge_source(inputs.knowledge_source.type).load_data(
+                inputs.knowledge_source.config.uri, tmpdirname
+            )
 
-        # Load the data from the source to the dest dir
-        get_loader_for_knowledge_source(inputs.knowledge_source.type).load_data(
-            inputs.knowledge_source.config.uri, dest_dir
-        )
+            # Count number of documents/files
+            docs_to_index_count = count_docs_to_index_in_dir(tmpdirname)
+            logger.info("Total docs to index: %s", docs_to_index_count)
 
-        # Count number of documents/files
-        docs_to_index_count = count_docs_to_index_in_dir(dest_dir)
-        logger.info("Total docs to index: %s", docs_to_index_count)
-
-        # Index all the documents in the dest dir
-        chunks = await get_all_chunks_from_dir(
-            dest_dir,
-            inputs.knowledge_source,
-            inputs.chunk_size,
-            parsers_map,
-        )
-        # Delere the temp dir
-        os.rmdir(dest_dir)
+            # Index all the documents in the dest dir
+            chunks = await get_all_chunks_from_dir(
+                tmpdirname,
+                inputs.knowledge_source,
+                inputs.chunk_size,
+                parsers_map,
+            )
+        logger.info("Total chunks to index: %s", len(chunks))
+        print(chunks[0])
 
         # Create vectors of all the chunks
         embeddings = get_embedder(inputs.embedder_config)
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )
-
-        logger.info("Total chunks to index: %s", len(chunks))
 
         # Index all the chunks
         vector_db_client.upsert_documents(documents=chunks, embeddings=embeddings)
