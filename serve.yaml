@@ -33,3 +33,4 @@ resources:
   memory_limit: 2000
   ephemeral_storage_request: 2000
   ephemeral_storage_limit: 2000
+
