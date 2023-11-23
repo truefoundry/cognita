@@ -198,7 +198,7 @@ async def search(request: SearchQuery):
             config=VECTOR_DB_CONFIG, collection_name=request.collection_name
         )
         retriever = vector_db_client.get_retriever(
-            get_embedder(collection.embedder_config)
+            get_embedder(collection.embedder_config), request.k
         )
 
         model_name = request.model_configuration.name

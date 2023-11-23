@@ -34,9 +34,9 @@ class QdrantVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.qdrant_client.delete_collection(collection_name="{collection_name}")
 
-    def get_retriever(self, embeddings: Embeddings):
+    def get_retriever(self, embeddings: Embeddings, k: int):
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
             collection_name=self.collection_name,
-        ).as_retriever()
+        ).as_retriever(search_kwargs={"k": k})

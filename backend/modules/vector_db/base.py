@@ -26,7 +26,7 @@ class BaseVectorDB(ABC):
         """
         raise NotImplementedError()
 
-    def get_retriever(self, embeddings: Embeddings) -> VectorStoreRetriever:
+    def get_retriever(self, embeddings: Embeddings, k: int) -> VectorStoreRetriever:
         """
         Get a retriever for the collection
         """

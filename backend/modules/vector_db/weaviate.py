@@ -37,11 +37,11 @@ class WeaviateVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.weaviate_client.schema.delete_class(self.collection_name)
 
-    def get_retriever(self, embeddings: Embeddings):
+    def get_retriever(self, embeddings: Embeddings, k: int):
         return Weaviate(
             client=self.weaviate_client,
             embedding=embeddings,
             index_name=self.collection_name.capitalize(),  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
-        ).as_retriever()
+        ).as_retriever(search_kwargs={"k": k})
