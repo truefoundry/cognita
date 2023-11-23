@@ -31,6 +31,5 @@ orjson==3.9.2
 PyMuPDF==1.23.6
 redis==5.0.1
 beautifulsoup4==4.12.2
-cohere==4.36
 mlfoundry==0.10.2
 servicefoundry==0.9.24
