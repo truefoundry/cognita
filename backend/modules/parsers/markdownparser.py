@@ -85,20 +85,34 @@ class MarkdownParser(BaseParser):
             headers_to_split_on=headers_to_split_on[i : i + 1]
         )
         md_header_splits = markdown_splitter.split_text(content)
-        chunks_arr = []
+        chunks_arr = list[Document]
+        lastAddedChunkSize = max_chunk_size + 1
         for document in md_header_splits:
             document.metadata.update(metadata)
             chunk_length = len(document.page_content)
             if chunk_length <= max_chunk_size:
-                chunks_arr.append(
-                    Document(
-                        page_content=self._include_headers_in_content(
-                            document.page_content, metadata
-                        ),
-                        metadata=metadata,
+                if chunk_length + lastAddedChunkSize <= max_chunk_size:
+                    metadata_header_key = headers_to_split_on[i][1]
+                    lastAddedChunk = chunks_arr.pop()
+                    lastAddedChunk.page_content = f"# {lastAddedChunk.metadata[metadata_header_key]}\n{lastAddedChunk.page_content}\n# {document.metadata[metadata_header_key]}\n{document.page_content}"
+                    lastAddedChunk.metadata[
+                        metadata_header_key
+                    ] = f"{lastAddedChunk.metadata[metadata_header_key]} & {document.metadata[metadata_header_key]}"
+                    chunks_arr.append(lastAddedChunk)
+                    lastAddedChunkSize = chunk_length + lastAddedChunkSize
+                else:
+                    chunks_arr.append(
+                        Document(
+                            page_content=self._include_headers_in_content(
+                                document.page_content, document.metadata
+                            ),
+                            metadata=document.metadata,
+                        )
                     )
-                )
+                    lastAddedChunkSize = chunk_length
                 continue
+            # For next level of headers not merging with previous level
+            lastAddedChunkSize = chunk_length
             chunks_arr.extend(
                 self._recurse_split(
                     document.page_content,
