@@ -94,10 +94,10 @@ class MarkdownParser(BaseParser):
                 if chunk_length + lastAddedChunkSize <= max_chunk_size:
                     metadata_header_key = headers_to_split_on[i][1]
                     lastAddedChunk = chunks_arr.pop()
-                    lastAddedChunk.page_content = f"# {lastAddedChunk.metadata[metadata_header_key]}\n{lastAddedChunk.page_content}\n# {document.metadata[metadata_header_key]}\n{document.page_content}"
+                    lastAddedChunk.page_content = f"# {lastAddedChunk.metadata.get(metadata_header_key,'')}\n{lastAddedChunk.page_content}\n# {document.metadata.get(metadata_header_key,'')}\n{document.page_content}"
                     lastAddedChunk.metadata[
                         metadata_header_key
-                    ] = f"{lastAddedChunk.metadata[metadata_header_key]} & {document.metadata[metadata_header_key]}"
+                    ] = f"{lastAddedChunk.metadata.get(metadata_header_key,'')} & {document.metadata.get(metadata_header_key,'')}"
                     chunks_arr.append(lastAddedChunk)
                     lastAddedChunkSize = chunk_length + lastAddedChunkSize
                 else:
