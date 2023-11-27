@@ -33,3 +33,4 @@ redis==5.0.1
 beautifulsoup4==4.12.2
 mlfoundry==0.10.2
 servicefoundry==0.9.24
+markdownify==0.11.6

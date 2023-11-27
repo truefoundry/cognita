@@ -85,7 +85,7 @@ class MarkdownParser(BaseParser):
             headers_to_split_on=headers_to_split_on[i : i + 1]
         )
         md_header_splits = markdown_splitter.split_text(content)
-        chunks_arr = list[Document]
+        chunks_arr = []
         lastAddedChunkSize = max_chunk_size + 1
         for document in md_header_splits:
             document.metadata.update(metadata)
