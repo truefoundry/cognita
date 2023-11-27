@@ -18,10 +18,8 @@ class Settings(BaseSettings):
     TFY_API_KEY = os.getenv("TFY_API_KEY")
     TFY_HOST = os.getenv("TFY_HOST")
     LLM_GATEWAY_ENDPOINT = os.getenv("LLM_GATEWAY_ENDPOINT")
-    EMBEDDING_CACHE_ENABLED = os.getenv("EMBEDDING_CACHE_ENABLED", "true") == "true"
-    REDIS_URL = os.getenv(
-        "REDIS_URL", "redis://redis-headless.tfy-docs-rag.svc.cluster.local:6379"
-    )
+    EMBEDDING_CACHE_ENABLED = os.getenv("EMBEDDING_CACHE_ENABLED", "false") == "true"
+    REDIS_URL = os.getenv("REDIS_URL", "")
 
     if not ML_REPO_NAME:
         raise ValueError("ML_REPO_NAME is not set")
