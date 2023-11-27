@@ -1,8 +1,11 @@
+from langchain.embeddings import CacheBackedEmbeddings
 from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.storage import RedisStore
 
 from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
 from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
+from backend.settings import settings
 from backend.utils.base import EmbedderConfig
 
 # A dictionary mapping embedder names to their respective classes.
@@ -26,6 +29,22 @@ def get_embedder(embedder_config: EmbedderConfig):
         Embeddings: An instance of the specified embedding class.
     """
     if embedder_config.provider in SUPPORTED_EMBEDDERS:
-        return SUPPORTED_EMBEDDERS[embedder_config.provider](**embedder_config.config)
+        if settings.EMBEDDING_CACHE_ENABLED:
+            underlying_embeddings = SUPPORTED_EMBEDDERS[embedder_config.provider](
+                **embedder_config.config
+            )
+            store = RedisStore(
+                redis_url=settings.REDIS_URL,
+                client_kwargs={"db": 2},
+                namespace="embedding_caches",
+            )
+            embedder = CacheBackedEmbeddings.from_bytes_store(
+                underlying_embeddings, store, namespace=underlying_embeddings.model
+            )
+            return embedder
+        else:
+            return SUPPORTED_EMBEDDERS[embedder_config.provider](
+                **embedder_config.config
+            )
     else:
         raise Exception(f"Embedder {embedder_config.provider} not supported!")
