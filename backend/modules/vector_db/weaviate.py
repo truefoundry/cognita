@@ -8,8 +8,14 @@ from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
 
 
+def decapitalize(s):
+    if not s:
+        return s
+    return s[0].lower() + s[1:]
+
+
 class WeaviateVectorDB(BaseVectorDB):
-    def __init__(self, config: VectorDBConfig, collection_name: str):
+    def __init__(self, config: VectorDBConfig, collection_name: str = None):
         self.url = config.url
         self.api_key = config.api_key
         self.collection_name = collection_name
@@ -33,6 +39,10 @@ class WeaviateVectorDB(BaseVectorDB):
             client=self.weaviate_client,
             index_name=self.collection_name,
         )
+
+    def get_collections(self) -> list[str]:
+        collections = self.weaviate_client.schema.get().get("classes", [])
+        return [decapitalize(collection["class"]) for collection in collections]
 
     def delete_collection(self):
         return self.weaviate_client.schema.delete_class(self.collection_name)

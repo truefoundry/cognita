@@ -20,12 +20,20 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_collections(self) -> list[str]:
+        """
+        Get all collection names from the vector database
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def delete_collection(self):
         """
         Delete a collection from the vector database
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_retriever(self, embeddings: Embeddings, k: int) -> VectorStoreRetriever:
         """
         Get a retriever for the collection

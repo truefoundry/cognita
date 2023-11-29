@@ -9,7 +9,7 @@ from backend.utils.base import VectorDBConfig
 
 
 class QdrantVectorDB(BaseVectorDB):
-    def __init__(self, config: VectorDBConfig, collection_name: str):
+    def __init__(self, config: VectorDBConfig, collection_name: str = None):
         self.url = config.url
         self.api_key = config.api_key
         self.collection_name = collection_name
@@ -30,6 +30,10 @@ class QdrantVectorDB(BaseVectorDB):
             api_key=self.api_key,
             prefer_grpc=True,
         )
+
+    def get_collections(self) -> list[str]:
+        collections = self.qdrant_client.get_collections().collections
+        return [collection.name for collection in collections]
 
     def delete_collection(self):
         return self.qdrant_client.delete_collection(collection_name="{collection_name}")

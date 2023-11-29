@@ -27,7 +27,9 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(self, include_runs=False) -> list[Collection]:
+    def get_collections(
+        self, names: list[str] = None, include_runs=False
+    ) -> list[Collection]:
         """
         Get all collections from the metadata store
         """

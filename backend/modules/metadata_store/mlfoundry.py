@@ -176,13 +176,17 @@ class MLFoundry(BaseMetadataStore):
             )
         return collection
 
-    def get_collections(self, include_runs=False) -> list[Collection]:
+    def get_collections(
+        self, names: list[str] = None, include_runs=False
+    ) -> list[Collection]:
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.type = '{MLRunTypes.COLLECTION.value}'",
         )
         collections = []
         for ml_run in ml_runs:
+            if names and ml_run.run_name not in names:
+                continue
             collection_params = CollectionMetadata.from_mlfoundry_params(
                 params=ml_run.get_params()
             )

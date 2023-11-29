@@ -56,7 +56,12 @@ async def status():
 @app.get("/collections")
 async def get_collections():
     try:
-        collections = metadata_store_client.get_collections(include_runs=True)
+        vector_db_client = get_vector_db_client(config=VECTOR_DB_CONFIG)
+        collection_names = vector_db_client.get_collections()
+        print(collection_names)
+        collections = metadata_store_client.get_collections(
+            names=collection_names, include_runs=False
+        )
         return JSONResponse(
             content={"collections": [obj.dict() for obj in collections]}
         )
