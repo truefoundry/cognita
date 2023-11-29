@@ -1,6 +1,13 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, constr
+
+
+class DocumentMetadata(BaseModel):
+    uri: str
+
+    class Config:
+        allow_extra = True
 
 
 class EmbedderConfig(BaseModel):
@@ -36,8 +43,9 @@ class VectorDBConfig(BaseModel):
 
 
 class CreateCollection(BaseModel):
-    name: str = Field(
+    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(
         title="a unique name to your collection",
+        description="Should only contain lowercase alphanumeric character",
     )
     description: Optional[str] = Field(
         title="a description for your collection",
