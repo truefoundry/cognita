@@ -38,8 +38,8 @@ class ParserConfig(BaseModel):
 
 class VectorDBConfig(BaseModel):
     provider: str
-    url: str
-    api_key: Optional[str]
+    url: Optional[str] = None
+    api_key: Optional[str] = None
 
 
 class LoadedDocument(BaseModel):
