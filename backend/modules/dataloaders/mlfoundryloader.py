@@ -59,8 +59,8 @@ class MlFoundryLoader(BaseLoader):
                 uri = generate_uri(self.type, source_uri, rel_path)
                 docs.append(
                     LoadedDocument(
-                        file_path=full_path,
-                        ext=file_ext,
+                        filepath=full_path,
+                        file_extension=file_ext,
                         metadata=DocumentMetadata(uri=uri),
                     )
                 )

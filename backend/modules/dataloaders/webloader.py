@@ -75,8 +75,8 @@ class WebLoader(BaseLoader):
 
             loaded_documents.append(
                 LoadedDocument(
-                    file_path=dest_path,
-                    ext=".md",
+                    filepath=dest_path,
+                    file_extension=".md",
                     metadata=DocumentMetadata(
                         uri=uri,
                         title=title,

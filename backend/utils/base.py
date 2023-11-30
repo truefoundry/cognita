@@ -43,8 +43,8 @@ class VectorDBConfig(BaseModel):
 
 
 class LoadedDocument(BaseModel):
-    file_path: str
-    ext: str
+    filepath: str
+    file_extension: str
     metadata: DocumentMetadata
 
 

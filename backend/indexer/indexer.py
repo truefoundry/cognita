@@ -45,7 +45,7 @@ async def index_collection(inputs: IndexerConfig):
             logger.info("Total docs to index: %s", docs_to_index_count)
 
             for doc in loaded_documents:
-                parser = get_parser_for_extension(doc.ext, parsers_map)
+                parser = get_parser_for_extension(doc.file_extension, parsers_map)
                 chunks = await parser.get_chunks(
                     doc.filepath,
                     max_chunk_size=inputs.chunk_size,
