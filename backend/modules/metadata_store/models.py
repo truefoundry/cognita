@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -41,4 +41,4 @@ class CollectionCreate(CollectionBase):
 
 
 class Collection(CollectionBase):
-    indexer_job_runs: Optional[list[CollectionIndexerJobRun]] = None
+    indexer_job_runs: Optional[List[CollectionIndexerJobRun]] = None

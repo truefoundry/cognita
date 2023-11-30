@@ -1,12 +1,15 @@
 import os
 import shutil
+from typing import List
 
 import markdownify
 from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.utils.base import DocumentMetadata, LoadedDocument
 from backend.utils.logger import logger
+from backend.utils.utils import generate_uri
 
 
 class WebLoader(BaseLoader):
@@ -32,16 +35,18 @@ class WebLoader(BaseLoader):
         # return data by retrieving the tag content
         return " ".join([str(d) for d in soup])
 
-    def load_data(self, source_uri, dest_dir):
+    def load_data(
+        self, source_uri: str, dest_dir: str, allowed_extensions: List[str]
+    ) -> List[LoadedDocument]:
         """
         Loads data from a local directory specified by the given source URI.
 
         Args:
             source_uri (str): The source URI of the website
             dest_dir (str): The destination directory where the data will be copied to.
-
+            allowed_extensions (List[str]): A list of allowed file extensions.
         Returns:
-            None
+            List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
         """
         # Check if the source_dir is a relative path or an absolute path.
         loader = RecursiveUrlLoader(
@@ -51,11 +56,34 @@ class WebLoader(BaseLoader):
                 markdownify.markdownify(self._remove_tags(x))
             ),
         )
-        docs = loader.load()
-        with open(os.path.join(dest_dir, "index.md"), "w") as file:
-            for doc in docs:
-                text = doc.page_content
-                if "description" in doc.metadata:
-                    text = f"# {doc.metadata['description']}\n"
-                if "title" in doc.metadata:
-                    text = f"# {doc.metadata['title']}\n"
+        documents = loader.load()
+
+        loaded_documents: List[LoadedDocument] = []
+        for doc in documents:
+            title = doc.metadata.get("title")
+            url = doc.metadata.get("source")
+            if title is None or url is None:
+                continue
+
+            file_name = title.replace(" ", "_") + ".md"
+            dest_path = os.path.join(dest_dir, file_name)
+
+            with open(dest_path, "w") as f:
+                f.write(doc.page_content)
+
+            uri = generate_uri(self.type, source_uri, url)
+
+            loaded_documents.append(
+                LoadedDocument(
+                    file_path=dest_path,
+                    ext=".md",
+                    metadata=DocumentMetadata(
+                        uri=uri,
+                        title=title,
+                        source=url,
+                        description=doc.metadata.get("description"),
+                    ),
+                )
+            )
+
+        return loaded_documents

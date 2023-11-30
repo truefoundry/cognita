@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from backend.modules.metadata_store.models import (
     Collection,
@@ -28,8 +29,8 @@ class BaseMetadataStore(ABC):
 
     @abstractmethod
     def get_collections(
-        self, names: list[str] = None, include_runs=False
-    ) -> list[Collection]:
+        self, names: List[str] = None, include_runs=False
+    ) -> List[Collection]:
         """
         Get all collections from the metadata store
         """

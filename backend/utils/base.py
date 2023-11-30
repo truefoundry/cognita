@@ -42,6 +42,12 @@ class VectorDBConfig(BaseModel):
     api_key: Optional[str]
 
 
+class LoadedDocument(BaseModel):
+    file_path: str
+    ext: str
+    metadata: DocumentMetadata
+
+
 class CreateCollection(BaseModel):
     name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(
         title="a unique name to your collection",

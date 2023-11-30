@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import weaviate
 from langchain.embeddings.base import Embeddings
@@ -32,7 +33,7 @@ class WeaviateVectorDB(BaseVectorDB):
         # Skip
         return
 
-    def upsert_documents(self, documents: list[str], embeddings: Embeddings):
+    def upsert_documents(self, documents: List[str], embeddings: Embeddings):
         return Weaviate.from_documents(
             documents=documents,
             embedding=embeddings,
@@ -40,7 +41,7 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=self.collection_name,
         )
 
-    def get_collections(self) -> list[str]:
+    def get_collections(self) -> List[str]:
         collections = self.weaviate_client.schema.get().get("classes", [])
         return [decapitalize(collection["class"]) for collection in collections]
 

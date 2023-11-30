@@ -1,29 +1,36 @@
+import os
 import re
+from typing import List
 
 from git import Repo
 
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.utils.base import DocumentMetadata, LoadedDocument
 from backend.utils.logger import logger
+from backend.utils.utils import generate_uri
 
 
 class GithubLoader(BaseLoader):
     """
     This loader handles Git repositories.
-    The source_uri should be of the form: github://github_repo_url
     """
 
     type = "github"
 
-    def load_data(self, source_uri, dest_dir):
+    def load_data(
+        self, source_uri: str, dest_dir: str, allowed_extensions: List[str]
+    ) -> List[LoadedDocument]:
         """
         Loads data from a Git repository specified by the given source URI. [supports public repository for now]
 
         Args:
-            source_uri (str): The source URI of the Git repository (github://github_repo_url).
+            source_uri (str): The source URI of the Git repository.
             dest_dir (str): The destination directory where the repository will be cloned.
+            allowed_extensions (List[str]): A list of allowed file extensions.
 
         Returns:
-            None
+            List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
+
         """
         if not self.is_valid_github_repo_url(source_uri):
             raise Exception("Invalid Github repo URL")
@@ -32,6 +39,27 @@ class GithubLoader(BaseLoader):
         logger.info("Cloning repo: %s", source_uri)
         Repo.clone_from(source_uri, dest_dir)
         logger.info("Git repo cloned successfully")
+
+        docs: List[LoadedDocument] = []
+        for root, d_names, f_names in os.walk(dest_dir):
+            for f in f_names:
+                if f.startswith("."):
+                    continue
+                full_path = os.path.join(root, f)
+                rel_path = os.path.relpath(full_path, dest_dir)
+                file_ext = os.path.splitext(f)[1]
+                if file_ext not in allowed_extensions:
+                    continue
+                uri = generate_uri(self.type, source_uri, rel_path)
+                docs.append(
+                    LoadedDocument(
+                        file_path=full_path,
+                        ext=file_ext,
+                        metadata=DocumentMetadata(uri=uri),
+                    )
+                )
+
+        return docs
 
     def is_valid_github_repo_url(self, url):
         """

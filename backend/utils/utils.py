@@ -95,3 +95,11 @@ def unzip_file(file_path, dest_dir):
     """
     with zipfile.ZipFile(file_path, "r") as zip_ref:
         zip_ref.extractall(dest_dir)
+
+
+def generate_uri(t, source_uri, path):
+    return "::".join([t, source_uri, path])
+
+
+def retrieve_uri(uri):
+    return uri.split("::")

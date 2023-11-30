@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.qdrant import Qdrant
@@ -31,7 +32,7 @@ class QdrantVectorDB(BaseVectorDB):
             prefer_grpc=True,
         )
 
-    def get_collections(self) -> list[str]:
+    def get_collections(self) -> List[str]:
         collections = self.qdrant_client.get_collections().collections
         return [collection.name for collection in collections]
 

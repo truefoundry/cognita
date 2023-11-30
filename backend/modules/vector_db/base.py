@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -20,7 +21,7 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(self) -> list[str]:
+    def get_collections(self) -> List[str]:
         """
         Get all collection names from the vector database
         """
