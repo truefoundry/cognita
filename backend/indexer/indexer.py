@@ -45,17 +45,19 @@ async def index_collection(inputs: IndexerConfig):
             logger.info("Total docs to index: %s", docs_to_index_count)
 
             for doc in loaded_documents:
-                parser = get_parser_for_extension(doc.file_extension, parsers_map)
+                parser = get_parser_for_extension(
+                    file_extension=doc.file_extension, parsers_map=parsers_map
+                )
                 chunks = await parser.get_chunks(
-                    doc.filepath,
+                    filepath=doc.filepath,
                     max_chunk_size=inputs.chunk_size,
                 )
                 for chunk in chunks:
-                    chunk.metadata.update(doc.metadata)
-                    chunks.append(chunk)
+                    chunk.metadata.update(doc.metadata.dict())
+                    final_documents.append(chunk)
+                logger.info("%s -> %s chunks", doc.filepath, len(chunks))
 
         logger.info("Total chunks to index: %s", len(final_documents))
-        print(final_documents[0])
 
         # Create vectors of all the final_documents
         embeddings = get_embedder(inputs.embedder_config)
