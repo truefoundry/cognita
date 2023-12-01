@@ -55,4 +55,5 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=self.collection_name.capitalize(),  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
+            attributes=["uri"],
         ).as_retriever(search_kwargs={"k": k})
