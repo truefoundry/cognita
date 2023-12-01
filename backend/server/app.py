@@ -10,6 +10,7 @@ from langchain.prompts import PromptTemplate
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
+from backend.modules.dataloaders.mlfoundryloader import MlFoundryLoader
 from backend.modules.embedder import get_embedder
 from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
@@ -23,6 +24,7 @@ from backend.settings import settings
 from backend.utils.base import (
     AddDocuments,
     CreateCollection,
+    GetSignedUrlForUploadDto,
     IndexerConfig,
     SearchQuery,
     VectorDBConfig,
@@ -279,3 +281,9 @@ async def search(request: SearchQuery):
     except Exception as exp:
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))
+
+
+@app.post("/get-signed-url-for-upload")
+async def get_signed_url_for_upload(req: GetSignedUrlForUploadDto):
+    loader = MlFoundryLoader()
+    return JSONResponse(content=loader.upload_data(req.collection_name, req.filepath))

@@ -2,8 +2,13 @@ import os
 from typing import List
 
 import mlfoundry
+from mlfoundry.artifact.truefoundry_artifact_repo import (
+    ArtifactIdentifier,
+    MlFoundryArtifactsRepository,
+)
 
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.settings import settings
 from backend.utils.base import DocumentMetadata, LoadedDocument
 from backend.utils.logger import logger
 from backend.utils.utils import generate_uri, unzip_file
@@ -15,6 +20,35 @@ class MlFoundryLoader(BaseLoader):
     """
 
     type = "mlfoundry"
+
+    def upload_data(self, data_dir_name: str, filepath: str) -> dict:
+        """
+        Uploads data to an MLFoundry data directory.
+
+        Args:
+            data_dir_name (str): The name of the data directory.
+            filepath (str): The path to the file to be uploaded.
+        """
+
+        mlfoundry_client = mlfoundry.get_client()
+
+        # Create a new data directory.
+        logger.info("Creating MLFoundry data directory: {}".format(data_dir_name))
+        dataset = mlfoundry_client.create_data_directory(
+            settings.ML_REPO_NAME, data_dir_name
+        )
+
+        artifact_repo = MlFoundryArtifactsRepository(
+            artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
+            mlflow_client=mlfoundry_client.mlflow_client,
+        )
+        urls = artifact_repo.get_signed_urls_for_write(
+            artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
+            paths=[filepath],
+        )
+        if not urls or len(urls) == 0:
+            raise Exception("Failed to get signed url for write")
+        return urls[0].dict()
 
     def load_data(
         self, source_uri: str, dest_dir: str, allowed_extensions: List[str]

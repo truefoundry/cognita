@@ -142,3 +142,8 @@ class SearchQuery(BaseModel):
         default="""Use the context below to answer question at the end.\n\n{context}\n\nQuestion: {question}\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
+
+
+class GetSignedUrlForUploadDto(BaseModel):
+    collection_name: str
+    filepath: str
