@@ -47,10 +47,11 @@ class WebLoader(BaseLoader):
         Returns:
             List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
         """
-        # Check if the source_dir is a relative path or an absolute path.
+        max_depth = source_config.dict().get("max_depth", 2)
+        print("WebLoader -> max_depth: ", max_depth)
         loader = RecursiveUrlLoader(
             url=source_config.uri,
-            max_depth=source_config.dict().get("max_depth", 2),
+            max_depth=max_depth,
             extractor=lambda x: self._remove_empty_lines(
                 markdownify.markdownify(self._remove_tags(x))
             ),
