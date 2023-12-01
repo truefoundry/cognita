@@ -1,5 +1,6 @@
 import json
 
+import mlfoundry
 import orjson
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,10 @@ from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
+from mlfoundry.artifact.truefoundry_artifact_repo import (
+    ArtifactIdentifier,
+    MlFoundryArtifactsRepository,
+)
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
@@ -16,12 +21,19 @@ from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate, CollectionIndexerJobRunCreate)
+    CollectionCreate,
+    CollectionIndexerJobRunCreate,
+)
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (AddDocuments, CreateCollection,
-                                GetPresignedURLsForWriteDto, IndexerConfig,
-                                SearchQuery, VectorDBConfig)
+from backend.utils.base import (
+    AddDocuments,
+    CreateCollection,
+    IndexerConfig,
+    SearchQuery,
+    UploadToDataDirectoryDto,
+    VectorDBConfig,
+)
 from backend.utils.logger import logger
 
 VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
@@ -276,10 +288,25 @@ async def search(request: SearchQuery):
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-@app.post("/get-presigned-urls-for-write")
-async def get_presigned_urls_for_write(req: GetPresignedURLsForWriteDto):
-    loader = MlFoundryLoader()
-    data = loader.get_presigned_urls_for_write(req.collection_name, req.filepaths)
+@app.post("/upload-to-data-directory")
+async def upload_to_data_directory(req: UploadToDataDirectoryDto):
+    mlfoundry_client = mlfoundry.get_client()
+
+    # Create a new data directory.
+    dataset = mlfoundry_client.create_data_directory(
+        settings.ML_REPO_NAME, req.collection_name
+    )
+
+    artifact_repo = MlFoundryArtifactsRepository(
+        artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
+        mlflow_client=mlfoundry_client.mlflow_client,
+    )
+
+    urls = artifact_repo.get_signed_urls_for_write(
+        artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
+        paths=req.filepaths,
+    )
+    data = [url.dict() for url in urls]
     return JSONResponse(
-        content={"data": data}
+        content={"data": data, "data_directory_fqn": dataset.fqn},
     )

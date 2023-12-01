@@ -145,6 +145,6 @@ class SearchQuery(BaseModel):
     )
 
 
-class GetPresignedURLsForWriteDto(BaseModel):
+class UploadToDataDirectoryDto(BaseModel):
     collection_name: str
     filepaths: List[str]
