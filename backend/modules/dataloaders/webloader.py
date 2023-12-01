@@ -58,13 +58,13 @@ class WebLoader(BaseLoader):
         documents = loader.load()
 
         loaded_documents: List[LoadedDocument] = []
-        for doc in documents:
-            title = doc.metadata.get("title")
-            url = doc.metadata.get("source")
+        for i, doc in enumerate(documents):
+            title: str = doc.metadata.get("title")
+            url: str = doc.metadata.get("source")
             if title is None or url is None:
                 continue
 
-            file_name = title.replace(" ", "_") + ".md"
+            file_name = f"file_{i}.md"
             dest_path = os.path.join(dest_dir, file_name)
 
             with open(dest_path, "w") as f:
