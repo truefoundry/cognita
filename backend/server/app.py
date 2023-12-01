@@ -16,19 +16,12 @@ from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
-    CollectionIndexerJobRunCreate,
-)
+    CollectionCreate, CollectionIndexerJobRunCreate)
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (
-    AddDocuments,
-    CreateCollection,
-    GetSignedUrlForUploadDto,
-    IndexerConfig,
-    SearchQuery,
-    VectorDBConfig,
-)
+from backend.utils.base import (AddDocuments, CreateCollection,
+                                GetPresignedURLsForWriteDto, IndexerConfig,
+                                SearchQuery, VectorDBConfig)
 from backend.utils.logger import logger
 
 VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
@@ -283,7 +276,10 @@ async def search(request: SearchQuery):
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-@app.post("/get-signed-url-for-upload")
-async def get_signed_url_for_upload(req: GetSignedUrlForUploadDto):
+@app.post("/get-presigned-urls-for-write")
+async def get_presigned_urls_for_write(req: GetPresignedURLsForWriteDto):
     loader = MlFoundryLoader()
-    return JSONResponse(content=loader.upload_data(req.collection_name, req.filepath))
+    data = loader.get_presigned_urls_for_write(req.collection_name, req.filepaths)
+    return JSONResponse(
+        content={"data": data}
+    )

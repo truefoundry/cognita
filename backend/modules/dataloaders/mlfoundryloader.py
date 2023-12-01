@@ -21,13 +21,15 @@ class MlFoundryLoader(BaseLoader):
 
     type = "mlfoundry"
 
-    def upload_data(self, data_dir_name: str, filepath: str) -> dict:
+    def get_presigned_urls_for_write(
+        self, data_dir_name: str, filepaths: List[str]
+    ) -> List[dict]:
         """
-        Uploads data to an MLFoundry data directory.
+        Uploads data to an MLFoundry data directory using Presigned URLs.
 
         Args:
             data_dir_name (str): The name of the data directory.
-            filepath (str): The path to the file to be uploaded.
+            filepaths (List[str]): The paths to the file to be uploaded.
         """
 
         mlfoundry_client = mlfoundry.get_client()
@@ -44,11 +46,9 @@ class MlFoundryLoader(BaseLoader):
         )
         urls = artifact_repo.get_signed_urls_for_write(
             artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
-            paths=[filepath],
+            paths=filepaths,
         )
-        if not urls or len(urls) == 0:
-            raise Exception("Failed to get signed url for write")
-        return urls[0].dict()
+        return [url.dict() for url in urls]
 
     def load_data(
         self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]

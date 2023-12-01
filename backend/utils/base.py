@@ -1,13 +1,13 @@
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Extra, Field, constr
 
 
 class DocumentMetadata(BaseModel):
     uri: str
 
     class Config:
-        allow_extra = True
+        extra = Extra.allow
 
 
 class EmbedderConfig(BaseModel):
@@ -20,7 +20,7 @@ class SourceConfig(BaseModel):
     uri: str
 
     class Config:
-        allow_extra = True
+        extra = Extra.allow
 
 
 class KnowledgeSource(BaseModel):
@@ -34,7 +34,7 @@ class KnowledgeSource(BaseModel):
 
 class ParserConfig(BaseModel):
     class Config:
-        allow_extra = True
+        extra = Extra.allow
 
 
 class VectorDBConfig(BaseModel):
@@ -145,6 +145,6 @@ class SearchQuery(BaseModel):
     )
 
 
-class GetSignedUrlForUploadDto(BaseModel):
+class GetPresignedURLsForWriteDto(BaseModel):
     collection_name: str
-    filepath: str
+    filepaths: List[str]
