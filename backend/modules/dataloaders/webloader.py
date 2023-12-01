@@ -8,7 +8,6 @@ from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
 from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
-from backend.utils.logger import logger
 from backend.utils.utils import generate_uri
 
 
@@ -19,12 +18,12 @@ class WebLoader(BaseLoader):
 
     type = "web"
 
-    def _remove_empty_lines(text):
+    def _remove_empty_lines(self, text):
         lines = text.split("\n")
         non_empty_lines = [line for line in lines if line.strip() != ""]
         return "\n".join(non_empty_lines)
 
-    def _remove_tags(html):
+    def _remove_tags(self, html):
         # parse html content
         soup = Soup(html, "html.parser")
 
