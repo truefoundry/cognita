@@ -39,12 +39,14 @@ class MlFoundryLoader(BaseLoader):
         )
         dataset = mlfoundry_client.get_data_directory_by_fqn(source_config.uri)
         download_info = dataset.download(path=dest_dir)
-
+        data_directory_files = os.path.join(download_info, "files")
         # If the downloaded data directory is a ZIP file, unzip its contents.
-        for file in os.listdir(download_info):
-            f = os.path.join(download_info, file)
-            if f.endswith(".zip"):
-                unzip_file(f, download_info)
+        for file_name in os.listdir(data_directory_files):
+            if file_name.endswith(".zip"):
+                unzip_file(
+                    file_path=os.path.join(data_directory_files, file_name),
+                    dest_dir=data_directory_files,
+                )
 
         logger.info("Downloaded data directory to: {}".format(dest_dir))
 
