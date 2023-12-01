@@ -24,7 +24,7 @@ class SourceConfig(BaseModel):
 
 
 class KnowledgeSource(BaseModel):
-    type: Literal["mlfoundry", "github", "local"]
+    type: Literal["mlfoundry", "github", "local", "web"]
     credentials: Optional[dict] = None
     config: SourceConfig
 
