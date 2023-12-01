@@ -19,6 +19,9 @@ class EmbedderConfig(BaseModel):
 class SourceConfig(BaseModel):
     uri: str
 
+    class Config:
+        allow_extra = True
+
 
 class KnowledgeSource(BaseModel):
     type: Literal["mlfoundry", "github", "local"]
@@ -30,8 +33,6 @@ class KnowledgeSource(BaseModel):
 
 
 class ParserConfig(BaseModel):
-    pass
-
     class Config:
         allow_extra = True
 

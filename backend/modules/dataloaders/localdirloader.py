@@ -3,7 +3,7 @@ import shutil
 from typing import List
 
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.utils.base import DocumentMetadata, LoadedDocument
+from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
 from backend.utils.logger import logger
 from backend.utils.utils import generate_uri
 
@@ -16,20 +16,20 @@ class LocalDirLoader(BaseLoader):
     type = "local"
 
     def load_data(
-        self, source_uri: str, dest_dir: str, allowed_extensions: List[str]
+        self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:
         """
         Loads data from a local directory specified by the given source URI.
 
         Args:
-            source_uri (str): The source URI of the local directory.
+            source_config (SourceConfig): The source URI of the local directory.
             dest_dir (str): The destination directory where the data will be copied to.
             allowed_extensions (List[str]): A list of allowed file extensions.
 
         Returns:
             List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
         """
-        source_dir = source_uri
+        source_dir = source_config.uri
 
         # Check if the source_dir is a relative path or an absolute path.
         if not os.path.isabs(source_dir):
@@ -58,7 +58,7 @@ class LocalDirLoader(BaseLoader):
                 file_ext = os.path.splitext(f)[1]
                 if file_ext not in allowed_extensions:
                     continue
-                uri = generate_uri(self.type, source_uri, rel_path)
+                uri = generate_uri(self.type, source_config.uri, rel_path)
                 docs.append(
                     LoadedDocument(
                         filepath=full_path,

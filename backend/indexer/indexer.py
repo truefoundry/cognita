@@ -36,9 +36,7 @@ async def index_collection(inputs: IndexerConfig):
             # Load the data from the source to the dest dir
             loaded_documents = get_loader_for_knowledge_source(
                 inputs.knowledge_source.type
-            ).load_data(
-                inputs.knowledge_source.config.uri, tmpdirname, parsers_map.keys()
-            )
+            ).load_data(inputs.knowledge_source.config, tmpdirname, parsers_map.keys())
 
             # Count number of documents/files/urls loaded
             docs_to_index_count = len(loaded_documents)

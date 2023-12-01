@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.utils.base import DocumentMetadata, LoadedDocument
+from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
 from backend.utils.logger import logger
 from backend.utils.utils import generate_uri
 
@@ -36,13 +36,13 @@ class WebLoader(BaseLoader):
         return " ".join([str(d) for d in soup])
 
     def load_data(
-        self, source_uri: str, dest_dir: str, allowed_extensions: List[str]
+        self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:
         """
         Loads data from a local directory specified by the given source URI.
 
         Args:
-            source_uri (str): The source URI of the website
+            source_config (SourceConfig): The source URI of the website
             dest_dir (str): The destination directory where the data will be copied to.
             allowed_extensions (List[str]): A list of allowed file extensions.
         Returns:
@@ -50,8 +50,8 @@ class WebLoader(BaseLoader):
         """
         # Check if the source_dir is a relative path or an absolute path.
         loader = RecursiveUrlLoader(
-            url=source_uri,
-            max_depth=2,
+            url=source_config.uri,
+            max_depth=source_config.dict().get("max_depth", 2),
             extractor=lambda x: self._remove_empty_lines(
                 markdownify.markdownify(self._remove_tags(x))
             ),
@@ -71,7 +71,7 @@ class WebLoader(BaseLoader):
             with open(dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            uri = generate_uri(self.type, source_uri, url)
+            uri = generate_uri(self.type, source_config.uri, url)
 
             loaded_documents.append(
                 LoadedDocument(

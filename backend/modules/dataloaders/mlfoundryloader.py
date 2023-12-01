@@ -9,7 +9,7 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
 
 from backend.modules.dataloaders.loader import BaseLoader
 from backend.settings import settings
-from backend.utils.base import DocumentMetadata, LoadedDocument
+from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
 from backend.utils.logger import logger
 from backend.utils.utils import generate_uri, unzip_file
 
@@ -51,13 +51,13 @@ class MlFoundryLoader(BaseLoader):
         return urls[0].dict()
 
     def load_data(
-        self, source_uri: str, dest_dir: str, allowed_extensions: List[str]
+        self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:
         """
         Loads data from an MLFoundry data directory specified by the given source URI.
 
         Args:
-            source_uri (str): Data directory FQN (data-dir:truefoundry/llama-finetune-test/akash-test).
+            source_config (SourceConfig): Data directory FQN (data-dir:truefoundry/llama-finetune-test/akash-test).
             dest_dir (str): The destination directory where the data directory will be downloaded to.
             allowed_extensions (List[str]): A list of allowed file extensions.
 
@@ -68,8 +68,10 @@ class MlFoundryLoader(BaseLoader):
         mlfoundry_client = mlfoundry.get_client()
 
         # Get information about the data directory and download it to the destination directory.
-        logger.info("Downloading MLFoundry data directory: {}".format(source_uri))
-        dataset = mlfoundry_client.get_data_directory_by_fqn(source_uri)
+        logger.info(
+            "Downloading MLFoundry data directory: {}".format(source_config.uri)
+        )
+        dataset = mlfoundry_client.get_data_directory_by_fqn(source_config.uri)
         download_info = dataset.download(path=dest_dir)
 
         # If the downloaded data directory is a ZIP file, unzip its contents.
@@ -90,7 +92,7 @@ class MlFoundryLoader(BaseLoader):
                 file_ext = os.path.splitext(f)[1]
                 if file_ext not in allowed_extensions:
                     continue
-                uri = generate_uri(self.type, source_uri, rel_path)
+                uri = generate_uri(self.type, source_config.uri, rel_path)
                 docs.append(
                     LoadedDocument(
                         filepath=full_path,
