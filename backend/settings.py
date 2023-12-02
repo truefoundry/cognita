@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     Settings class to hold all the environment variables for FastAPI
     """
 
+    DOCUMENT_ID_SEPARATOR = "::"
+
     DEBUG_MODE = True if os.getenv("DEBUG_MODE", "false") == "true" else False
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
     ML_REPO_NAME = os.getenv("ML_REPO_NAME")

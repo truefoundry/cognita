@@ -56,7 +56,7 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=self.collection_name,  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
-            attributes=["uri"],
+            attributes=["document_id"],
         ).as_retriever(search_kwargs={"k": k})
 
     def list_documents_in_collection(self) -> List[dict]:
@@ -66,7 +66,7 @@ class WeaviateVectorDB(BaseVectorDB):
         # https://weaviate.io/developers/weaviate/search/aggregate#retrieve-groupedby-properties
         response = (
             self.weaviate_client.query.aggregate(self.collection_name)
-            .with_group_by_filter(["uri"])
+            .with_group_by_filter(["document_id"])
             .with_fields("groupedBy { value }")
             .do()
         )
@@ -77,12 +77,12 @@ class WeaviateVectorDB(BaseVectorDB):
         for group in groups:
             documents.append(
                 {
-                    "uri": group.get("groupedBy", {}).get("value", ""),
+                    "document_id": group.get("groupedBy", {}).get("value", ""),
                 }
             )
         return documents
 
-    def delete_documents(self, uri_match: str):
+    def delete_documents(self, document_id_match: str):
         """
         Delete documents from the collection that match given `uri_match`
         """
@@ -90,8 +90,8 @@ class WeaviateVectorDB(BaseVectorDB):
         self.weaviate_client.batch.delete_objects(
             class_name=self.collection_name,
             where={
-                "path": ["uri"],
+                "path": ["document_id"],
                 "operator": "Like",
-                "valueText": uri_match,
+                "valueText": document_id_match,
             },
         )

@@ -8,7 +8,7 @@ from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
 from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
-from backend.utils.utils import generate_uri
+from backend.utils.utils import generate_document_id
 
 
 class WebLoader(BaseLoader):
@@ -71,14 +71,14 @@ class WebLoader(BaseLoader):
             with open(dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            uri = generate_uri(self.type, source_config.uri, url)
+            document_id = generate_document_id(self.type, source_config.uri, url)
 
             loaded_documents.append(
                 LoadedDocument(
                     filepath=dest_path,
                     file_extension=".md",
                     metadata=DocumentMetadata(
-                        uri=uri,
+                        document_id=document_id,
                         title=title,
                         source=url,
                         description=doc.metadata.get("description"),

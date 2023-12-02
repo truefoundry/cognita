@@ -54,7 +54,7 @@ class QdrantVectorDB(BaseVectorDB):
         """
         response = self.qdrant_client.search_groups(
             collection_name=self.collection_name,
-            group_by="uri",
+            group_by="document_id",
             query_vector=None,
             limit=1000,
             group_size=1,
@@ -64,12 +64,12 @@ class QdrantVectorDB(BaseVectorDB):
         for group in groups:
             documents.append(
                 {
-                    "uri": group.id,
+                    "document_id": group.id,
                 }
             )
         return documents
 
-    def delete_document(self, uri_match: str):
+    def delete_document(self, document_id_match: str):
         """
         Delete a document from the collection
         """
@@ -80,8 +80,8 @@ class QdrantVectorDB(BaseVectorDB):
                 filter=models.Filter(
                     must=[
                         models.FieldCondition(
-                            key="uri",
-                            match=models.MatchText(text=uri_match),
+                            key="document_id",
+                            match=models.MatchText(text=document_id_match),
                         ),
                     ],
                 )

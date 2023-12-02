@@ -4,7 +4,12 @@ from pydantic import BaseModel, Extra, Field, constr
 
 
 class DocumentMetadata(BaseModel):
-    uri: str
+    """
+    Document metadata saved in vector store
+    document_id: str unique identifier for the document source
+    """
+
+    document_id: str
 
     class Config:
         extra = Extra.allow

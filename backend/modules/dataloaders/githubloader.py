@@ -7,7 +7,7 @@ from git import Repo
 from backend.modules.dataloaders.loader import BaseLoader
 from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
 from backend.utils.logger import logger
-from backend.utils.utils import generate_uri
+from backend.utils.utils import generate_document_id
 
 
 class GithubLoader(BaseLoader):
@@ -50,12 +50,14 @@ class GithubLoader(BaseLoader):
                 file_ext = os.path.splitext(f)[1]
                 if file_ext not in allowed_extensions:
                     continue
-                uri = generate_uri(self.type, source_config.uri, rel_path)
+                document_id = generate_document_id(
+                    self.type, source_config.uri, rel_path
+                )
                 docs.append(
                     LoadedDocument(
                         filepath=full_path,
                         file_extension=file_ext,
-                        metadata=DocumentMetadata(uri=uri),
+                        metadata=DocumentMetadata(document_id=document_id),
                     )
                 )
 

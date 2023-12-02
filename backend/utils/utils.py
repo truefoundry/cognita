@@ -3,6 +3,8 @@ import zipfile
 import tiktoken
 from langchain.docstore.document import Document
 
+from backend.settings import settings
+
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     """
@@ -97,20 +99,20 @@ def unzip_file(file_path, dest_dir):
         zip_ref.extractall(dest_dir)
 
 
-def generate_uri(t, source_uri, path):
+def generate_document_id(t, source_uri, path):
     """
-    Generates unique uri for a given document. We use the following format:
+    Generates unique document id for a given document. We use the following format:
     <type>::<source_uri>::<path>
     This will be used to identify the document in the database.
     """
-    return "::".join([t, source_uri, path])
+    return f"{settings.DOCUMENT_ID_SEPARATOR}".join([t, source_uri, path])
 
 
-def retrieve_uri(uri):
+def retrieve_source_from_document_id(document_id: str):
     """
-    Retrives params from uri for a given document. We use the following format:
+    Retrives params from document id for a given document. We use the following format:
     <type>::<source_uri>::<path>
     This will be used to identify the document in the database.
-    reverse for `generate_uri`
+    reverse for `generate_document_id`
     """
-    return uri.split("::")
+    return document_id.split(settings.DOCUMENT_ID_SEPARATOR)
