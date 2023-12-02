@@ -14,8 +14,10 @@ class ChromaVectorDB(BaseVectorDB):
         self.client = chromadb.Client()
 
     def create_collection(self, embeddings: Embeddings):
-        # No provision to create a empty collection
-        return
+        self.client.get_or_create_collection(
+            name=self.collection_name,
+            embedding_function=None,
+        )
 
     def upsert_documents(self, documents, embeddings: Embeddings):
         return Chroma.from_documents(
@@ -38,3 +40,9 @@ class ChromaVectorDB(BaseVectorDB):
             embedding_function=embeddings,
             collection_name=self.collection_name,
         ).as_retriever(search_kwargs={"k": k})
+
+    def list_documents_in_collection(self) -> List[dict]:
+        return []
+
+    def delete_documents(self, document_id_match: str):
+        pass

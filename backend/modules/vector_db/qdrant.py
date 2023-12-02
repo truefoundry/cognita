@@ -69,7 +69,7 @@ class QdrantVectorDB(BaseVectorDB):
             )
         return documents
 
-    def delete_document(self, document_id_match: str):
+    def delete_documents(self, document_id_match: str):
         """
         Delete a document from the collection
         """

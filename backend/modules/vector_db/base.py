@@ -49,8 +49,8 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_document(self, uri_match: str):
+    def delete_documents(self, document_id_match: str):
         """
-        Delete documents from the collection with matching `uri_match`
+        Delete documents from the collection with matching `document_id_match`
         """
         raise NotImplementedError()

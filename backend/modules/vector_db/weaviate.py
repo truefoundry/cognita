@@ -27,12 +27,25 @@ class WeaviateVectorDB(BaseVectorDB):
                 {"auth_client_secret": weaviate.AuthApiKey(api_key=self.api_key)}
                 if self.api_key
                 else {}
-            )
+            ),
         )
 
     def create_collection(self, embeddings: Embeddings):
-        # Skip
-        return
+        self.weaviate_client.schema.create_class(
+            {
+                "class": self.collection_name,
+                "properties": [
+                    {
+                        "name": "text",
+                        "dataType": ["text"],
+                    },
+                    {
+                        "name": "document_id",
+                        "dataType": ["text"],
+                    },
+                ],
+            }
+        )
 
     def upsert_documents(self, documents: List[str], embeddings: Embeddings):
         return Weaviate.from_documents(
@@ -84,10 +97,10 @@ class WeaviateVectorDB(BaseVectorDB):
 
     def delete_documents(self, document_id_match: str):
         """
-        Delete documents from the collection that match given `uri_match`
+        Delete documents from the collection that match given `document_id_match`
         """
         # https://weaviate.io/developers/weaviate/manage-data/delete#delete-multiple-objects
-        self.weaviate_client.batch.delete_objects(
+        res = self.weaviate_client.batch.delete_objects(
             class_name=self.collection_name,
             where={
                 "path": ["document_id"],
@@ -95,3 +108,8 @@ class WeaviateVectorDB(BaseVectorDB):
                 "valueText": document_id_match,
             },
         )
+        deleted_vectors = res.get("results", {}).get("successful", None)
+        if deleted_vectors:
+            print(
+                f"Deleted {deleted_vectors} documents from the collection that match {document_id_match}"
+            )

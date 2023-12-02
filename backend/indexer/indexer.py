@@ -15,6 +15,7 @@ from backend.modules.parsers.parser import (
 from backend.modules.vector_db import get_vector_db_client
 from backend.utils.base import IndexerConfig
 from backend.utils.logger import logger
+from backend.utils.utils import get_base_document_id
 
 METADATA_STORE_TYPE = os.environ.get("METADATA_STORE_TYPE", "mlfoundry")
 
@@ -57,10 +58,24 @@ async def index_collection(inputs: IndexerConfig):
 
         logger.info("Total chunks to index: %s", len(final_documents))
 
+        if len(final_documents) == 0:
+            logger.warning("No documents to index")
+            metadata_store_client.update_indexer_job_run_status(
+                collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                status=CollectionIndexerJobRunStatus.COMPLETED,
+            )
+            return
+
         # Create vectors of all the final_documents
         embeddings = get_embedder(inputs.embedder_config)
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
+        )
+
+        # Delete all the documents with the same base_document_id to avoid duplicate data
+        # Note: Since by default we enable embedding caching, we do not have to bare any embedding model cost
+        vector_db_client.delete_documents(
+            document_id_match=get_base_document_id(source=inputs.knowledge_source)
         )
 
         # Index all the final_documents
