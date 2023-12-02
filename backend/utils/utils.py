@@ -98,8 +98,19 @@ def unzip_file(file_path, dest_dir):
 
 
 def generate_uri(t, source_uri, path):
+    """
+    Generates unique uri for a given document. We use the following format:
+    <type>::<source_uri>::<path>
+    This will be used to identify the document in the database.
+    """
     return "::".join([t, source_uri, path])
 
 
 def retrieve_uri(uri):
+    """
+    Retrives params from uri for a given document. We use the following format:
+    <type>::<source_uri>::<path>
+    This will be used to identify the document in the database.
+    reverse for `generate_uri`
+    """
     return uri.split("::")

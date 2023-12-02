@@ -40,3 +40,17 @@ class BaseVectorDB(ABC):
         Get a retriever for the collection
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def list_documents_in_collection(self) -> List[dict]:
+        """
+        List all documents in a collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def delete_document(self, uri_match: str):
+        """
+        Delete documents from the collection with matching `uri_match`
+        """
+        raise NotImplementedError()

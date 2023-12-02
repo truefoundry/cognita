@@ -41,6 +41,13 @@ class VectorDBConfig(BaseModel):
     provider: str
     url: Optional[str] = None
     api_key: Optional[str] = None
+    config: Optional[dict] = None
+
+
+class EmbeddingCacheConfig(BaseModel):
+    provider: str
+    url: Optional[str] = None
+    config: Optional[dict] = None
 
 
 class LoadedDocument(BaseModel):

@@ -6,7 +6,7 @@ from langchain.storage import RedisStore
 from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
 from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
 from backend.settings import settings
-from backend.utils.base import EmbedderConfig
+from backend.utils.base import EmbedderConfig, EmbeddingCacheConfig
 
 # A dictionary mapping embedder names to their respective classes.
 SUPPORTED_EMBEDDERS = {
@@ -15,6 +15,16 @@ SUPPORTED_EMBEDDERS = {
     "TruefoundryEmbeddings": TruefoundryEmbeddings,
     "Cohere": CohereEmbeddings,
 }
+
+
+def get_embedding_cache_store(config: EmbeddingCacheConfig):
+    if config.provider == "redis":
+        return RedisStore(
+            redis_url=config.url,
+            client_kwargs=config.config,
+            namespace="embedding_caches",
+        )
+    raise Exception(f"Embedding cache provider {config.provider} not supported!")
 
 
 def get_embedder(embedder_config: EmbedderConfig):
@@ -33,11 +43,7 @@ def get_embedder(embedder_config: EmbedderConfig):
             underlying_embeddings = SUPPORTED_EMBEDDERS[embedder_config.provider](
                 **embedder_config.config
             )
-            store = RedisStore(
-                redis_url=settings.REDIS_URL,
-                client_kwargs={"db": 2},
-                namespace="embedding_caches",
-            )
+            store = get_embedding_cache_store(settings.EMBEDDING_CACHE_CONFIG)
             embedder = CacheBackedEmbeddings.from_bytes_store(
                 underlying_embeddings, store, namespace=underlying_embeddings.model
             )

@@ -1,6 +1,9 @@
 import os
 
+import orjson
 from pydantic import BaseSettings
+
+from backend.utils.base import EmbeddingCacheConfig, VectorDBConfig
 
 
 class Settings(BaseSettings):
@@ -19,7 +22,15 @@ class Settings(BaseSettings):
     TFY_HOST = os.getenv("TFY_HOST")
     LLM_GATEWAY_ENDPOINT = os.getenv("LLM_GATEWAY_ENDPOINT")
     EMBEDDING_CACHE_ENABLED = os.getenv("EMBEDDING_CACHE_ENABLED", "false") == "true"
-    REDIS_URL = os.getenv("REDIS_URL", "")
+    EMBEDDING_CACHE_CONFIG = (
+        EmbeddingCacheConfig.parse_obj(
+            orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
+        )
+        if os.getenv("EMBEDDING_CACHE_CONFIG", None)
+        else None
+    )
+    if EMBEDDING_CACHE_ENABLED and not EMBEDDING_CACHE_CONFIG:
+        raise ValueError("EMBEDDING_CACHE_CONFIG is not set")
 
     if not ML_REPO_NAME:
         raise ValueError("ML_REPO_NAME is not set")

@@ -19,7 +19,8 @@ class WeaviateVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig, collection_name: str = None):
         self.url = config.url
         self.api_key = config.api_key
-        self.collection_name = collection_name
+        if collection_name:
+            self.collection_name = collection_name.capitalize()
         self.weaviate_client = weaviate.Client(
             url=self.url,
             **(
@@ -52,8 +53,45 @@ class WeaviateVectorDB(BaseVectorDB):
         return Weaviate(
             client=self.weaviate_client,
             embedding=embeddings,
-            index_name=self.collection_name.capitalize(),  # Weaviate stores the index name as capitalized
+            index_name=self.collection_name,  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
             attributes=["uri"],
         ).as_retriever(search_kwargs={"k": k})
+
+    def list_documents_in_collection(self) -> List[dict]:
+        """
+        List all documents in a collection
+        """
+        # https://weaviate.io/developers/weaviate/search/aggregate#retrieve-groupedby-properties
+        response = (
+            self.weaviate_client.query.aggregate(self.collection_name)
+            .with_group_by_filter(["uri"])
+            .with_fields("groupedBy { value }")
+            .do()
+        )
+        groups: List[dict] = (
+            response.get("data", {}).get("Aggregate", {}).get(self.collection_name, [])
+        )
+        documents: List[dict] = []
+        for group in groups:
+            documents.append(
+                {
+                    "uri": group.get("groupedBy", {}).get("value", ""),
+                }
+            )
+        return documents
+
+    def delete_documents(self, uri_match: str):
+        """
+        Delete documents from the collection that match given `uri_match`
+        """
+        # https://weaviate.io/developers/weaviate/manage-data/delete#delete-multiple-objects
+        self.weaviate_client.batch.delete_objects(
+            class_name=self.collection_name,
+            where={
+                "path": ["uri"],
+                "operator": "Like",
+                "valueText": uri_match,
+            },
+        )

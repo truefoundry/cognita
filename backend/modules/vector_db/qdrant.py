@@ -3,7 +3,7 @@ from typing import List
 
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.qdrant import Qdrant
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
@@ -47,3 +47,43 @@ class QdrantVectorDB(BaseVectorDB):
             embeddings=embeddings,
             collection_name=self.collection_name,
         ).as_retriever(search_kwargs={"k": k})
+
+    def list_documents_in_collection(self) -> List[dict]:
+        """
+        List all documents in a collection
+        """
+        response = self.qdrant_client.search_groups(
+            collection_name=self.collection_name,
+            group_by="uri",
+            query_vector=None,
+            limit=1000,
+            group_size=1,
+        )
+        groups = response.groups
+        documents: List[dict] = []
+        for group in groups:
+            documents.append(
+                {
+                    "uri": group.id,
+                }
+            )
+        return documents
+
+    def delete_document(self, uri_match: str):
+        """
+        Delete a document from the collection
+        """
+        # https://qdrant.tech/documentation/concepts/filtering/#full-text-match
+        self.qdrant_client.delete(
+            collection_name=self.collection_name,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="uri",
+                            match=models.MatchText(text=uri_match),
+                        ),
+                    ],
+                )
+            ),
+        )
