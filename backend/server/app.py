@@ -2,6 +2,7 @@ import json
 
 import mlfoundry
 import orjson
+import requests
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,6 +14,7 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
     MlFoundryArtifactsRepository,
 )
 from servicefoundry import trigger_job
+from servicefoundry.lib.auth.servicefoundry_session import ServiceFoundrySession
 
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules.dataloaders.mlfoundryloader import MlFoundryLoader
@@ -309,4 +311,30 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     data = [url.dict() for url in urls]
     return JSONResponse(
         content={"data": data, "data_directory_fqn": dataset.fqn},
+    )
+
+
+@app.get("/models")
+async def get_enabled_models():
+    session = ServiceFoundrySession()
+
+    if not session:
+        raise Exception(
+            f"Unauthenticated: Please login using servicefoundry login --host <https://example-domain.com>"
+        )
+    url = f"{settings.LLM_GATEWAY_ENDPOINT}/api/model/enabled"
+    headers = {"Authorization": f"Bearer {session.access_token}"}
+    try:
+        response = requests.get(url=url, headers=headers)
+        response.raise_for_status()
+    except Exception as ex:
+        raise Exception(f"Error fetching the models: {ex}") from ex
+    data: dict[str, dict[str, list[dict]]] = response.json()
+    enabled_models = []
+    for provider_accounts in data.values():
+        for models in provider_accounts.values():
+            enabled_models.extend(models)
+
+    return JSONResponse(
+        content={"models": enabled_models},
     )
