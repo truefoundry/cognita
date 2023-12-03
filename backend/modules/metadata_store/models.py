@@ -10,6 +10,9 @@ from backend.utils.base import EmbedderConfig, KnowledgeSource, ParserConfig
 class CollectionIndexerJobRunStatus(str, enum.Enum):
     INITIALIZED = "INITIALIZED"
     RUNNING = "RUNNING"
+    DATA_LOADING_STARTED = "DATA_LOADING_STARTED"
+    CHUNKING_STARTED = "CHUNKING_STARTED"
+    EMBEDDING_STARTED = "EMBEDDING_STARTED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 

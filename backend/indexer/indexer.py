@@ -27,7 +27,7 @@ async def index_collection(inputs: IndexerConfig):
     # Set the status of the collection run to running
     metadata_store_client.update_indexer_job_run_status(
         collection_inderer_job_run_name=inputs.indexer_job_run_name,
-        status=CollectionIndexerJobRunStatus.RUNNING,
+        status=CollectionIndexerJobRunStatus.DATA_LOADING_STARTED,
     )
 
     try:
@@ -39,6 +39,11 @@ async def index_collection(inputs: IndexerConfig):
                 inputs.knowledge_source.type
             ).load_data(inputs.knowledge_source.config, tmpdirname, parsers_map.keys())
 
+            metadata_store_client.update_indexer_job_run_status(
+                collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                status=CollectionIndexerJobRunStatus.CHUNKING_STARTED,
+            )
+            
             # Count number of documents/files/urls loaded
             docs_to_index_count = len(loaded_documents)
             logger.info("Total docs to index: %s", docs_to_index_count)
@@ -60,13 +65,13 @@ async def index_collection(inputs: IndexerConfig):
 
         if len(final_documents) == 0:
             logger.warning("No documents to index")
-            metadata_store_client.update_indexer_job_run_status(
-                collection_inderer_job_run_name=inputs.indexer_job_run_name,
-                status=CollectionIndexerJobRunStatus.COMPLETED,
-            )
             return
 
         # Create vectors of all the final_documents
+        metadata_store_client.update_indexer_job_run_status(
+            collection_inderer_job_run_name=inputs.indexer_job_run_name,
+            status=CollectionIndexerJobRunStatus.EMBEDDING_STARTED,
+        )
         embeddings = get_embedder(inputs.embedder_config)
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
