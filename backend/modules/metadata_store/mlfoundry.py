@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import warnings
-from typing import Literal
+from typing import List, Literal
 
 import mlflow
 import mlfoundry
@@ -177,8 +177,8 @@ class MLFoundry(BaseMetadataStore):
         return collection
 
     def get_collections(
-        self, names: list[str] = None, include_runs=False
-    ) -> list[Collection]:
+        self, names: List[str] = None, include_runs=False
+    ) -> List[Collection]:
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.type = '{MLRunTypes.COLLECTION.value}'",

@@ -77,16 +77,6 @@ class BaseParser(ABC):
         pass
 
 
-def get_parser(name, *args, **kwargs) -> BaseParser:
-    """
-    Returns the parser class for the given name.
-    """
-    global PARSER_REGISTRY
-    if name not in PARSER_REGISTRY:
-        raise ValueError(f"No parser registered with name {name}")
-    return PARSER_REGISTRY[name]["cls"](*args, **kwargs)
-
-
 def get_parsers_map():
     """
     Returns a mapping of file extensions to parser names.
@@ -120,14 +110,16 @@ def get_parsers_configurations(input_parsers_config):
     return parsers_map
 
 
-def get_parser_for_file(filepath, parsers_map):
+def get_parser_for_extension(
+    file_extension, parsers_map, *args, **kwargs
+) -> BaseParser:
     """
-    Given the input file and parsers mapping, return the appropriate mapper.
+    Given the file_extension and parsers mapping, return the appropriate mapper.
     """
-    if not "." in filepath:
-        return None
-    file_extension = filepath.split(".")[-1]
-    file_extension = "." + file_extension
     if file_extension not in parsers_map:
-        return None
-    return parsers_map[file_extension]
+        raise ValueError(f"Loaded doc with extension {file_extension} is not supported")
+    global PARSER_REGISTRY
+    name = parsers_map[file_extension]
+    if name not in PARSER_REGISTRY:
+        raise ValueError(f"No parser registered with name {name}")
+    return PARSER_REGISTRY[name]["cls"](*args, **kwargs)

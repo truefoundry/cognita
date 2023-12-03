@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -20,7 +21,7 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(self) -> list[str]:
+    def get_collections(self) -> List[str]:
         """
         Get all collection names from the vector database
         """
@@ -37,5 +38,19 @@ class BaseVectorDB(ABC):
     def get_retriever(self, embeddings: Embeddings, k: int) -> VectorStoreRetriever:
         """
         Get a retriever for the collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def list_documents_in_collection(self) -> List[dict]:
+        """
+        List all documents in a collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def delete_documents(self, document_id_match: str):
+        """
+        Delete documents from the collection with matching `document_id_match`
         """
         raise NotImplementedError()

@@ -1,13 +1,18 @@
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Extra, Field, constr
 
 
 class DocumentMetadata(BaseModel):
-    uri: str
+    """
+    Document metadata saved in vector store
+    document_id: str unique identifier for the document source
+    """
+
+    document_id: str
 
     class Config:
-        allow_extra = True
+        extra = Extra.allow
 
 
 class EmbedderConfig(BaseModel):
@@ -19,9 +24,12 @@ class EmbedderConfig(BaseModel):
 class SourceConfig(BaseModel):
     uri: str
 
+    class Config:
+        extra = Extra.allow
+
 
 class KnowledgeSource(BaseModel):
-    type: Literal["mlfoundry", "github", "local"]
+    type: Literal["mlfoundry", "github", "local", "web"]
     credentials: Optional[dict] = None
     config: SourceConfig
 
@@ -30,16 +38,27 @@ class KnowledgeSource(BaseModel):
 
 
 class ParserConfig(BaseModel):
-    pass
-
     class Config:
-        allow_extra = True
+        extra = Extra.allow
 
 
 class VectorDBConfig(BaseModel):
     provider: str
-    url: str
-    api_key: Optional[str]
+    url: Optional[str] = None
+    api_key: Optional[str] = None
+    config: Optional[dict] = None
+
+
+class EmbeddingCacheConfig(BaseModel):
+    provider: str
+    url: Optional[str] = None
+    config: Optional[dict] = None
+
+
+class LoadedDocument(BaseModel):
+    filepath: str
+    file_extension: str
+    metadata: DocumentMetadata
 
 
 class CreateCollection(BaseModel):
@@ -136,3 +155,8 @@ class SearchQuery(BaseModel):
         default="""Use the context below to answer question at the end.\n\n{context}\n\nQuestion: {question}\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
+
+
+class UploadToDataDirectoryDto(BaseModel):
+    collection_name: str
+    filepaths: List[str]

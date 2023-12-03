@@ -1,8 +1,9 @@
 import os
+from typing import List
 
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.qdrant import Qdrant
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
@@ -31,12 +32,14 @@ class QdrantVectorDB(BaseVectorDB):
             prefer_grpc=True,
         )
 
-    def get_collections(self) -> list[str]:
+    def get_collections(self) -> List[str]:
         collections = self.qdrant_client.get_collections().collections
         return [collection.name for collection in collections]
 
     def delete_collection(self):
-        return self.qdrant_client.delete_collection(collection_name="{collection_name}")
+        return self.qdrant_client.delete_collection(
+            collection_name=self.collection_name
+        )
 
     def get_retriever(self, embeddings: Embeddings, k: int):
         return Qdrant(
@@ -44,3 +47,43 @@ class QdrantVectorDB(BaseVectorDB):
             embeddings=embeddings,
             collection_name=self.collection_name,
         ).as_retriever(search_kwargs={"k": k})
+
+    def list_documents_in_collection(self) -> List[dict]:
+        """
+        List all documents in a collection
+        """
+        response = self.qdrant_client.search_groups(
+            collection_name=self.collection_name,
+            group_by="document_id",
+            query_vector=None,
+            limit=1000,
+            group_size=1,
+        )
+        groups = response.groups
+        documents: List[dict] = []
+        for group in groups:
+            documents.append(
+                {
+                    "document_id": group.id,
+                }
+            )
+        return documents
+
+    def delete_documents(self, document_id_match: str):
+        """
+        Delete a document from the collection
+        """
+        # https://qdrant.tech/documentation/concepts/filtering/#full-text-match
+        self.qdrant_client.delete(
+            collection_name=self.collection_name,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="document_id",
+                            match=models.MatchText(text=document_id_match),
+                        ),
+                    ],
+                )
+            ),
+        )

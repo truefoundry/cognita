@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import List
 
 from langchain.docstore.document import Document
 
@@ -7,64 +8,16 @@ from backend.modules.dataloaders.loader import get_loader_for_knowledge_source
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
-from backend.modules.parsers.parser import (get_parser, get_parser_for_file,
-                                            get_parsers_configurations,
-                                            get_parsers_map)
+from backend.modules.parsers.parser import (
+    get_parser_for_extension,
+    get_parsers_configurations,
+)
 from backend.modules.vector_db import get_vector_db_client
-from backend.utils.base import IndexerConfig, KnowledgeSource
+from backend.utils.base import IndexerConfig
 from backend.utils.logger import logger
+from backend.utils.utils import get_base_document_id
 
 METADATA_STORE_TYPE = os.environ.get("METADATA_STORE_TYPE", "mlfoundry")
-
-
-def count_docs_to_index_in_dir(target_dir: str) -> int:
-    count = 0
-    parsers_map = get_parsers_map()
-    for dirpath, dirnames, filenames in os.walk(target_dir):
-        for file in filenames:
-            for ext in parsers_map.keys():
-                if file.endswith(ext):
-                    count += 1
-    return count
-
-
-async def get_all_chunks_from_dir(
-    dest_dir,
-    source: KnowledgeSource,
-    max_chunk_size,
-    parsers_map,
-):
-    """
-    This function loops over all the files in the dest dir and uses
-    parsers to get the chunks from all the files. It returns the chunks
-    as an array where each element is the chunk along with some metadata
-    """
-    docs_to_embed = []
-    for dirpath, dirnames, filenames in os.walk(dest_dir):
-        for file in filenames:
-            if file.startswith("."):
-                continue
-            # Get the file extension using os.path
-            file_ext = os.path.splitext(file)[1]
-            if file_ext not in parsers_map.keys():
-                continue
-            parser_name = get_parser_for_file(file, parsers_map)
-            if parser_name is None:
-                logger.info(f"Skipping file {file} as it is not supported")
-                continue
-            parser = get_parser(parser_name)
-            filepath = os.path.join(dirpath, file)
-            docs = await parser.get_chunks(filepath, max_chunk_size=max_chunk_size)
-            # Loop over all the Documents and add them to the docs_to_embed
-            # array
-            for doc in docs:
-                doc.metadata["filepath"] = os.path.relpath(filepath, dest_dir)  
-                doc.metadata["source"] = source.config.uri
-                doc.metadata["source_type"] = source.type
-                docs_to_embed.append(doc)
-
-            logger.info("%s -> %s chunks", filepath, len(docs))
-    return docs_to_embed
 
 
 async def index_collection(inputs: IndexerConfig):
@@ -78,36 +31,57 @@ async def index_collection(inputs: IndexerConfig):
     )
 
     try:
-        chunks: list[Document]
+        final_documents: List[Document] = []
         # Create a temp dir to store the data
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Load the data from the source to the dest dir
-            get_loader_for_knowledge_source(inputs.knowledge_source.type).load_data(
-                inputs.knowledge_source.config.uri, tmpdirname
-            )
+            loaded_documents = get_loader_for_knowledge_source(
+                inputs.knowledge_source.type
+            ).load_data(inputs.knowledge_source.config, tmpdirname, parsers_map.keys())
 
-            # Count number of documents/files
-            docs_to_index_count = count_docs_to_index_in_dir(tmpdirname)
+            # Count number of documents/files/urls loaded
+            docs_to_index_count = len(loaded_documents)
             logger.info("Total docs to index: %s", docs_to_index_count)
 
-            # Index all the documents in the dest dir
-            chunks = await get_all_chunks_from_dir(
-                tmpdirname,
-                inputs.knowledge_source,
-                inputs.chunk_size,
-                parsers_map,
-            )
-        logger.info("Total chunks to index: %s", len(chunks))
-        print(chunks[0])
+            for doc in loaded_documents:
+                parser = get_parser_for_extension(
+                    file_extension=doc.file_extension, parsers_map=parsers_map
+                )
+                chunks = await parser.get_chunks(
+                    filepath=doc.filepath,
+                    max_chunk_size=inputs.chunk_size,
+                )
+                for chunk in chunks:
+                    chunk.metadata.update(doc.metadata.dict())
+                    final_documents.append(chunk)
+                logger.info("%s -> %s chunks", doc.filepath, len(chunks))
 
-        # Create vectors of all the chunks
+        logger.info("Total chunks to index: %s", len(final_documents))
+
+        if len(final_documents) == 0:
+            logger.warning("No documents to index")
+            metadata_store_client.update_indexer_job_run_status(
+                collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                status=CollectionIndexerJobRunStatus.COMPLETED,
+            )
+            return
+
+        # Create vectors of all the final_documents
         embeddings = get_embedder(inputs.embedder_config)
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )
 
-        # Index all the chunks
-        vector_db_client.upsert_documents(documents=chunks, embeddings=embeddings)
+        # Delete all the documents with the same base_document_id to avoid duplicate data
+        # Note: Since by default we enable embedding caching, we do not have to bare any embedding model cost
+        vector_db_client.delete_documents(
+            document_id_match=get_base_document_id(source=inputs.knowledge_source)
+        )
+
+        # Index all the final_documents
+        vector_db_client.upsert_documents(
+            documents=final_documents, embeddings=embeddings
+        )
 
         metadata_store_client.update_indexer_job_run_status(
             collection_inderer_job_run_name=inputs.indexer_job_run_name,

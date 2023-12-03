@@ -1,9 +1,14 @@
 from backend.modules.vector_db.base import BaseVectorDB
+from backend.modules.vector_db.chroma import ChromaVectorDB
 from backend.modules.vector_db.qdrant import QdrantVectorDB
 from backend.modules.vector_db.weaviate import WeaviateVectorDB
 from backend.utils.base import VectorDBConfig
 
-SUPPORTED_VECTOR_DBS = {"qdrant": QdrantVectorDB, "weaviate": WeaviateVectorDB}
+SUPPORTED_VECTOR_DBS = {
+    "qdrant": QdrantVectorDB,
+    "weaviate": WeaviateVectorDB,
+    "chroma": ChromaVectorDB,
+}
 
 
 def get_vector_db_client(
