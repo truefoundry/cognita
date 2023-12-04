@@ -1,9 +1,8 @@
-from backend.modules.metadata_store.mlfoundry import MLFoundry
 from backend.modules.metadata_store.base import BaseMetadataStore
+from backend.modules.metadata_store.console_store import ConsoleStore
+from backend.modules.metadata_store.mlfoundry_store import MLFoundryStore
 
-SUPPORTED_METADATA_STORES = {
-    "mlfoundry": MLFoundry,
-}
+SUPPORTED_METADATA_STORES = {"mlfoundry": MLFoundryStore, "console": ConsoleStore}
 
 
 def get_metadata_store_client(type: str, *args, **kwargs) -> BaseMetadataStore:
