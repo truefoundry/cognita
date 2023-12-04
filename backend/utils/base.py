@@ -43,17 +43,17 @@ class ParserConfig(BaseModel):
 
 
 class QdrantDBConfig(BaseModel):
-    provider: constr(regex="^qdrant$") = "qdrant"
+    provider: Literal["qdrant"]
     url: Optional[str] = None
     api_key: Optional[str] = None
 
 
 class ChromaDBConfig(BaseModel):
-    provider: constr(regex="^chroma$") = "chroma"
+    provider: Literal["chroma"]
 
 
 class WeaviateDBConfig(BaseModel):
-    provider: constr(regex="^weaviate$") = "weaviate"
+    provider: Literal["weaviate"]
     url: Optional[str] = None
     api_key: Optional[str] = None
 
