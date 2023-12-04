@@ -4,7 +4,7 @@ import tiktoken
 from langchain.docstore.document import Document
 
 from backend.settings import settings
-from backend.utils.base import KnowledgeSource
+from backend.utils.base import DataSource
 
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
@@ -100,7 +100,7 @@ def unzip_file(file_path, dest_dir):
         zip_ref.extractall(dest_dir)
 
 
-def get_base_document_id(source: KnowledgeSource):
+def get_base_document_id(source: DataSource):
     """
     Generates unique document id for a given source. We use the following format:
     <type>::<source_uri>

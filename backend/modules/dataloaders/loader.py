@@ -61,7 +61,7 @@ class BaseLoader(ABC):
         pass
 
 
-def get_loader_for_knowledge_source(type, *args, **kwargs) -> BaseLoader:
+def get_loader_for_data_source(type, *args, **kwargs) -> BaseLoader:
     """
     Returns the object of the loader class for given type
 

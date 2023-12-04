@@ -28,7 +28,7 @@ class SourceConfig(BaseModel):
         extra = Extra.allow
 
 
-class KnowledgeSource(BaseModel):
+class DataSource(BaseModel):
     type: Literal["mlfoundry", "github", "local", "web"]
     credentials: Optional[dict] = None
     config: SourceConfig
@@ -76,7 +76,7 @@ class CreateCollection(BaseModel):
 
 
 class AddDocuments(BaseModel):
-    knowledge_source: KnowledgeSource = Field(
+    data_source: DataSource = Field(
         title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
     )
 
@@ -97,7 +97,7 @@ class IndexerConfig(BaseModel):
     indexer_job_run_name: str = Field(
         title="a unique name to your indexing run",
     )
-    knowledge_source: KnowledgeSource = Field(
+    data_source: DataSource = Field(
         title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
     )
     chunk_size: int = Field(default=1000, title="chunk size for indexing", ge=1)

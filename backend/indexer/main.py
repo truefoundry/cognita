@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 from backend.indexer.indexer import index_collection
 from backend.utils.base import (
+    DataSource,
     EmbedderConfig,
     IndexerConfig,
-    KnowledgeSource,
     ParserConfig,
     VectorDBConfig,
 )
@@ -37,8 +37,8 @@ def parse_args() -> IndexerConfig:
         help="a unique name to your indexing run",
     )
     parser.add_argument(
-        "--knowledge_source",
-        dest="knowledge_source",
+        "--data_source",
+        dest="data_source",
         type=str,
         required=True,
         help="Source of documents to be indexed. Can be s3, github or mlfoundry artifact",
@@ -78,7 +78,7 @@ def parse_args() -> IndexerConfig:
     return IndexerConfig(
         collection_name=args.collection_name,
         indexer_job_run_name=args.indexer_job_run_name,
-        knowledge_source=KnowledgeSource.parse_obj(orjson.loads(args.knowledge_source)),
+        data_source=DataSource.parse_obj(orjson.loads(args.data_source)),
         chunk_size=args.chunk_size,
         embedder_config=EmbedderConfig.parse_obj(orjson.loads(args.embedder_config)),
         parser_config=ParserConfig.parse_obj(orjson.loads(args.parser_config)),
