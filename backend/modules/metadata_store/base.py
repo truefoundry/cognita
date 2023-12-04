@@ -69,3 +69,15 @@ class BaseMetadataStore(ABC):
         Update the status of a collection indexer job run
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def log_metrics_for_indexer_job_run(
+        self,
+        collection_inderer_job_run_name: str,
+        metric_dict: dict[str, int | float],
+        step: int = 0,
+    ):
+        """
+        Log metrics for indexer job run
+        """
+        raise NotImplementedError()

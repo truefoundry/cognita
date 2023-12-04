@@ -8,7 +8,7 @@ from typing import List, Literal
 
 import mlflow
 import mlfoundry
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.models import (
@@ -106,6 +106,7 @@ class Tags(BaseModel):
 
     class Config:
         use_enum_values = True
+        extra = Extra.allow
 
 
 class MLFoundry(BaseMetadataStore):
@@ -266,13 +267,25 @@ class MLFoundry(BaseMetadataStore):
         self,
         collection_inderer_job_run_name: str,
         status: CollectionIndexerJobRunStatus,
+        extras: dict = None,
     ):
         collection_inderer_job_run = self.client.get_run_by_name(
             ml_repo=self.ml_repo_name, run_name=collection_inderer_job_run_name
         )
-        collection_inderer_job_run.set_tags({"status": status.value})
+        collection_inderer_job_run.set_tags({"status": status.value, **extras})
         if (
             status == CollectionIndexerJobRunStatus.COMPLETED
             or status == CollectionIndexerJobRunStatus.FAILED
         ):
             collection_inderer_job_run.end()
+
+    def log_metrics_for_indexer_job_run(
+        self,
+        collection_inderer_job_run_name: str,
+        metric_dict: dict[str, int | float],
+        step: int = 0,
+    ):
+        collection_inderer_job_run = self.client.get_run_by_name(
+            ml_repo=self.ml_repo_name, run_name=collection_inderer_job_run_name
+        )
+        collection_inderer_job_run.log_metrics(metric_dict=metric_dict, step=step)

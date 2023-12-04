@@ -43,12 +43,20 @@ async def index_collection(inputs: IndexerConfig):
                 collection_inderer_job_run_name=inputs.indexer_job_run_name,
                 status=CollectionIndexerJobRunStatus.CHUNKING_STARTED,
             )
-            
+
             # Count number of documents/files/urls loaded
             docs_to_index_count = len(loaded_documents)
-            logger.info("Total docs to index: %s", docs_to_index_count)
+            if docs_to_index_count == 0:
+                logger.warning("No documents to found")
+                return
 
-            for doc in loaded_documents:
+            logger.info("Total docs to index: %s", docs_to_index_count)
+            metadata_store_client.log_metrics_for_indexer_job_run(
+                collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                metric_dict={"num_files": docs_to_index_count},
+            )
+
+            for index, doc in enumerate(loaded_documents):
                 parser = get_parser_for_extension(
                     file_extension=doc.file_extension, parsers_map=parsers_map
                 )
@@ -60,6 +68,11 @@ async def index_collection(inputs: IndexerConfig):
                     chunk.metadata.update(doc.metadata.dict())
                     final_documents.append(chunk)
                 logger.info("%s -> %s chunks", doc.filepath, len(chunks))
+                metadata_store_client.log_metrics_for_indexer_job_run(
+                    collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                    metric_dict={"num_chunks": len(chunks)},
+                    step=index,
+                )
 
         logger.info("Total chunks to index: %s", len(final_documents))
 
