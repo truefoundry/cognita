@@ -116,7 +116,7 @@ async def add_documents_to_collection(
         indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
             collection_name=collection_name,
             indexer_job_run=CollectionIndexerJobRunCreate(
-                knowledge_source=request.knowledge_source,
+                data_source=request.data_source,
                 parser_config=request.parser_config,
             ),
         )
@@ -126,7 +126,7 @@ async def add_documents_to_collection(
                 inputs=IndexerConfig(
                     collection_name=collection_name,
                     indexer_job_run_name=indexer_job_run.name,
-                    knowledge_source=request.knowledge_source,
+                    data_source=request.data_source,
                     chunk_size=collection.chunk_size,
                     embedder_config=collection.embedder_config,
                     parser_config=request.parser_config,
@@ -139,7 +139,7 @@ async def add_documents_to_collection(
                 params={
                     "collection_name": collection_name,
                     "indexer_job_run_name": indexer_job_run.name,
-                    "knowledge_source": json.dumps(request.knowledge_source.dict()),
+                    "data_source": json.dumps(request.data_source.dict()),
                     "chunk_size": str(collection.chunk_size),
                     "embedder_config": json.dumps(collection.embedder_config.dict()),
                     "parser_config": json.dumps(request.parser_config.dict()),

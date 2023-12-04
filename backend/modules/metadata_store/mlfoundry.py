@@ -18,7 +18,7 @@ from backend.modules.metadata_store.models import (
     CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
-from backend.utils.base import EmbedderConfig, KnowledgeSource, ParserConfig
+from backend.utils.base import DataSource, EmbedderConfig, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
 
@@ -73,14 +73,14 @@ class RunParams(BaseParams):
     ] = MLRunTypes.COLLECTION_INDEXER_JOB_RUN
     collection_name: str
     parser_config: ParserConfig
-    knowledge_source: KnowledgeSource
+    data_source: DataSource
 
     def to_mlfoundry_params(self):
         return {
             "type": self.type.value,
             "collection_name": self.collection_name,
             "parser_config": json.dumps(self.parser_config.dict()),
-            "knowledge_source": json.dumps(self.knowledge_source.dict()),
+            "data_source": json.dumps(self.data_source.dict()),
         }
 
     @classmethod
@@ -90,9 +90,7 @@ class RunParams(BaseParams):
             parser_config=ParserConfig.parse_obj(
                 json.loads(params.get("parser_config"))
             ),
-            knowledge_source=KnowledgeSource.parse_obj(
-                json.loads(params.get("knowledge_source"))
-            ),
+            data_source=DataSource.parse_obj(json.loads(params.get("data_source"))),
         )
 
     class Config:
@@ -219,7 +217,7 @@ class MLFoundry(BaseMetadataStore):
                 CollectionIndexerJobRun(
                     name=run.run_name,
                     parser_config=collection_inderer_job_run.parser_config,
-                    knowledge_source=collection_inderer_job_run.knowledge_source,
+                    data_source=collection_inderer_job_run.data_source,
                     status=CollectionIndexerJobRunStatus[run.get_tags().get("status")],
                 )
             )
@@ -241,12 +239,12 @@ class MLFoundry(BaseMetadataStore):
             RunParams(
                 collection_name=collection_name,
                 parser_config=indexer_job_run.parser_config,
-                knowledge_source=indexer_job_run.knowledge_source,
+                data_source=indexer_job_run.data_source,
             ).to_mlfoundry_params()
         )
         return CollectionIndexerJobRun(
             name=created_run.run_name,
-            knowledge_source=indexer_job_run.knowledge_source,
+            data_source=indexer_job_run.data_source,
             parser_config=indexer_job_run.parser_config,
             status=CollectionIndexerJobRunStatus.INITIALIZED,
         )

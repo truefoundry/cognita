@@ -4,7 +4,7 @@ from typing import List
 
 from langchain.docstore.document import Document
 
-from backend.modules.dataloaders.loader import get_loader_for_knowledge_source
+from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
@@ -35,9 +35,9 @@ async def index_collection(inputs: IndexerConfig):
         # Create a temp dir to store the data
         with tempfile.TemporaryDirectory() as tmpdirname:
             # Load the data from the source to the dest dir
-            loaded_documents = get_loader_for_knowledge_source(
-                inputs.knowledge_source.type
-            ).load_data(inputs.knowledge_source.config, tmpdirname, parsers_map.keys())
+            loaded_documents = get_loader_for_data_source(
+                inputs.data_source.type
+            ).load_data(inputs.data_source.config, tmpdirname, parsers_map.keys())
 
             metadata_store_client.update_indexer_job_run_status(
                 collection_inderer_job_run_name=inputs.indexer_job_run_name,
@@ -93,7 +93,7 @@ async def index_collection(inputs: IndexerConfig):
         # Delete all the documents with the same base_document_id to avoid duplicate data
         # Note: Since by default we enable embedding caching, we do not have to bare any embedding model cost
         vector_db_client.delete_documents(
-            document_id_match=get_base_document_id(source=inputs.knowledge_source)
+            document_id_match=get_base_document_id(source=inputs.data_source)
         )
 
         # Index all the final_documents

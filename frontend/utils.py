@@ -6,7 +6,6 @@ from zipfile import ZipFile
 import requests
 import streamlit as st
 
-
 TEXT_TEMPLATE = """Given a list of documents, answer the given question precisely and accurately. Copying from the list of documents to form an answer is encouraged. Answer only from the information found in the documents. Paraphrasing is allowed but do not change any of the facts. Once you answer the question, stop immediately. If the given documents do not contain a relevant answer, say "I am not sure" and stop. Do not make up an answer.
     
     DOCUMENTS:
@@ -74,7 +73,7 @@ def create_collection_and_add_docs(
         f"{url}/collections/{collection_name}/add_docs",
         json={
             "collection_name": collection_name,
-            "knowledge_source": {"type": "mlfoundry", "config": {"uri": source_uri}},
+            "data_source": {"type": "mlfoundry", "config": {"uri": source_uri}},
             "parser_config": {
                 ".md": "MarkdownParser",
                 ".pdf": "PdfParserFast",
