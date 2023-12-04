@@ -7,6 +7,7 @@ from qdrant_client import QdrantClient, models
 
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.utils.base import VectorDBConfig
+from backend.utils.logger import logger
 
 
 class QdrantVectorDB(BaseVectorDB):
@@ -73,6 +74,11 @@ class QdrantVectorDB(BaseVectorDB):
         """
         Delete a document from the collection
         """
+        try:
+            self.qdrant_client.get_collection(collection_name=self.collection_name)
+        except Exception as exp:
+            logger.debug(exp)
+            return
         # https://qdrant.tech/documentation/concepts/filtering/#full-text-match
         self.qdrant_client.delete(
             collection_name=self.collection_name,
