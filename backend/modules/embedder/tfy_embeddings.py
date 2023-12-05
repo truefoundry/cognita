@@ -2,12 +2,11 @@ import concurrent.futures
 import math
 import os
 from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin
 
 import requests
 import tqdm
 from langchain.embeddings.base import Embeddings
-from langchain.pydantic_v1 import Extra, Field, root_validator
+from langchain.pydantic_v1 import BaseModel, Extra, Field, root_validator
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -54,7 +53,7 @@ EMBEDDER_BATCH_SIZE = 32
 PARALLEL_WORKERS = 4
 
 
-class TrueFoundryEmbeddings(Embeddings):
+class TrueFoundryEmbeddings(BaseModel, Embeddings):
     """TrueFoundry embedding models.
 
     To use, you should have the ``servicefoundry`` python package installed, and the
@@ -83,6 +82,7 @@ class TrueFoundryEmbeddings(Embeddings):
     """The batch size to use for embedding."""
     parallel_workers: Optional[int] = Field(default=PARALLEL_WORKERS)
     """The number of parallel workers to use for embedding."""
+    __private_attributes__ = {"_executor", "_endpoint"}
 
     class Config:
         """Configuration for this pydantic object."""
@@ -112,21 +112,14 @@ class TrueFoundryEmbeddings(Embeddings):
             )
         return values
 
-    def __init__(
-        self,
-        **kwargs: Any,
-    ):
-        """
-        Initializes the TruefoundryEmbeddings.
-        """
-        self.client = None
+    def _init_private_attributes(self):
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=self.parallel_workers
         )
         if self.tfy_llm_gateway_url:
-            self.endpoint = f"{self.tfy_llm_gateway_url}/api/inference/embedding"
+            self._endpoint = f"{self.tfy_llm_gateway_url}/api/inference/embedding"
         else:
-            self.endpoint = f"{self.tfy_host}/api/llm/api/inference/embedding"
+            self._endpoint = f"{self.tfy_host}/api/llm/api/inference/embedding"
 
     def __del__(self):
         """
@@ -155,12 +148,15 @@ class TrueFoundryEmbeddings(Embeddings):
             backoff_factor=3,
             status_forcelist=(400, 408, 499, 500, 502, 503, 504),
         )
+        print(
+            f"model: {self.model}, endpoint: {self.endpoint}, api_key: {self.tfy_api_key}"
+        )
         payload = {
             "input": texts,
             "model": {"name": self.model, "parameters": self.model_parameters},
         }
         response = session.post(
-            self.endpoint,
+            self._endpoint,
             json=payload,
             headers={
                 "Authorization": f"Bearer {self.tfy_api_key}",
