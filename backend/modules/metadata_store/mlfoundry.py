@@ -90,7 +90,11 @@ class RunParams(BaseParams):
             parser_config=ParserConfig.parse_obj(
                 json.loads(params.get("parser_config"))
             ),
-            data_source=DataSource.parse_obj(json.loads(params.get("data_source"))),
+            data_source=(
+                DataSource.parse_obj(json.loads(params.get("data_source")))
+                if params.get("data_source", None)
+                else DataSource.parse_obj(json.loads(params.get("knowledge_source")))
+            ),
         )
 
     class Config:
@@ -270,7 +274,9 @@ class MLFoundry(BaseMetadataStore):
         collection_inderer_job_run = self.client.get_run_by_name(
             ml_repo=self.ml_repo_name, run_name=collection_inderer_job_run_name
         )
-        collection_inderer_job_run.set_tags({"status": status.value, **extras})
+        collection_inderer_job_run.set_tags(
+            {"status": status.value, **({**extras} if extras else {})}
+        )
         if (
             status == CollectionIndexerJobRunStatus.COMPLETED
             or status == CollectionIndexerJobRunStatus.FAILED
