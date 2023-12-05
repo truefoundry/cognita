@@ -1,19 +1,15 @@
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.storage import RedisStore
 
-from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
-from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
+from backend.modules.embedder.tfy_embeddings import TrueFoundryEmbeddings
 from backend.settings import settings
 from backend.utils.base import EmbedderConfig, EmbeddingCacheConfig
 
 # A dictionary mapping embedder names to their respective classes.
 SUPPORTED_EMBEDDERS = {
     "OpenAI": OpenAIEmbeddings,
-    "HuggingFaceInstruct": RemoteHuggingFaceInstructEmbeddings,
-    "TruefoundryEmbeddings": TruefoundryEmbeddings,
-    "Cohere": CohereEmbeddings,
+    "TruefoundryEmbeddings": TrueFoundryEmbeddings,
 }
 
 
