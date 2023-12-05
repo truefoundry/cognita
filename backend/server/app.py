@@ -10,11 +10,10 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier,
-    MlFoundryArtifactsRepository,
-)
+    ArtifactIdentifier, MlFoundryArtifactsRepository)
 from servicefoundry import trigger_job
-from servicefoundry.lib.auth.servicefoundry_session import ServiceFoundrySession
+from servicefoundry.lib.auth.servicefoundry_session import \
+    ServiceFoundrySession
 
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules.dataloaders.mlfoundryloader import MlFoundryLoader
@@ -23,19 +22,12 @@ from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
-    CollectionIndexerJobRunCreate,
-)
+    CollectionCreate, CollectionIndexerJobRunCreate)
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (
-    AddDocuments,
-    CreateCollection,
-    IndexerConfig,
-    SearchQuery,
-    UploadToDataDirectoryDto,
-    VectorDBConfig,
-)
+from backend.utils.base import (AddDocuments, CreateCollection, IndexerConfig,
+                                SearchQuery, UploadToDataDirectoryDto,
+                                VectorDBConfig)
 from backend.utils.logger import logger
 
 VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
@@ -228,7 +220,7 @@ async def search(request: SearchQuery):
             model_name = model_mapper.get(model_name, None)
             model = ChatOpenAI(
                 api_key=settings.OPENAI_API_KEY,
-                max_tokens=request.model_configuration.parameters.get("maximumLength"),
+                max_tokens=1000,
                 model=model_name,
                 streaming=True,
                 timeout=30,
