@@ -316,9 +316,9 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
 
 @app.get("/models")
 async def get_enabled_models(
-    model_type: Optional[ModelType] = Query(default=ModelType.chat),
+    model_type: Optional[ModelType] = Query(default=None),
 ):
-    url = f"{settings.TFY_LLM_GATEWAY_ENDPOINT}/api/model/enabled?model_types={model_type.value}"
+    url = f"{settings.TFY_LLM_GATEWAY_ENDPOINT}/api/model/enabled{f'?model_types={model_type.value}' if model_type else ''}"
     headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
     try:
         response = requests.get(url=url, headers=headers)
