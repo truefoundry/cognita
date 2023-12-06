@@ -144,7 +144,7 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
             status_forcelist=(400, 408, 499, 500, 502, 503, 504),
         )
         logger.debug(
-            f"model: {self.model}, endpoint: {self.endpoint}, api_key: {self.tfy_api_key}"
+            f"Embedding using - model: {self.model} at endpoint: {self._endpoint}, for {len(texts)} texts"
         )
         payload = {
             "input": texts,
