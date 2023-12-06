@@ -20,7 +20,9 @@ class MarkdownParser(BaseParser):
         """
         pass
 
-    async def get_chunks(self, filepath, max_chunk_size=1000) -> typing.List[Document]:
+    async def get_chunks(
+        self, filepath: str, max_chunk_size=1000
+    ) -> typing.List[Document]:
         """
         Extracts chunks of content from a given Markdown file.
 

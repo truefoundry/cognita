@@ -25,7 +25,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
         """
         pass
 
-    async def get_chunks(self, file_path, max_chunk_size=1000, *args):
+    async def get_chunks(self, filepath: str, max_chunk_size=1000, *args):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
 
@@ -39,7 +39,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
         final_tables = []
         try:
             # Open the PDF file using pdfplumber
-            doc = fitz.open(file_path)
+            doc = fitz.open(filepath)
             for page in doc:
                 table = page.find_tables()
                 table = list(table)
@@ -97,7 +97,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
                         )
                     )
         except Exception:
-            print(f"Error while parsing PDF file at {file_path}")
+            print(f"Error while parsing PDF file at {filepath}")
             # Return an empty list if there was an error during processing
             return []
 
