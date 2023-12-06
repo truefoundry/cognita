@@ -10,6 +10,8 @@ from langchain.pydantic_v1 import BaseModel, Extra, Field, root_validator
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from backend.utils.logger import logger
+
 
 def _requests_retry_session(
     retries=3,
@@ -59,13 +61,6 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
     To use, you should have the ``servicefoundry`` python package installed, and the
     environment variable ``TFY_API_KEY`` set with your API key and ``TFY_HOST`` set with your host or pass it
     as a named parameter to the constructor.
-
-    Example:
-        .. code-block:: python
-
-            from servicefoundry.langchain.truefoundry_embedding import TrueFoundryEmbeddings
-            truefoundry = TrueFoundryEmbeddings(tfy_api_key="my-api-key",tfy_llm_gateway_url="my-gateway-url")
-
     """
 
     model: str = Field(default=None)
@@ -148,7 +143,7 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
             backoff_factor=3,
             status_forcelist=(400, 408, 499, 500, 502, 503, 504),
         )
-        print(
+        logger.debug(
             f"model: {self.model}, endpoint: {self.endpoint}, api_key: {self.tfy_api_key}"
         )
         payload = {
@@ -164,8 +159,8 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
             timeout=30,
         )
         response.raise_for_status()
-        embeddings = response.json()
-        return embeddings
+        output = response.json()
+        return output["embeddings"]
 
     def _embed(self, texts: List[str], query_mode: bool):
         """
