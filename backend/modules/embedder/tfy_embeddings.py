@@ -58,8 +58,7 @@ PARALLEL_WORKERS = 4
 class TrueFoundryEmbeddings(BaseModel, Embeddings):
     """TrueFoundry embedding models.
 
-    To use, you should have the ``servicefoundry`` python package installed, and the
-    environment variable ``TFY_API_KEY`` set with your API key and ``TFY_HOST`` set with your host or pass it
+    To use, you must have the environment variable ``TFY_API_KEY`` set with your API key and ``TFY_HOST`` set with your host or pass it
     as a named parameter to the constructor.
     """
 
@@ -71,8 +70,11 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
     """Automatically inferred from env var `TFY_API_KEY` if not provided."""
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     model_parameters: Dict[str, Any] = Field(default_factory=dict)
-    tfy_llm_gateway_url: Optional[str] = Field(default=None, alias="llm_gateway_url")
+    tfy_llm_gateway_url: Optional[str] = Field(default=None)
     """Overwrite for tfy_host for LLM Gateway"""
+    tfy_llm_gateway_path: Optional[str] = Field(
+        default=None,
+    )
     batch_size: Optional[int] = Field(default=EMBEDDER_BATCH_SIZE)
     """The batch size to use for embedding."""
     parallel_workers: Optional[int] = Field(default=PARALLEL_WORKERS)
@@ -91,7 +93,12 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
         values["tfy_api_key"] = values["tfy_api_key"] or os.getenv("TFY_API_KEY")
         values["tfy_host"] = values["tfy_host"] or os.getenv("TFY_HOST")
         values["tfy_llm_gateway_url"] = values["tfy_llm_gateway_url"] or os.getenv(
-            "TFY_LLM_GATEWAY_URL"
+            "TFY_LLM_GATEWAY_ENDPOINT"
+        )
+        values["tfy_llm_gateway_path"] = (
+            values["tfy_llm_gateway_path"]
+            or os.getenv("TFY_LLM_GATEWAY_PATH")
+            or "/api/llm"
         )
         if not values["tfy_api_key"]:
             raise ValueError(
@@ -114,7 +121,9 @@ class TrueFoundryEmbeddings(BaseModel, Embeddings):
         if self.tfy_llm_gateway_url:
             self._endpoint = f"{self.tfy_llm_gateway_url}/api/inference/embedding"
         else:
-            self._endpoint = f"{self.tfy_host}/api/llm/api/inference/embedding"
+            self._endpoint = (
+                f"{self.tfy_host}{self.tfy_llm_gateway_path}/api/inference/embedding"
+            )
 
     def __del__(self):
         """
