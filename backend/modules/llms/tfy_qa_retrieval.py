@@ -5,7 +5,7 @@ from langchain.callbacks.manager import (
     CallbackManagerForChainRun,
 )
 from langchain.chains import RetrievalQA
-from langchain.chat_models.openai import ChatOpenAI
+from langchain.chat_models.base import BaseChatModel
 from langchain.schema import Document
 
 
@@ -13,7 +13,7 @@ class CustomRetrievalQA(RetrievalQA):
     """Custom RetrievalQA chain."""
 
     k: int = None
-    model_openai: ChatOpenAI = None
+    model_openai: BaseChatModel = None
     query_template: str = """As an assistant, your role is to translate a user's natural \
 language query into a suitable query for a vectorstore, ensuring to omit any extraneous \
 information that may hinder the retrieval process. Please take the provided user query "{question}" \

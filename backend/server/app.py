@@ -18,8 +18,8 @@ from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules.embedder import get_embedder
-from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
+from backend.modules.llms.truefoundry_llm import TrueFoundryLLMGateway
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
     CollectionCreate,
@@ -215,34 +215,11 @@ async def search(request: SearchQuery):
             get_embedder(collection.embedder_config), request.k
         )
 
-        model_name = request.model_configuration.name
-        if "openai" in request.model_configuration.name:
-            model_name = model_name.split("/")[-1]
-            model_mapper = {
-                "gpt-3-5-turbo": "gpt-3.5-turbo-1106",
-                "gpt-4": "gpt-4-1106-preview",
-                "text-davinci-003": "gpt-3.5-turbo-1106",
-                "text-curie-001": "gpt-3.5-turbo-1106",
-                "text-babbage-001": "gpt-3.5-turbo-1106",
-            }
-            model_name = model_mapper.get(model_name, None)
-            model = ChatOpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                max_tokens=1000,
-                model=model_name,
-                streaming=True,
-                timeout=30,
-            )
-            logger.info(f"Loaded OpenAI model: {model_name}")
-        else:
-            model = TfyPlaygroundLLM(
-                model_name=request.model_configuration.name,
-                parameters=request.model_configuration.parameters,
-                api_key=settings.TFY_API_KEY,
-            )
-            logger.info(
-                f"Loaded TrueFoundry LLM model {request.model_configuration.name}"
-            )
+        model = TrueFoundryLLMGateway(
+            model=request.model_configuration.name,
+            model_parameters=request.model_configuration.parameters,
+        )
+        logger.info(f"Loaded TrueFoundry LLM model {request.model_configuration.name}")
 
         # retrieval QA chain
         logger.info("Loading QA chain")

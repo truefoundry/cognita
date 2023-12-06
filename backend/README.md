@@ -5,7 +5,6 @@ This directory contains the primary code for the backend including a FastAPI ser
 Prerequisite: follow [here](../../GETTING_STARTED.md) and fetch following values
 
 ```
-OPENAI_API_KEY = 
 ML_REPO_NAME = 
 VECTOR_DB_CONFIG = 
 METADATA_STORE_TYPE = 
