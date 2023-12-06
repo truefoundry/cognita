@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Extra, Field, constr
@@ -160,3 +161,9 @@ class SearchQuery(BaseModel):
 class UploadToDataDirectoryDto(BaseModel):
     collection_name: str
     filepaths: List[str]
+
+
+class ModelType(str, Enum):
+    completion = "completion"
+    chat = "chat"
+    embedding = "embedding"

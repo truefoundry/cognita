@@ -1,19 +1,14 @@
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.embeddings.cohere import CohereEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.storage import RedisStore
 
-from backend.modules.embedder.instruct import RemoteHuggingFaceInstructEmbeddings
-from backend.modules.embedder.tfy_embeddings import TruefoundryEmbeddings
+from backend.modules.embedder.tfy_embeddings import TrueFoundryEmbeddings
 from backend.settings import settings
 from backend.utils.base import EmbedderConfig, EmbeddingCacheConfig
 
 # A dictionary mapping embedder names to their respective classes.
 SUPPORTED_EMBEDDERS = {
-    "OpenAI": OpenAIEmbeddings,
-    "HuggingFaceInstruct": RemoteHuggingFaceInstructEmbeddings,
-    "TruefoundryEmbeddings": TruefoundryEmbeddings,
-    "Cohere": CohereEmbeddings,
+    "truefoundry": TrueFoundryEmbeddings,
 }
 
 
@@ -32,7 +27,7 @@ def get_embedder(embedder_config: EmbedderConfig):
     Returns an instance of the embedding class based on the specified embedder and configuration.
 
     Args:
-        embedder (str): The name of the embedder (e.g., "OpenAI", "HuggingFaceInstruct", "TruefoundryEmbeddings").
+        embedder (str): The name of the embedder (e.g., "truefoundry").
         embedding_configuration (dict): A dictionary containing configuration parameters for the embedder.
 
     Returns:

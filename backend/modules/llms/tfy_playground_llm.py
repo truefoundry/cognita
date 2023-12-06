@@ -37,7 +37,7 @@ class TfyPlaygroundLLM(TruefoundryPlaygroundLLM):
                 f"Unauthenticated: Please login using servicefoundry login --host <https://example-domain.com>"
             )
 
-        url = f"{settings.LLM_GATEWAY_ENDPOINT}/api/inference/text"
+        url = f"{settings.TFY_LLM_GATEWAY_ENDPOINT}/api/inference/text"
         headers = {"Authorization": f"Bearer {session.access_token}"}
 
         json = {

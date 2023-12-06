@@ -1,33 +1,41 @@
 import json
+from typing import Optional
 
 import mlfoundry
 import orjson
 import requests
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier, MlFoundryArtifactsRepository)
+    ArtifactIdentifier,
+    MlFoundryArtifactsRepository,
+)
 from servicefoundry import trigger_job
-from servicefoundry.lib.auth.servicefoundry_session import \
-    ServiceFoundrySession
 
 from backend.indexer.indexer import trigger_job_locally
-from backend.modules.dataloaders.mlfoundryloader import MlFoundryLoader
 from backend.modules.embedder import get_embedder
 from backend.modules.llms.tfy_playground_llm import TfyPlaygroundLLM
 from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate, CollectionIndexerJobRunCreate)
+    CollectionCreate,
+    CollectionIndexerJobRunCreate,
+)
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (AddDocuments, CreateCollection, IndexerConfig,
-                                SearchQuery, UploadToDataDirectoryDto,
-                                VectorDBConfig)
+from backend.utils.base import (
+    AddDocuments,
+    CreateCollection,
+    IndexerConfig,
+    ModelType,
+    SearchQuery,
+    UploadToDataDirectoryDto,
+    VectorDBConfig,
+)
 from backend.utils.logger import logger
 
 VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
@@ -307,15 +315,11 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
 
 
 @app.get("/models")
-async def get_enabled_models():
-    session = ServiceFoundrySession()
-
-    if not session:
-        raise Exception(
-            f"Unauthenticated: Please login using servicefoundry login --host <https://example-domain.com>"
-        )
-    url = f"{settings.LLM_GATEWAY_ENDPOINT}/api/model/enabled"
-    headers = {"Authorization": f"Bearer {session.access_token}"}
+async def get_enabled_models(
+    model_type: Optional[ModelType] = Query(default=ModelType.chat),
+):
+    url = f"{settings.TFY_LLM_GATEWAY_ENDPOINT}/api/model/enabled?model_types={model_type.value}"
+    headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
     try:
         response = requests.get(url=url, headers=headers)
         response.raise_for_status()

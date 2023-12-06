@@ -1,12 +1,16 @@
 import concurrent.futures
 import math
-from typing import Any, List
+import os
+from typing import Any, Dict, List, Optional
 
 import requests
 import tqdm
 from langchain.embeddings.base import Embeddings
+from langchain.pydantic_v1 import BaseModel, Extra, Field, root_validator
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from backend.utils.logger import logger
 
 
 def _requests_retry_session(
@@ -51,51 +55,75 @@ EMBEDDER_BATCH_SIZE = 32
 PARALLEL_WORKERS = 4
 
 
-class TruefoundryEmbeddings(Embeddings):
-    def __init__(
-        self,
-        endpoint_url: str,
-        batch_size: int = EMBEDDER_BATCH_SIZE,
-        parallel_workers: int = PARALLEL_WORKERS,
-        **kwargs: Any,
-    ):
-        """
-        Initializes the TruefoundryEmbeddings.
+class TrueFoundryEmbeddings(BaseModel, Embeddings):
+    """TrueFoundry embedding models.
 
-        Args:
-            endpoint_url (str): The URL of the deployed embedding model on Truefoundry.
-            batch_size (int, optional): The batch size for processing embeddings in parallel.
-            parallel_workers (int, optional): The number of parallel worker threads for embedding.
-        Returns:
-            None
-        """
-        try:
-            session = _requests_retry_session(
-                retries=3,
-                backoff_factor=3,
-                status_forcelist=(400, 408, 499, 500, 502, 503, 504),
+    To use, you must have the environment variable ``TFY_API_KEY`` set with your API key and ``TFY_HOST`` set with your host or pass it
+    as a named parameter to the constructor.
+    """
+
+    model: str = Field(default=None)
+    """The model to use for embedding."""
+    tfy_host: Optional[str] = Field(default=None, alias="url")
+    """Base URL path for API requests, Automatically inferred from env var `TFY_HOST` if not provided."""
+    tfy_api_key: Optional[str] = Field(default=None, alias="api_key")
+    """Automatically inferred from env var `TFY_API_KEY` if not provided."""
+    model_kwargs: Dict[str, Any] = Field(default_factory=dict)
+    model_parameters: Dict[str, Any] = Field(default_factory=dict)
+    tfy_llm_gateway_url: Optional[str] = Field(default=None)
+    """Overwrite for tfy_host for LLM Gateway"""
+    tfy_llm_gateway_path: Optional[str] = Field(
+        default=None,
+    )
+    batch_size: Optional[int] = Field(default=EMBEDDER_BATCH_SIZE)
+    """The batch size to use for embedding."""
+    parallel_workers: Optional[int] = Field(default=PARALLEL_WORKERS)
+    """The number of parallel workers to use for embedding."""
+    __private_attributes__ = {"_executor", "_endpoint"}
+
+    class Config:
+        """Configuration for this pydantic object."""
+
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    @root_validator()
+    def validate_environment(cls, values: Dict) -> Dict:
+        """Validate that api key and python package exists in environment."""
+        values["tfy_api_key"] = values["tfy_api_key"] or os.getenv("TFY_API_KEY")
+        values["tfy_host"] = values["tfy_host"] or os.getenv("TFY_HOST")
+        values["tfy_llm_gateway_url"] = values["tfy_llm_gateway_url"] or os.getenv(
+            "TFY_LLM_GATEWAY_ENDPOINT"
+        )
+        values["tfy_llm_gateway_path"] = (
+            values["tfy_llm_gateway_path"]
+            or os.getenv("TFY_LLM_GATEWAY_PATH")
+            or "/api/llm"
+        )
+        if not values["tfy_api_key"]:
+            raise ValueError(
+                f"Did not find `tfy_api_key`, please add an environment variable"
+                f" `TFY_API_KEY` which contains it, or pass"
+                f"  `tfy_api_key` as a named parameter."
             )
-            response = session.post(
-                url=f"{endpoint_url.strip('/')}/v2/repository/index", json={}
+        if not values["tfy_host"]:
+            raise ValueError(
+                f"Did not find `tfy_host`, please add an environment variable"
+                f" `TFY_HOST` which contains it, or pass"
+                f"  `tfy_host` as a named parameter."
             )
-            response.raise_for_status()
-            models = response.json()
-            if len(models) == 0:
-                raise ValueError("No model is deployed in the model server")
-            model_names = [m["name"] for m in models]
-        except Exception as ex:
-            raise Exception(f"Error raised by Inference API: {ex}") from ex
-        else:
-            model_name = model_names[0]
-            self.endpoint = (
-                f"{endpoint_url.strip('/')}/v2/models/{model_name}/infer/simple"
-            )
-        self.client = None
-        self.batch_size = int(batch_size)
-        self.parallel_workers = int(parallel_workers)
+        return values
+
+    def _init_private_attributes(self):
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=self.parallel_workers
         )
+        if self.tfy_llm_gateway_url:
+            self._endpoint = f"{self.tfy_llm_gateway_url}/api/inference/embedding"
+        else:
+            self._endpoint = (
+                f"{self.tfy_host}{self.tfy_llm_gateway_path}/api/inference/embedding"
+            )
 
     def __del__(self):
         """
@@ -124,13 +152,24 @@ class TruefoundryEmbeddings(Embeddings):
             backoff_factor=3,
             status_forcelist=(400, 408, 499, 500, 502, 503, 504),
         )
+        logger.debug(
+            f"Embedding using - model: {self.model} at endpoint: {self._endpoint}, for {len(texts)} texts"
+        )
         payload = {
-            "inputs": texts,
+            "input": texts,
+            "model": {"name": self.model, "parameters": self.model_parameters},
         }
-        response = session.post(self.endpoint, json=payload, timeout=30)
+        response = session.post(
+            self._endpoint,
+            json=payload,
+            headers={
+                "Authorization": f"Bearer {self.tfy_api_key}",
+            },
+            timeout=30,
+        )
         response.raise_for_status()
-        embeddings = response.json()
-        return embeddings
+        output = response.json()
+        return output["embeddings"]
 
     def _embed(self, texts: List[str], query_mode: bool):
         """
