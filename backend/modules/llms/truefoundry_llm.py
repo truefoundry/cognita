@@ -88,7 +88,6 @@ class TrueFoundryLLMGateway(BaseChatModel):
     """Base URL path for API requests, Automatically inferred from env var `TFY_HOST` if not provided."""
     tfy_api_key: Optional[str] = Field(default=None, alias="api_key")
     """Automatically inferred from env var `TFY_API_KEY` if not provided."""
-    model_kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict)
     model_parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
     tfy_llm_gateway_url: Optional[str] = Field(default=None)
     """Overwrite for tfy_host for LLM Gateway"""
@@ -258,6 +257,7 @@ class TrueFoundryLLMGateway(BaseChatModel):
     def _call(
         self,
         prompt: str,
+        stop: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> str:
         """Call out to the deployed model
