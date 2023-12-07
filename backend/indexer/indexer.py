@@ -17,12 +17,12 @@ from backend.utils.base import IndexerConfig
 from backend.utils.logger import logger
 from backend.utils.utils import get_base_document_id
 
-METADATA_STORE_TYPE = os.environ.get("METADATA_STORE_TYPE", "mlfoundry")
-
 
 async def index_collection(inputs: IndexerConfig):
     parsers_map = get_parsers_configurations(inputs.parser_config)
-    metadata_store_client = get_metadata_store_client(METADATA_STORE_TYPE)
+    metadata_store_client = get_metadata_store_client(
+        config=inputs.metadata_store_config
+    )
 
     # Set the status of the collection run to running
     metadata_store_client.update_indexer_job_run_status(
@@ -85,7 +85,10 @@ async def index_collection(inputs: IndexerConfig):
             collection_inderer_job_run_name=inputs.indexer_job_run_name,
             status=CollectionIndexerJobRunStatus.EMBEDDING_STARTED,
         )
-        embeddings = get_embedder(inputs.embedder_config)
+        embeddings = get_embedder(
+            embedder_config=inputs.embedder_config,
+            embedding_cache_config=inputs.embedding_cache_config,
+        )
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )

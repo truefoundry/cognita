@@ -1,3 +1,5 @@
+from typing import Optional
+
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.storage import RedisStore
@@ -22,7 +24,10 @@ def get_embedding_cache_store(config: EmbeddingCacheConfig):
     raise Exception(f"Embedding cache provider {config.provider} not supported!")
 
 
-def get_embedder(embedder_config: EmbedderConfig):
+def get_embedder(
+    embedder_config: EmbedderConfig,
+    embedding_cache_config: Optional[EmbeddingCacheConfig] = None,
+):
     """
     Returns an instance of the embedding class based on the specified embedder and configuration.
 
@@ -34,11 +39,11 @@ def get_embedder(embedder_config: EmbedderConfig):
         Embeddings: An instance of the specified embedding class.
     """
     if embedder_config.provider in SUPPORTED_EMBEDDERS:
-        if settings.EMBEDDING_CACHE_ENABLED:
+        if embedding_cache_config:
             underlying_embeddings = SUPPORTED_EMBEDDERS[embedder_config.provider](
                 **embedder_config.config
             )
-            store = get_embedding_cache_store(settings.EMBEDDING_CACHE_CONFIG)
+            store = get_embedding_cache_store(config=embedding_cache_config)
             embedder = CacheBackedEmbeddings.from_bytes_store(
                 underlying_embeddings, store, namespace=underlying_embeddings.model
             )

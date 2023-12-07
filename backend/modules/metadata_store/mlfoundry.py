@@ -112,12 +112,12 @@ class Tags(BaseModel):
 
 
 class MLFoundry(BaseMetadataStore):
-    def __init__(self):
+    def __init__(self, config: dict):
+        self.ml_repo_name = config.get("ml_repo_name", None)
+        if not self.ml_repo_name:
+            raise Exception("config.ml_repo_name is not set.")
         logging.getLogger("mlfoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        self.ml_repo_name = os.getenv("ML_REPO_NAME")
-        if not self.ml_repo_name:
-            raise Exception("ML_REPO_NAME environment variable is not set.")
         self.client = mlfoundry.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
 

@@ -8,7 +8,9 @@ from backend.indexer.indexer import index_collection
 from backend.utils.base import (
     DataSource,
     EmbedderConfig,
+    EmbeddingCacheConfig,
     IndexerConfig,
+    MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,
 )
@@ -69,9 +71,20 @@ def parse_args() -> IndexerConfig:
     parser.add_argument(
         "--vector_db_config",
         type=str,
-        default="""{"provider": "weaviate", "url": "", "api_key": ""}""",
-        required=False,
+        required=True,
         help="Vector DB config to store the indexed documents.",
+    )
+    parser.add_argument(
+        "--metadata_store_config",
+        type=str,
+        required=True,
+        help="Metadata store config",
+    )
+    parser.add_argument(
+        "--embedding_cache_config",
+        type=str,
+        required=False,
+        help="Embedding cache config",
     )
     args = parser.parse_args()
 
@@ -83,6 +96,14 @@ def parse_args() -> IndexerConfig:
         embedder_config=EmbedderConfig.parse_obj(orjson.loads(args.embedder_config)),
         parser_config=ParserConfig.parse_obj(orjson.loads(args.parser_config)),
         vector_db_config=VectorDBConfig.parse_obj(orjson.loads(args.vector_db_config)),
+        metadata_store_config=MetadataStoreConfig.parse_obj(
+            orjson.loads(args.metadata_store_config)
+        ),
+        embedding_cache_config=(
+            EmbeddingCacheConfig.parse_obj(orjson.loads(args.embedding_cache_config))
+            if args.embedding_cache_config
+            else None
+        ),
     )
 
 

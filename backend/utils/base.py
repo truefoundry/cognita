@@ -50,6 +50,11 @@ class VectorDBConfig(BaseModel):
     config: Optional[dict] = None
 
 
+class MetadataStoreConfig(BaseModel):
+    provider: str
+    config: Optional[dict] = None
+
+
 class EmbeddingCacheConfig(BaseModel):
     provider: str
     url: Optional[str] = None
@@ -115,12 +120,13 @@ class IndexerConfig(BaseModel):
         title="Mapping of file extensions to parsers. Required only incase, multiple parsers are available for same extension.",
     )
     vector_db_config: VectorDBConfig = Field(
-        default={
-            "provider": "weaviate",
-            "url": "",
-            "api_key": "",
-        },
         title="Vector DB config to store the indexed documents.",
+    )
+    metadata_store_config: MetadataStoreConfig = Field(
+        title="Vector DB config to store the indexed documents.",
+    )
+    embedding_cache_config: Optional[EmbeddingCacheConfig] = Field(
+        title="Embedding cache config", default=None
     )
 
 
