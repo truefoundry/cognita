@@ -153,7 +153,7 @@ class SearchQuery(BaseModel):
         default=False, title="If true, then return the complete prompt sent to LLM"
     )
     prompt_template: str = Field(
-        default="""Use the context below to answer question at the end.\n\n{context}\n\nQuestion: {question}\nAnswer:""",
+        default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
 
