@@ -2,13 +2,11 @@ import json
 from typing import Optional
 
 import mlfoundry
-import orjson
 import requests
 from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
-from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
     ArtifactIdentifier,
@@ -34,12 +32,10 @@ from backend.utils.base import (
     ModelType,
     SearchQuery,
     UploadToDataDirectoryDto,
-    VectorDBConfig,
 )
 from backend.utils.logger import logger
 
-VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(settings.VECTOR_DB_CONFIG))
-metadata_store_client = get_metadata_store_client(settings.METADATA_STORE_TYPE)
+metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
 
 # FastAPI Initialization
 app = FastAPI(
@@ -65,7 +61,7 @@ async def status():
 @app.get("/collections")
 async def get_collections():
     try:
-        vector_db_client = get_vector_db_client(config=VECTOR_DB_CONFIG)
+        vector_db_client = get_vector_db_client(config=settings.VECTOR_DB_CONFIG)
         collection_names = vector_db_client.get_collections()
         print(collection_names)
         collections = metadata_store_client.get_collections(
@@ -91,7 +87,7 @@ async def create_collection(request: CreateCollection):
             )
         )
         vector_db_client = get_vector_db_client(
-            config=VECTOR_DB_CONFIG, collection_name=request.name
+            config=settings.VECTOR_DB_CONFIG, collection_name=request.name
         )
         vector_db_client.create_collection(get_embedder(request.embedder_config))
         return JSONResponse(content={"collection": collection.dict()}, status_code=201)
@@ -130,12 +126,15 @@ async def add_documents_to_collection(
                     chunk_size=collection.chunk_size,
                     embedder_config=collection.embedder_config,
                     parser_config=request.parser_config,
-                    vector_db_config=VECTOR_DB_CONFIG,
+                    vector_db_config=settings.VECTOR_DB_CONFIG,
+                    metadata_store_config=settings.METADATA_STORE_CONFIG,
+                    embedding_cache_config=settings.EMBEDDING_CACHE_CONFIG,
                 )
             )
         else:
             trigger_job(
                 application_fqn=settings.JOB_FQN,
+                component_name=settings.JOB_COMPONENT_NAME,
                 params={
                     "collection_name": collection_name,
                     "indexer_job_run_name": indexer_job_run.name,
@@ -143,7 +142,19 @@ async def add_documents_to_collection(
                     "chunk_size": str(collection.chunk_size),
                     "embedder_config": json.dumps(collection.embedder_config.dict()),
                     "parser_config": json.dumps(request.parser_config.dict()),
-                    "vector_db_config": json.dumps(VECTOR_DB_CONFIG.dict()),
+                    "vector_db_config": json.dumps(settings.VECTOR_DB_CONFIG.dict()),
+                    "metadata_store_config": json.dumps(
+                        settings.METADATA_STORE_CONFIG.dict()
+                    ),
+                    **(
+                        {
+                            "embedding_cache_config": json.dumps(
+                                settings.EMBEDDING_CACHE_CONFIG.dict()
+                            )
+                        }
+                        if settings.EMBEDDING_CACHE_CONFIG
+                        else {}
+                    ),
                 },
             )
         return JSONResponse(
@@ -158,7 +169,7 @@ async def add_documents_to_collection(
 async def delete_collection(collection_name: str = Path(title="Collection name")):
     try:
         vector_db_client = get_vector_db_client(
-            config=VECTOR_DB_CONFIG, collection_name=collection_name
+            config=settings.VECTOR_DB_CONFIG, collection_name=collection_name
         )
         vector_db_client.delete_collection()
         metadata_store_client.delete_collection(collection_name)
@@ -209,7 +220,7 @@ async def search(request: SearchQuery):
     )
     try:
         vector_db_client = get_vector_db_client(
-            config=VECTOR_DB_CONFIG, collection_name=request.collection_name
+            config=settings.VECTOR_DB_CONFIG, collection_name=request.collection_name
         )
         retriever = vector_db_client.get_retriever(
             get_embedder(collection.embedder_config), request.k
@@ -269,11 +280,13 @@ async def search(request: SearchQuery):
 
 @app.post("/upload-to-data-directory")
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
+    if settings.METADATA_STORE_CONFIG.provider != "mlfoundry":
+        raise Exception("API only supported for metadata store provider: mlfoundry")
     mlfoundry_client = mlfoundry.get_client()
 
     # Create a new data directory.
     dataset = mlfoundry_client.create_data_directory(
-        settings.ML_REPO_NAME, req.collection_name
+        settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"), req.collection_name
     )
 
     artifact_repo = MlFoundryArtifactsRepository(
