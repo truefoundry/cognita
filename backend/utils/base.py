@@ -135,23 +135,53 @@ class LLMConfig(BaseModel):
     parameters: dict = None
 
 
+class RetrieverConfig(BaseModel):
+    class_name: Literal["VectorStoreRetriever", "CustomRetriever"] = Field(
+        default="VectorStoreRetriever"
+    )
+    search_type: Literal["mmr", "similarity"] = Field(
+        default="similarity",
+        title="""Defines the type of search that the Retriever should perform. Can be "similarity" (default), "mmr", or "similarity_score_threshold".""",
+    )
+    k: int = Field(
+        default=4,
+        title="""Amount of documents to return (Default: 4)""",
+    )
+    fetch_k: int = Field(
+        default=20,
+        title="""Amount of documents to pass to MMR algorithm (Default: 20)""",
+    )
+    filter: Optional[dict] = Field(
+        default=None,
+        title="""Filter by document metadata""",
+    )
+
+    @property
+    def get_search_type(self) -> str:
+        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        return self.search_type
+
+    @property
+    def get_search_kwargs(self) -> dict:
+        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        match self.search_type:
+            case "similarity":
+                return {"k": self.k, "filter": self.filter}
+            case "mmr":
+                return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+
+
 class SearchQuery(BaseModel):
     collection_name: str = Field(
         default=None,
         title="Collection name on which to search",
     )
-    k: int = Field(
-        default=4, title="Number of chunks to send to LLM in context", ge=1, le=100
+    retrieval_chain_name: Literal["RetrievalQA", "CustomRetrievalQA"] = Field(
+        default="RetrievalQA",
+        title="Name of the retrieval chain to use for retrieving documents",
     )
-    mmr: Optional[bool] = Field(
-        default=True,
-        title="""If true, then use Maximal Marginal Relevance(mmr), else use similarity search. 
-        In similarity search, it selects text chunk vectors that are most similar to the question vector. 
-        search_type="mmr" uses the maximum marginal relevance search where it optimizes for similarity to 
-        query AND diversity among selected documents.""",
-    )
-    fetch_k: Optional[int] = Field(
-        default=20, title="Number of chunks to fetch for MMR. Only relevant if mmr=True"
+    retriever_config: Optional[RetrieverConfig] = Field(
+        title="Retriever configuration",
     )
     query: str = Field(title="Question to search for", max_length=1000)
     model_configuration: LLMConfig

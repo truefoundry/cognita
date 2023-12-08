@@ -62,7 +62,7 @@ class WeaviateVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.weaviate_client.schema.delete_class(self.collection_name)
 
-    def get_retriever(self, embeddings: Embeddings, k: int):
+    def get_vector_store(self, embeddings: Embeddings):
         return Weaviate(
             client=self.weaviate_client,
             embedding=embeddings,
@@ -70,7 +70,7 @@ class WeaviateVectorDB(BaseVectorDB):
             text_key="text",
             by_text=False,
             attributes=["document_id"],
-        ).as_retriever(search_kwargs={"k": k})
+        )
 
     def list_documents_in_collection(self) -> List[dict]:
         """

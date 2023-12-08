@@ -9,30 +9,22 @@ from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier,
-    MlFoundryArtifactsRepository,
-)
+    ArtifactIdentifier, MlFoundryArtifactsRepository)
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules.embedder import get_embedder
-from backend.modules.llms.tfy_qa_retrieval import CustomRetrievalQA
 from backend.modules.llms.truefoundry_llm import TrueFoundryLLMGateway
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
-    CollectionIndexerJobRunCreate,
-)
+    CollectionCreate, CollectionIndexerJobRunCreate)
+from backend.modules.retrieval_chains import get_retrieval_chain
+from backend.modules.retrievers import get_retriever
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (
-    AddDocuments,
-    CreateCollection,
-    IndexerConfig,
-    ModelType,
-    SearchQuery,
-    UploadToDataDirectoryDto,
-)
+from backend.utils.base import (AddDocuments, CreateCollection, IndexerConfig,
+                                ModelType, SearchQuery,
+                                UploadToDataDirectoryDto)
 from backend.utils.logger import logger
 
 metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
@@ -210,68 +202,61 @@ async def search(request: SearchQuery):
     if collection is None:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    DOCUMENT_PROMPT = PromptTemplate(
-        input_variables=["page_content"],
-        template="<document>{page_content}</document>",
-    )
-    QA_PROMPT = PromptTemplate(
-        input_variables=["context", "question"],
-        template=request.prompt_template,
-    )
     try:
+        # Vector Store Client
         vector_db_client = get_vector_db_client(
             config=settings.VECTOR_DB_CONFIG, collection_name=request.collection_name
         )
-        retriever = vector_db_client.get_retriever(
-            get_embedder(collection.embedder_config), request.k
-        )
-
-        model = TrueFoundryLLMGateway(
+        # Model to use for chat
+        llm = TrueFoundryLLMGateway(
             model=request.model_configuration.name,
             model_parameters=request.model_configuration.parameters,
         )
         logger.info(f"Loaded TrueFoundry LLM model {request.model_configuration.name}")
 
-        # retrieval QA chain
-        logger.info("Loading QA chain")
-        qa = CustomRetrievalQA(
+        # get vector store
+        vector_store = vector_db_client.get_vector_store(
+            embeddings=get_embedder(collection.embedder_config),
+        )
+
+        # get retriever
+        retriever = get_retriever(
+            vectorstore=vector_store,
+            retriever_config=request.retriever_config,
+            llm=llm,
+        )
+
+        DOCUMENT_PROMPT = PromptTemplate(
+            input_variables=["page_content"],
+            template="<document>{page_content}</document>",
+        )
+        QA_PROMPT = PromptTemplate(
+            input_variables=["context", "question"],
+            template=request.prompt_template,
+        )
+        # Chain to get output for given query from docs using llm
+        retrieval_chain = get_retrieval_chain(
+            chain_name=request.retrieval_chain_name,
+            retriever=retriever,
+            llm=llm,
             combine_documents_chain=load_qa_chain(
-                llm=model,
+                llm=llm,
                 chain_type="stuff",
                 prompt=QA_PROMPT,
                 document_variable_name="context",
                 document_prompt=DOCUMENT_PROMPT,
                 verbose=True,
             ),
-            retriever=retriever,
             return_source_documents=True,
             verbose=True,
         )
-        qa.k = request.k
-        qa.model_openai = model
-        logger.info("Making query chain")
-        outputs = qa({"query": request.query})
 
-        # prepare the final prompt for debug
-        final_prompt = request.prompt_template.format(
-            question=request.query,
-            context=" ".join(
-                [tx.page_content for tx in outputs.get("source_documents")]
-            ),
-        )
-        if request.debug:
-            response = {
-                "answer": outputs["result"],
-                "docs": outputs.get("source_documents") or [],
-                "prompt": final_prompt,
-            }
-        else:
-            response = {
-                "answer": outputs["result"],
-                "docs": outputs.get("source_documents") or [],
-            }
+        outputs = retrieval_chain({"query": request.query})
 
-        return response
+        return {
+            "answer": outputs["result"],
+            "docs": outputs.get("source_documents") or [],
+        }
 
     except Exception as exp:
         logger.exception(exp)
