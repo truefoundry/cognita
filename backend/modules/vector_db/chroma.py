@@ -34,12 +34,12 @@ class ChromaVectorDB(BaseVectorDB):
     def delete_collection(self):
         return self.client.delete_collection(name=self.collection_name)
 
-    def get_retriever(self, embeddings: Embeddings, k: int):
+    def get_vector_store(self, embeddings: Embeddings):
         return Chroma(
             client=self.client,
             embedding_function=embeddings,
             collection_name=self.collection_name,
-        ).as_retriever(search_kwargs={"k": k})
+        )
 
     def list_documents_in_collection(self) -> List[dict]:
         return []

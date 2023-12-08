@@ -42,12 +42,12 @@ class QdrantVectorDB(BaseVectorDB):
             collection_name=self.collection_name
         )
 
-    def get_retriever(self, embeddings: Embeddings, k: int):
+    def get_vector_store(self, embeddings: Embeddings):
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
             collection_name=self.collection_name,
-        ).as_retriever(search_kwargs={"k": k})
+        )
 
     def list_documents_in_collection(self) -> List[dict]:
         """
