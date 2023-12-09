@@ -32,7 +32,11 @@ class WebLoader(BaseLoader):
             data.decompose()
 
         # return data by retrieving the tag content
-        return " ".join([str(d) for d in soup])
+        content = " ".join([str(d) for d in soup])
+        # Remove html tags
+        if content.startswith("html"):
+            content = content[5:]
+        return content
 
     def load_data(
         self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]

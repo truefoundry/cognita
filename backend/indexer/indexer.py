@@ -65,6 +65,8 @@ async def index_collection(inputs: IndexerConfig):
                     max_chunk_size=inputs.chunk_size,
                 )
                 for chunk in chunks:
+                    if doc.metadata.source:
+                        chunk.page_content = f"<source>{doc.metadata.source}</source>\n{chunk.page_content}"
                     chunk.metadata.update(doc.metadata.dict())
                     final_documents.append(chunk)
                 logger.info("%s -> %s chunks", doc.filepath, len(chunks))

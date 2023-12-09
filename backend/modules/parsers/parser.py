@@ -64,7 +64,13 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    async def get_chunks(self, filepath, max_chunk_size) -> typing.List[Document]:
+    async def get_chunks(
+        self,
+        filepath,
+        max_chunk_size,
+        *args,
+        **kwargs,
+    ) -> typing.List[Document]:
         """
         Abstract method. This should asynchronously read a file and return its content in chunks.
 

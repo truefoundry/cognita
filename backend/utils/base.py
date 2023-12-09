@@ -11,6 +11,7 @@ class DocumentMetadata(BaseModel):
     """
 
     document_id: str
+    source: Optional[str]
 
     class Config:
         extra = Extra.allow

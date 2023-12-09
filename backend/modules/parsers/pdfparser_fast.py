@@ -25,7 +25,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
         """
         pass
 
-    async def get_chunks(self, filepath: str, max_chunk_size=1000, *args):
+    async def get_chunks(self, filepath: str, max_chunk_size: int, *args, **kwargs):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
 
