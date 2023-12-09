@@ -1,11 +1,9 @@
 from typing import Optional
 
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.storage import RedisStore
 
 from backend.modules.embedder.tfy_embeddings import TrueFoundryEmbeddings
-from backend.settings import settings
 from backend.utils.base import EmbedderConfig, EmbeddingCacheConfig
 
 # A dictionary mapping embedder names to their respective classes.

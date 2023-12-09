@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import typing
 from functools import partial
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -9,7 +8,6 @@ import requests
 from langchain.chat_models.base import BaseChatModel
 from langchain.pydantic_v1 import Extra, Field, root_validator
 from langchain.schema import ChatGeneration, ChatResult
-from langchain.schema.language_model import BaseLanguageModel
 from langchain.schema.messages import (
     AIMessage,
     BaseMessage,
@@ -18,13 +16,9 @@ from langchain.schema.messages import (
     HumanMessage,
     SystemMessage,
 )
-from langchain.schema.output import LLMResult
-from langchain.schema.prompt import PromptValue
 from requests.adapters import HTTPAdapter
-from servicefoundry.lib.auth.servicefoundry_session import ServiceFoundrySession
 from urllib3.util.retry import Retry
 
-from backend.settings import settings
 from backend.utils.logger import logger
 
 logger = logging.getLogger(__name__)
