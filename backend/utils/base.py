@@ -181,7 +181,7 @@ class SearchQuery(BaseModel):
         default="RetrievalQA",
         title="Name of the retrieval chain to use for retrieving documents",
     )
-    retriever_config: Optional[RetrieverConfig] = Field(
+    retriever_config: RetrieverConfig = Field(
         title="Retriever configuration",
     )
     query: str = Field(title="Question to search for", max_length=1000)
