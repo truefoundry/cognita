@@ -122,25 +122,12 @@ class MLFoundry(BaseMetadataStore):
         self.client.create_ml_repo(self.ml_repo_name)
 
     def create_collection(self, collection: CollectionCreate) -> Collection:
-        collection_name = collection.name
-        try:
-            existing_run = self.client.get_run_by_name(
-                ml_repo=self.ml_repo_name, run_name=collection_name
-            )
-            if existing_run:
-                raise Exception(
-                    f"Collection with name {collection_name} already exists."
-                )
-        except mlflow.exceptions.RestException as exp:
-            if exp.error_code != "RESOURCE_DOES_NOT_EXIST":
-                raise exp
-
         created_collection = self.client.create_run(
             ml_repo=self.ml_repo_name,
-            run_name=collection_name,
+            run_name=collection.name,
             tags=Tags(
                 type=MLRunTypes.COLLECTION,
-                collection_name=collection_name,
+                collection_name=collection.name,
             ).dict(),
         )
         created_collection.log_params(
@@ -161,9 +148,13 @@ class MLFoundry(BaseMetadataStore):
     def get_collection_by_name(
         self, collection_name: str, include_runs=False
     ) -> Collection:
-        ml_run = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_name
-        )
+        try:
+            ml_run = self.client.get_run_by_name(
+                ml_repo=self.ml_repo_name, run_name=collection_name
+            )
+        except mlflow.exceptions.RestException as exp:
+            if exp.error_code == "RESOURCE_DOES_NOT_EXIST":
+                return None
         collection_params = CollectionMetadata.from_mlfoundry_params(
             params=ml_run.get_params()
         )
@@ -292,13 +283,14 @@ class MLFoundry(BaseMetadataStore):
             status=CollectionIndexerJobRunStatus.INITIALIZED,
         )
 
-    def delete_collection(self, collection_name: str):
-        collection_inderer_job_runs = self.client.search_runs(
-            ml_repo=self.ml_repo_name,
-            filter_string=f"params.type = '{MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value}' and params.collection_name = '{collection_name}'",
-        )
-        for collection_inderer_job_run in collection_inderer_job_runs:
-            collection_inderer_job_run.delete()
+    def delete_collection(self, collection_name: str, include_runs=False):
+        if include_runs:
+            collection_inderer_job_runs = self.client.search_runs(
+                ml_repo=self.ml_repo_name,
+                filter_string=f"params.type = '{MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value}' and params.collection_name = '{collection_name}'",
+            )
+            for collection_inderer_job_run in collection_inderer_job_runs:
+                collection_inderer_job_run.delete()
         collection = self.client.get_run_by_name(
             ml_repo=self.ml_repo_name, run_name=collection_name
         )

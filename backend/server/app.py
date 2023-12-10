@@ -79,6 +79,14 @@ async def get_collections():
 @app.post("/collections")
 async def create_collection(request: CreateCollection):
     try:
+        existing_collection = metadata_store_client.get_collection_by_name(
+            collection_name=request.name
+        )
+        if existing_collection:
+            return HTTPException(
+                status_code=400,
+                detail=f"Collection with name {request.name} already exists.",
+            )
         collection = metadata_store_client.create_collection(
             CollectionCreate(
                 name=request.name,
@@ -93,6 +101,10 @@ async def create_collection(request: CreateCollection):
         vector_db_client.create_collection(get_embedder(request.embedder_config))
         return JSONResponse(content={"collection": collection.dict()}, status_code=201)
     except Exception as exp:
+        try:
+            metadata_store_client.delete_collection(collection_name=request.name)
+        except Exception as e:
+            logger.exception(e)
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))
 
@@ -190,7 +202,7 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
             config=settings.VECTOR_DB_CONFIG, collection_name=collection_name
         )
         vector_db_client.delete_collection()
-        metadata_store_client.delete_collection(collection_name)
+        metadata_store_client.delete_collection(collection_name, include_runs=True)
         return JSONResponse(content={"deleted": True})
     except Exception as exp:
         logger.exception(exp)
