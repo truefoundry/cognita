@@ -11,12 +11,8 @@ from pydantic import BaseModel, Extra
 
 from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.models import (
-    Collection,
-    CollectionCreate,
-    CollectionIndexerJobRun,
-    CollectionIndexerJobRunCreate,
-    CollectionIndexerJobRunStatus,
-)
+    Collection, CollectionCreate, CollectionIndexerJobRun,
+    CollectionIndexerJobRunCreate, CollectionIndexerJobRunStatus)
 from backend.utils.base import DataSource, EmbedderConfig, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
@@ -112,6 +108,8 @@ class Tags(BaseModel):
 
 
 class MLFoundry(BaseMetadataStore):
+    ml_runs: dict[str, mlfoundry.MlFoundryRun] = {}
+
     def __init__(self, config: dict):
         self.ml_repo_name = config.get("ml_repo_name", None)
         if not self.ml_repo_name:
@@ -120,6 +118,22 @@ class MLFoundry(BaseMetadataStore):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = mlfoundry.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
+
+    def _get_run_by_name(self, run_name: str, no_cache: bool = False) -> mlfoundry.MlFoundryRun:
+        """
+        Cache the runs to avoid too many requests to the backend.
+        """
+        if len(self.ml_runs.keys()) > 50:
+            self.ml_runs = {}
+        if no_cache:
+            self.ml_runs[run_name] = self.client.get_run_by_name(
+                ml_repo=self.ml_repo_name, run_name=run_name
+            )
+        if run_name not in self.ml_runs:
+            self.ml_runs[run_name] = self.client.get_run_by_name(
+                ml_repo=self.ml_repo_name, run_name=run_name
+            )
+        return self.ml_runs.get(run_name)
 
     def create_collection(self, collection: CollectionCreate) -> Collection:
         created_collection = self.client.create_run(
@@ -149,9 +163,7 @@ class MLFoundry(BaseMetadataStore):
         self, collection_name: str, include_runs=False
     ) -> Collection:
         try:
-            ml_run = self.client.get_run_by_name(
-                ml_repo=self.ml_repo_name, run_name=collection_name
-            )
+            ml_run = self._get_run_by_name(run_name=collection_name, no_cache=True)
         except mlflow.exceptions.RestException as exp:
             if exp.error_code == "RESOURCE_DOES_NOT_EXIST":
                 return None
@@ -201,9 +213,7 @@ class MLFoundry(BaseMetadataStore):
     def get_current_indexer_job_run(
         self, collection_name: str
     ) -> CollectionIndexerJobRun:
-        collection = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_name
-        )
+        collection = self._get_run_by_name(run_name=collection_name)
         tags = collection.get_tags(no_cache=True)
         current_indexer_job_run_name = tags.get(CURRENT_INDEXER_JOB_RUN_NAME_KEY, None)
         if current_indexer_job_run_name:
@@ -213,10 +223,7 @@ class MLFoundry(BaseMetadataStore):
         return None
 
     def get_collection_indexer_job_run(self, collection_inderer_job_run_name: str):
-        run = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name,
-            run_name=collection_inderer_job_run_name,
-        )
+        run = self._get_run_by_name(run_name=collection_inderer_job_run_name)
         collection_inderer_job_run = RunParams.from_mlfoundry_params(
             params=run.get_params()
         )
@@ -254,9 +261,7 @@ class MLFoundry(BaseMetadataStore):
     def create_collection_indexer_job_run(
         self, collection_name: str, indexer_job_run: CollectionIndexerJobRunCreate
     ) -> CollectionIndexerJobRun:
-        collection = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_name
-        )
+        collection = self._get_run_by_name(run_name=collection_name)
         created_run = self.client.create_run(
             ml_repo=self.ml_repo_name,
             run_name=collection_name,
@@ -291,9 +296,7 @@ class MLFoundry(BaseMetadataStore):
             )
             for collection_inderer_job_run in collection_inderer_job_runs:
                 collection_inderer_job_run.delete()
-        collection = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_name
-        )
+        collection = self._get_run_by_name(run_name=collection_name)
         collection.delete()
 
     def update_indexer_job_run_status(
@@ -302,8 +305,8 @@ class MLFoundry(BaseMetadataStore):
         status: CollectionIndexerJobRunStatus,
         extras: dict = None,
     ):
-        collection_inderer_job_run = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_inderer_job_run_name
+        collection_inderer_job_run = self._get_run_by_name(
+            run_name=collection_inderer_job_run_name
         )
         collection_inderer_job_run.set_tags(
             {"status": status.value, **({**extras} if extras else {})}
@@ -320,7 +323,7 @@ class MLFoundry(BaseMetadataStore):
         metric_dict: dict[str, int | float],
         step: int = 0,
     ):
-        collection_inderer_job_run = self.client.get_run_by_name(
-            ml_repo=self.ml_repo_name, run_name=collection_inderer_job_run_name
+        collection_inderer_job_run = self._get_run_by_name(
+            run_name=collection_inderer_job_run_name
         )
         collection_inderer_job_run.log_metrics(metric_dict=metric_dict, step=step)

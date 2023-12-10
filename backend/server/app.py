@@ -83,7 +83,7 @@ async def create_collection(request: CreateCollection):
             collection_name=request.name
         )
         if existing_collection:
-            return HTTPException(
+            raise HTTPException(
                 status_code=400,
                 detail=f"Collection with name {request.name} already exists.",
             )
@@ -100,6 +100,8 @@ async def create_collection(request: CreateCollection):
         )
         vector_db_client.create_collection(get_embedder(request.embedder_config))
         return JSONResponse(content={"collection": collection.dict()}, status_code=201)
+    except HTTPException as exp:
+        raise exp
     except Exception as exp:
         try:
             metadata_store_client.delete_collection(collection_name=request.name)
@@ -113,38 +115,38 @@ async def create_collection(request: CreateCollection):
 async def add_documents_to_collection(
     request: AddDocuments, collection_name: str = Path(title="Collection name")
 ):
-    collection = metadata_store_client.get_collection_by_name(
-        collection_name=collection_name
-    )
-    if not collection:
-        return HTTPException(
-            status_code=404,
-            detail=f"Collection with name {collection_name} does not exist.",
-        )
-    current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
-        collection_name=collection_name
-    )
-    if (
-        not request.force
-        and current_indexer_job_run
-        and current_indexer_job_run.status
-        not in [
-            CollectionIndexerJobRunStatus.COMPLETED,
-            CollectionIndexerJobRunStatus.FAILED,
-        ]
-    ):
-        return HTTPException(
-            status_code=400,
-            detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
-        )
-    indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
-        collection_name=collection_name,
-        indexer_job_run=CollectionIndexerJobRunCreate(
-            data_source=request.data_source,
-            parser_config=request.parser_config,
-        ),
-    )
     try:
+        collection = metadata_store_client.get_collection_by_name(
+            collection_name=collection_name
+        )
+        if not collection:
+            return HTTPException(
+                status_code=404,
+                detail=f"Collection with name {collection_name} does not exist.",
+            )
+        current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
+            collection_name=collection_name
+        )
+        if (
+            not request.force
+            and current_indexer_job_run
+            and current_indexer_job_run.status
+            not in [
+                CollectionIndexerJobRunStatus.COMPLETED,
+                CollectionIndexerJobRunStatus.FAILED,
+            ]
+        ):
+            return HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
+            )
+        indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
+            collection_name=collection_name,
+            indexer_job_run=CollectionIndexerJobRunCreate(
+                data_source=request.data_source,
+                parser_config=request.parser_config,
+            ),
+        )
         if settings.DEBUG_MODE:
             await trigger_job_locally(
                 inputs=IndexerConfig(
@@ -188,6 +190,8 @@ async def add_documents_to_collection(
         return JSONResponse(
             status_code=201, content={"indexer_job_run": indexer_job_run.dict()}
         )
+    except HTTPException as exp:
+        raise exp
     except Exception as exp:
         logger.exception(exp)
         metadata_store_client.update_indexer_job_run_status(
@@ -206,6 +210,8 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
         vector_db_client.delete_collection()
         metadata_store_client.delete_collection(collection_name, include_runs=True)
         return JSONResponse(content={"deleted": True})
+    except HTTPException as exp:
+        raise exp
     except Exception as exp:
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))
@@ -301,7 +307,8 @@ async def search(request: SearchQuery):
             "answer": outputs["result"],
             "docs": outputs.get("source_documents") or [],
         }
-
+    except HTTPException as exp:
+        raise exp
     except Exception as exp:
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))
