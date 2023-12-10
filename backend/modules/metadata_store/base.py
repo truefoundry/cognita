@@ -44,6 +44,15 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_current_indexer_job_run(
+        self, collection_name: str
+    ) -> CollectionIndexerJobRun:
+        """
+        Get the current collection indexer job run for a collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def create_collection_indexer_job_run(
         self, collection_name: str, indexer_job_run: CollectionIndexerJobRunCreate
     ) -> CollectionIndexerJobRun:

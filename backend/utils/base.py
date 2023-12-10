@@ -96,6 +96,11 @@ class AddDocuments(BaseModel):
         title="Mapping of file extensions to parsers. Required only incase, multiple parsers are available for same extension. Must be a valid json",
     )
 
+    force: bool = Field(
+        default=False,
+        title="If true, then force index the documents even if there is active indexer job run",
+    )
+
 
 class IndexerConfig(BaseModel):
     collection_name: str = Field(

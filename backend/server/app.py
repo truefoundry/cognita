@@ -21,6 +21,7 @@ from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
     CollectionCreate,
     CollectionIndexerJobRunCreate,
+    CollectionIndexerJobRunStatus,
 )
 from backend.modules.retrieval_chains import get_retrieval_chain
 from backend.modules.retrievers import get_retriever
@@ -105,10 +106,27 @@ async def add_documents_to_collection(
             collection_name=collection_name
         )
         if not collection:
-            raise HTTPException(
+            return HTTPException(
                 status_code=404,
                 detail=f"Collection with name {collection_name} does not exist.",
             )
+        current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
+            collection_name=collection_name
+        )
+        if (
+            not request.force
+            and current_indexer_job_run
+            and current_indexer_job_run.status
+            not in [
+                CollectionIndexerJobRunStatus.COMPLETED,
+                CollectionIndexerJobRunStatus.FAILED,
+            ]
+        ):
+            return HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
+            )
+
         indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
             collection_name=collection_name,
             indexer_job_run=CollectionIndexerJobRunCreate(
@@ -182,21 +200,25 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
 @app.get("/collections/{collection_name}/status")
 async def get_collection_status(collection_name: str = Path(title="Collection name")):
     collection = metadata_store_client.get_collection_by_name(
-        collection_name=collection_name, include_runs=True
+        collection_name=collection_name
     )
 
     if collection is None:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    if len(collection.indexer_job_runs) == 0:
+    current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
+        collection_name=collection_name
+    )
+
+    if current_indexer_job_run is None:
         return JSONResponse(
             content={"status": "MISSING", "message": "No indexer job runs found"}
         )
-    latest_indexer_job_run = collection.indexer_job_runs[-1]
+
     return JSONResponse(
         content={
-            "status": latest_indexer_job_run.status.value,
-            "message": f"Indexer job run {latest_indexer_job_run.name} in {latest_indexer_job_run.status.value}. Check logs for more details.",
+            "status": current_indexer_job_run.status.value,
+            "message": f"Indexer job run {current_indexer_job_run.name} in {current_indexer_job_run.status.value}. Check logs for more details.",
         }
     )
 

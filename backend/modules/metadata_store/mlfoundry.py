@@ -20,6 +20,7 @@ from backend.modules.metadata_store.models import (
 from backend.utils.base import DataSource, EmbedderConfig, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
+CURRENT_INDEXER_JOB_RUN_NAME_KEY = "current_indexer_job_run_name"
 
 
 class MLRunTypes(str, enum.Enum):
@@ -206,6 +207,37 @@ class MLFoundry(BaseMetadataStore):
 
         return collections
 
+    def get_current_indexer_job_run(
+        self, collection_name: str
+    ) -> CollectionIndexerJobRun:
+        collection = self.client.get_run_by_name(
+            ml_repo=self.ml_repo_name, run_name=collection_name
+        )
+        tags = collection.get_tags(no_cache=True)
+        current_indexer_job_run_name = tags.get(CURRENT_INDEXER_JOB_RUN_NAME_KEY, None)
+        if current_indexer_job_run_name:
+            return self.get_collection_indexer_job_run(
+                collection_inderer_job_run_name=current_indexer_job_run_name
+            )
+        return None
+
+    def get_collection_indexer_job_run(self, collection_inderer_job_run_name: str):
+        run = self.client.get_run_by_name(
+            ml_repo=self.ml_repo_name,
+            run_name=collection_inderer_job_run_name,
+        )
+        collection_inderer_job_run = RunParams.from_mlfoundry_params(
+            params=run.get_params()
+        )
+        return CollectionIndexerJobRun(
+            name=run.run_name,
+            parser_config=collection_inderer_job_run.parser_config,
+            data_source=collection_inderer_job_run.data_source,
+            status=CollectionIndexerJobRunStatus[
+                run.get_tags(no_cache=True).get("status")
+            ],
+        )
+
     def get_collection_indexer_job_runs(self, collection_name: str):
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -221,7 +253,9 @@ class MLFoundry(BaseMetadataStore):
                     name=run.run_name,
                     parser_config=collection_inderer_job_run.parser_config,
                     data_source=collection_inderer_job_run.data_source,
-                    status=CollectionIndexerJobRunStatus[run.get_tags().get("status")],
+                    status=CollectionIndexerJobRunStatus[
+                        run.get_tags(no_cache=True).get("status")
+                    ],
                 )
             )
         return indexer_job_runs
@@ -229,6 +263,9 @@ class MLFoundry(BaseMetadataStore):
     def create_collection_indexer_job_run(
         self, collection_name: str, indexer_job_run: CollectionIndexerJobRunCreate
     ) -> CollectionIndexerJobRun:
+        collection = self.client.get_run_by_name(
+            ml_repo=self.ml_repo_name, run_name=collection_name
+        )
         created_run = self.client.create_run(
             ml_repo=self.ml_repo_name,
             run_name=collection_name,
@@ -244,6 +281,9 @@ class MLFoundry(BaseMetadataStore):
                 parser_config=indexer_job_run.parser_config,
                 data_source=indexer_job_run.data_source,
             ).to_mlfoundry_params()
+        )
+        collection.set_tags(
+            tags={CURRENT_INDEXER_JOB_RUN_NAME_KEY: created_run.run_name}
         )
         return CollectionIndexerJobRun(
             name=created_run.run_name,
