@@ -2,7 +2,6 @@ import abc
 import enum
 import json
 import logging
-import os
 import warnings
 from typing import List, Literal
 
@@ -188,7 +187,7 @@ class MLFoundry(BaseMetadataStore):
         )
         collections = []
         for ml_run in ml_runs:
-            if names and ml_run.run_name not in names:
+            if names is not None and ml_run.run_name not in names:
                 continue
             collection_params = CollectionMetadata.from_mlfoundry_params(
                 params=ml_run.get_params()
