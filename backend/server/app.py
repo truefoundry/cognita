@@ -113,40 +113,38 @@ async def create_collection(request: CreateCollection):
 async def add_documents_to_collection(
     request: AddDocuments, collection_name: str = Path(title="Collection name")
 ):
+    collection = metadata_store_client.get_collection_by_name(
+        collection_name=collection_name
+    )
+    if not collection:
+        return HTTPException(
+            status_code=404,
+            detail=f"Collection with name {collection_name} does not exist.",
+        )
+    current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
+        collection_name=collection_name
+    )
+    if (
+        not request.force
+        and current_indexer_job_run
+        and current_indexer_job_run.status
+        not in [
+            CollectionIndexerJobRunStatus.COMPLETED,
+            CollectionIndexerJobRunStatus.FAILED,
+        ]
+    ):
+        return HTTPException(
+            status_code=400,
+            detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
+        )
+    indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
+        collection_name=collection_name,
+        indexer_job_run=CollectionIndexerJobRunCreate(
+            data_source=request.data_source,
+            parser_config=request.parser_config,
+        ),
+    )
     try:
-        collection = metadata_store_client.get_collection_by_name(
-            collection_name=collection_name
-        )
-        if not collection:
-            return HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist.",
-            )
-        current_indexer_job_run = metadata_store_client.get_current_indexer_job_run(
-            collection_name=collection_name
-        )
-        if (
-            not request.force
-            and current_indexer_job_run
-            and current_indexer_job_run.status
-            not in [
-                CollectionIndexerJobRunStatus.COMPLETED,
-                CollectionIndexerJobRunStatus.FAILED,
-            ]
-        ):
-            return HTTPException(
-                status_code=400,
-                detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
-            )
-
-        indexer_job_run = metadata_store_client.create_collection_indexer_job_run(
-            collection_name=collection_name,
-            indexer_job_run=CollectionIndexerJobRunCreate(
-                data_source=request.data_source,
-                parser_config=request.parser_config,
-            ),
-        )
-
         if settings.DEBUG_MODE:
             await trigger_job_locally(
                 inputs=IndexerConfig(
@@ -192,6 +190,10 @@ async def add_documents_to_collection(
         )
     except Exception as exp:
         logger.exception(exp)
+        metadata_store_client.update_indexer_job_run_status(
+            collection_inderer_job_run_name=indexer_job_run.name,
+            indexer_job_run_status=CollectionIndexerJobRunStatus.FAILED,
+        )
         raise HTTPException(status_code=500, detail=str(exp))
 
 
