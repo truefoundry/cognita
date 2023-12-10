@@ -9,7 +9,9 @@ from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier, MlFoundryArtifactsRepository)
+    ArtifactIdentifier,
+    MlFoundryArtifactsRepository,
+)
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
@@ -17,14 +19,21 @@ from backend.modules.embedder import get_embedder
 from backend.modules.llms.truefoundry_llm import TrueFoundryLLMGateway
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate, CollectionIndexerJobRunCreate)
+    CollectionCreate,
+    CollectionIndexerJobRunCreate,
+)
 from backend.modules.retrieval_chains import get_retrieval_chain
 from backend.modules.retrievers import get_retriever
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (AddDocuments, CreateCollection, IndexerConfig,
-                                ModelType, SearchQuery,
-                                UploadToDataDirectoryDto)
+from backend.utils.base import (
+    AddDocuments,
+    CreateCollection,
+    IndexerConfig,
+    ModelType,
+    SearchQuery,
+    UploadToDataDirectoryDto,
+)
 from backend.utils.logger import logger
 
 metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
@@ -53,12 +62,10 @@ async def status():
 @app.get("/collections")
 async def get_collections():
     try:
-        vector_db_client = get_vector_db_client(config=settings.VECTOR_DB_CONFIG)
-        collection_names = vector_db_client.get_collections()
-        print(collection_names)
-        collections = metadata_store_client.get_collections(
-            names=collection_names, include_runs=False
-        )
+        # vector_db_client = get_vector_db_client(config=settings.VECTOR_DB_CONFIG)
+        # collection_names = vector_db_client.get_collections()
+        # print(collection_names)
+        collections = metadata_store_client.get_collections(include_runs=False)
         return JSONResponse(
             content={"collections": [obj.dict() for obj in collections]}
         )
