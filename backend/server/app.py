@@ -261,6 +261,7 @@ async def search(request: SearchQuery):
         llm = TrueFoundryLLMGateway(
             model=request.model_configuration.name,
             model_parameters=request.model_configuration.parameters,
+            system_prompt=request.system_prompt,
         )
         logger.info(f"Loaded TrueFoundry LLM model {request.model_configuration.name}")
 

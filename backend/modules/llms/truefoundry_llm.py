@@ -88,6 +88,7 @@ class TrueFoundryLLMGateway(BaseChatModel):
     tfy_llm_gateway_path: Optional[str] = Field(
         default=None,
     )
+    system_prompt: str = Field(default=SYSTEM_INSTRUCTION)
 
     class Config:
         """Configuration for this pydantic object."""
@@ -137,7 +138,7 @@ class TrueFoundryLLMGateway(BaseChatModel):
             for message in messages
         ]
         if message_dicts[0].get("role") != "system":
-            message_dicts.insert(0, {"role": "system", "content": SYSTEM_INSTRUCTION})
+            message_dicts.insert(0, {"role": "system", "content": self.system_prompt})
         payload = {
             "messages": message_dicts,
             "model": {
