@@ -82,8 +82,8 @@ Modules are designed to support different functionalities like metadata_store, v
 Each module can be extended by adding a subclass class of class defined in `__init__.py` of each folder.
 Currently, we support following types in each module
 - dataloaders - dataloaders are component responsible for loading data from `DataSource`. We have `mlfoundry`, `web`, `github` and `local` dataloaders
-- embedder - embedder are component responsible for embedding functions used to index the documents into vector. We have `OpenAI`, `TruefoundryEmbeddings`
-- llms - llms contain various llm components like `tfy_playground_llm` to support TrueFoundry's LLM Gateway support.
+- embedder - embedder are component responsible for embedding functions used to index the documents into vector. We support all the embedding models available in TrueFoundry's LLM Gateway
+- llms - llms contain various llm components. We support all the chat models available in TrueFoundry's LLM Gateway.
 - metadara_store - used to store metadata of various collections like embedding used, chunk size, data source used, status of indexing. We are using `mlfoundry` ML repos, you can also use SQL for same
 - parsers - parsers are component responsible for parsing data and chunking them based on file type. We have `markdown`, `pdf`, and `txt` support
 - vector_db - used to store and query over vectors. We have `chroma`, `qdrant`, `weaviate`.

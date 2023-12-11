@@ -13,10 +13,10 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
     MlFoundryArtifactsRepository,
 )
 from servicefoundry import trigger_job
+from servicefoundry.langchain import TrueFoundryChat
 
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules.embedder import get_embedder
-from backend.modules.llms.truefoundry_llm import TrueFoundryLLMGateway
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
     CollectionCreate,
@@ -258,7 +258,7 @@ async def search(request: SearchQuery):
             config=settings.VECTOR_DB_CONFIG, collection_name=request.collection_name
         )
         # Model to use for chat
-        llm = TrueFoundryLLMGateway(
+        llm = TrueFoundryChat(
             model=request.model_configuration.name,
             model_parameters=request.model_configuration.parameters,
             system_prompt=request.system_prompt,
