@@ -345,7 +345,7 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
 async def get_enabled_models(
     model_type: Optional[ModelType] = Query(default=None),
 ):
-    url = f"{settings.TFY_LLM_GATEWAY_ENDPOINT}/api/model/enabled{f'?model_types={model_type.value}' if model_type else ''}"
+    url = f"{settings.TFY_LLM_GATEWAY_URL}/api/model/enabled{f'?model_types={model_type.value}' if model_type else ''}"
     headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
     try:
         response = requests.get(url=url, headers=headers)

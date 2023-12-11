@@ -20,9 +20,8 @@ class Settings(BaseSettings):
     JOB_FQN: str
     JOB_COMPONENT_NAME: str
     TFY_API_KEY: str
-    TFY_HOST: str
-    TFY_LLM_GATEWAY_ENDPOINT: Optional[str]
-    TFY_LLM_GATEWAY_PATH: Optional[str] = "/api/llm"
+    TFY_HOST: Optional[str]
+    TFY_LLM_GATEWAY_URL: str
     EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
     DEBUG_MODE: bool = False
 
@@ -34,8 +33,7 @@ class Settings(BaseSettings):
     JOB_COMPONENT_NAME = os.getenv("JOB_COMPONENT_NAME", "")
     TFY_API_KEY = os.getenv("TFY_API_KEY", "")
     TFY_HOST = os.getenv("TFY_HOST", "")
-    TFY_LLM_GATEWAY_ENDPOINT = os.getenv("TFY_LLM_GATEWAY_ENDPOINT", "")
-    TFY_LLM_GATEWAY_PATH = os.getenv("TFY_LLM_GATEWAY_PATH", "/api/llm")
+    TFY_LLM_GATEWAY_URL = os.getenv("TFY_LLM_GATEWAY_URL", "")
     EMBEDDING_CACHE_CONFIG = (
         EmbeddingCacheConfig.parse_obj(
             orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
@@ -58,11 +56,10 @@ class Settings(BaseSettings):
     if not TFY_API_KEY:
         raise ValueError("TFY_API_KEY is not set")
 
-    if not TFY_HOST:
-        raise ValueError("TFY_HOST is not set")
-
-    if not TFY_LLM_GATEWAY_ENDPOINT:
-        TFY_LLM_GATEWAY_ENDPOINT = f"{TFY_HOST}{TFY_LLM_GATEWAY_PATH}"
+    if not TFY_LLM_GATEWAY_URL:
+        if not TFY_HOST:
+            raise ValueError("TFY_HOST is not set")
+        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
 
     try:
         VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
