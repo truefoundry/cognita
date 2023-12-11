@@ -9,9 +9,7 @@ from fastapi.responses import JSONResponse
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier,
-    MlFoundryArtifactsRepository,
-)
+    ArtifactIdentifier, MlFoundryArtifactsRepository)
 from servicefoundry import trigger_job
 from servicefoundry.langchain import TrueFoundryChat
 
@@ -19,22 +17,15 @@ from backend.indexer.indexer import trigger_job_locally
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
-    CollectionCreate,
-    CollectionIndexerJobRunCreate,
-    CollectionIndexerJobRunStatus,
-)
+    CollectionCreate, CollectionIndexerJobRunCreate,
+    CollectionIndexerJobRunStatus)
 from backend.modules.retrieval_chains import get_retrieval_chain
 from backend.modules.retrievers import get_retriever
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.utils.base import (
-    AddDocuments,
-    CreateCollection,
-    IndexerConfig,
-    ModelType,
-    SearchQuery,
-    UploadToDataDirectoryDto,
-)
+from backend.utils.base import (AddDocuments, CreateCollection, IndexerConfig,
+                                ModelType, SearchQuery,
+                                UploadToDataDirectoryDto)
 from backend.utils.logger import logger
 
 metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
@@ -120,7 +111,7 @@ async def add_documents_to_collection(
             collection_name=collection_name
         )
         if not collection:
-            return HTTPException(
+            raise HTTPException(
                 status_code=404,
                 detail=f"Collection with name {collection_name} does not exist.",
             )
@@ -136,7 +127,7 @@ async def add_documents_to_collection(
                 CollectionIndexerJobRunStatus.FAILED,
             ]
         ):
-            return HTTPException(
+            raise HTTPException(
                 status_code=400,
                 detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
             )
@@ -183,7 +174,7 @@ async def add_documents_to_collection(
                             )
                         }
                         if settings.EMBEDDING_CACHE_CONFIG
-                        else {}
+                        else {"embedding_cache_config": ""}
                     ),
                 },
             )
