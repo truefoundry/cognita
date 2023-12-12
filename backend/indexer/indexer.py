@@ -47,6 +47,10 @@ async def index_collection(inputs: IndexerConfig):
             docs_to_index_count = len(loaded_documents)
             if docs_to_index_count == 0:
                 logger.warning("No documents to found")
+                metadata_store_client.update_indexer_job_run_status(
+                    collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                    status=CollectionIndexerJobRunStatus.COMPLETED,
+                )
                 return
 
             logger.info("Total docs to index: %s", docs_to_index_count)
@@ -79,6 +83,10 @@ async def index_collection(inputs: IndexerConfig):
 
         if len(final_documents) == 0:
             logger.warning("No documents to index")
+            metadata_store_client.update_indexer_job_run_status(
+                collection_inderer_job_run_name=inputs.indexer_job_run_name,
+                status=CollectionIndexerJobRunStatus.COMPLETED,
+            )
             return
 
         # Create vectors of all the final_documents
