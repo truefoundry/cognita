@@ -17,3 +17,4 @@ mlfoundry==0.10.3rc2
 servicefoundry==0.9.26rc4
 markdownify==0.11.6
 chromadb==0.4.17
+gunicorn==21.2.0

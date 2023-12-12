@@ -43,7 +43,7 @@ Note: To run the indexer job too locally, add `DEBUG_MODE=true` as env
 5. Run the Server
 
 ```
-uvicorn --host 0.0.0.0 --port 8080 backend.server.app:app --reload
+gunicorn backend.server.app:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 --reload
 ```
 
 6. Run indexer JOB
