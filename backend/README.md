@@ -5,14 +5,15 @@ This directory contains the primary code for the backend including a FastAPI ser
 Prerequisite: follow [here](../../GETTING_STARTED.md) and fetch following values
 
 ```
-ML_REPO_NAME = 
 VECTOR_DB_CONFIG = 
-METADATA_STORE_TYPE = 
+METADATA_STORE_CONFIG = 
 TFY_SERVICE_ROOT_PATH = 
 JOB_FQN = 
+JOB_COMPONENT_NAME =
 TFY_API_KEY = 
 TFY_HOST = 
-LLM_GATEWAY_ENDPOINT = 
+EMBEDDING_CACHE_CONFI G=
+DEBUG_MODE =
 ```
 
 1. Go to the root directory of this repository
@@ -43,19 +44,19 @@ Note: To run the indexer job too locally, add `DEBUG_MODE=true` as env
 5. Run the Server
 
 ```
-gunicorn backend.server.app:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 --reload
+uvicorn --host 0.0.0.0 --port 8080 backend.server.app:app --reload
 ```
 
 6. Run indexer JOB
 
 **Use mlfoundry artifact as the data source**
 ```
-python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "mlfoundry", "credentials": null, "config": {"uri": "artifact:truefoundry/ag-test/newtestag_7a62e508-41f1-45ff-b49f-bf75a6afe4fa:1"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}'
+python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "mlfoundry", "credentials": null, "config": {"uri": "artifact:truefoundry/ag-test/newtestag_7a62e508-41f1-45ff-b49f-bf75a6afe4fa:1"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}' --metadata_store_config '{"provider": "mlfoundry", "config": {"ml_repo_name": "tfy-docs-rag"}}'
 ```
 
 **Use local file as the data source**
 ```
-python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "local", "credentials": null, "config": {"uri": "sample-data/creditcards"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}'
+python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "local", "credentials": null, "config": {"uri": "sample-data/creditcards"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}' --metadata_store_config '{"provider": "mlfoundry", "config": {"ml_repo_name": "tfy-docs-rag"}}'
 ```
 
 # Development
