@@ -361,3 +361,8 @@ async def get_enabled_models(
     return JSONResponse(
         content={"models": enabled_models},
     )
+
+
+### NEW
+from backend.modules.retrievers.base import RETRIEVER_ROUTER
+app.include_router(RETRIEVER_ROUTER)

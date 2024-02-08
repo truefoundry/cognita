@@ -5,14 +5,14 @@ This directory contains the primary code for the backend including a FastAPI ser
 Prerequisite: follow [here](../../GETTING_STARTED.md) and fetch following values
 
 ```
-VECTOR_DB_CONFIG = 
-METADATA_STORE_CONFIG = 
-TFY_SERVICE_ROOT_PATH = 
-JOB_FQN = 
+VECTOR_DB_CONFIG =
+METADATA_STORE_CONFIG =
+TFY_SERVICE_ROOT_PATH =
+JOB_FQN =
 JOB_COMPONENT_NAME =
-TFY_API_KEY = 
-TFY_HOST = 
-EMBEDDING_CACHE_CONFI G=
+TFY_API_KEY =
+TFY_HOST =
+EMBEDDING_CACHE_CONFIG=
 DEBUG_MODE =
 ```
 
@@ -50,11 +50,13 @@ uvicorn --host 0.0.0.0 --port 8080 backend.server.app:app --reload
 6. Run indexer JOB
 
 **Use mlfoundry artifact as the data source**
+
 ```
 python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "mlfoundry", "credentials": null, "config": {"uri": "artifact:truefoundry/ag-test/newtestag_7a62e508-41f1-45ff-b49f-bf75a6afe4fa:1"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}' --metadata_store_config '{"provider": "mlfoundry", "config": {"ml_repo_name": "tfy-docs-rag"}}'
 ```
 
 **Use local file as the data source**
+
 ```
 python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "local", "credentials": null, "config": {"uri": "sample-data/creditcards"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}' --metadata_store_config '{"provider": "mlfoundry", "config": {"ml_repo_name": "tfy-docs-rag"}}'
 ```
@@ -62,17 +64,18 @@ python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --in
 # Development
 
 # Folder structure
+
     .
     ├── backend                 # Source files for backend
     │   ├── indexer             # Files for indexer
     │   ├── modules             # Modules to support different functions
     │   ├── server              # Files for FastAPI server
     |   ├── utils               # Utils functions and base types
-    |   ├── __init__.py         
+    |   ├── __init__.py
     |   ├── Dockerfile          # Dockerfile for backedn
-    │   ├── README.md           # Readme 
-    |   ├── requirements.txt    
-    │   └── settings.py         # Env validation and parsing           
+    │   ├── README.md           # Readme
+    |   ├── requirements.txt
+    │   └── settings.py         # Env validation and parsing
     ├── venv                    # virtual env dir
     ├── .env                    # For local envs
     └── ...
@@ -82,12 +85,13 @@ python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --in
 Modules are designed to support different functionalities like metadata_store, vector_db, embeddings, llms, parsers and data loaders
 Each module can be extended by adding a subclass class of class defined in `__init__.py` of each folder.
 Currently, we support following types in each module
-- dataloaders - dataloaders are component responsible for loading data from `DataSource`. We have `mlfoundry`, `web`, `github` and `local` dataloaders
-- embedder - embedder are component responsible for embedding functions used to index the documents into vector. We support all the embedding models available in TrueFoundry's LLM Gateway
-- llms - llms contain various llm components. We support all the chat models available in TrueFoundry's LLM Gateway.
-- metadara_store - used to store metadata of various collections like embedding used, chunk size, data source used, status of indexing. We are using `mlfoundry` ML repos, you can also use SQL for same
-- parsers - parsers are component responsible for parsing data and chunking them based on file type. We have `markdown`, `pdf`, and `txt` support
-- vector_db - used to store and query over vectors. We have `chroma`, `qdrant`, `weaviate`.
+
+-   dataloaders - dataloaders are component responsible for loading data from `DataSource`. We have `mlfoundry`, `web`, `github` and `local` dataloaders
+-   embedder - embedder are component responsible for embedding functions used to index the documents into vector. We support all the embedding models available in TrueFoundry's LLM Gateway
+-   llms - llms contain various llm components. We support all the chat models available in TrueFoundry's LLM Gateway.
+-   metadara_store - used to store metadata of various collections like embedding used, chunk size, data source used, status of indexing. We are using `mlfoundry` ML repos, you can also use SQL for same
+-   parsers - parsers are component responsible for parsing data and chunking them based on file type. We have `markdown`, `pdf`, and `txt` support
+-   vector_db - used to store and query over vectors. We have `chroma`, `qdrant`, `weaviate`.
 
 # Indexer
 
