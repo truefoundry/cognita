@@ -36,7 +36,7 @@ class TFQueryInput(BaseModel):
     query: str = Field(title="Query using which the similar documents will be searched", max_length=1000)
 
 
-class TFBaseRetriever(ABC):
+class TFQueryEngine(ABC):
     """Base Retriever Class"""
 
     retriever_name: str = ''

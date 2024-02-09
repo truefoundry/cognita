@@ -1,25 +1,3 @@
-
-
-
-# from fastapi import HTTPException
-
-# from langchain.callbacks.manager import CallbackManagerForRetrieverRun
-# from langchain.chat_models.base import BaseChatModel
-# from langchain.schema import BaseRetriever, Document
-# from langchain.schema.vectorstore import VectorStoreRetriever
-
-
-# from backend.utils.logger import logger
-# from backend.modules.retrievers.base import TFBaseRetriever, TFQueryInput, TFQueryOutput, retriever_post
-# from backend.utils.base import RetrivalQuery
-# from backend.modules.metadata_store import get_metadata_store_client
-# from backend.modules.vector_db import get_vector_db_client
-# from backend.settings import settings
-# from servicefoundry.langchain import TrueFoundryChat
-# from backend.modules.embedder import get_embedder
-
-
-
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Literal
@@ -34,7 +12,7 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain.schema import Document
 from langchain.schema.vectorstore import VectorStore
 
-from backend.modules.retrievers.base import TFBaseRetriever, TFQueryInput, retriever_post
+from backend.modules.retrievers.base import TFQueryEngine, TFQueryInput, retriever_post
 
 
 
@@ -94,7 +72,7 @@ class CreditCardInputQuery(TFQueryInput):
         )
 
 
-class CreditCardRetriver(TFBaseRetriever):
+class CreditCardRetriver(TFQueryEngine):
 
     retriever_name: str = RETRIEVER_NAME
 
