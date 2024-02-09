@@ -243,76 +243,76 @@ async def get_collection_status(collection_name: str = Path(title="Collection na
     )
 
 
-@app.post("/search")
-async def search(request: SearchQuery):
-    logger.info(request)
-    # Get collection
-    collection = metadata_store_client.get_collection_by_name(request.collection_name)
+# @app.post("/search")
+# async def search(request: SearchQuery):
+#     logger.info(request)
+#     # Get collection
+#     collection = metadata_store_client.get_collection_by_name(request.collection_name)
 
-    if collection is None:
-        raise HTTPException(status_code=404, detail="Collection not found")
+#     if collection is None:
+#         raise HTTPException(status_code=404, detail="Collection not found")
 
-    try:
-        # Vector Store Client
-        vector_db_client = get_vector_db_client(
-            config=settings.VECTOR_DB_CONFIG, collection_name=request.collection_name
-        )
-        # Model to use for chat
-        llm = TrueFoundryChat(
-            model=request.model_configuration.name,
-            model_parameters=request.model_configuration.parameters,
-            system_prompt=request.system_prompt,
-        )
-        logger.info(f"Loaded TrueFoundry LLM model {request.model_configuration.name}")
+#     try:
+#         # Vector Store Client
+#         vector_db_client = get_vector_db_client(
+#             config=settings.VECTOR_DB_CONFIG, collection_name=request.collection_name
+#         )
+#         # Model to use for chat
+#         llm = TrueFoundryChat(
+#             model=request.model_configuration.name,
+#             model_parameters=request.model_configuration.parameters,
+#             system_prompt=request.system_prompt,
+#         )
+#         logger.info(f"Loaded TrueFoundry LLM model {request.model_configuration.name}")
 
-        # get vector store
-        vector_store = vector_db_client.get_vector_store(
-            embeddings=get_embedder(collection.embedder_config),
-        )
+#         # get vector store
+#         vector_store = vector_db_client.get_vector_store(
+#             embeddings=get_embedder(collection.embedder_config),
+#         )
 
-        # get retriever
-        retriever = get_retriever(
-            vectorstore=vector_store,
-            retriever_config=request.retriever_config,
-            llm=llm,
-        )
+#         # get retriever
+#         retriever = get_retriever(
+#             vectorstore=vector_store,
+#             retriever_config=request.retriever_config,
+#             llm=llm,
+#         )
 
-        DOCUMENT_PROMPT = PromptTemplate(
-            input_variables=["page_content"],
-            template="<document>{page_content}</document>",
-        )
-        QA_PROMPT = PromptTemplate(
-            input_variables=["context", "question"],
-            template=request.prompt_template,
-        )
-        # Chain to get output for given query from docs using llm
-        retrieval_chain = get_retrieval_chain(
-            chain_name=request.retrieval_chain_name,
-            retriever=retriever,
-            llm=llm,
-            combine_documents_chain=load_qa_chain(
-                llm=llm,
-                chain_type="stuff",
-                prompt=QA_PROMPT,
-                document_variable_name="context",
-                document_prompt=DOCUMENT_PROMPT,
-                verbose=True,
-            ),
-            return_source_documents=True,
-            verbose=True,
-        )
+#         DOCUMENT_PROMPT = PromptTemplate(
+#             input_variables=["page_content"],
+#             template="<document>{page_content}</document>",
+#         )
+#         QA_PROMPT = PromptTemplate(
+#             input_variables=["context", "question"],
+#             template=request.prompt_template,
+#         )
+#         # Chain to get output for given query from docs using llm
+#         retrieval_chain = get_retrieval_chain(
+#             chain_name=request.retrieval_chain_name,
+#             retriever=retriever,
+#             llm=llm,
+#             combine_documents_chain=load_qa_chain(
+#                 llm=llm,
+#                 chain_type="stuff",
+#                 prompt=QA_PROMPT,
+#                 document_variable_name="context",
+#                 document_prompt=DOCUMENT_PROMPT,
+#                 verbose=True,
+#             ),
+#             return_source_documents=True,
+#             verbose=True,
+#         )
 
-        outputs = retrieval_chain({"query": request.query})
+#         outputs = retrieval_chain({"query": request.query})
 
-        return {
-            "answer": outputs["result"],
-            "docs": outputs.get("source_documents") or [],
-        }
-    except HTTPException as exp:
-        raise exp
-    except Exception as exp:
-        logger.exception(exp)
-        raise HTTPException(status_code=500, detail=str(exp))
+#         return {
+#             "answer": outputs["result"],
+#             "docs": outputs.get("source_documents") or [],
+#         }
+#     except HTTPException as exp:
+#         raise exp
+#     except Exception as exp:
+#         logger.exception(exp)
+#         raise HTTPException(status_code=500, detail=str(exp))
 
 
 @app.post("/upload-to-data-directory")

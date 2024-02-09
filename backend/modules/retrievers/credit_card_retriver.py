@@ -142,7 +142,6 @@ class CreditCardRetriver(TFQueryEngine):
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
         
-    
     @staticmethod
     @retriever_post(RETRIEVER_NAME)
     def query(input: CreditCardInputQuery):    
