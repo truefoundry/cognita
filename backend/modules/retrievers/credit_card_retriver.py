@@ -8,7 +8,7 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 
 
 from backend.utils.logger import logger
-from backend.modules.retrievers.base import TFBaseRetriever, post
+from backend.modules.retrievers.base import TFBaseRetriever, retriever_post
 from backend.utils.base import RetrivalQuery
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.vector_db import get_vector_db_client
@@ -52,7 +52,7 @@ class CreditCardRetriver(TFBaseRetriever, BaseRetriever):
         return docs
 
 # This decorator will create path as: /retriver/<RETRIEVER_NAME>/<func_name>
-@post(RETRIEVER_NAME)
+@retriever_post(RETRIEVER_NAME)
 async def get_answer(
     request: RetrivalQuery
 ) -> List:

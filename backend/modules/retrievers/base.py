@@ -9,7 +9,7 @@ RETRIEVER_ROUTER = APIRouter(
     prefix="/retriever",
 )
 
-def post(retriever_name):
+def retriever_post(retriever_name):
     def decorator(func, **kwargs):
         url = '/'+retriever_name +'/'+func.__name__.replace("_","-") 
         RETRIEVER_ROUTER.post(url, **kwargs)(func)
