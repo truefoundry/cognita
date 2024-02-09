@@ -29,15 +29,5 @@ class TFBaseRetriever(ABC):
 
     retriever_name: str = ''
 
-    # @abstractmethod
-    # def get_answer(
-    #     query:  QueryRequest
-    # ) -> Output:
-        
-    #     """
-    #         Return retrived response from RAG pipeline 
-    #     """
-    #     raise NotImplementedError()
-
 
 

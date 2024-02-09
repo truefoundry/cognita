@@ -34,8 +34,6 @@ class CreditCardRetriver(TFBaseRetriever, BaseRetriever):
     def _get_relevant_documents(
         self,
         query: str,
-        # *,
-        # run_manager: CallbackManagerForRetrieverRun,
     ) -> List[Document]:
         """Get docs."""
         # rewrite the question for retrieval
@@ -47,13 +45,13 @@ class CreditCardRetriver(TFBaseRetriever, BaseRetriever):
         )
         # retrieve N docs
         docs = self.retriever.get_relevant_documents(
-            query, 
-            # callbacks=run_manager.get_child()
+            query
         )
 
         print("DOCS:",docs, type(docs))
         return docs
 
+# This decorator will create path as: /retriver/<RETRIEVER_NAME>/<func_name>
 @post(RETRIEVER_NAME)
 async def get_answer(
     request: RetrivalQuery
