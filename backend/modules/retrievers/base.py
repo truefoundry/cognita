@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter
 
 from backend.settings import settings
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.vector_db import get_vector_db_client
-from backend.modules.embedder import get_embedder
-
+from backend.utils.base import LLMConfig
 
 
 
@@ -37,7 +36,18 @@ class TFQueryInput(BaseModel):
 
 
 class TFQueryEngine(ABC):
-    """Base Retriever Class"""
+    """Base Query Engine class, this class lets you write your own retriver. All it's methods can be inherited and overridden 
+    for custom use. 
+
+    This class follows the following steps to write your own query engine:
+        1. Get your collection by giving the collection name
+        2. Get the corresponding vector store client and vector store
+        3. Get the necessary embeddings
+        4. Define an LLM to format the query and retrival
+        5. Define retriver logic
+        6. Define query, this is a compulsory method, with compulsory collection name argument, either you can write your custom 
+            logic here or use the above helper functions to stitch together your query engine components.
+    """
 
     retriever_name: str = ''
 
@@ -63,7 +73,7 @@ class TFQueryEngine(ABC):
         """Logic to get vector store"""
     
     @abstractmethod
-    def get_llm(self):
+    def get_llm(self, model_config: LLMConfig, system_prompt: str):
         """Logic for using a custom llm if any"""
 
     
