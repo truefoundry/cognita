@@ -12,13 +12,19 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain.schema import Document
 from langchain.schema.vectorstore import VectorStore
 
-from backend.modules.retrievers.base import TFQueryEngine, TFQueryInput, retriever_post
+from backend.modules.retrievers.base import QueryEngine, QueryInput, retriever_post
 
 
 
 RETRIEVER_NAME = 'credit-card'
 
-class CreditCardInputDocs(TFQueryInput):
+class CredCardDocsQuery(QueryInput):
+    collection_name: str = Field(
+        default=None,
+        title="Collection name on which to search",
+    )
+
+    query: str = Field(title="Query using which the similar documents will be searched", max_length=1000)
 
     retrieval_chain_name: Literal["RetrievalQA", "CustomRetrievalQA"] = Field(
         default="RetrievalQA",
@@ -42,7 +48,13 @@ class CreditCardInputDocs(TFQueryInput):
         title="System prompt to use for generating answer to the question",
     )
 
-class CreditCardInputQuery(TFQueryInput):
+class CreditCardInputQuery(QueryInput):
+    collection_name: str = Field(
+        default=None,
+        title="Collection name on which to search",
+    )
+
+    query: str = Field(title="Query using which the similar documents will be searched", max_length=1000)
 
     retrieval_chain_name: Literal["RetrievalQA", "CustomRetrievalQA"] = Field(
         default="RetrievalQA",
@@ -65,92 +77,39 @@ class CreditCardInputQuery(TFQueryInput):
     by indicating any uncertainty or lack of knowledge regarding the correct answer to avoid providing incorrect information.""",
         title="System prompt to use for generating answer to the question",
     )
-
     prompt_template: str = Field(
-            default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
-            title="Prompt Template to use for generating answer to the question using the context",
-        )
+        default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
+        title="Prompt Template to use for generating answer to the question using the context",
+    )
 
 
-class CreditCardRetriver(TFQueryEngine):
+class CreditCardRetriver(QueryEngine):
 
     retriever_name: str = RETRIEVER_NAME
 
-    @classmethod
-    def get_embeddings(self, collection_name: str):
-        collection = CreditCardRetriver._get_collection(collection_name)
-        embedding = get_embedder(collection.embedder_config)
-        return embedding
-    
-    @classmethod
-    def get_vector_store(self, collection_name: str) -> VectorStore:
-        vector_store_client = CreditCardRetriver._get_vector_store_client(collection_name)
-        embeddings = CreditCardRetriver.get_embeddings(collection_name)
-        vector_store = vector_store_client.get_vector_store(embeddings)
-        return vector_store
-
-    @classmethod
-    def get_retriever(self, vector_store: VectorStore, retriever_config: RetrieverConfig):
-       base_retriever = VectorStoreRetriever(
-            vectorstore=vector_store,
-            search_type=retriever_config.get_search_type,
-            search_kwargs=retriever_config.get_search_kwargs,
-        )
-       return base_retriever
-       
-    @classmethod
-    def get_llm(self, model_config: LLMConfig, system_prompt: str):
-        llm = TrueFoundryChat(
-            model=model_config.name,
-            model_parameters=model_config.parameters,
-            system_prompt=system_prompt,
-        )
-        logger.info(f"Loaded TrueFoundry LLM model {model_config.name}")
-        return llm
-
     @staticmethod
     @retriever_post(RETRIEVER_NAME)
-    def get_documents(input: CreditCardInputDocs):
-        try:
-            collection_name = input.collection_name
-            vector_store = CreditCardRetriver.get_vector_store(collection_name)
-            retriever = CreditCardRetriver.get_retriever(vector_store, input.retriever_config)
-            llm = CreditCardRetriver.get_llm(input.model_configuration, input.system_prompt)
-
-            # Formating the query
-
-            query_template: str = """As an assistant, your role is to translate a user's natural \
-            language query into a suitable query for a vectorstore, ensuring to omit any extraneous \
-            information that may hinder the retrieval process. Please take the provided user query "{question}" \
-            and refine it into a concise, relevant query for the vectorstore, focusing only on the \
-            essential elements required for accurate and efficient data retrieval."""
-
-            formatted_query = query_template.format(question=input.query)
-            question = llm.predict(formatted_query)
-
-            # Get Docs
-            docs = retriever.get_relevant_documents(
-                question
-            )
-            print("DOCS:",docs, type(docs))
+    def get_documents(input: CredCardDocsQuery):
+        """Here we directly use the get documents function from the base class without any modifications"""
+        try:        
+            docs = QueryEngine.get_documents(input)
             return docs
-
-        
         except HTTPException as exp:
             raise exp
         except Exception as exp:
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
-        
+    
     @staticmethod
     @retriever_post(RETRIEVER_NAME)
     def query(input: CreditCardInputQuery):    
-
+        """We implement query function for getting answer and relavant documents"""
         from langchain.prompts import PromptTemplate
         from backend.modules.retrieval_chains import get_retrieval_chain
         from langchain.chains.question_answering import load_qa_chain
 
         try:
+            # Define prompt templates
             DOCUMENT_PROMPT = PromptTemplate(
                 input_variables=["page_content"],
                 template="<document>{page_content}</document>",
@@ -159,14 +118,12 @@ class CreditCardRetriver(TFQueryEngine):
                 input_variables=["context", "question"],
                 template=input.prompt_template,
             )
-            # Chain to get output for given query from docs using llm
+            
+            # Define reteiver and llm
+            retriever = QueryEngine._get_retriever(input.collection_name, input.retriever_config)
+            llm = QueryEngine._get_llm(input.model_configuration, input.system_prompt)
 
-            collection_name = input.collection_name
-            vector_store = CreditCardRetriver.get_vector_store(collection_name)
-            retriever = CreditCardRetriver.get_retriever(vector_store, input.retriever_config)
-            llm = CreditCardRetriver.get_llm(input.model_configuration, input.system_prompt)
-
-
+            # Define retrieval chain
             retrieval_chain = get_retrieval_chain(
                 chain_name=input.retrieval_chain_name,
                 retriever=retriever,
@@ -183,6 +140,7 @@ class CreditCardRetriver(TFQueryEngine):
                 verbose=True,
             )
 
+            # get the output from the chain
             outputs = retrieval_chain({"query": input.query})
 
             return {
