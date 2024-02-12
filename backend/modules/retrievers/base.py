@@ -132,15 +132,14 @@ class RAGEngine(ABC):
     retriever_name: str = ''    
     query_object: BaseQueryEngine = None
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def get_documents(input: QueryInput) -> List[Document]:
         """Logic for document retirval. Uses functions of QueryEngine if required for vector store
         and retival. User can also write their own methods if required."""
         
-
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def query(self, query: QueryInput) -> dict[str, Any]:
         """Logic for getting the RAG output. It gets the retiever and fetches relavant documents.
         Finally answers the query based on fetched context. User can also write their own helper methods if required."""
