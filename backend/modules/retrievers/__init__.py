@@ -1,7 +1,7 @@
 from langchain.chat_models.base import BaseChatModel
 from langchain.schema.vectorstore import VectorStore, VectorStoreRetriever
 
-from backend.modules.retrievers.default_retriever import DefaultRetriver
+from backend.modules.retrievers.default_retriever import DefaultRAGTool
 from backend.utils.base import RetrieverConfig
 
 
@@ -18,12 +18,12 @@ def get_retriever(
     )
     SUPPORTED_RETRIEVERS = [
         "VectorStoreRetriever",
-        "DefaultRetriver",
+        "DefaultRAGTool",
     ]
     if retriever_config.class_name not in SUPPORTED_RETRIEVERS:
         raise ValueError(f"Unsupported retriever: {retriever_config.class_name}")
     match retriever_config.class_name:
         case "VectorStoreRetriever":
             return base_retriever
-        case "DefaultRetriver":
-            return DefaultRetriver(retriever=base_retriever, llm=llm)
+        case "DefaultRAGTool":
+            return DefaultRAGTool(retriever=base_retriever, llm=llm)
