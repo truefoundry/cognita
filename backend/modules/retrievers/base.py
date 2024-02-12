@@ -132,7 +132,7 @@ class LangchainQueryEngine:
 class BaseRAGTool(ABC):
 
     retriever_name: str = ''    
-    query_object: LangchainQueryEngine = None
+    query_object: Optional[LangchainQueryEngine] = None
         
     @staticmethod
     @abstractmethod
