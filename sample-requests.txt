@@ -12,7 +12,6 @@
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo"
     },
-    "system_prompt": "Your task is to craft the most helpful, highly informative, accurate and comprehensive answers possible, \n    ensuring they are easy to understand and implement. Use the context information provided as a reference to form accurate responses \n    that incorporate as much relevant detail as possible. Strive to make each answer clear and precise to enhance user comprehension and \n    assist in solving their problems effectively.\n\nEmploy the provided context information meticulously to craft precise answers, \n    ensuring they incorporate all pertinent details. Structure your responses for ease of reading and relevance by providing as much as \n    information regarding it. Make sure the answers are well detailed and provide proper references. Align your answers with the context given and maintain transparency \n    by indicating any uncertainty or lack of knowledge regarding the correct answer to avoid providing incorrect information.",
     "prompt_template": "Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:"
 }
 
