@@ -7,17 +7,17 @@ from backend.settings import settings
 from backend.utils.logger import logger
 from backend.modules.metadata_store.models import Collection
 from backend.utils.base import RetrieverConfig, LLMConfig
+from langchain.chat_models.base import SimpleChatModel as LangChainSimpleChatModel
+
+# TODO: Change this to OpenAI API from langchain later
 from servicefoundry.langchain import TrueFoundryChat
 
 from langchain.schema import Document
-from langchain.schema.vectorstore import VectorStore, VectorStoreRetriever
+from langchain.schema.vectorstore import VectorStore as LangChainVectorStore, VectorStoreRetriever as LangChainVectorStoreRetriever
 
 from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.vector_db import get_vector_db_client
 from backend.modules.embedder import get_embedder
-
-
-
 
 
 # Custom router
@@ -69,7 +69,7 @@ class QueryInput(BaseModel):
     )
 
 
-class BaseQueryEngine:
+class LangchainQueryEngine:
     """Base Query Engine class, this class lets you write your own retriver. All it's methods can be inherited and overridden 
     for custom use. 
 
@@ -83,8 +83,8 @@ class BaseQueryEngine:
             logic here or use the above helper functions to stitch together your query engine components.
     """
 
-    def _get_vector_store(self, collection_name: str) -> VectorStore:
-        """Logic to get vector store"""
+    def _get_vector_store_for_collection(self, collection_name: str) -> LangChainVectorStore:
+        """Function to get langchain vector store"""
 
         # get the vector store client from the collection name
         vector_store_client = get_vector_db_client(
@@ -104,8 +104,9 @@ class BaseQueryEngine:
         return vector_store
     
 
-    def _get_llm(self, model_config: LLMConfig, system_prompt: str) -> TrueFoundryChat:
+    def _get_llm(self, model_config: LLMConfig, system_prompt: str) -> LangChainSimpleChatModel:
         """Logic for using a custom llm if any"""
+        # TODO: Replace with OpenAI client
         llm = TrueFoundryChat(
             model=model_config.name,
             model_parameters=model_config.parameters,
@@ -113,13 +114,14 @@ class BaseQueryEngine:
         )
         return llm
 
-    def _get_retriever(self, collection_name: str, retriever_config: RetrieverConfig) -> VectorStoreRetriever:
+    def _get_retriever(self, collection_name: str, retriever_config: RetrieverConfig) -> LangChainVectorStore:
         """Logic for retriever to get relavant documents. 
         It gets the vector store from collection name and passes it to user defined retriver"""
         # get vector store
-        vector_store = self._get_vector_store(collection_name)
+        vector_store = self._get_vector_store_for_collection(collection_name)
+
         # initialize the document retriver
-        retriever = VectorStoreRetriever(
+        retriever = LangChainVectorStoreRetriever(
             vectorstore=vector_store,
             search_type=retriever_config.get_search_type,
             search_kwargs=retriever_config.get_search_kwargs
@@ -127,16 +129,10 @@ class BaseQueryEngine:
         return retriever
 
 
-class RAGEngine(ABC):
+class BaseRAGTool(ABC):
 
     retriever_name: str = ''    
-    query_object: BaseQueryEngine = None
-
-    @staticmethod
-    @abstractmethod
-    def get_documents(input: QueryInput) -> List[Document]:
-        """Logic for document retirval. Uses functions of QueryEngine if required for vector store
-        and retival. User can also write their own methods if required."""
+    query_object: LangchainQueryEngine = None
         
     @staticmethod
     @abstractmethod

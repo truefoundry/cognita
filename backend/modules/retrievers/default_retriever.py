@@ -6,49 +6,16 @@ from backend.utils.logger import logger
 
 from backend.utils.base import RetrieverConfig, LLMConfig
 
-
+# Compulsory inports
 from backend.modules.retrievers.base import (
-    BaseQueryEngine,
-    RAGEngine, 
+    LangchainQueryEngine,
+    BaseRAGTool, 
     QueryInput, 
     retriever_post
 )
 
 
-
-RETRIEVER_NAME = 'credit-card'
-
-class CredCardDocsQuery(QueryInput):
-    collection_name: str = Field(
-        default=None,
-        title="Collection name on which to search",
-    )
-
-    query: str = Field(title="Query using which the similar documents will be searched", max_length=1000)
-
-    retrieval_chain_name: Literal["RetrievalQA", "CustomRetrievalQA"] = Field(
-        default="RetrievalQA",
-        title="Name of the retrieval chain to use for retrieving documents",
-    )
-
-    retriever_config: RetrieverConfig = Field(
-        title="Retriever configuration",
-    )
-
-    model_configuration: LLMConfig
-
-    system_prompt: str = Field(
-        default="""Your task is to craft the most helpful, highly informative, accurate and comprehensive answers possible, 
-    ensuring they are easy to understand and implement. Use the context information provided as a reference to form accurate responses 
-    that incorporate as much relevant detail as possible. Strive to make each answer clear and precise to enhance user comprehension and 
-    assist in solving their problems effectively.\n\nEmploy the provided context information meticulously to craft precise answers, 
-    ensuring they incorporate all pertinent details. Structure your responses for ease of reading and relevance by providing as much as 
-    information regarding it. Make sure the answers are well detailed and provide proper references. Align your answers with the context given and maintain transparency 
-    by indicating any uncertainty or lack of knowledge regarding the correct answer to avoid providing incorrect information.""",
-        title="System prompt to use for generating answer to the question",
-    )
-
-class CreditCardInputQuery(QueryInput):
+class DefaultInputQuery(QueryInput):
     collection_name: str = Field(
         default=None,
         title="Collection name on which to search",
@@ -83,52 +50,22 @@ class CreditCardInputQuery(QueryInput):
     )
 
 
-class CreditCardRetriver(RAGEngine):
+RETRIEVER_NAME = 'default-retriever'
+
+class DefaultRAGTool(BaseRAGTool):
 
     retriever_name: str = RETRIEVER_NAME
     
     @retriever_post(RETRIEVER_NAME)
-    def get_documents(input: CredCardDocsQuery):
-        """Here we directly use the get documents function from the base class without any modifications"""
-        try:        
-            query_object = BaseQueryEngine()
-            # Get the retriever
-            retriever = query_object._get_retriever(input.collection_name, input.retriever_config)
-
-            # Initialize LLM for query formatting 
-            llm = query_object._get_llm(input.model_configuration, input.system_prompt)
-
-            query_template: str = """As an assistant, your role is to translate a user's natural \
-            language query into a suitable query for a vectorstore, ensuring to omit any extraneous \
-            information that may hinder the retrieval process. Please take the provided user query "{question}" \
-            and refine it into a concise, relevant query for the vectorstore, focusing only on the \
-            essential elements required for accurate and efficient data retrieval."""
-
-            formatted_query = query_template.format(question=input.query)
-
-            # reformat the user query using the above llm
-            question = llm.predict(formatted_query)
-
-            # get relavant documents
-            docs = retriever.get_relevant_documents(
-                question
-            )
-            return docs
-        except HTTPException as exp:
-            raise exp
-        except Exception as exp:
-            logger.exception(exp)
-            raise HTTPException(status_code=500, detail=str(exp))
-    
-    @retriever_post(RETRIEVER_NAME)
-    def query(input: CreditCardInputQuery):    
+    def query(input: DefaultInputQuery):    
         """We implement query function for getting answer and relavant documents"""
-        from langchain.prompts import PromptTemplate
-        from backend.modules.retrieval_chains import get_retrieval_chain
-        from langchain.chains.question_answering import load_qa_chain
-
         try:
-            query_object = BaseQueryEngine()
+            from langchain.prompts import PromptTemplate
+            from backend.modules.retrieval_chains import get_retrieval_chain
+            from langchain.chains.question_answering import load_qa_chain
+
+            # Create query object
+            query_object = LangchainQueryEngine()
 
             # Define prompt templates
             DOCUMENT_PROMPT = PromptTemplate(
@@ -168,6 +105,7 @@ class CreditCardRetriver(RAGEngine):
                 "answer": outputs["result"],
                 "docs": outputs.get("source_documents") or [],
             }
+        
         except HTTPException as exp:
             raise exp
         except Exception as exp:
