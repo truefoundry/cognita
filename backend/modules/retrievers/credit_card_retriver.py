@@ -5,14 +5,14 @@ from backend.utils.logger import logger
 
 
 from backend.utils.base import RetrieverConfig, LLMConfig
-from servicefoundry.langchain import TrueFoundryChat
-from backend.modules.embedder import get_embedder
 
-from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain.schema import Document
-from langchain.schema.vectorstore import VectorStore
 
-from backend.modules.retrievers.base import QueryEngine, QueryInput, retriever_post
+from backend.modules.retrievers.base import (
+    BaseQueryEngine,
+    RAGEngine, 
+    QueryInput, 
+    retriever_post
+)
 
 
 
@@ -83,16 +83,36 @@ class CreditCardInputQuery(QueryInput):
     )
 
 
-class CreditCardRetriver(QueryEngine):
+class CreditCardRetriver(RAGEngine):
 
     retriever_name: str = RETRIEVER_NAME
-
-    @staticmethod
+    
     @retriever_post(RETRIEVER_NAME)
     def get_documents(input: CredCardDocsQuery):
         """Here we directly use the get documents function from the base class without any modifications"""
         try:        
-            docs = QueryEngine.get_documents(input)
+            query_object = BaseQueryEngine()
+            # Get the retriever
+            retriever = query_object._get_retriever(input.collection_name, input.retriever_config)
+
+            # Initialize LLM for query formatting 
+            llm = query_object._get_llm(input.model_configuration, input.system_prompt)
+
+            query_template: str = """As an assistant, your role is to translate a user's natural \
+            language query into a suitable query for a vectorstore, ensuring to omit any extraneous \
+            information that may hinder the retrieval process. Please take the provided user query "{question}" \
+            and refine it into a concise, relevant query for the vectorstore, focusing only on the \
+            essential elements required for accurate and efficient data retrieval."""
+
+            formatted_query = query_template.format(question=input.query)
+
+            # reformat the user query using the above llm
+            question = llm.predict(formatted_query)
+
+            # get relavant documents
+            docs = retriever.get_relevant_documents(
+                question
+            )
             return docs
         except HTTPException as exp:
             raise exp
@@ -100,7 +120,6 @@ class CreditCardRetriver(QueryEngine):
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
     
-    @staticmethod
     @retriever_post(RETRIEVER_NAME)
     def query(input: CreditCardInputQuery):    
         """We implement query function for getting answer and relavant documents"""
@@ -109,6 +128,8 @@ class CreditCardRetriver(QueryEngine):
         from langchain.chains.question_answering import load_qa_chain
 
         try:
+            query_object = BaseQueryEngine()
+
             # Define prompt templates
             DOCUMENT_PROMPT = PromptTemplate(
                 input_variables=["page_content"],
@@ -120,8 +141,8 @@ class CreditCardRetriver(QueryEngine):
             )
             
             # Define reteiver and llm
-            retriever = QueryEngine._get_retriever(input.collection_name, input.retriever_config)
-            llm = QueryEngine._get_llm(input.model_configuration, input.system_prompt)
+            retriever = query_object._get_retriever(input.collection_name, input.retriever_config)
+            llm = query_object._get_llm(input.model_configuration, input.system_prompt)
 
             # Define retrieval chain
             retrieval_chain = get_retrieval_chain(

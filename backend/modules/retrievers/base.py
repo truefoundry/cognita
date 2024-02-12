@@ -69,7 +69,7 @@ class QueryInput(BaseModel):
     )
 
 
-class QueryEngine(ABC):
+class BaseQueryEngine:
     """Base Query Engine class, this class lets you write your own retriver. All it's methods can be inherited and overridden 
     for custom use. 
 
@@ -83,24 +83,17 @@ class QueryEngine(ABC):
             logic here or use the above helper functions to stitch together your query engine components.
     """
 
-    retriever_name: str = ''
-
-    @staticmethod
-    def _get_collection(collection_name: str) -> Collection:
-        metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
-        collection = metadata_store_client.get_collection_by_name(collection_name)
-        return collection
-
-    @staticmethod
-    def _get_vector_store(collection_name: str) -> VectorStore:
+    def _get_vector_store(self, collection_name: str) -> VectorStore:
         """Logic to get vector store"""
+
         # get the vector store client from the collection name
         vector_store_client = get_vector_db_client(
             config=settings.VECTOR_DB_CONFIG, collection_name=collection_name
         )
 
-        # get the collection
-        collection = QueryEngine._get_collection(collection_name)
+        # get collection
+        metadata_store_client = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
+        collection = metadata_store_client.get_collection_by_name(collection_name)
 
         # Get the embeddings from the collections embedding config
         embedding = get_embedder(collection.embedder_config)
@@ -110,8 +103,8 @@ class QueryEngine(ABC):
 
         return vector_store
     
-    @staticmethod
-    def _get_llm(model_config: LLMConfig, system_prompt: str) -> TrueFoundryChat:
+
+    def _get_llm(self, model_config: LLMConfig, system_prompt: str) -> TrueFoundryChat:
         """Logic for using a custom llm if any"""
         llm = TrueFoundryChat(
             model=model_config.name,
@@ -120,55 +113,37 @@ class QueryEngine(ABC):
         )
         return llm
 
-    @staticmethod
-    def _get_retriever(collection_name: str,
-                       retriever_config: RetrieverConfig) -> VectorStoreRetriever:
+    def _get_retriever(self, collection_name: str, retriever_config: RetrieverConfig) -> VectorStoreRetriever:
         """Logic for retriever to get relavant documents. 
         It gets the vector store from collection name and passes it to user defined retriver"""
-
-        try:
-            # get vector store
-            vector_store = QueryEngine._get_vector_store(collection_name)
-            # initialize the document retriver
-            retriever = VectorStoreRetriever(
-                vectorstore=vector_store,
-                search_type=retriever_config.get_search_type,
-                search_kwargs=retriever_config.get_search_kwargs
-            )
-            return retriever
-        except Exception as e:
-            logger.debug("Error (_get_retriever):",e)
-
-    @staticmethod
-    def get_documents(input: QueryInput) -> List[Document]:
-
-        # Get the retriever
-        retriever = QueryEngine._get_retriever(input.collection_name, input.retriever_config)
-
-        # Initialize LLM for query formatting 
-        llm = QueryEngine._get_llm(input.model_configuration, input.system_prompt)
-
-        query_template: str = """As an assistant, your role is to translate a user's natural \
-        language query into a suitable query for a vectorstore, ensuring to omit any extraneous \
-        information that may hinder the retrieval process. Please take the provided user query "{question}" \
-        and refine it into a concise, relevant query for the vectorstore, focusing only on the \
-        essential elements required for accurate and efficient data retrieval."""
-
-        formatted_query = query_template.format(question=input.query)
-
-        # reformat the user query using the above llm
-        question = llm.predict(formatted_query)
-
-        # get relavant documents
-        docs = retriever.get_relevant_documents(
-            question
+        # get vector store
+        vector_store = self._get_vector_store(collection_name)
+        # initialize the document retriver
+        retriever = VectorStoreRetriever(
+            vectorstore=vector_store,
+            search_type=retriever_config.get_search_type,
+            search_kwargs=retriever_config.get_search_kwargs
         )
-        return docs
+        return retriever
+
+
+class RAGEngine(ABC):
+
+    retriever_name: str = ''    
+    query_object: BaseQueryEngine = None
 
     @abstractmethod
+    @staticmethod
+    def get_documents(input: QueryInput) -> List[Document]:
+        """Logic for document retirval. Uses functions of QueryEngine if required for vector store
+        and retival. User can also write their own methods if required."""
+        
+
+    @abstractmethod
+    @staticmethod
     def query(self, query: QueryInput) -> dict[str, Any]:
         """Logic for getting the RAG output. It gets the retiever and fetches relavant documents.
-        Finally answers the query based on fetched context"""
+        Finally answers the query based on fetched context. User can also write their own helper methods if required."""
         raise NotImplementedError()
 
 
