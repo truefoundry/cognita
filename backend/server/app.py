@@ -3,6 +3,7 @@ from typing import Optional
 
 import mlfoundry
 import requests
+
 from fastapi import APIRouter, FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -31,6 +32,10 @@ from backend.utils.base import (
 )
 from backend.utils.logger import logger
 
+from backend.modules.metadata_store import get_metadata_store_client
+
+METADATA_STORE_CLIENT = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
+
 # FastAPI Initialization
 app = FastAPI(
     title="Backend for RAG",
@@ -57,7 +62,7 @@ async def get_collections():
     try:
         vector_db_client = get_vector_db_client(config=settings.VECTOR_DB_CONFIG)
         collection_names = vector_db_client.get_collections()
-        collections = settings.METADATA_STORE_CLIENT.get_collections(
+        collections = METADATA_STORE_CLIENT.get_collections(
             names=collection_names, include_runs=False
         )
         return JSONResponse(
@@ -71,7 +76,7 @@ async def get_collections():
 @app.post("/collections")
 async def create_collection(request: CreateCollection):
     try:
-        existing_collection = settings.METADATA_STORE_CLIENT.get_collection_by_name(
+        existing_collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name=request.name
         )
         if existing_collection:
@@ -79,7 +84,7 @@ async def create_collection(request: CreateCollection):
                 status_code=400,
                 detail=f"Collection with name {request.name} already exists.",
             )
-        collection = settings.METADATA_STORE_CLIENT.create_collection(
+        collection = METADATA_STORE_CLIENT.create_collection(
             CollectionCreate(
                 name=request.name,
                 description=request.description,
@@ -96,7 +101,7 @@ async def create_collection(request: CreateCollection):
         raise exp
     except Exception as exp:
         try:
-            settings.METADATA_STORE_CLIENT.delete_collection(
+            METADATA_STORE_CLIENT.delete_collection(
                 collection_name=request.name
             )
         except Exception as e:
@@ -110,7 +115,7 @@ async def add_documents_to_collection(
     request: AddDocuments, collection_name: str = Path(title="Collection name")
 ):
     try:
-        collection = settings.METADATA_STORE_CLIENT.get_collection_by_name(
+        collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name=collection_name
         )
         if not collection:
@@ -119,7 +124,7 @@ async def add_documents_to_collection(
                 detail=f"Collection with name {collection_name} does not exist.",
             )
         current_indexer_job_run = (
-            settings.METADATA_STORE_CLIENT.get_current_indexer_job_run(
+            METADATA_STORE_CLIENT.get_current_indexer_job_run(
                 collection_name=collection_name
             )
         )
@@ -137,7 +142,7 @@ async def add_documents_to_collection(
                 detail=f"Collection with name {collection_name} already has an active indexer job run with status {current_indexer_job_run.status.value}. Please wait for it to complete.",
             )
         indexer_job_run = (
-            settings.METADATA_STORE_CLIENT.create_collection_indexer_job_run(
+            METADATA_STORE_CLIENT.create_collection_indexer_job_run(
                 collection_name=collection_name,
                 indexer_job_run=CollectionIndexerJobRunCreate(
                     data_source=request.data_source,
@@ -192,7 +197,7 @@ async def add_documents_to_collection(
         raise exp
     except Exception as exp:
         logger.exception(exp)
-        settings.METADATA_STORE_CLIENT.update_indexer_job_run_status(
+        METADATA_STORE_CLIENT.update_indexer_job_run_status(
             collection_inderer_job_run_name=indexer_job_run.name,
             status=CollectionIndexerJobRunStatus.FAILED,
         )
@@ -206,7 +211,7 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
             config=settings.VECTOR_DB_CONFIG, collection_name=collection_name
         )
         vector_db_client.delete_collection()
-        settings.METADATA_STORE_CLIENT.delete_collection(
+        METADATA_STORE_CLIENT.delete_collection(
             collection_name, include_runs=True
         )
         return JSONResponse(content={"deleted": True})
@@ -219,7 +224,7 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
 
 @app.get("/collections/{collection_name}/status")
 async def get_collection_status(collection_name: str = Path(title="Collection name")):
-    collection = settings.METADATA_STORE_CLIENT.get_collection_by_name(
+    collection = METADATA_STORE_CLIENT.get_collection_by_name(
         collection_name=collection_name
     )
 
@@ -227,7 +232,7 @@ async def get_collection_status(collection_name: str = Path(title="Collection na
         raise HTTPException(status_code=404, detail="Collection not found")
 
     current_indexer_job_run = (
-        settings.METADATA_STORE_CLIENT.get_current_indexer_job_run(
+        METADATA_STORE_CLIENT.get_current_indexer_job_run(
             collection_name=collection_name
         )
     )

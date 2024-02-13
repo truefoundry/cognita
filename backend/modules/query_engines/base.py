@@ -9,10 +9,14 @@ from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.utils.base import LLMConfig
 
+from backend.modules.metadata_store import get_metadata_store_client
+
+METADATA_STORE_CLIENT = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
+
 
 class BaseQueryEngine:
-    def _get_vector_store(self, collection_name: str) -> VectorStore:
-        collection = settings.METADATA_STORE_CLIENT.get_collection_by_name(
+    async def _get_vector_store(self, collection_name: str) -> VectorStore:
+        collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name
         )
 
@@ -27,7 +31,7 @@ class BaseQueryEngine:
         )
         return vector_store
 
-    def _get_llm(self, model_configuration: LLMConfig) -> BaseChatModel:
+    async def _get_llm(self, model_configuration: LLMConfig) -> BaseChatModel:
         llm = ChatOpenAI(
             model=model_configuration.name,
             api_key=settings.TFY_API_KEY,

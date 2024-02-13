@@ -18,13 +18,13 @@ class DefaultQueryEngine(BaseQueryEngine):
     """
 
     @Post("/query")
-    def query(self, request: DefaultQueryInput):
+    async def query(self, request: DefaultQueryInput):
         try:
             # Get the vector store
-            vector_store = self._get_vector_store(request.collection_name)
+            vector_store = await self._get_vector_store(request.collection_name)
 
             # Get the LLM
-            llm = self._get_llm(request.model_configuration)
+            llm = await self._get_llm(request.model_configuration)
 
             # Create the retriever using langchain VectorStoreRetriever
             retriever = VectorStoreRetriever(
@@ -44,7 +44,6 @@ class DefaultQueryEngine(BaseQueryEngine):
             # Create the QA chain
             qa = RetrievalQA(
                 retriever=retriever,
-                llm=llm,
                 combine_documents_chain=load_qa_chain(
                     llm=llm,
                     chain_type="stuff",

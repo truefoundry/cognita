@@ -4,7 +4,6 @@ from typing import Optional
 import orjson
 from pydantic import BaseSettings
 
-from backend.modules.metadata_store import get_metadata_store_client
 from backend.utils.base import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
 
 
@@ -72,8 +71,6 @@ class Settings(BaseSettings):
         )
     except Exception as e:
         raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
-
-    METADATA_STORE_CLIENT = get_metadata_store_client(config=METADATA_STORE_CONFIG)
 
 
 settings = Settings()
