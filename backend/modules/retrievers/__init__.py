@@ -4,7 +4,7 @@ from langchain.schema.vectorstore import VectorStore, VectorStoreRetriever
 from backend.modules.retrievers.default_retriever import DefaultRAGTool
 from backend.utils.base import RetrieverConfig
 
-
+# TODO: To remove this section later
 def get_retriever(
     vectorstore: VectorStore,
     retriever_config: RetrieverConfig,
