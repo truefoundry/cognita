@@ -47,16 +47,16 @@ class QueryInput(BaseModel):
         title="Retriever configuration",
     )
 
-    model_configuration: Optional[LLMConfig | str]
+    model_configuration: Optional[LLMConfig]
 
     prompt_template: Optional[str] = Field(
-        default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
+        default="""Answer the following question: {question}\n\nBased on the given context information:\n{context}\n\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
 
 
 class LangchainQueryEngine:
-    """Base Query Engine class, this class lets you write your own retriver. All it's methods can be inherited and overridden 
+    """Base Query Engine class, this class lets you write your own retriever. All it's methods can be inherited and overridden 
     for custom use. 
 
     This class follows the following steps to write your own query engine:
@@ -64,7 +64,7 @@ class LangchainQueryEngine:
         2. Get the corresponding vector store client and vector store
         3. Get the necessary embeddings
         4. Define an LLM to format the query and retrival
-        5. Define retriver function
+        5. Define retriever function
         6. Define query, this is a compulsory method, with compulsory collection name argument, either you can write your custom 
             implementaion here or use the above helper functions to stitch together your query engine components.
     """
@@ -101,11 +101,11 @@ class LangchainQueryEngine:
 
     def _get_retriever(self, collection_name: str, retriever_config: RetrieverConfig) -> LangChainBaseRetriever:
         """Logic for retriever to get relavant documents. 
-        It gets the vector store from collection name and passes it to user defined retriver"""
+        It gets the vector store from collection name and passes it to user defined retriever"""
         # get vector store
         vector_store = self._get_vector_store_for_collection(collection_name)
 
-        # initialize the document retriver
+        # initialize the document retriever
         retriever = LangChainVectorStoreRetriever(
             vectorstore=vector_store,
             search_type=retriever_config.get_search_type,
