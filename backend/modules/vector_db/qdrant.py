@@ -6,9 +6,9 @@ from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
 
+from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.utils.base import VectorDBConfig
-from backend.utils.logger import logger
+from backend.types import VectorDBConfig
 
 
 class QdrantVectorDB(BaseVectorDB):

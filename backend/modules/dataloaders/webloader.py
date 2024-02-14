@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
-from backend.utils.utils import generate_document_id
+from backend.types import DocumentMetadata, LoadedDocument, SourceConfig
+from backend.utils import generate_document_id
 
 
 class WebLoader(BaseLoader):

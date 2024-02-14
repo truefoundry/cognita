@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from backend.utils.base import DataSource, EmbedderConfig, ParserConfig
+from backend.types import DataSource, EmbedderConfig, ParserConfig
 
 
 class CollectionIndexerJobRunStatus(str, enum.Enum):

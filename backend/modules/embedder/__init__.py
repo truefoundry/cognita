@@ -4,7 +4,7 @@ from langchain.embeddings import CacheBackedEmbeddings
 from langchain.storage import RedisStore
 from servicefoundry.langchain import TrueFoundryEmbeddings
 
-from backend.utils.base import EmbedderConfig, EmbeddingCacheConfig
+from backend.types import EmbedderConfig, EmbeddingCacheConfig
 
 # A dictionary mapping embedder names to their respective classes.
 SUPPORTED_EMBEDDERS = {
