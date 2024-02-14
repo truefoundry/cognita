@@ -103,9 +103,12 @@ def _update_cbv_route_endpoint_signature(
     setattr(route.endpoint, "__signature__", new_signature)
 
 
-def QueryEngine(tag: str = None, prefix: str = None):
+QUERY_CONTROLLER_REGISTRY = {}
+
+
+def query_controller(tag: str = None, prefix: str = None):
     """
-    Decorator that turns a class into a QueryEngine, allowing you to define routes using FastAPI decorators.
+    Decorator that turns a class into a Query Controller, allowing you to define routes using FastAPI decorators.
 
     Args:
         tag (str, optional): The tag to use for OpenAPI documentation.
@@ -125,6 +128,7 @@ def QueryEngine(tag: str = None, prefix: str = None):
         prefix = prefix[:-1]
 
     def wrapper(cls) -> ClassBasedView:
+        QUERY_CONTROLLER_REGISTRY[cls.__name__] = cls
         router = APIRouter(tags=[tag] if tag else None)
 
         http_method_names = ("GET", "POST", "PUT", "DELETE", "PATCH")
@@ -144,7 +148,10 @@ def QueryEngine(tag: str = None, prefix: str = None):
                 if not method.__path__.startswith("/"):
                     method.__path__ = "/" + method.__path__
                 router.add_api_route(
-                    method.__path__, method, methods=[http_method], **method.__kwargs__
+                    method.__path__,
+                    method,
+                    methods=[http_method],
+                    **method.__kwargs__,
                 )
 
         def get_router() -> APIRouter:
@@ -161,7 +168,7 @@ def QueryEngine(tag: str = None, prefix: str = None):
     return wrapper
 
 
-def Get(path: str, **kwargs):
+def get(path: str, **kwargs):
     """
     Decorator that defines a GET route for the controller.
 
@@ -183,7 +190,7 @@ def Get(path: str, **kwargs):
     return decorator
 
 
-def Post(path: str, **kwargs):
+def post(path: str, **kwargs):
     """
     Decorator that defines a POST route for the controller.
 
@@ -205,7 +212,7 @@ def Post(path: str, **kwargs):
     return decorator
 
 
-def Delete(path: str, **kwargs):
+def delete(path: str, **kwargs):
     """
     Decorator that defines a DELETE route for the controller.
 
@@ -227,7 +234,7 @@ def Delete(path: str, **kwargs):
     return decorator
 
 
-def Put(path: str, **kwargs):
+def put(path: str, **kwargs):
     """
     Decorator that defines a PUT route for the controller.
 
@@ -249,7 +256,7 @@ def Put(path: str, **kwargs):
     return decorator
 
 
-def Patch(path: str, **kwargs):
+def patch(path: str, **kwargs):
     """
     Decorator that defines a PATCH route for the controller.
 

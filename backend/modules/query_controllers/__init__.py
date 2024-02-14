@@ -1,0 +1,1 @@
+from backend.modules.query_controllers.default import DefaultQueryController

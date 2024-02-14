@@ -3,7 +3,6 @@ from typing import Optional
 
 import mlfoundry
 import requests
-
 from fastapi import APIRouter, FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -14,13 +13,14 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
+from backend.modules import query_controllers
 from backend.modules.embedder import get_embedder
+from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.metadata_store.models import (
     CollectionCreate,
     CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
-from backend.modules.query_engines import QueryEngineModule
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.utils.base import (
@@ -30,9 +30,8 @@ from backend.utils.base import (
     ModelType,
     UploadToDataDirectoryDto,
 )
+from backend.utils.decorator import QUERY_CONTROLLER_REGISTRY
 from backend.utils.logger import logger
-
-from backend.modules.metadata_store import get_metadata_store_client
 
 METADATA_STORE_CLIENT = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
 
@@ -296,8 +295,7 @@ async def get_enabled_models(
         content={"models": enabled_models},
     )
 
-# Register Query Engines dynamically as FastAPI routers
-query_engine_modules = QueryEngineModule()
-for module in query_engine_modules.modules:
-    router: APIRouter = module.get_router()
+# Register Query Controllers dynamically as FastAPI routers
+for cls in QUERY_CONTROLLER_REGISTRY.values():
+    router: APIRouter = cls.get_router()
     app.include_router(router)

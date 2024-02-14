@@ -5,16 +5,15 @@ from langchain.chat_models.openai import ChatOpenAI
 from langchain.schema.vectorstore import VectorStore
 
 from backend.modules.embedder import get_embedder
+from backend.modules.metadata_store import get_metadata_store_client
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.utils.base import LLMConfig
 
-from backend.modules.metadata_store import get_metadata_store_client
-
 METADATA_STORE_CLIENT = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
 
 
-class BaseQueryEngine:
+class BaseQueryController:
     async def _get_vector_store(self, collection_name: str) -> VectorStore:
         collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name

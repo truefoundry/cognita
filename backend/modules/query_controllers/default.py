@@ -4,20 +4,20 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
 
-from backend.modules.query_engines.base import BaseQueryEngine
+from backend.modules.query_controllers.base import BaseQueryController
 from backend.utils.base import DefaultQueryInput
-from backend.utils.decorator import Post, QueryEngine
+from backend.utils.decorator import post, query_controller
 from backend.utils.logger import logger
 
 
-@QueryEngine("/default")
-class DefaultQueryEngine(BaseQueryEngine):
+@query_controller("/default")
+class DefaultQueryController(BaseQueryController):
     """
-    Default Query Engine
+    Default Query Controller
     uses langchain retrieval qa to answer the query
     """
 
-    @Post("/query")
+    @post("/query")
     async def query(self, request: DefaultQueryInput):
         try:
             # Get the vector store
