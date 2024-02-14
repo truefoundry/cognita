@@ -69,7 +69,7 @@ class LoadedDocument(BaseModel):
 
 
 class CreateCollection(BaseModel):
-    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(
+    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character",
     )
@@ -142,9 +142,6 @@ class LLMConfig(BaseModel):
 
 
 class RetrieverConfig(BaseModel):
-    class_name: Literal["VectorStoreRetriever", "CustomRetriever"] = Field(
-        default="VectorStoreRetriever"
-    )
     search_type: Literal["mmr", "similarity"] = Field(
         default="similarity",
         title="""Defines the type of search that the Retriever should perform. Can be "similarity" (default), "mmr", or "similarity_score_threshold".""",
@@ -175,37 +172,6 @@ class RetrieverConfig(BaseModel):
                 return {"k": self.k, "filter": self.filter}
             case "mmr":
                 return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
-
-
-class SearchQuery(BaseModel):
-    collection_name: str = Field(
-        default=None,
-        title="Collection name on which to search",
-    )
-    retrieval_chain_name: Literal["RetrievalQA", "CustomRetrievalQA"] = Field(
-        default="RetrievalQA",
-        title="Name of the retrieval chain to use for retrieving documents",
-    )
-    retriever_config: RetrieverConfig = Field(
-        title="Retriever configuration",
-    )
-    query: str = Field(title="Question to search for", max_length=1000)
-    model_configuration: LLMConfig
-    system_prompt: str = Field(
-        default="""Your task is to craft the most helpful, highly informative, accurate and comprehensive answers possible, 
-    ensuring they are easy to understand and implement. Use the context information provided as a reference to form accurate responses 
-    that incorporate as much relevant detail as possible. Strive to make each answer clear and precise to enhance user comprehension and 
-    assist in solving their problems effectively.\n\nEmploy the provided context information meticulously to craft precise answers, 
-    ensuring they incorporate all pertinent details. Structure your responses for ease of reading and relevance by providing as much as 
-    information regarding it. Make sure the answers are well detailed and provide proper references. Align your answers with the context given and maintain transparency 
-    by indicating any uncertainty or lack of knowledge regarding the correct answer to avoid providing incorrect information.""",
-        title="System prompt to use for generating answer to the question",
-    )
-    prompt_template: str = Field(
-        default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
-        title="Prompt Template to use for generating answer to the question using the context",
-    )
-
 
 class UploadToDataDirectoryDto(BaseModel):
     collection_name: str
