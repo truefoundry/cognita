@@ -5,7 +5,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.chroma import Chroma
 
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.utils.base import VectorDBConfig
+from backend.types import VectorDBConfig
 
 
 class ChromaVectorDB(BaseVectorDB):

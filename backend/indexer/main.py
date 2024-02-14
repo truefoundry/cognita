@@ -5,11 +5,11 @@ import orjson
 from dotenv import load_dotenv
 
 from backend.indexer.indexer import index_collection
-from backend.utils.base import (
+from backend.indexer.types import IndexerConfig
+from backend.types import (
     DataSource,
     EmbedderConfig,
     EmbeddingCacheConfig,
-    IndexerConfig,
     MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,

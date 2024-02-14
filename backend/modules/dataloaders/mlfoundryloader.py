@@ -3,10 +3,10 @@ from typing import List
 
 import mlfoundry
 
+from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
-from backend.utils.logger import logger
-from backend.utils.utils import generate_document_id, unzip_file
+from backend.types import DocumentMetadata, LoadedDocument, SourceConfig
+from backend.utils import generate_document_id, unzip_file
 
 
 class MlFoundryLoader(BaseLoader):

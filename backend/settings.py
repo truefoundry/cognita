@@ -4,7 +4,7 @@ from typing import Optional
 import orjson
 from pydantic import BaseSettings
 
-from backend.utils.base import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
+from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
 
 
 class Settings(BaseSettings):

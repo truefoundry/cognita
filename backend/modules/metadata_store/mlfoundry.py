@@ -13,7 +13,7 @@ from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.models import (
     Collection, CollectionCreate, CollectionIndexerJobRun,
     CollectionIndexerJobRunCreate, CollectionIndexerJobRunStatus)
-from backend.utils.base import DataSource, EmbedderConfig, ParserConfig
+from backend.types import DataSource, EmbedderConfig, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
 CURRENT_INDEXER_JOB_RUN_NAME_KEY = "current_indexer_job_run_name"

@@ -3,6 +3,8 @@ from typing import List
 
 from langchain.docstore.document import Document
 
+from backend.indexer.types import IndexerConfig
+from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store import get_metadata_store_client
@@ -12,9 +14,7 @@ from backend.modules.parsers.parser import (
     get_parsers_configurations,
 )
 from backend.modules.vector_db import get_vector_db_client
-from backend.utils.base import IndexerConfig
-from backend.utils.logger import logger
-from backend.utils.utils import get_base_document_id
+from backend.utils import get_base_document_id
 
 
 async def index_collection(inputs: IndexerConfig):

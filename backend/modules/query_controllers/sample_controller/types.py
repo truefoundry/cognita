@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from backend.utils.base import LLMConfig, RetrieverConfig
+from backend.types import LLMConfig, RetrieverConfig
 
 
 class SampleQueryInput(BaseModel):

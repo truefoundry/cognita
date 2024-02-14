@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from backend.utils.base import LoadedDocument, SourceConfig
+from backend.types import LoadedDocument, SourceConfig
 
 # A global registry to store all available loaders.
 LOADER_REGISTRY = {}

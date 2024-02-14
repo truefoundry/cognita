@@ -13,6 +13,8 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import trigger_job_locally
+from backend.indexer.types import IndexerConfig
+from backend.logger import logger
 from backend.modules import query_controllers
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
@@ -24,14 +26,12 @@ from backend.modules.metadata_store.models import (
 from backend.modules.vector_db import get_vector_db_client
 from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
-from backend.utils.base import (
+from backend.types import (
     AddDocuments,
     CreateCollection,
-    IndexerConfig,
     ModelType,
     UploadToDataDirectoryDto,
 )
-from backend.utils.logger import logger
 
 # FastAPI Initialization
 app = FastAPI(

@@ -2,10 +2,10 @@ import os
 import shutil
 from typing import List
 
+from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.utils.base import DocumentMetadata, LoadedDocument, SourceConfig
-from backend.utils.logger import logger
-from backend.utils.utils import generate_document_id
+from backend.types import DocumentMetadata, LoadedDocument, SourceConfig
+from backend.utils import generate_document_id
 
 
 class LocalDirLoader(BaseLoader):
