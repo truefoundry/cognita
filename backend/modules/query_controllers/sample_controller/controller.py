@@ -9,7 +9,7 @@ from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.sample_controller.types import SampleQueryInput
 from backend.modules.vector_db import get_vector_db_client
-from backend.server.decorator import post, query_controller
+from backend.server.decorators import post, query_controller
 from backend.settings import settings
 from backend.utils.logger import logger
 

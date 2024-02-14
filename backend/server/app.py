@@ -22,7 +22,7 @@ from backend.modules.metadata_store.models import (
     CollectionIndexerJobRunStatus,
 )
 from backend.modules.vector_db import get_vector_db_client
-from backend.server.decorator import QUERY_CONTROLLER_REGISTRY
+from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
 from backend.utils.base import (
     AddDocuments,
