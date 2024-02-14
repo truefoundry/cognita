@@ -15,13 +15,14 @@ from servicefoundry import trigger_job
 from backend.indexer.indexer import trigger_job_locally
 from backend.modules import query_controllers
 from backend.modules.embedder import get_embedder
-from backend.modules.metadata_store import get_metadata_store_client
+from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.metadata_store.models import (
     CollectionCreate,
     CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
 from backend.modules.vector_db import get_vector_db_client
+from backend.server.decorator import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
 from backend.utils.base import (
     AddDocuments,
@@ -30,10 +31,7 @@ from backend.utils.base import (
     ModelType,
     UploadToDataDirectoryDto,
 )
-from backend.utils.decorator import QUERY_CONTROLLER_REGISTRY
 from backend.utils.logger import logger
-
-METADATA_STORE_CLIENT = get_metadata_store_client(config=settings.METADATA_STORE_CONFIG)
 
 # FastAPI Initialization
 app = FastAPI(
