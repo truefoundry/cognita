@@ -1,5 +1,5 @@
 GitPython==3.1.41
-langchain==0.0.338
+langchain==0.1.0
 langchainplus-sdk==0.0.20
 openai==1.3.3
 tiktoken==0.5.1
