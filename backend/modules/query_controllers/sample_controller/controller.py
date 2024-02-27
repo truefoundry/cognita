@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
-from langchain.chat_models.openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
+from langchain_community.chat_models.openai import ChatOpenAI
 
 from backend.logger import logger
 from backend.modules.embedder import get_embedder

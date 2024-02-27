@@ -1,7 +1,7 @@
 from typing import Optional
 
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.storage import RedisStore
+from langchain_community.storage.redis import RedisStore
 from servicefoundry.langchain import TrueFoundryEmbeddings
 
 from backend.types import EmbedderConfig, EmbeddingCacheConfig
