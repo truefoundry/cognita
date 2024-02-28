@@ -17,12 +17,14 @@ class QdrantVectorDB(BaseVectorDB):
         self.api_key = config.api_key
         self.collection_name = collection_name
         self.port = 443 if self.url.startswith("https://") else 6333
+        self.prefix = config.config.get("prefix", None) if config.config else None
         self.prefer_grpc = False if self.url.startswith("https://") else True
         self.qdrant_client = QdrantClient(
             url=self.url,
             **({"api_key": self.api_key} if self.api_key else {}),
             port=self.port,
             prefer_grpc=self.prefer_grpc,
+            prefix=self.prefix,
         )
 
     def create_collection(self, embeddings: Embeddings):
@@ -41,6 +43,7 @@ class QdrantVectorDB(BaseVectorDB):
             api_key=self.api_key,
             prefer_grpc=self.prefer_grpc,
             port=self.port,
+            prefix=self.prefix,
         )
         self.qdrant_client.delete(
             collection_name=self.collection_name,
