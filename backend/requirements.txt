@@ -4,7 +4,7 @@ langchain-community==0.0.24
 openai==1.3.3
 tiktoken==0.5.1
 uvicorn==0.23.2
-fastapi==0.104.1
+fastapi==0.109.1
 qdrant-client==1.7.3
 python-dotenv==1.0.0
 weaviate-client==3.25.3
