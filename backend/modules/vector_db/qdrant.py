@@ -3,7 +3,7 @@ from typing import List
 
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
-from langchain.vectorstores.qdrant import Qdrant
+from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
 
 from backend.logger import logger

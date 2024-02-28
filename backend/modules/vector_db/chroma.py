@@ -2,7 +2,7 @@ from typing import List
 
 import chromadb
 from langchain.embeddings.base import Embeddings
-from langchain.vectorstores.chroma import Chroma
+from langchain_community.vectorstores.chroma import Chroma
 
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig

@@ -3,7 +3,7 @@ from typing import List
 
 import weaviate
 from langchain.embeddings.base import Embeddings
-from langchain.vectorstores.weaviate import Weaviate
+from langchain_community.vectorstores.weaviate import Weaviate
 
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig
