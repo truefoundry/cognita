@@ -67,23 +67,12 @@ class QdrantVectorDB(BaseVectorDB):
         )
         return
 
-    def upsert_documents(
-        self,
-        documents,
-        embeddings: Embeddings,
-        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.incremental,
+    def _get_records_to_be_deleted(
+        self, document_ids: List[str], deletion_mode: IndexingDeletionMode
     ):
-        if len(documents) == 0:
-            logger.warning("No documents to index")
-            return
-        # Collection record IDs to be deleted
-        record_ids_to_be_deleted: List[str] = []
         if deletion_mode == IndexingDeletionMode.INCREMENTAL:
             # For incremental deletion, we delete the documents with the same document_id
-            document_ids = [
-                document.metadata.get(DOCUMENT_ID_METADATA_KEY)
-                for document in documents
-            ]
+
             records, _ = self.qdrant_client.scroll(
                 collection_name=self.collection_name,
                 scroll_filter=models.Filter(
@@ -104,11 +93,10 @@ class QdrantVectorDB(BaseVectorDB):
             )
             record_ids_to_be_deleted = [record.id for record in records]
             logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
+            return record_ids_to_be_deleted
         elif deletion_mode == IndexingDeletionMode.FULL:
             # For full deletion, we delete all the documents with same source
-            base_document_id = get_base_document_id(
-                _document_id=documents[0].metadata.get(DOCUMENT_ID_METADATA_KEY)
-            )
+            base_document_id = get_base_document_id(_document_id=document_ids[0])
             if base_document_id:
                 records, _ = self.qdrant_client.scroll(
                     collection_name=self.collection_name,
@@ -130,6 +118,26 @@ class QdrantVectorDB(BaseVectorDB):
                 )
                 record_ids_to_be_deleted = [record.id for record in records]
                 logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
+                return record_ids_to_be_deleted
+        return []
+
+    def upsert_documents(
+        self,
+        documents,
+        embeddings: Embeddings,
+        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.incremental,
+    ):
+        if len(documents) == 0:
+            logger.warning("No documents to index")
+            return
+        # get record IDs to be deleted
+        record_ids_to_be_deleted: List[str] = self._get_records_to_be_deleted(
+            document_ids=[
+                document.metadata.get(DOCUMENT_ID_METADATA_KEY)
+                for document in documents
+            ],
+            deletion_mode=deletion_mode,
+        )
 
         # Add Documents
         Qdrant(
