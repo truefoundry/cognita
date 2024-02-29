@@ -40,7 +40,7 @@ class WeaviateVectorDB(BaseVectorDB):
                         "dataType": ["text"],
                     },
                     {
-                        "name": "document_id",
+                        "name": "_document_id",
                         "dataType": ["text"],
                     },
                 ],
@@ -69,7 +69,7 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=self.collection_name,  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
-            attributes=["document_id"],
+            attributes=["_document_id"],
         )
 
     def list_documents_in_collection(self) -> List[dict]:
@@ -79,7 +79,7 @@ class WeaviateVectorDB(BaseVectorDB):
         # https://weaviate.io/developers/weaviate/search/aggregate#retrieve-groupedby-properties
         response = (
             self.weaviate_client.query.aggregate(self.collection_name)
-            .with_group_by_filter(["document_id"])
+            .with_group_by_filter(["_document_id"])
             .with_fields("groupedBy { value }")
             .do()
         )
@@ -90,7 +90,7 @@ class WeaviateVectorDB(BaseVectorDB):
         for group in groups:
             documents.append(
                 {
-                    "document_id": group.get("groupedBy", {}).get("value", ""),
+                    "_document_id": group.get("groupedBy", {}).get("value", ""),
                 }
             )
         return documents
@@ -103,7 +103,7 @@ class WeaviateVectorDB(BaseVectorDB):
         res = self.weaviate_client.batch.delete_objects(
             class_name=self.collection_name,
             where={
-                "path": ["document_id"],
+                "path": ["_document_id"],
                 "operator": "Like",
                 "valueText": document_id_match,
             },

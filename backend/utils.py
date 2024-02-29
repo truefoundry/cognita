@@ -41,11 +41,11 @@ def generate_document_id(source_type: str, source_uri: str, path: str):
     return f"{DOCUMENT_ID_SEPARATOR}".join([source_type, source_uri, path])
 
 
-def retrieve_source_from_document_id(document_id: str):
+def retrieve_source_from_document_id(_document_id: str):
     """
     Retrives params from document id for a given document. We use the following format:
     <type>::<source_uri>::<path>
     This will be used to identify the document in the database.
     reverse for `generate_document_id`
     """
-    return document_id.split(DOCUMENT_ID_SEPARATOR)
+    return _document_id.split(DOCUMENT_ID_SEPARATOR)

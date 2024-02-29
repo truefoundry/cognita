@@ -75,14 +75,14 @@ class WebLoader(BaseLoader):
             with open(dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            document_id = generate_document_id(self.type, source_config.uri, url)
+            _document_id = generate_document_id(self.type, source_config.uri, url)
 
             loaded_documents.append(
                 LoadedDocument(
                     filepath=dest_path,
                     file_extension=".md",
                     metadata=DocumentMetadata(
-                        document_id=document_id,
+                        _document_id=_document_id,
                         title=title,
                         source=url,
                         description=doc.metadata.get("description"),
