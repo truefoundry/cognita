@@ -125,7 +125,7 @@ class QdrantVectorDB(BaseVectorDB):
         self,
         documents,
         embeddings: Embeddings,
-        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.incremental,
+        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.INCREMENTAL,
     ):
         if len(documents) == 0:
             logger.warning("No documents to index")
