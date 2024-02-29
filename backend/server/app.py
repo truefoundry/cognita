@@ -16,6 +16,7 @@ from backend.indexer.indexer import trigger_job_locally
 from backend.indexer.types import IndexerConfig
 from backend.logger import logger
 from backend.modules import query_controllers
+from backend.modules.dataloaders.loader import LOADER_REGISTRY
 from backend.modules.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.metadata_store.models import (
@@ -23,6 +24,7 @@ from backend.modules.metadata_store.models import (
     CollectionIndexerJobRunCreate,
     CollectionIndexerJobRunStatus,
 )
+from backend.modules.parsers.parser import PARSER_REGISTRY
 from backend.modules.vector_db import get_vector_db_client
 from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
@@ -97,12 +99,6 @@ async def create_collection(request: CreateCollection):
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        try:
-            METADATA_STORE_CLIENT.delete_collection(
-                collection_name=request.name
-            )
-        except Exception as e:
-            logger.exception(e)
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))
 
@@ -292,6 +288,33 @@ async def get_enabled_models(
     return JSONResponse(
         content={"models": enabled_models},
     )
+
+
+@app.get("/parsers")
+async def get_parsers():
+    parsers = []
+    for key, value in PARSER_REGISTRY.items():
+        parsers.append(
+            {"name": key, "supported_extensions": value.get("supported_extensions")}
+        )
+    return parsers
+
+
+@app.get("/data_loaders")
+async def get_data_loaders():
+    data_loaders = []
+    for key, value in LOADER_REGISTRY.items():
+        data_loaders.append({"name": key})
+    return data_loaders
+
+
+@app.get("/query_controllers")
+async def get_query_controllers():
+    query_controllers = []
+    for key, value in QUERY_CONTROLLER_REGISTRY.items():
+        query_controllers.append({"name": key})
+    return query_controllers
+
 
 # Register Query Controllers dynamically as FastAPI routers
 for cls in QUERY_CONTROLLER_REGISTRY.values():
