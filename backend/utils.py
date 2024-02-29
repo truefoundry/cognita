@@ -23,13 +23,16 @@ def unzip_file(file_path, dest_dir):
         zip_ref.extractall(dest_dir)
 
 
-def get_base_document_id(source: DataSource):
+def get_base_document_id(_document_id: str) -> str | None:
     """
-    Generates unique document id for a given source. We use the following format:
+    Generates unique document id for a given document id. We use the following format:
     <type>::<source_uri>
     This will be used to identify the source in the database.
     """
-    return f"{DOCUMENT_ID_SEPARATOR}".join([source.type, source.config.uri])
+    parts = _document_id.split(DOCUMENT_ID_SEPARATOR)
+    if len(parts) != 3:
+        return
+    return f"{DOCUMENT_ID_SEPARATOR}".join([parts[0], parts[1]])
 
 
 def generate_document_id(source_type: str, source_uri: str, path: str):

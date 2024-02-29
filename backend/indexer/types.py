@@ -6,6 +6,7 @@ from backend.types import (
     DataSource,
     EmbedderConfig,
     EmbeddingCacheConfig,
+    IndexingDeletionMode,
     MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,
@@ -43,4 +44,7 @@ class IndexerConfig(BaseModel):
     )
     embedding_cache_config: Optional[EmbeddingCacheConfig] = Field(
         title="Embedding cache config", default=None
+    )
+    deletion_mode: IndexingDeletionMode = Field(
+        default=IndexingDeletionMode.INCREMENTAL, title="Deletion mode for indexing"
     )

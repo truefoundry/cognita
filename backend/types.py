@@ -4,6 +4,16 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Extra, Field, constr
 
 
+class IndexingDeletionMode(str, Enum):
+    """
+    Indexing deletion modes
+    """
+
+    NONE = "NONE"
+    INCREMENTAL = "INCREMENTAL"
+    FULL = "FULL"
+
+
 class DocumentMetadata(BaseModel):
     """
     Document metadata saved in vector store
@@ -99,6 +109,10 @@ class AddDocuments(BaseModel):
     force: bool = Field(
         default=False,
         title="If true, then force index the documents even if there is active indexer job run",
+    )
+
+    deletion_mode: IndexingDeletionMode = Field(
+        default=IndexingDeletionMode.INCREMENTAL, title="Deletion mode for indexing"
     )
 
 

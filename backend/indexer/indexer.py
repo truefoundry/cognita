@@ -14,7 +14,6 @@ from backend.modules.parsers.parser import (
     get_parsers_configurations,
 )
 from backend.modules.vector_db import get_vector_db_client
-from backend.utils import get_base_document_id
 
 
 async def index_collection(inputs: IndexerConfig):
@@ -98,15 +97,11 @@ async def index_collection(inputs: IndexerConfig):
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )
 
-        # Delete all the documents with the same base_document_id to avoid duplicate data
-        # Note: Since by default we enable embedding caching, we do not have to bare any embedding model cost
-        vector_db_client.delete_documents(
-            document_id_match=get_base_document_id(source=inputs.data_source)
-        )
-
         # Index all the final_documents
         vector_db_client.upsert_documents(
-            documents=final_documents, embeddings=embeddings
+            documents=final_documents,
+            embeddings=embeddings,
+            deletion_mode=inputs.deletion_mode,
         )
 
         metadata_store_client.update_indexer_job_run_status(

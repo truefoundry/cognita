@@ -37,10 +37,6 @@ class WeaviateVectorDB(BaseVectorDB):
                 "class": self.collection_name,
                 "properties": [
                     {
-                        "name": "text",
-                        "dataType": ["text"],
-                    },
-                    {
                         "name": f"{DOCUMENT_ID_METADATA_KEY}",
                         "dataType": ["text"],
                     },
@@ -48,8 +44,10 @@ class WeaviateVectorDB(BaseVectorDB):
             }
         )
 
-    def upsert_documents(self, documents: List[str], embeddings: Embeddings):
-        return Weaviate.from_documents(
+    def upsert_documents(
+        self, documents: List[str], embeddings: Embeddings, deletion_mode
+    ):
+        Weaviate.from_documents(
             documents=documents,
             embedding=embeddings,
             client=self.weaviate_client,
@@ -116,3 +114,6 @@ class WeaviateVectorDB(BaseVectorDB):
             print(
                 f"Deleted {deleted_vectors} documents from the collection that match {document_id_match}"
             )
+
+    def get_vector_client(self):
+        return self.weaviate_client

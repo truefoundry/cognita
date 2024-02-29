@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStore
+
+from backend.types import IndexingDeletionMode
 
 
 class BaseVectorDB(ABC):
@@ -14,7 +17,12 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def upsert_documents(self, documents, embeddings: Embeddings):
+    def upsert_documents(
+        self,
+        documents: List[Document],
+        embeddings: Embeddings,
+        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.INCREMENTAL,
+    ):
         """
         Upsert documents into the vector database
         """
@@ -52,5 +60,12 @@ class BaseVectorDB(ABC):
     def delete_documents(self, document_id_match: str):
         """
         Delete documents from the collection with matching `document_id_match`
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_vector_client(self):
+        """
+        Get vector client
         """
         raise NotImplementedError()

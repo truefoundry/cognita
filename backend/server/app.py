@@ -155,6 +155,7 @@ async def add_documents_to_collection(
                     vector_db_config=settings.VECTOR_DB_CONFIG,
                     metadata_store_config=settings.METADATA_STORE_CONFIG,
                     embedding_cache_config=settings.EMBEDDING_CACHE_CONFIG,
+                    deletion_mode=request.deletion_mode,
                 )
             )
         else:
@@ -172,6 +173,7 @@ async def add_documents_to_collection(
                     "metadata_store_config": json.dumps(
                         settings.METADATA_STORE_CONFIG.dict()
                     ),
+                    "deletion_mode": request.deletion_mode.value,
                     **(
                         {
                             "embedding_cache_config": json.dumps(

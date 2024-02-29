@@ -9,7 +9,8 @@ from qdrant_client import QdrantClient, models
 from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import VectorDBConfig
+from backend.types import IndexingDeletionMode, VectorDBConfig
+from backend.utils import get_base_document_id
 
 
 class QdrantVectorDB(BaseVectorDB):
@@ -59,14 +60,89 @@ class QdrantVectorDB(BaseVectorDB):
                 )
             ),
         )
+        self.qdrant_client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+            field_schema="keyword",
+        )
         return
 
-    def upsert_documents(self, documents, embeddings: Embeddings):
-        return Qdrant(
+    def upsert_documents(
+        self,
+        documents,
+        embeddings: Embeddings,
+        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.incremental,
+    ):
+        if len(documents) == 0:
+            logger.warning("No documents to index")
+            return
+        # Collection record IDs to be deleted
+        record_ids_to_be_deleted: List[str] = []
+        if deletion_mode == IndexingDeletionMode.INCREMENTAL:
+            # For incremental deletion, we delete the documents with the same document_id
+            document_ids = [
+                document.metadata.get(DOCUMENT_ID_METADATA_KEY)
+                for document in documents
+            ]
+            records, _ = self.qdrant_client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=models.Filter(
+                    should=[
+                        models.FieldCondition(
+                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                            match=models.MatchAny(
+                                any=document_ids,
+                            ),
+                        ),
+                    ]
+                ),
+                limit=100000000,
+                with_payload=False,
+                with_vectors=False,
+            )
+            record_ids_to_be_deleted = [record.id for record in records]
+            logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
+        elif deletion_mode == IndexingDeletionMode.FULL:
+            # For full deletion, we delete all the documents with same source
+            base_document_id = get_base_document_id(
+                _document_id=documents[0].metadata.get(DOCUMENT_ID_METADATA_KEY)
+            )
+            if base_document_id:
+                records, _ = self.qdrant_client.scroll(
+                    collection_name=self.collection_name,
+                    scroll_filter=models.Filter(
+                        should=[
+                            models.FieldCondition(
+                                key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                                match=models.MatchText(
+                                    text=base_document_id,
+                                ),
+                            ),
+                        ]
+                    ),
+                    limit=100000000,
+                    with_payload=False,
+                    with_vectors=False,
+                )
+                record_ids_to_be_deleted = [record.id for record in records]
+                logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
+
+        # Add Documents
+        Qdrant(
             client=self.qdrant_client,
             collection_name=self.collection_name,
             embeddings=embeddings,
         ).add_documents(documents=documents)
+
+        # Delete Documents
+        if len(record_ids_to_be_deleted):
+            logger.info(f"Deleting {len(record_ids_to_be_deleted)} records")
+            self.qdrant_client.delete(
+                collection_name=self.collection_name,
+                points_selector=models.PointIdsList(
+                    points=record_ids_to_be_deleted,
+                ),
+            )
 
     def get_collections(self) -> List[str]:
         collections = self.qdrant_client.get_collections().collections
@@ -128,3 +204,6 @@ class QdrantVectorDB(BaseVectorDB):
                 )
             ),
         )
+
+    def get_vector_client(self):
+        return self.qdrant_client

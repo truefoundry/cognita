@@ -1,15 +1,13 @@
 import argparse
-import asyncio
 
 import orjson
-from dotenv import load_dotenv
 
-from backend.indexer.indexer import index_collection
 from backend.indexer.types import IndexerConfig
 from backend.types import (
     DataSource,
     EmbedderConfig,
     EmbeddingCacheConfig,
+    IndexingDeletionMode,
     MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,
@@ -83,6 +81,13 @@ def parse_args() -> IndexerConfig:
         required=False,
         help="Embedding cache config",
     )
+    parser.add_argument(
+        "--deletion_mode",
+        type=IndexingDeletionMode,
+        required=False,
+        default=IndexingDeletionMode.INCREMENTAL,
+        help="Deletion mode for indexing (NONE/INCREMENTAL/FULl)",
+    )
     args = parser.parse_args()
 
     return IndexerConfig(
@@ -96,6 +101,7 @@ def parse_args() -> IndexerConfig:
         metadata_store_config=MetadataStoreConfig.parse_obj(
             orjson.loads(args.metadata_store_config)
         ),
+        deletion_mode=args.deletion_mode,
         embedding_cache_config=(
             EmbeddingCacheConfig.parse_obj(orjson.loads(args.embedding_cache_config))
             if args.embedding_cache_config
