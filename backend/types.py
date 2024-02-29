@@ -7,10 +7,10 @@ from pydantic import BaseModel, Extra, Field, constr
 class DocumentMetadata(BaseModel):
     """
     Document metadata saved in vector store
-    document_id: str unique identifier for the document source
+    _document_id: str unique identifier for the document source
     """
 
-    document_id: str
+    _document_id: str
     source: Optional[str]
 
     class Config:

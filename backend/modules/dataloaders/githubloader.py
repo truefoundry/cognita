@@ -50,14 +50,14 @@ class GithubLoader(BaseLoader):
                 file_ext = os.path.splitext(f)[1]
                 if file_ext not in allowed_extensions:
                     continue
-                document_id = generate_document_id(
+                _document_id = generate_document_id(
                     self.type, source_config.uri, rel_path
                 )
                 docs.append(
                     LoadedDocument(
                         filepath=full_path,
                         file_extension=file_ext,
-                        metadata=DocumentMetadata(document_id=document_id),
+                        metadata=DocumentMetadata(_document_id=_document_id),
                     )
                 )
 
