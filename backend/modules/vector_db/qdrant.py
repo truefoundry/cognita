@@ -96,7 +96,9 @@ class QdrantVectorDB(BaseVectorDB):
                         ),
                     ]
                 ),
-                limit=100000000,
+                limit=self.qdrant_client.count(
+                    collection_name=self.collection_name,
+                ).count,
                 with_payload=False,
                 with_vectors=False,
             )
@@ -120,7 +122,9 @@ class QdrantVectorDB(BaseVectorDB):
                             ),
                         ]
                     ),
-                    limit=100000000,
+                    limit=self.qdrant_client.count(
+                        collection_name=self.collection_name,
+                    ).count,
                     with_payload=False,
                     with_vectors=False,
                 )
@@ -168,7 +172,9 @@ class QdrantVectorDB(BaseVectorDB):
             collection_name=self.collection_name,
             group_by=f"{DOCUMENT_ID_METADATA_KEY}",
             query_vector=None,
-            limit=1000,
+            limit=self.qdrant_client.count(
+                collection_name=self.collection_name,
+            ).count,
             group_size=1,
         )
         groups = response.groups
