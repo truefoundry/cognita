@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 from langchain.docstore.document import Document
 
+from backend.types import LoadedDocument
+
 PARSER_REGISTRY = {}
 
 
@@ -66,7 +68,7 @@ class BaseParser(ABC):
     @abstractmethod
     async def get_chunks(
         self,
-        filepath,
+        document: LoadedDocument,
         max_chunk_size,
         *args,
         **kwargs,
@@ -75,7 +77,7 @@ class BaseParser(ABC):
         Abstract method. This should asynchronously read a file and return its content in chunks.
 
         Parameters:
-            filepath (str): Path of the file to be read.
+            document (LoadedDocument): Loaded Document to read and parse.
 
         Returns:
             typing.List[Document]: A list of Document objects, each representing a chunk of the file.

@@ -4,7 +4,8 @@ import fitz
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from .parser import BaseParser
+from backend.modules.parsers.parser import BaseParser
+from backend.types import LoadedDocument
 
 
 class PdfParserUsingPyMuPDF(BaseParser):
@@ -25,7 +26,9 @@ class PdfParserUsingPyMuPDF(BaseParser):
         """
         pass
 
-    async def get_chunks(self, filepath: str, max_chunk_size: int, *args, **kwargs):
+    async def get_chunks(
+        self, document: LoadedDocument, max_chunk_size: int, *args, **kwargs
+    ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
 
@@ -35,6 +38,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
         Returns:
             List[Document]: A list of Document objects, each representing a chunk of extracted text.
         """
+        filepath = document.filepath
         final_texts = []
         final_tables = []
         try:
@@ -55,6 +59,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
                                 "page_num": page.number,
                                 "type": "table",
                                 "table_num": ix,
+                                **(document.metadata if document.metadata else {}),
                             },
                         )
                     ]
@@ -81,6 +86,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
                             metadata={
                                 "page_num": page.number,
                                 "type": "text",
+                                **(document.metadata if document.metadata else {}),
                             },
                         )
                         for text_split in text_splits
@@ -93,6 +99,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
                             metadata={
                                 "page_num": page.number,
                                 "type": "text",
+                                **(document.metadata if document.metadata else {}),
                             },
                         )
                     )

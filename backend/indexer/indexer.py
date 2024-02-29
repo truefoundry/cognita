@@ -64,14 +64,10 @@ async def index_collection(inputs: IndexerConfig):
                     file_extension=doc.file_extension, parsers_map=parsers_map
                 )
                 chunks = await parser.get_chunks(
-                    filepath=doc.filepath,
+                    document=doc,
                     max_chunk_size=inputs.chunk_size,
                 )
-                for chunk in chunks:
-                    if doc.metadata.source:
-                        chunk.page_content = f"<source>{doc.metadata.source}</source>\n{chunk.page_content}"
-                    chunk.metadata.update(doc.metadata.dict())
-                    final_documents.append(chunk)
+                final_documents.extend(chunks)
                 logger.info("%s -> %s chunks", doc.filepath, len(chunks))
                 metadata_store_client.log_metrics_for_indexer_job_run(
                     collection_inderer_job_run_name=inputs.indexer_job_run_name,

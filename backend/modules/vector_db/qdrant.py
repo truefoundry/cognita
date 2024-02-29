@@ -6,6 +6,7 @@ from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
 
+from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig
@@ -34,7 +35,7 @@ class QdrantVectorDB(BaseVectorDB):
             documents=[
                 Document(
                     page_content="Initial document",
-                    metadata={"_document_id": "__init__"},
+                    metadata={f"{DOCUMENT_ID_METADATA_KEY}": "__init__"},
                 )
             ],
             embedding=embeddings,
@@ -51,7 +52,7 @@ class QdrantVectorDB(BaseVectorDB):
                 filter=models.Filter(
                     must=[
                         models.FieldCondition(
-                            key="metadata._document_id",
+                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
                             match=models.MatchText(text="__init__"),
                         ),
                     ],
@@ -89,7 +90,7 @@ class QdrantVectorDB(BaseVectorDB):
         """
         response = self.qdrant_client.search_groups(
             collection_name=self.collection_name,
-            group_by="_document_id",
+            group_by=f"{DOCUMENT_ID_METADATA_KEY}",
             query_vector=None,
             limit=1000,
             group_size=1,
@@ -99,7 +100,7 @@ class QdrantVectorDB(BaseVectorDB):
         for group in groups:
             documents.append(
                 {
-                    "_document_id": group.id,
+                    f"{DOCUMENT_ID_METADATA_KEY}": group.id,
                 }
             )
         return documents
@@ -120,7 +121,7 @@ class QdrantVectorDB(BaseVectorDB):
                 filter=models.Filter(
                     must=[
                         models.FieldCondition(
-                            key="metadata._document_id",
+                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
                             match=models.MatchText(text=document_id_match),
                         ),
                     ],

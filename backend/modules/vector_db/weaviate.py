@@ -5,6 +5,7 @@ import weaviate
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.weaviate import Weaviate
 
+from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig
 
@@ -40,7 +41,7 @@ class WeaviateVectorDB(BaseVectorDB):
                         "dataType": ["text"],
                     },
                     {
-                        "name": "_document_id",
+                        "name": f"{DOCUMENT_ID_METADATA_KEY}",
                         "dataType": ["text"],
                     },
                 ],
@@ -69,7 +70,7 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=self.collection_name,  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
-            attributes=["_document_id"],
+            attributes=[f"{DOCUMENT_ID_METADATA_KEY}"],
         )
 
     def list_documents_in_collection(self) -> List[dict]:
@@ -79,7 +80,7 @@ class WeaviateVectorDB(BaseVectorDB):
         # https://weaviate.io/developers/weaviate/search/aggregate#retrieve-groupedby-properties
         response = (
             self.weaviate_client.query.aggregate(self.collection_name)
-            .with_group_by_filter(["_document_id"])
+            .with_group_by_filter([f"{DOCUMENT_ID_METADATA_KEY}"])
             .with_fields("groupedBy { value }")
             .do()
         )
@@ -90,7 +91,9 @@ class WeaviateVectorDB(BaseVectorDB):
         for group in groups:
             documents.append(
                 {
-                    "_document_id": group.get("groupedBy", {}).get("value", ""),
+                    f"{DOCUMENT_ID_METADATA_KEY}": group.get("groupedBy", {}).get(
+                        "value", ""
+                    ),
                 }
             )
         return documents
@@ -103,7 +106,7 @@ class WeaviateVectorDB(BaseVectorDB):
         res = self.weaviate_client.batch.delete_objects(
             class_name=self.collection_name,
             where={
-                "path": ["_document_id"],
+                "path": [f"{DOCUMENT_ID_METADATA_KEY}"],
                 "operator": "Like",
                 "valueText": document_id_match,
             },

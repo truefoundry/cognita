@@ -4,7 +4,8 @@ import typing
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from .parser import BaseParser
+from backend.modules.parsers.parser import BaseParser
+from backend.types import LoadedDocument
 
 
 class TextParser(BaseParser):
@@ -26,7 +27,7 @@ class TextParser(BaseParser):
         pass
 
     async def get_chunks(
-        self, filepath: str, max_chunk_size: int, *args, **kwargs
+        self, document: LoadedDocument, max_chunk_size: int, *args, **kwargs
     ) -> typing.List[Document]:
         """
         Asynchronously loads the text from a text file and returns it in chunks.
@@ -37,6 +38,7 @@ class TextParser(BaseParser):
         Returns:
             List[Document]: A list of Document objects, each representing a chunk of the text.
         """
+        filepath = document.filepath
         content = None
         with open(filepath, "r") as f:
             content = f.read()
@@ -47,7 +49,14 @@ class TextParser(BaseParser):
         texts = text_splitter.split_text(content)
 
         docs = [
-            Document(page_content=text, metadata={"type": "text"}) for text in texts
+            Document(
+                page_content=text,
+                metadata={
+                    "type": "text",
+                    **(document.metadata if document.metadata else {}),
+                },
+            )
+            for text in texts
         ]
 
         return docs
