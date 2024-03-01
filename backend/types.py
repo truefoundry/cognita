@@ -32,7 +32,7 @@ class EmbedderConfig(BaseModel):
     config: dict = None
 
 class DataSource(BaseModel):
-    type: Literal["mlfoundry", "github", "local", "web"]
+    type: str
     uri: str
     class Config:
         use_enum_values = True

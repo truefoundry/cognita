@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from langchain.docstore.document import Document
@@ -9,8 +8,7 @@ from qdrant_client import QdrantClient, models
 from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import IndexingDeletionMode, VectorDBConfig
-from backend.utils import get_base_document_id
+from backend.types import VectorDBConfig
 
 
 class QdrantVectorDB(BaseVectorDB):
@@ -180,9 +178,9 @@ class QdrantVectorDB(BaseVectorDB):
                 )
         return list(document_ids_set)
 
-    def delete_documents(self, document_id_match: str):
+    def delete_documents(self, document_ids: List[str]):
         """
-        Delete a document from the collection
+        Delete documents from the collection
         """
         try:
             self.qdrant_client.get_collection(collection_name=self.collection_name)
@@ -197,7 +195,7 @@ class QdrantVectorDB(BaseVectorDB):
                     must=[
                         models.FieldCondition(
                             key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                            match=models.MatchText(text=document_id_match),
+                            match=models.MatchAny(any=document_ids),
                         ),
                     ],
                 )

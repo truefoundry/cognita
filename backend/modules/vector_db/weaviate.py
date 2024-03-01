@@ -90,7 +90,7 @@ class WeaviateVectorDB(BaseVectorDB):
             document_ids.add(group.get("groupedBy", {}).get("value", ""))
         return document_ids
 
-    def delete_documents(self, document_id_match: str):
+    def delete_documents(self, document_ids: List[str]):
         """
         Delete documents from the collection that match given `document_id_match`
         """
@@ -99,15 +99,13 @@ class WeaviateVectorDB(BaseVectorDB):
             class_name=self.collection_name,
             where={
                 "path": [f"{DOCUMENT_ID_METADATA_KEY}"],
-                "operator": "Like",
-                "valueText": document_id_match,
+                "operator": "ContainsAny",
+                "valueTextArray": document_ids,
             },
         )
         deleted_vectors = res.get("results", {}).get("successful", None)
         if deleted_vectors:
-            print(
-                f"Deleted {deleted_vectors} documents from the collection that match {document_id_match}"
-            )
+            print(f"Deleted {len(document_ids)} documents from the collection")
 
     def get_vector_client(self):
         return self.weaviate_client
