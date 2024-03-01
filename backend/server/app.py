@@ -2,7 +2,7 @@ from typing import Optional
 
 import mlfoundry
 import requests
-from fastapi import APIRouter, FastAPI, HTTPException, Path, Query
+from fastapi import APIRouter, FastAPI, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from mlfoundry.artifact.truefoundry_artifact_repo import (
@@ -14,13 +14,12 @@ import backend.server.service as service
 from backend.modules import query_controllers
 from backend.modules.dataloaders.loader import LOADER_REGISTRY
 from backend.modules.parsers.parser import PARSER_REGISTRY
-from backend.modules.vector_db import get_vector_db_client
 from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
 from backend.types import (
-    AddDocuments,
     CreateCollection,
     ModelType,
+    SyncDocumentsDto,
     UploadToDataDirectoryDto,
 )
 
@@ -55,11 +54,11 @@ async def create_collection(request: CreateCollection):
     return await service.create_collection(request)
 
 
-@app.post("/collections/{collection_name}/upsert_docs")
-async def upsert_documents_to_collection(
-    request: AddDocuments, collection_name: str = Path(title="Collection name")
+@app.post("/collections/{collection_name}/sync_docs")
+async def sync_documents_to_collection(
+    request: SyncDocumentsDto, collection_name: str = Path(title="Collection name")
 ):
-    return await service.upsert_documents_to_collection(request, collection_name)
+    return await service.sync_documents_to_collection(request, collection_name)
 
 
 @app.delete("/collections/{collection_name}")

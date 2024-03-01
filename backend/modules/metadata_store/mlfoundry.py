@@ -3,7 +3,7 @@ import enum
 import json
 import logging
 import warnings
-from typing import List, Literal
+from typing import Dict, List, Literal
 
 import mlflow
 import mlfoundry
@@ -14,6 +14,7 @@ from backend.modules.metadata_store.models import (
     Collection, CollectionCreate, CollectionIndexerJobRun,
     CollectionIndexerJobRunCreate, CollectionIndexerJobRunStatus)
 from backend.types import DataSource, EmbedderConfig, IndexingMode, ParserConfig
+from backend.utils import _flatten, _unflatten
 
 DEFAULT_CHUNK_SIZE = 500
 CURRENT_INDEXER_JOB_RUN_NAME_KEY = "current_indexer_job_run_name"
@@ -41,23 +42,20 @@ class CollectionMetadata(BaseParams):
     embedder_config: EmbedderConfig
     chunk_size: int
 
-    def to_mlfoundry_params(self):
-        return {
-            "type": self.type.value,
-            "description": self.description,
-            "embedder_config": json.dumps(self.embedder_config.dict()),
-            "chunk_size": str(self.chunk_size),
-        }
+    def to_mlfoundry_params(self) -> Dict[str, str]:
+        data = self.dict().copy()
+        data = _flatten(data, "embedder_config")
+        for k, v in data.items():
+            data[k] = json.dumps(v)
+        return data
 
     @classmethod
-    def from_mlfoundry_params(cls, params: dict[str, str]):
-        return CollectionMetadata(
-            description=params.get("description"),
-            embedder_config=EmbedderConfig.parse_obj(
-                json.loads(params.get("embedder_config"))
-            ),
-            chunk_size=int(params.get("chunk_size", DEFAULT_CHUNK_SIZE)),
-        )
+    def from_mlfoundry_params(cls, params: Dict[str, str]):
+        data = params.copy()
+        for k, v in data.items():
+            data[k] = json.loads(v)
+        data = _unflatten(data, "embedder_config")
+        return cls(**data)
 
     class Config:
         use_enum_values = True
@@ -72,33 +70,22 @@ class RunParams(BaseParams):
     data_source: DataSource
     indexing_mode: IndexingMode
 
-    def to_mlfoundry_params(self):
-        return {
-            "type": self.type.value,
-            "collection_name": self.collection_name,
-            "parser_config": json.dumps(self.parser_config.dict()),
-            "data_source": json.dumps(self.data_source.dict()),
-            "indexing_mode": self.indexing_mode.value,
-        }
+    def to_mlfoundry_params(self) -> Dict[str, str]:
+        data = self.dict().copy()
+        data = _flatten(data, "data_source")
+        data = _flatten(data, "parser_config")
+        for k, v in data.items():
+            data[k] = json.dumps(v)
+        return data
 
     @classmethod
-    def from_mlfoundry_params(cls, params: dict[str, str]):
-        return RunParams(
-            collection_name=params.get("collection_name"),
-            parser_config=ParserConfig.parse_obj(
-                json.loads(params.get("parser_config"))
-            ),
-            data_source=(
-                DataSource.parse_obj(json.loads(params.get("data_source")))
-                if params.get("data_source", None)
-                else DataSource.parse_obj(json.loads(params.get("knowledge_source")))
-            ),
-            indexing_mode=(
-                IndexingMode(params.get("indexing_mode"))
-                if params.get("indexing_mode", None)
-                else IndexingMode.INCREMENTAL
-            ),
-        )
+    def from_mlfoundry_params(cls, params: Dict[str, str]):
+        data = params.copy()
+        for k, v in data.items():
+            data[k] = json.loads(v)
+        data = _unflatten(data, "data_source")
+        data = _unflatten(data, "parser_config")
+        return cls(**data)
 
     class Config:
         use_enum_values = True
@@ -152,7 +139,7 @@ class MLFoundry(BaseMetadataStore):
             ).dict(),
         )
         created_collection.log_params(
-            CollectionMetadata(
+            param_dict=CollectionMetadata(
                 description=collection.description,
                 embedder_config=collection.embedder_config,
                 chunk_size=collection.chunk_size,
@@ -234,7 +221,7 @@ class MLFoundry(BaseMetadataStore):
     ) -> CollectionIndexerJobRun:
         try:
             run = self._get_run_by_name(
-                run_name=collection_inderer_job_run, no_cache=True
+                run_name=collection_inderer_job_run_name, no_cache=True
             )
         except mlflow.exceptions.RestException as exp:
             if exp.error_code == "RESOURCE_DOES_NOT_EXIST":
@@ -289,7 +276,7 @@ class MLFoundry(BaseMetadataStore):
             ).dict(),
         )
         created_run.log_params(
-            RunParams(
+            param_dict=RunParams(
                 collection_name=collection_name,
                 parser_config=indexer_job_run.parser_config,
                 data_source=indexer_job_run.data_source,

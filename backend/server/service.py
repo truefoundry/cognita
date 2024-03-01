@@ -62,7 +62,7 @@ async def create_collection(request: CreateCollection):
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-async def upsert_documents_to_collection(request: AddDocuments, collection_name: str):
+async def sync_documents_to_collection(request: AddDocuments, collection_name: str):
     try:
         collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name=collection_name
