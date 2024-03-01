@@ -83,7 +83,8 @@ class QdrantVectorDB(BaseVectorDB):
             ),
             limit=self.qdrant_client.count(
                 collection_name=self.collection_name,
-            ).count,
+            ).count
+            or 1000,
             with_payload=False,
             with_vectors=False,
         )
@@ -164,7 +165,8 @@ class QdrantVectorDB(BaseVectorDB):
             ),
             limit=self.qdrant_client.count(
                 collection_name=self.collection_name,
-            ).count,
+            ).count
+            or 1000,
             with_payload=[f"metadata.{DOCUMENT_ID_METADATA_KEY}"],
             with_vectors=False,
         )

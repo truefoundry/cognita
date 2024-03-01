@@ -82,7 +82,7 @@ class CreateCollection(BaseModel):
     chunk_size: int = Field(title="Chunk Size for indexing", ge=1)
 
 
-class AddDocuments(BaseModel):
+class SyncDocumentsDto(BaseModel):
     data_source: DataSource = Field(
         title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
     )
