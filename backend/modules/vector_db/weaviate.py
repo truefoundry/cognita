@@ -45,7 +45,7 @@ class WeaviateVectorDB(BaseVectorDB):
         )
 
     def upsert_documents(
-        self, documents: List[str], embeddings: Embeddings, deletion_mode
+        self, documents: List[str], embeddings: Embeddings, incremental
     ):
         Weaviate.from_documents(
             documents=documents,
@@ -71,7 +71,7 @@ class WeaviateVectorDB(BaseVectorDB):
             attributes=[f"{DOCUMENT_ID_METADATA_KEY}"],
         )
 
-    def list_documents_in_collection(self) -> List[dict]:
+    def list_documents_in_collection(self, base_document_id: str = None) -> List[str]:
         """
         List all documents in a collection
         """
@@ -85,16 +85,10 @@ class WeaviateVectorDB(BaseVectorDB):
         groups: List[dict] = (
             response.get("data", {}).get("Aggregate", {}).get(self.collection_name, [])
         )
-        documents: List[dict] = []
+        document_ids = set()
         for group in groups:
-            documents.append(
-                {
-                    f"{DOCUMENT_ID_METADATA_KEY}": group.get("groupedBy", {}).get(
-                        "value", ""
-                    ),
-                }
-            )
-        return documents
+            document_ids.add(group.get("groupedBy", {}).get("value", ""))
+        return document_ids
 
     def delete_documents(self, document_id_match: str):
         """

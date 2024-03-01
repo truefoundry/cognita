@@ -67,76 +67,48 @@ class QdrantVectorDB(BaseVectorDB):
         )
         return
 
-    def _get_records_to_be_deleted(
-        self, document_ids: List[str], deletion_mode: IndexingDeletionMode
-    ):
-        if deletion_mode == IndexingDeletionMode.INCREMENTAL:
-            # For incremental deletion, we delete the documents with the same document_id
-
-            records, _ = self.qdrant_client.scroll(
-                collection_name=self.collection_name,
-                scroll_filter=models.Filter(
-                    should=[
-                        models.FieldCondition(
-                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                            match=models.MatchAny(
-                                any=document_ids,
-                            ),
+    def _get_records_to_be_upserted(self, document_ids: List[str], incremental: bool):
+        if not incremental:
+            return []
+        # For incremental deletion, we delete the documents with the same document_id
+        records, _ = self.qdrant_client.scroll(
+            collection_name=self.collection_name,
+            scroll_filter=models.Filter(
+                should=[
+                    models.FieldCondition(
+                        key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                        match=models.MatchAny(
+                            any=document_ids,
                         ),
-                    ]
-                ),
-                limit=self.qdrant_client.count(
-                    collection_name=self.collection_name,
-                ).count,
-                with_payload=False,
-                with_vectors=False,
-            )
-            record_ids_to_be_deleted = [record.id for record in records]
-            logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
-            return record_ids_to_be_deleted
-        elif deletion_mode == IndexingDeletionMode.FULL:
-            # For full deletion, we delete all the documents with same source
-            base_document_id = get_base_document_id(_document_id=document_ids[0])
-            if base_document_id:
-                records, _ = self.qdrant_client.scroll(
-                    collection_name=self.collection_name,
-                    scroll_filter=models.Filter(
-                        should=[
-                            models.FieldCondition(
-                                key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                                match=models.MatchText(
-                                    text=base_document_id,
-                                ),
-                            ),
-                        ]
                     ),
-                    limit=self.qdrant_client.count(
-                        collection_name=self.collection_name,
-                    ).count,
-                    with_payload=False,
-                    with_vectors=False,
-                )
-                record_ids_to_be_deleted = [record.id for record in records]
-                logger.info(f"Records to be deleted {len(record_ids_to_be_deleted)}")
-                return record_ids_to_be_deleted
-        return []
+                ]
+            ),
+            limit=self.qdrant_client.count(
+                collection_name=self.collection_name,
+            ).count,
+            with_payload=False,
+            with_vectors=False,
+        )
+        record_ids_to_be_upserted = [record.id for record in records]
+        logger.info(f"Records to be upserted {len(record_ids_to_be_upserted)}")
+        return record_ids_to_be_upserted
 
     def upsert_documents(
         self,
         documents,
         embeddings: Embeddings,
-        deletion_mode: IndexingDeletionMode = IndexingDeletionMode.INCREMENTAL,
+        incremental: bool = True,
     ):
         if len(documents) == 0:
             logger.warning("No documents to index")
             return
-        # get record IDs to be deleted
-        record_ids_to_be_deleted: List[str] = self._get_records_to_be_deleted(
+        # get record IDs to be upserted
+        record_ids_to_be_upserted: List[str] = self._get_records_to_be_upserted(
             document_ids=[
                 document.metadata.get(DOCUMENT_ID_METADATA_KEY)
                 for document in documents
             ],
-            deletion_mode=deletion_mode,
+            incremental=incremental,
         )
 
         # Add Documents
@@ -147,12 +119,12 @@ class QdrantVectorDB(BaseVectorDB):
         ).add_documents(documents=documents)
 
         # Delete Documents
-        if len(record_ids_to_be_deleted):
-            logger.info(f"Deleting {len(record_ids_to_be_deleted)} records")
+        if len(record_ids_to_be_upserted):
+            logger.info(f"Deleting {len(record_ids_to_be_upserted)} records")
             self.qdrant_client.delete(
                 collection_name=self.collection_name,
                 points_selector=models.PointIdsList(
-                    points=record_ids_to_be_deleted,
+                    points=record_ids_to_be_upserted,
                 ),
             )
 
@@ -172,28 +144,41 @@ class QdrantVectorDB(BaseVectorDB):
             collection_name=self.collection_name,
         )
 
-    def list_documents_in_collection(self) -> List[dict]:
+    def list_documents_in_collection(self, base_document_id: str = None) -> List[str]:
         """
         List all documents in a collection
         """
-        response = self.qdrant_client.search_groups(
+        records, _ = self.qdrant_client.scroll(
             collection_name=self.collection_name,
-            group_by=f"{DOCUMENT_ID_METADATA_KEY}",
-            query_vector=None,
+            scroll_filter=models.Filter(
+                should=(
+                    [
+                        models.FieldCondition(
+                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                            match=models.MatchText(
+                                text=base_document_id,
+                            ),
+                        ),
+                    ]
+                    if base_document_id
+                    else None
+                )
+            ),
             limit=self.qdrant_client.count(
                 collection_name=self.collection_name,
             ).count,
-            group_size=1,
+            with_payload=[f"metadata.{DOCUMENT_ID_METADATA_KEY}"],
+            with_vectors=False,
         )
-        groups = response.groups
-        documents: List[dict] = []
-        for group in groups:
-            documents.append(
-                {
-                    f"{DOCUMENT_ID_METADATA_KEY}": group.id,
-                }
-            )
-        return documents
+        document_ids_set = set()
+        for record in records:
+            if record.payload.get("metadata") and record.payload.get("metadata").get(
+                DOCUMENT_ID_METADATA_KEY
+            ):
+                document_ids_set.add(
+                    record.payload.get("metadata").get(DOCUMENT_ID_METADATA_KEY)
+                )
+        return list(document_ids_set)
 
     def delete_documents(self, document_id_match: str):
         """

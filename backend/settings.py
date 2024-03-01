@@ -9,7 +9,7 @@ from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBCon
 
 class Settings(BaseSettings):
     """
-    Settings class to hold all the environment variables for FastAPI
+    Settings class to hold all the environment variables
     """
 
     DOCUMENT_ID_SEPARATOR = "::"
@@ -17,8 +17,6 @@ class Settings(BaseSettings):
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
     TFY_SERVICE_ROOT_PATH: Optional[str] = "/"
-    JOB_FQN: str
-    JOB_COMPONENT_NAME: str
     TFY_API_KEY: str
     TFY_HOST: Optional[str]
     TFY_LLM_GATEWAY_URL: str
@@ -46,12 +44,6 @@ class Settings(BaseSettings):
 
     if not METADATA_STORE_CONFIG:
         raise ValueError("METADATA_STORE_CONFIG is not set")
-
-    if not DEBUG_MODE and not JOB_FQN:
-        raise ValueError("JOB_FQN is not set")
-
-    if not DEBUG_MODE and not JOB_COMPONENT_NAME:
-        raise ValueError("JOB_COMPONENT_NAME is not set")
 
     if not TFY_API_KEY:
         raise ValueError("TFY_API_KEY is not set")

@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from backend.types import DataSource, EmbedderConfig, ParserConfig
+from backend.types import DataSource, EmbedderConfig, IndexingMode, ParserConfig
 
 
 class CollectionIndexerJobRunStatus(str, enum.Enum):
@@ -20,6 +20,7 @@ class CollectionIndexerJobRunStatus(str, enum.Enum):
 class CollectionIndexerJobRunBase(BaseModel):
     data_source: DataSource
     parser_config: ParserConfig
+    indexing_mode: IndexingMode
 
 
 class CollectionIndexerJobRunCreate(CollectionIndexerJobRunBase):

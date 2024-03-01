@@ -62,6 +62,15 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_collection_indexer_job_run(
+        self, collection_inderer_job_run_name: str
+    ) -> CollectionIndexerJobRun:
+        """
+        Get a collection indexer job run for a collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def delete_collection(self, collection_name: str):
         """
         Delete a collection from the metadata store
