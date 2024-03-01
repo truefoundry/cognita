@@ -14,7 +14,7 @@ from backend.modules.metadata_store.models import (
 )
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
-from backend.types import AddDocuments, CreateCollection
+from backend.types import CreateCollection, SyncDocumentsDto
 
 
 async def get_collections():
@@ -62,7 +62,7 @@ async def create_collection(request: CreateCollection):
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-async def sync_documents_to_collection(request: AddDocuments, collection_name: str):
+async def sync_documents_to_collection(request: SyncDocumentsDto, collection_name: str):
     try:
         collection = METADATA_STORE_CLIENT.get_collection_by_name(
             collection_name=collection_name
