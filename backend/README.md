@@ -56,7 +56,7 @@ python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --in
 
 **Use local file as the data source**
 ```
-python -m backend.indexer.main --collection_name newtestag --chunk_size 350 --indexer_job_run_name newtestag-k185 --data_source '{"type": "local", "credentials": null, "config": {"uri": "sample-data/creditcards"}}' --embedder_config '{"description": null, "provider": "OpenAI", "config": {"model": "text-embedding-ada-002"}}' --parser_config '{}' --vector_db_config '{"provider": "weaviate", "url": "https://test-f97pfm6u.weaviate.network", "api_key": null}' --metadata_store_config '{"provider": "mlfoundry", "config": {"ml_repo_name": "tfy-docs-rag"}}'
+python -m backend.indexer.main --collection_name newtestag --indexer_job_run_name newtestag-k185
 ```
 
 # Development

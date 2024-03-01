@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStore
 
@@ -14,7 +15,12 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def upsert_documents(self, documents, embeddings: Embeddings):
+    def upsert_documents(
+        self,
+        documents: List[Document],
+        embeddings: Embeddings,
+        incremental: bool = True,
+    ):
         """
         Upsert documents into the vector database
         """
@@ -42,15 +48,22 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def list_documents_in_collection(self) -> List[dict]:
+    def list_documents_in_collection(self, base_document_id: str = None) -> List[dict]:
         """
         List all documents in a collection
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_documents(self, document_id_match: str):
+    def delete_documents(self, document_ids: List[str]):
         """
-        Delete documents from the collection with matching `document_id_match`
+        Delete documents from the collection with given `document_ids`
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_vector_client(self):
+        """
+        Get vector client
         """
         raise NotImplementedError()

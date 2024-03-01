@@ -46,3 +46,6 @@ class ChromaVectorDB(BaseVectorDB):
 
     def delete_documents(self, document_id_match: str):
         pass
+
+    def get_vector_client(self):
+        return self.client

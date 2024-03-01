@@ -4,6 +4,16 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Extra, Field, constr
 
 
+class IndexingMode(str, Enum):
+    """
+    Indexing modes
+    """
+
+    NONE = "NONE"
+    INCREMENTAL = "INCREMENTAL"
+    FULL = "FULL"
+
+
 class DocumentMetadata(BaseModel):
     """
     Document metadata saved in vector store
@@ -11,7 +21,6 @@ class DocumentMetadata(BaseModel):
     """
 
     _document_id: str
-    source: Optional[str]
 
     class Config:
         extra = Extra.allow
@@ -22,21 +31,12 @@ class EmbedderConfig(BaseModel):
     provider: str
     config: dict = None
 
-
-class SourceConfig(BaseModel):
-    uri: str
-
-    class Config:
-        extra = Extra.allow
-
-
 class DataSource(BaseModel):
-    type: Literal["mlfoundry", "github", "local", "web"]
-    credentials: Optional[dict] = None
-    config: SourceConfig
-
+    type: str
+    uri: str
     class Config:
         use_enum_values = True
+        extra = Extra.allow
 
 
 class ParserConfig(BaseModel):
@@ -99,6 +99,10 @@ class AddDocuments(BaseModel):
     force: bool = Field(
         default=False,
         title="If true, then force index the documents even if there is active indexer job run",
+    )
+
+    indexing_mode: IndexingMode = Field(
+        default=IndexingMode.INCREMENTAL, title="Indexing mode for the documents"
     )
 
 

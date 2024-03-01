@@ -13,7 +13,7 @@ from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.models import (
     Collection, CollectionCreate, CollectionIndexerJobRun,
     CollectionIndexerJobRunCreate, CollectionIndexerJobRunStatus)
-from backend.types import DataSource, EmbedderConfig, ParserConfig
+from backend.types import DataSource, EmbedderConfig, IndexingMode, ParserConfig
 
 DEFAULT_CHUNK_SIZE = 500
 CURRENT_INDEXER_JOB_RUN_NAME_KEY = "current_indexer_job_run_name"
@@ -70,6 +70,7 @@ class RunParams(BaseParams):
     collection_name: str
     parser_config: ParserConfig
     data_source: DataSource
+    indexing_mode: IndexingMode
 
     def to_mlfoundry_params(self):
         return {
@@ -77,6 +78,7 @@ class RunParams(BaseParams):
             "collection_name": self.collection_name,
             "parser_config": json.dumps(self.parser_config.dict()),
             "data_source": json.dumps(self.data_source.dict()),
+            "indexing_mode": self.indexing_mode.value,
         }
 
     @classmethod
@@ -90,6 +92,11 @@ class RunParams(BaseParams):
                 DataSource.parse_obj(json.loads(params.get("data_source")))
                 if params.get("data_source", None)
                 else DataSource.parse_obj(json.loads(params.get("knowledge_source")))
+            ),
+            indexing_mode=(
+                IndexingMode(params.get("indexing_mode"))
+                if params.get("indexing_mode", None)
+                else IndexingMode.INCREMENTAL
             ),
         )
 
@@ -222,8 +229,16 @@ class MLFoundry(BaseMetadataStore):
             )
         return None
 
-    def get_collection_indexer_job_run(self, collection_inderer_job_run_name: str):
-        run = self._get_run_by_name(run_name=collection_inderer_job_run_name)
+    def get_collection_indexer_job_run(
+        self, collection_inderer_job_run_name: str
+    ) -> CollectionIndexerJobRun:
+        try:
+            run = self._get_run_by_name(
+                run_name=collection_inderer_job_run, no_cache=True
+            )
+        except mlflow.exceptions.RestException as exp:
+            if exp.error_code == "RESOURCE_DOES_NOT_EXIST":
+                return None
         collection_inderer_job_run = RunParams.from_mlfoundry_params(
             params=run.get_params()
         )
@@ -231,6 +246,7 @@ class MLFoundry(BaseMetadataStore):
             name=run.run_name,
             parser_config=collection_inderer_job_run.parser_config,
             data_source=collection_inderer_job_run.data_source,
+            indexing_mode=collection_inderer_job_run.indexing_mode,
             status=CollectionIndexerJobRunStatus[
                 run.get_tags(no_cache=True).get("status")
             ],
@@ -251,6 +267,7 @@ class MLFoundry(BaseMetadataStore):
                     name=run.run_name,
                     parser_config=collection_inderer_job_run.parser_config,
                     data_source=collection_inderer_job_run.data_source,
+                    indexing_mode=collection_inderer_job_run.indexing_mode,
                     status=CollectionIndexerJobRunStatus[
                         run.get_tags(no_cache=True).get("status")
                     ],
@@ -276,6 +293,7 @@ class MLFoundry(BaseMetadataStore):
                 collection_name=collection_name,
                 parser_config=indexer_job_run.parser_config,
                 data_source=indexer_job_run.data_source,
+                indexing_mode=indexer_job_run.indexing_mode,
             ).to_mlfoundry_params()
         )
         collection.set_tags(
@@ -285,6 +303,7 @@ class MLFoundry(BaseMetadataStore):
             name=created_run.run_name,
             data_source=indexer_job_run.data_source,
             parser_config=indexer_job_run.parser_config,
+            indexing_mode=indexer_job_run.indexing_mode,
             status=CollectionIndexerJobRunStatus.INITIALIZED,
         )
 

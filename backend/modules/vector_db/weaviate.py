@@ -37,10 +37,6 @@ class WeaviateVectorDB(BaseVectorDB):
                 "class": self.collection_name,
                 "properties": [
                     {
-                        "name": "text",
-                        "dataType": ["text"],
-                    },
-                    {
                         "name": f"{DOCUMENT_ID_METADATA_KEY}",
                         "dataType": ["text"],
                     },
@@ -48,8 +44,10 @@ class WeaviateVectorDB(BaseVectorDB):
             }
         )
 
-    def upsert_documents(self, documents: List[str], embeddings: Embeddings):
-        return Weaviate.from_documents(
+    def upsert_documents(
+        self, documents: List[str], embeddings: Embeddings, incremental
+    ):
+        Weaviate.from_documents(
             documents=documents,
             embedding=embeddings,
             client=self.weaviate_client,
@@ -73,7 +71,7 @@ class WeaviateVectorDB(BaseVectorDB):
             attributes=[f"{DOCUMENT_ID_METADATA_KEY}"],
         )
 
-    def list_documents_in_collection(self) -> List[dict]:
+    def list_documents_in_collection(self, base_document_id: str = None) -> List[str]:
         """
         List all documents in a collection
         """
@@ -87,18 +85,12 @@ class WeaviateVectorDB(BaseVectorDB):
         groups: List[dict] = (
             response.get("data", {}).get("Aggregate", {}).get(self.collection_name, [])
         )
-        documents: List[dict] = []
+        document_ids = set()
         for group in groups:
-            documents.append(
-                {
-                    f"{DOCUMENT_ID_METADATA_KEY}": group.get("groupedBy", {}).get(
-                        "value", ""
-                    ),
-                }
-            )
-        return documents
+            document_ids.add(group.get("groupedBy", {}).get("value", ""))
+        return document_ids
 
-    def delete_documents(self, document_id_match: str):
+    def delete_documents(self, document_ids: List[str]):
         """
         Delete documents from the collection that match given `document_id_match`
         """
@@ -107,12 +99,13 @@ class WeaviateVectorDB(BaseVectorDB):
             class_name=self.collection_name,
             where={
                 "path": [f"{DOCUMENT_ID_METADATA_KEY}"],
-                "operator": "Like",
-                "valueText": document_id_match,
+                "operator": "ContainsAny",
+                "valueTextArray": document_ids,
             },
         )
         deleted_vectors = res.get("results", {}).get("successful", None)
         if deleted_vectors:
-            print(
-                f"Deleted {deleted_vectors} documents from the collection that match {document_id_match}"
-            )
+            print(f"Deleted {len(document_ids)} documents from the collection")
+
+    def get_vector_client(self):
+        return self.weaviate_client

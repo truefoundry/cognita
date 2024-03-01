@@ -6,6 +6,7 @@ from backend.types import (
     DataSource,
     EmbedderConfig,
     EmbeddingCacheConfig,
+    IndexingMode,
     MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,
@@ -28,11 +29,6 @@ class IndexerConfig(BaseModel):
         title="Embedder configuration",
     )
     parser_config: ParserConfig = Field(
-        default={
-            ".md": "MarkdownParser",
-            ".pdf": "PdfParserFast",
-            ".txt": "TextParser",
-        },
         title="Mapping of file extensions to parsers. Required only incase, multiple parsers are available for same extension.",
     )
     vector_db_config: VectorDBConfig = Field(
@@ -44,3 +40,7 @@ class IndexerConfig(BaseModel):
     embedding_cache_config: Optional[EmbeddingCacheConfig] = Field(
         title="Embedding cache config", default=None
     )
+    indexing_mode: IndexingMode = Field(
+        default=IndexingMode.INCREMENTAL, title="Indexing Mode"
+    )
+    batch_size: int = Field(default=100, title="Batch size for indexing", ge=1)

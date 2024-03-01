@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
-from backend.types import DocumentMetadata, LoadedDocument, SourceConfig
+from backend.types import DataSource, DocumentMetadata, LoadedDocument
 from backend.utils import generate_document_id
 
 
@@ -39,22 +39,22 @@ class WebLoader(BaseLoader):
         return content
 
     def load_data(
-        self, source_config: SourceConfig, dest_dir: str, allowed_extensions: List[str]
+        self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:
         """
         Loads data from a local directory specified by the given source URI.
 
         Args:
-            source_config (SourceConfig): The source URI of the website
+            data_source (DataSource): The source URI of the website
             dest_dir (str): The destination directory where the data will be copied to.
             allowed_extensions (List[str]): A list of allowed file extensions.
         Returns:
             List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
         """
-        max_depth = source_config.dict().get("max_depth", 2)
+        max_depth = data_source.dict().get("max_depth", 2)
         print("WebLoader -> max_depth: ", max_depth)
         loader = RecursiveUrlLoader(
-            url=source_config.uri,
+            url=data_source.uri,
             max_depth=max_depth,
             extractor=lambda x: self._remove_empty_lines(
                 markdownify.markdownify(self._remove_tags(x))
@@ -75,7 +75,7 @@ class WebLoader(BaseLoader):
             with open(dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            _document_id = generate_document_id(self.type, source_config.uri, url)
+            _document_id = generate_document_id(data_source=data_source.uri, path=url)
 
             loaded_documents.append(
                 LoadedDocument(
