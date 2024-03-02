@@ -9,7 +9,7 @@ from backend.types import EmbedderConfig, EmbeddingCacheConfig
 EMBEDDER_REGISTRY = {}
 
 
-def register_embedder(provider, cls):
+def register_embedder(provider: str, cls):
     """
     Registers all the available loaders using `BaseEmbedder` class
 
@@ -21,13 +21,9 @@ def register_embedder(provider, cls):
     """
     global EMBEDDER_REGISTRY
     # Validate and add the embedder to the registry.
-    if not provider:
-        raise ValueError(
-            f"static attribute `name` needs to be a non-empty string on class {cls.__name__}"
-        )
     if provider in EMBEDDER_REGISTRY:
         raise ValueError(
-            f"Error while registering class {cls.__name__}, `name` already taken by {EMBEDDER_REGISTRY[provider].__name__}"
+            f"Error while registering class {cls.__name__}, already taken by {EMBEDDER_REGISTRY[provider].__name__}"
         )
     EMBEDDER_REGISTRY[provider] = cls
 
@@ -39,7 +35,9 @@ def get_embedding_cache_store(config: EmbeddingCacheConfig):
             client_kwargs=config.config,
             namespace="embedding_caches",
         )
-    raise Exception(f"Embedding cache provider {config.provider} not supported!")
+    raise NotImplementedError(
+        f"Embedding cache provider {config.provider} not supported!"
+    )
 
 
 def get_embedder(
@@ -59,7 +57,9 @@ def get_embedder(
         raise ValueError(
             f"No embedder registered with provider {embedder_config.provider}"
         )
-    base_embedder: Embeddings = EMBEDDER_REGISTRY[type](**embedder_config.config)
+    base_embedder: Embeddings = EMBEDDER_REGISTRY[embedder_config.provider](
+        **embedder_config.config
+    )
     if not settings.EMBEDDING_CACHE_CONFIG:
         return base_embedder
 
@@ -67,6 +67,6 @@ def get_embedder(
     embedder = CacheBackedEmbeddings.from_bytes_store(
         underlying_embeddings=base_embedder,
         document_embedding_cache=store,
-        namespace=base_embedder.model,
+        namespace=embedder_config.model,
     )
     return embedder
