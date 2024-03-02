@@ -181,7 +181,7 @@ class MLFoundry(BaseMetadataStore):
     ) -> List[Collection]:
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.type = '{MLRunTypes.COLLECTION.value}'",
+            filter_string=f"params.type = '{json.dumps(MLRunTypes.COLLECTION.value)}'",
         )
         collections = []
         for ml_run in ml_runs:
@@ -242,7 +242,7 @@ class MLFoundry(BaseMetadataStore):
     def get_collection_indexer_job_runs(self, collection_name: str):
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.type = '{MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value}' and params.collection_name = '{collection_name}'",
+            filter_string=f"params.type = '{json.dumps(MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value)}' and params.collection_name = '{json.dumps(collection_name)}'",
         )
         indexer_job_runs = []
         for run in runs:
@@ -298,7 +298,7 @@ class MLFoundry(BaseMetadataStore):
         if include_runs:
             collection_inderer_job_runs = self.client.search_runs(
                 ml_repo=self.ml_repo_name,
-                filter_string=f"params.type = '{MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value}' and params.collection_name = '{collection_name}'",
+                filter_string=f"params.type = '{json.dumps(MLRunTypes.COLLECTION_INDEXER_JOB_RUN.value)}' and params.collection_name = '{json.dumps(collection_name)}'",
             )
             for collection_inderer_job_run in collection_inderer_job_runs:
                 collection_inderer_job_run.delete()

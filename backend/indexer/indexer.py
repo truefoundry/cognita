@@ -6,7 +6,7 @@ from langchain.docstore.document import Document
 from backend.indexer.types import IndexerConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
-from backend.modules.embedder import get_embedder
+from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
 from backend.modules.parsers.parser import (
@@ -29,7 +29,6 @@ async def upsert_documents_to_collection(inputs: IndexerConfig):
         )
         embeddings = get_embedder(
             embedder_config=inputs.embedder_config,
-            embedding_cache_config=inputs.embedding_cache_config,
         )
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
