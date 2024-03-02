@@ -13,6 +13,7 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
 import backend.server.service as service
 from backend.modules import query_controllers
 from backend.modules.dataloaders.loader import LOADER_REGISTRY
+from backend.modules.embedder.embedder import EMBEDDER_REGISTRY
 from backend.modules.parsers.parser import PARSER_REGISTRY
 from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
 from backend.settings import settings
@@ -128,10 +129,18 @@ async def get_parsers():
     return parsers
 
 
+@app.get("/embedders")
+async def get_embedders():
+    embedders = []
+    for key, _ in EMBEDDER_REGISTRY.items():
+        embedders.append({"name": key})
+    return embedders
+
+
 @app.get("/data_loaders")
 async def get_data_loaders():
     data_loaders = []
-    for key, value in LOADER_REGISTRY.items():
+    for key, _ in LOADER_REGISTRY.items():
         data_loaders.append({"name": key})
     return data_loaders
 
