@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from langchain.docstore.document import Document
 
-from backend.types import LoadedDocument
+from backend.types import LoadedDocument, ParserConfig
 
 PARSER_REGISTRY = {}
 
@@ -101,10 +101,11 @@ def get_parsers_map():
     return file_extension_to_parsers_map
 
 
-def get_parsers_configurations(input_parsers_config):
+def get_parsers_configurations(parser_config: ParserConfig):
     """
     Return parsers mapping given the input parser configuration.
     """
+    input_parsers_config = parser_config.parser_map
     parsers_map = get_parsers_map()
     for file_type in parsers_map.keys():
         if (

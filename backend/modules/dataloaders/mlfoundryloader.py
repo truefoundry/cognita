@@ -5,8 +5,9 @@ import mlfoundry
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.modules.metadata_store.base import generate_document_id
 from backend.types import DataSource, DocumentMetadata, LoadedDocument
-from backend.utils import generate_document_id, unzip_file
+from backend.utils import unzip_file
 
 
 class MlFoundryLoader(BaseLoader):

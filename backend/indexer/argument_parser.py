@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class ParsedIndexingArguments(BaseModel):
     collection_name: str
-    indexer_job_run_name: str
+    data_ingestion_run_name: str
 
 
 def parse_args() -> ParsedIndexingArguments:
@@ -22,14 +22,14 @@ def parse_args() -> ParsedIndexingArguments:
         help="a unique name for your collection",
     )
     parser.add_argument(
-        "--indexer_job_run_name",
+        "--data_ingestion_run_name",
         type=str,
         required=True,
-        help="a unique name to your indexing run",
+        help="a unique name to your ingestion run",
     )
     args = parser.parse_args()
 
     return ParsedIndexingArguments(
         collection_name=args.collection_name,
-        indexer_job_run_name=args.indexer_job_run_name,
+        data_ingestion_run_name=args.data_ingestion_run_name,
     )

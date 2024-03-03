@@ -106,7 +106,7 @@ def _update_cbv_route_endpoint_signature(
 QUERY_CONTROLLER_REGISTRY = {}
 
 
-def query_controller(tag: str = None, prefix: str = None):
+def query_controller(tag: str):
     """
     Decorator that turns a class into a Query Controller, allowing you to define routes using FastAPI decorators.
 
@@ -118,18 +118,14 @@ def query_controller(tag: str = None, prefix: str = None):
         class: The decorated class.
 
     """
-    # Use tag as default prefix if prefix is None
-    if prefix is None:
-        prefix = tag
+    prefix = "/retrievers/" + tag.lstrip("/")
 
-    if not prefix.startswith("/"):
-        prefix = "/" + prefix
     if prefix.endswith("/"):
         prefix = prefix[:-1]
 
     def wrapper(cls) -> ClassBasedView:
         QUERY_CONTROLLER_REGISTRY[cls.__name__] = cls
-        router = APIRouter(tags=[tag] if tag else None)
+        router = APIRouter(tags=[tag.strip("/")] if tag else None)
 
         http_method_names = ("GET", "POST", "PUT", "DELETE", "PATCH")
 

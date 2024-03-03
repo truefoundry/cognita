@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from servicefoundry import trigger_job
 
 from backend.indexer.indexer import upsert_documents_to_collection
-from backend.indexer.types import IndexerConfig
+from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
@@ -97,7 +97,7 @@ async def sync_documents_to_collection(request: SyncDocumentsDto, collection_nam
         )
         if settings.DEBUG_MODE:
             await upsert_documents_to_collection(
-                inputs=IndexerConfig(
+                inputs=DataIngestionConfig(
                     collection_name=collection_name,
                     indexer_job_run_name=indexer_job_run.name,
                     data_source=request.data_source,
@@ -107,7 +107,7 @@ async def sync_documents_to_collection(request: SyncDocumentsDto, collection_nam
                     vector_db_config=settings.VECTOR_DB_CONFIG,
                     metadata_store_config=settings.METADATA_STORE_CONFIG,
                     embedding_cache_config=settings.EMBEDDING_CACHE_CONFIG,
-                    indexing_mode=request.indexing_mode,
+                    data_ingestion_mode=request.data_ingestion_mode,
                 )
             )
         else:
