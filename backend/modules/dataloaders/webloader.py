@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
 from backend.modules.dataloaders.loader import BaseLoader
+from backend.modules.metadata_store.base import generate_document_id
 from backend.types import DataSource, DocumentMetadata, LoadedDocument
-from backend.utils import generate_document_id
 
 
 class WebLoader(BaseLoader):
@@ -51,7 +51,7 @@ class WebLoader(BaseLoader):
         Returns:
             List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
         """
-        max_depth = data_source.dict().get("max_depth", 2)
+        max_depth = data_source.metadata.get("max_depth", 2)
         print("WebLoader -> max_depth: ", max_depth)
         loader = RecursiveUrlLoader(
             url=data_source.uri,
@@ -75,7 +75,7 @@ class WebLoader(BaseLoader):
             with open(dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            _document_id = generate_document_id(data_source=data_source.uri, path=url)
+            _document_id = generate_document_id(data_source=data_source, path=url)
 
             loaded_documents.append(
                 LoadedDocument(

@@ -1,10 +1,10 @@
 import enum
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from backend.types import DataSource, EmbedderConfig, IndexingMode, ParserConfig
+from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserConfig
 
 
 class CollectionIndexerJobRunStatus(str, enum.Enum):
@@ -20,7 +20,7 @@ class CollectionIndexerJobRunStatus(str, enum.Enum):
 class CollectionIndexerJobRunBase(BaseModel):
     data_source: DataSource
     parser_config: ParserConfig
-    indexing_mode: IndexingMode
+    data_ingestion_mode: DataIngestionMode
 
 
 class CollectionIndexerJobRunCreate(CollectionIndexerJobRunBase):
@@ -31,18 +31,3 @@ class CollectionIndexerJobRun(CollectionIndexerJobRunBase):
     name: str
     status: CollectionIndexerJobRunStatus
     created_at: datetime = None
-
-
-class CollectionBase(BaseModel):
-    name: str
-    description: str | None = None
-    embedder_config: EmbedderConfig
-    chunk_size: int
-
-
-class CollectionCreate(CollectionBase):
-    pass
-
-
-class Collection(CollectionBase):
-    indexer_job_runs: Optional[List[CollectionIndexerJobRun]] = None

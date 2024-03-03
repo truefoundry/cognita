@@ -3,44 +3,34 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from backend.types import (
+    DataIngestionMode,
     DataSource,
     EmbedderConfig,
-    EmbeddingCacheConfig,
-    IndexingMode,
     MetadataStoreConfig,
     ParserConfig,
     VectorDBConfig,
 )
 
 
-class IndexerConfig(BaseModel):
+class DataIngestionConfig(BaseModel):
     collection_name: str = Field(
         title="a unique name to your collection",
     )
-    indexer_job_run_name: str = Field(
-        title="a unique name to your indexing run",
+    data_ingestion_run_name: str = Field(
+        title="a unique name to your ingestion run",
     )
     data_source: DataSource = Field(
-        title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
+        title="Data source to ingest data from. Can be local, github or mlfoundry artifact",
     )
-    chunk_size: int = Field(default=1000, title="chunk size for indexing", ge=1)
-
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration",
     )
     parser_config: ParserConfig = Field(
-        title="Mapping of file extensions to parsers. Required only incase, multiple parsers are available for same extension.",
+        title="Parser configuration to parse the documents.",
     )
     vector_db_config: VectorDBConfig = Field(
         title="Vector DB config to store the indexed documents.",
     )
-    metadata_store_config: MetadataStoreConfig = Field(
-        title="Vector DB config to store the indexed documents.",
-    )
-    embedding_cache_config: Optional[EmbeddingCacheConfig] = Field(
-        title="Embedding cache config", default=None
-    )
-    indexing_mode: IndexingMode = Field(
-        default=IndexingMode.INCREMENTAL, title="Indexing Mode"
-    )
+    data_ingestion_mode: DataIngestionMode = Field(title="Data ingestion mode")
+    raise_error_on_failure: bool = Field(default=True, title="Raise error on failure")
     batch_size: int = Field(default=100, title="Batch size for indexing", ge=1)

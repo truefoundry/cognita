@@ -1,101 +1,150 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List, Optional
 
-from backend.modules.metadata_store.models import (
+from backend.types import (
     Collection,
-    CollectionCreate,
-    CollectionIndexerJobRun,
-    CollectionIndexerJobRunCreate,
-    CollectionIndexerJobRunStatus,
+    CreateCollection,
+    CreateDataIngestionRun,
+    CreateDataSource,
+    DataIngestionRun,
+    DataIngestionRunStatus,
+    DataSource,
 )
 
+DOCUMENT_ID_SEPARATOR = "::"
 
 class BaseMetadataStore(ABC):
     @abstractmethod
-    def create_collection(self, collection: CollectionCreate) -> Collection:
+    def create_collection(self, collection: CreateCollection) -> Collection:
         """
-        Create a collection in the metadata store and save its metadata
+        Create a collection in the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
     def get_collection_by_name(
-        self, collection_name: str, include_runs=False
-    ) -> Collection:
+        self, collection_name: str, no_cache: bool = False
+    ) -> Collection | None:
         """
         Get a collection from the metadata store by name
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(
-        self, names: List[str] = None, include_runs=False
-    ) -> List[Collection]:
+    def get_collections(self, names: Optional[List[str]]) -> List[Collection]:
         """
         Get all collections from the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collection_indexer_job_runs(self, collection_name: str):
+    def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         """
-        Get all collection indexer job runs for a collection
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_current_indexer_job_run(
-        self, collection_name: str
-    ) -> CollectionIndexerJobRun:
-        """
-        Get the current collection indexer job run for a collection
+        Create a data source in the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def create_collection_indexer_job_run(
-        self, collection_name: str, indexer_job_run: CollectionIndexerJobRunCreate
-    ) -> CollectionIndexerJobRun:
+    def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
         """
-        Create a collection indexer job run for a collection
+        Get a data source from the metadata store by fqn
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collection_indexer_job_run(
-        self, collection_inderer_job_run_name: str
-    ) -> CollectionIndexerJobRun:
+    def get_data_sources(self) -> List[DataSource]:
         """
-        Get a collection indexer job run for a collection
+        Get all data sources from the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_collection(self, collection_name: str):
+    def create_data_ingestion_run(
+        self, data_ingestion_run: CreateDataIngestionRun
+    ) -> DataIngestionRun:
+        """
+        Create a data ingestion run in the metadata store
+        """
+        raise NotImplementedError()
+
+    def get_data_ingestion_run(
+        self, data_ingestion_run_name: str, no_cache: bool = False
+    ) -> DataIngestionRun | None:
+        """
+        Get a data ingestion run from the metadata store by name
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_data_ingestion_runs(
+        self, collection_name: str, data_source_fqn: str
+    ) -> List[DataIngestionRun]:
+        """
+        Get all data ingestion runs from the metadata store
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def delete_collection(self, collection_name: str, include_runs=False):
         """
         Delete a collection from the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def update_indexer_job_run_status(
+    def update_data_ingestion_run_status(
         self,
-        collection_inderer_job_run_name: str,
-        status: CollectionIndexerJobRunStatus,
+        data_ingestion_run_name: str,
+        status: DataIngestionRunStatus,
     ):
         """
-        Update the status of a collection indexer job run
+        Update the status of a data ingestion run in the metadata store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def log_metrics_for_indexer_job_run(
+    def log_metrics_for_data_ingestion_run(
         self,
-        collection_inderer_job_run_name: str,
+        data_ingestion_run_name: str,
         metric_dict: dict[str, int | float],
         step: int = 0,
     ):
         """
-        Log metrics for indexer job run
+        Log metrics for a data ingestion run in the metadata store
         """
         raise NotImplementedError()
+
+
+def get_data_source_fqn(data_source: CreateDataSource) -> str:
+    return f"{DOCUMENT_ID_SEPARATOR}".join([data_source.type, data_source.uri])
+
+
+def get_base_document_id(data_source: DataSource) -> str | None:
+    """
+    Generates unique document id for a given data source. We use the following format:
+    <fqn>
+    This will be used to identify the source in the database.
+    """
+    return data_source.fqn
+
+
+def generate_document_id(data_source: DataSource, path: str):
+    """
+    Generates unique document id for a given document. We use the following format:
+    <type>::<source_uri>::<path>
+    This will be used to identify the document in the database.
+    """
+    return f"{DOCUMENT_ID_SEPARATOR}".join([data_source.fqn, path])
+
+
+def retrieve_data_source_fqn_from_document_id(_document_id: str):
+    """
+    Retrives params from document id for a given document. We use the following format:
+    <type>::<source_uri>::<path>
+    This will be used to identify the document in the database.
+    reverse for `generate_document_id`
+    """
+    parts = _document_id.split(DOCUMENT_ID_SEPARATOR)
+    if len(parts) == 3:
+        return f"{DOCUMENT_ID_SEPARATOR}".join([parts[0], parts[1]])
+    return None

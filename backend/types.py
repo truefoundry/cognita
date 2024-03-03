@@ -1,12 +1,13 @@
+import enum
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Extra, Field, constr
 
 
-class IndexingMode(str, Enum):
+class DataIngestionMode(str, Enum):
     """
-    Indexing modes
+    Data Ingestion Modes
     """
 
     NONE = "NONE"
@@ -27,21 +28,29 @@ class DocumentMetadata(BaseModel):
 
 
 class EmbedderConfig(BaseModel):
-    description: str | None = None
-    provider: str
-    config: dict = None
-
-class DataSource(BaseModel):
-    type: str
-    uri: str
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
+    provider: str = Field(
+        title="Provider of the embedder",
+    )
+    config: Optional[Dict[str, Any]] = Field(
+        title="Configuration for the embedder",
+        default_factory=dict,
+    )
 
 
 class ParserConfig(BaseModel):
-    class Config:
-        extra = Extra.allow
+
+    chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=500)
+
+    chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=0)
+
+    parser_map: Dict[str, str] = Field(
+        title="Mapping of file extensions to parsers",
+        default={
+            ".md": "MarkdownParser",
+            ".pdf": "PdfParserFast",
+            ".txt": "TextParser",
+        },
+    )
 
 
 class VectorDBConfig(BaseModel):
@@ -66,44 +75,6 @@ class LoadedDocument(BaseModel):
     filepath: str
     file_extension: str
     metadata: DocumentMetadata
-
-
-class CreateCollection(BaseModel):
-    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
-        title="a unique name to your collection",
-        description="Should only contain lowercase alphanumeric character",
-    )
-    description: Optional[str] = Field(
-        title="a description for your collection",
-    )
-    embedder_config: EmbedderConfig = Field(
-        title="Embedder configuration",
-    )
-    chunk_size: int = Field(title="Chunk Size for indexing", ge=1)
-
-
-class SyncDocumentsDto(BaseModel):
-    data_source: DataSource = Field(
-        title="Path of the source of documents to be indexed. Can be local, github or mlfoundry artifact",
-    )
-
-    parser_config: ParserConfig = Field(
-        default={
-            ".md": "MarkdownParser",
-            ".pdf": "PdfParserFast",
-            ".txt": "TextParser",
-        },
-        title="Mapping of file extensions to parsers. Required only incase, multiple parsers are available for same extension. Must be a valid json",
-    )
-
-    force: bool = Field(
-        default=False,
-        title="If true, then force index the documents even if there is active indexer job run",
-    )
-
-    indexing_mode: IndexingMode = Field(
-        default=IndexingMode.INCREMENTAL, title="Indexing mode for the documents"
-    )
 
 
 class LLMConfig(BaseModel):
@@ -142,6 +113,96 @@ class RetrieverConfig(BaseModel):
                 return {"k": self.k, "filter": self.filter}
             case "mmr":
                 return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+
+
+class DataIngestionRunStatus(str, enum.Enum):
+    INITIALIZED = "INITIALIZED"
+    RUNNING = "RUNNING"
+    DATA_LOADING_STARTED = "DATA_LOADING_STARTED"
+    CHUNKING_STARTED = "CHUNKING_STARTED"
+    EMBEDDING_STARTED = "EMBEDDING_STARTED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class BaseDataIngestionRun(BaseModel):
+    collection_name: str = Field(
+        title="Name of the collection",
+    )
+
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
+
+    parser_config: ParserConfig = Field(
+        title="Parser configuration for the data transformation", default_factory=dict
+    )
+
+    data_ingestion_mode: DataIngestionMode = Field(
+        default=DataIngestionMode.INCREMENTAL,
+        title="Data ingestion mode for the data ingestion",
+    )
+
+    raise_error_on_failure: Optional[bool] = Field(
+        title="Flag to configure weather to raise error on failure or not. Default is True",
+        default=True,
+    )
+
+
+class CreateDataIngestionRun(BaseDataIngestionRun):
+    pass
+
+
+class DataIngestionRun(BaseDataIngestionRun):
+    name: str = Field(
+        title="Name of the data ingestion run",
+    )
+    status: DataIngestionRunStatus = Field(
+        title="Status of the data ingestion run",
+    )
+
+
+class BaseCollection(BaseModel):
+    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
+        title="a unique name to your collection",
+        description="Should only contain lowercase alphanumeric character",
+    )
+    description: Optional[str] = Field(
+        title="a description for your collection",
+    )
+    embedder_config: EmbedderConfig = Field(
+        title="Embedder configuration", default_factory=dict
+    )
+
+
+class CreateCollection(BaseCollection):
+    pass
+
+
+class Collection(BaseCollection):
+    pass
+
+
+class BaseDataSource(BaseModel):
+    type: str = Field(
+        title="Type of the data source",
+    )
+    uri: str = Field(
+        title="A unique identifier for the data source",
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        title="Additional config for your data source", default_factory=dict
+    )
+
+
+class CreateDataSource(BaseDataSource):
+    pass
+
+
+class DataSource(BaseDataSource):
+    fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
 
 
 class UploadToDataDirectoryDto(BaseModel):
