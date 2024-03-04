@@ -391,6 +391,6 @@ class MLFoundry(BaseMetadataStore):
             artifact = data_ingestion_run.log_artifact(
                 name=data_ingestion_run.run_name,
                 artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
-                description="This artifact contains the entity",
+                description="This artifact contains the errors during run",
             )
         data_ingestion_run.log_errors(errors=errors)
