@@ -4,6 +4,7 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
+from qdrant_client.conversions.common_types import PayloadSchemaType
 
 from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.logger import logger
@@ -61,7 +62,7 @@ class QdrantVectorDB(BaseVectorDB):
         self.qdrant_client.create_payload_index(
             collection_name=self.collection_name,
             field_name=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-            field_schema="keyword",
+            field_schema=PayloadSchemaType.KEYWORD,
         )
         return
 
@@ -89,7 +90,9 @@ class QdrantVectorDB(BaseVectorDB):
             with_vectors=False,
         )
         record_ids_to_be_upserted = [record.id for record in records]
-        logger.info(f"Records to be upserted {len(record_ids_to_be_upserted)}")
+        logger.info(
+            f"Vectors Ingestion: addition: {len(document_ids)}, update: {len(record_ids_to_be_upserted)}"
+        )
         return record_ids_to_be_upserted
 
     def upsert_documents(
@@ -119,7 +122,9 @@ class QdrantVectorDB(BaseVectorDB):
 
         # Delete Documents
         if len(record_ids_to_be_upserted):
-            logger.info(f"Deleting {len(record_ids_to_be_upserted)} records")
+            logger.info(
+                f"Deleting {len(record_ids_to_be_upserted)} duplicate vectors from the collection"
+            )
             self.qdrant_client.delete(
                 collection_name=self.collection_name,
                 points_selector=models.PointIdsList(
