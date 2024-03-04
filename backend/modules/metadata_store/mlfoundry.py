@@ -388,9 +388,8 @@ class MLFoundry(BaseMetadataStore):
             file_path = os.path.join(tmpdirname, "error.json")
             with open(file_path, "w") as f:
                 f.write(json.dumps(errors))
-            artifact = data_ingestion_run.log_artifact(
+            data_ingestion_run.log_artifact(
                 name=data_ingestion_run.run_name,
                 artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
                 description="This artifact contains the errors during run",
             )
-        data_ingestion_run.log_errors(errors=errors)
