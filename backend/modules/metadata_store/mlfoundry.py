@@ -1,192 +1,33 @@
-import abc
 import enum
 import json
 import logging
+import os
+import tempfile
 import warnings
-from re import L
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List
 
 import mlflow
 import mlfoundry
 from fastapi import HTTPException
-from git import Optional
-from pydantic import BaseModel
 
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
 from backend.types import (
+    AssociateDataSourceWithCollectionDto,
+    AssociatedDataSources,
     Collection,
     CreateCollection,
     CreateDataIngestionRun,
     CreateDataSource,
-    DataIngestionMode,
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
-    EmbedderConfig,
-    ParserConfig,
 )
-from backend.utils import flatten, unflatten
 
 
 class MLRunTypes(str, enum.Enum):
     COLLECTION = "COLLECTION"
     DATA_INGESTION_RUN = "DATA_INGESTION_RUN"
     DATA_SOURCE = "DATA_SOURCE"
-
-
-class BaseParams(abc.ABC, BaseModel):
-
-    @abc.abstractmethod
-    def to_mlfoundry_params(self):
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def from_mlfoundry_params(cls, params):
-        raise NotImplementedError()
-
-
-class CollectionParams(BaseParams):
-    entity_type: Literal[MLRunTypes.COLLECTION] = MLRunTypes.COLLECTION
-    name: str
-    description: Optional[str]
-    embedder_config: EmbedderConfig
-
-    def to_mlfoundry_params(self) -> Dict[str, str]:
-        data = self.dict().copy()
-        data = flatten(data, "embedder_config")
-        for k, v in data.items():
-            data[k] = json.dumps(v)
-        return data
-
-    @classmethod
-    def from_mlfoundry_params(cls, params: Dict[str, str]):
-        data = params.copy()
-        for k, v in data.items():
-            data[k] = json.loads(v)
-        data = unflatten(data, "embedder_config")
-        return cls(**data)
-
-    class Config:
-        use_enum_values = True
-
-
-class DataSourceParams(BaseParams):
-    entity_type: Literal[MLRunTypes.DATA_SOURCE] = MLRunTypes.DATA_SOURCE
-    type: str
-    uri: str
-    fqn: str
-
-    def to_mlfoundry_params(self) -> Dict[str, str]:
-        data = self.dict().copy()
-        for k, v in data.items():
-            data[k] = json.dumps(v)
-        return data
-
-    @classmethod
-    def from_mlfoundry_params(cls, params: Dict[str, str]):
-        data = params.copy()
-        for k, v in data.items():
-            data[k] = json.loads(v)
-        return cls(**data)
-
-    class Config:
-        use_enum_values = True
-
-
-class DataIngestionRunParams(BaseParams):
-    entity_type: Literal[MLRunTypes.DATA_INGESTION_RUN] = MLRunTypes.DATA_INGESTION_RUN
-    collection_name: str
-    data_source_fqn: str
-    data_ingestion_mode: str
-    parser_config: ParserConfig
-    raise_error_on_failure: Optional[bool]
-
-    def to_mlfoundry_params(self) -> Dict[str, str]:
-        data = self.dict().copy()
-        data = flatten(data, "parser_config")
-        for k, v in data.items():
-            data[k] = json.dumps(v)
-        return data
-
-    @classmethod
-    def from_mlfoundry_params(cls, params: Dict[str, str]):
-        data = params.copy()
-        for k, v in data.items():
-            data[k] = json.loads(v)
-        data = unflatten(data, "parser_config")
-        return cls(**data)
-
-    class Config:
-        use_enum_values = True
-
-
-class BaseTags(BaseModel):
-
-    @abc.abstractmethod
-    def to_mlfoundry_tags(self):
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def from_mlfoundry_tags(cls, params):
-        raise NotImplementedError()
-
-
-class DataSourceTags(BaseTags):
-    entity_type: Literal[MLRunTypes.DATA_SOURCE] = MLRunTypes.DATA_SOURCE
-    metadata: Optional[Dict[str, Any]]
-
-    def to_mlfoundry_tags(self) -> Dict[str, str]:
-        data = self.dict().copy()
-        data = flatten(data, "metadata")
-        for k, v in data.items():
-            if isinstance(v, str):
-                data[k] = v
-            data[k] = json.dumps(v)
-        return data
-
-    @classmethod
-    def from_mlfoundry_tags(cls, params: Dict[str, str]):
-        data = params.copy()
-        for k, v in data.items():
-            if k.startswith("mlf."):
-                continue
-            data[k] = json.loads(v)
-        data = unflatten(data, "metadata")
-        return cls(**data)
-
-    class Config:
-        use_enum_values = True
-
-
-class DataIngestionRunTags(BaseTags):
-    entity_type: Literal[MLRunTypes.DATA_INGESTION_RUN] = MLRunTypes.DATA_INGESTION_RUN
-    collection_name: str
-    data_source_fqn: str
-    status: str
-
-    def to_mlfoundry_tags(self) -> Dict[str, str]:
-        data = self.dict().copy()
-        for k, v in data.items():
-            if isinstance(v, str):
-                data[k] = v
-            data[k] = json.dumps(v)
-        return data
-
-    @classmethod
-    def from_mlfoundry_tags(cls, params: Dict[str, str]):
-        data = params.copy()
-        for k, v in data.items():
-            if k.startswith("mlf."):
-                continue
-            data[k] = json.loads(v)
-        return cls(**data)
-
-    class Config:
-        use_enum_values = True
-
-
 class MLFoundry(BaseMetadataStore):
     ml_runs: dict[str, mlfoundry.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
@@ -225,34 +66,89 @@ class MLFoundry(BaseMetadataStore):
 
     def create_collection(self, collection: CreateCollection) -> Collection:
         existing_collection = self.get_collection_by_name(
-            collection_name=collection.name
+            collection_name=collection.name, no_cache=True
         )
         if existing_collection:
             raise HTTPException(
                 status_code=400,
                 detail=f"Collection with name {collection.name} already exists.",
             )
-        created_collection = self.client.create_run(
+        params = {
+            "entity_type": MLRunTypes.COLLECTION.value,
+            "collection_name": collection.name,
+        }
+
+        run = self.client.create_run(
             ml_repo=self.ml_repo_name,
             run_name=collection.name,
-            tags={
-                "entity_type": MLRunTypes.COLLECTION,
-                "collection_name": collection.name,
-            },
+            tags=params,
         )
-        created_collection.log_params(
-            param_dict=CollectionParams(
-                name=collection.name,
-                description=collection.description,
-                embedder_config=collection.embedder_config,
-            ).to_mlfoundry_params()
-        )
-        created_collection.end()
-        return Collection(
+        created_collection = Collection(
             name=collection.name,
             description=collection.description,
             embedder_config=collection.embedder_config,
         )
+        self._save_entity_to_run(
+            run=run, metadata=created_collection.dict(), params=params
+        )
+        run.end()
+        return created_collection
+
+    def _get_entity_from_run(
+        self,
+        run: mlfoundry.MlFoundryRun,
+    ) -> Dict[str, Any]:
+        artifact = self._get_artifact_metadata_ml_run(run)
+        metadata = artifact.metadata
+        if not metadata:
+            raise HTTPException(
+                404,
+                f"Entity {run.run_name} was manupulated: metadata artifact not found.",
+            )
+        return metadata
+
+    def _get_artifact_metadata_ml_run(
+        self, run: mlfoundry.MlFoundryRun
+    ) -> mlfoundry.ArtifactVersion | None:
+        params = run.get_params()
+        metadata_artifact_fqn = params.get("metadata_artifact_fqn")
+        if not metadata_artifact_fqn:
+            raise HTTPException(
+                404,
+                f"Entity {run.run_name} was manupulated: metadata_artifact_fqn not found.",
+            )
+        artifacts = run.list_artifact_versions()
+        for artifact in artifacts:
+            if artifact.fqn == metadata_artifact_fqn:
+                return artifact
+        return None
+
+    def _save_entity_to_run(
+        self,
+        run: mlfoundry.MlFoundryRun,
+        metadata: Dict[str, Any],
+        params: Dict[str, str],
+    ):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            file_path = os.path.join(tmpdirname, "metadata.json")
+            with open(file_path, "w") as f:
+                f.write(json.dumps(metadata))
+            artifact = run.log_artifact(
+                name=run.run_name,
+                artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
+                description="This artifact contains the entity",
+                metadata=metadata,
+            )
+            run.log_params({"metadata_artifact_fqn": artifact.fqn, **params})
+
+    def _update_entity_in_run(
+        self,
+        run: mlfoundry.MlFoundryRun,
+        metadata: Dict[str, Any],
+    ):
+        artifact = self._get_artifact_metadata_ml_run(run)
+        artifact.metadata = metadata
+        artifact.update()
 
     def get_collection_by_name(
         self, collection_name: str, no_cache: bool = False
@@ -260,36 +156,76 @@ class MLFoundry(BaseMetadataStore):
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
         if not ml_run:
             return None
-        collection_params = CollectionParams.from_mlfoundry_params(
-            params=ml_run.get_params()
+        return self._polulate_collection(
+            Collection.parse_obj(self._get_entity_from_run(run=ml_run))
         )
-        collection = Collection(
-            name=ml_run.run_name,
-            description=collection_params.description,
-            embedder_config=collection_params.embedder_config,
-        )
-        return collection
 
-    def get_collections(self, names: Optional[List[str]]) -> List[Collection]:
+    def get_collections(self) -> List[Collection]:
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.entity_type = '{json.dumps(MLRunTypes.COLLECTION.value)}'",
+            filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
         )
         collections = []
         for ml_run in ml_runs:
-            if names is not None and ml_run.run_name not in names:
-                continue
-            collection_params = CollectionParams.from_mlfoundry_params(
-                params=ml_run.get_params()
-            )
-            collection = Collection(
-                name=ml_run.run_name,
-                description=collection_params.description,
-                embedder_config=collection_params.embedder_config,
-            )
-            collections.append(collection)
-
+            collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            collections.append(self._polulate_collection(collection))
         return collections
+
+    def _polulate_collection(self, collection: Collection):
+        for (
+            data_source_fqn,
+            associated_data_source,
+        ) in collection.associated_data_sources.items():
+            data_source = self.get_data_source_from_fqn(data_source_fqn)
+            associated_data_source.data_source = data_source
+            collection.associated_data_sources[data_source_fqn] = associated_data_source
+        return collection
+
+    def associate_data_source_with_collection(
+        self,
+        create_collection_data_source_association: AssociateDataSourceWithCollectionDto,
+    ) -> Collection:
+        collection_run = self._get_run_by_name(
+            run_name=create_collection_data_source_association.collection_name,
+            no_cache=True,
+        )
+        if not collection_run:
+            raise HTTPException(
+                404,
+                f"Collection {create_collection_data_source_association.collection_name} not found.",
+            )
+        # Always do this to avoid run conditions
+        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        associated_data_source = AssociatedDataSources(
+            data_source_fqn=create_collection_data_source_association.data_source_fqn,
+            parser_config=create_collection_data_source_association.parser_config,
+        )
+        collection.associated_data_sources[
+            create_collection_data_source_association.data_source_fqn
+        ] = associated_data_source
+
+        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        return collection
+
+    def unassociate_data_source_with_collection(
+        self,
+        collection_name: str,
+        data_source_fqn: str,
+    ) -> Collection:
+        collection_run = self._get_run_by_name(
+            run_name=collection_name,
+            no_cache=True,
+        )
+        if not collection_run:
+            raise HTTPException(
+                404,
+                f"Collection {collection_name} not found.",
+            )
+        # Always do this to avoid run conditions
+        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        collection.associated_data_sources.pop(data_source_fqn)
+        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        return collection
 
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         fqn = get_data_source_fqn(data_source)
@@ -298,88 +234,67 @@ class MLFoundry(BaseMetadataStore):
         if existing_data_source:
             raise HTTPException(400, f"Data source with fqn {fqn} already exists.")
 
-        created_data_source = self.client.create_run(
+        params = {
+            "entity_type": MLRunTypes.DATA_SOURCE.value,
+            "data_source_fqn": fqn,
+        }
+        run = self.client.create_run(
             ml_repo=self.ml_repo_name,
             run_name=self.CONSTANT_DATA_SOURCE_RUN_NAME,
-            tags=DataSourceTags(
-                metadata=data_source.metadata,
-            ).to_mlfoundry_tags(),
+            tags=params,
         )
-        created_data_source.log_params(
-            param_dict=DataSourceParams(
-                type=data_source.type,
-                uri=data_source.uri,
-                fqn=fqn,
-            ).to_mlfoundry_params()
-        )
-        created_data_source.end()
-        return DataSource(
+        created_data_source = DataSource(
             type=data_source.type,
             uri=data_source.uri,
             fqn=fqn,
             metadata=data_source.metadata,
         )
+        self._save_entity_to_run(
+            run=run, metadata=created_data_source.dict(), params=params
+        )
+        run.end()
+        return created_data_source
 
     def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.entity_type = '{json.dumps(MLRunTypes.DATA_SOURCE.value)}' and params.fqn = '{json.dumps(fqn)}'",
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}' and params.data_source_fqn = '{fqn}'",
         )
         for run in runs:
-            run_params = DataSourceParams.from_mlfoundry_params(params=run.get_params())
-            run_tags = DataSourceTags.from_mlfoundry_tags(params=run.get_tags())
-            return DataSource(
-                type=run_params.type,
-                uri=run_params.uri,
-                fqn=run_params.fqn,
-                metadata=run_tags.metadata,
-            )
+            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            return data_source
 
         return None
 
     def get_data_sources(self) -> List[DataSource]:
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.entity_type = '{json.dumps(MLRunTypes.DATA_SOURCE.value)}'",
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
         )
         data_sources: List[DataSource] = []
         for run in runs:
-            run_params = DataSourceParams.from_mlfoundry_params(params=run.get_params())
-            run_tags = DataSourceTags.from_mlfoundry_tags(params=run.get_tags())
-            data_sources.append(
-                DataSource(
-                    type=run_params.type,
-                    uri=run_params.uri,
-                    fqn=run_params.fqn,
-                    metadata=run_tags.metadata,
-                )
-            )
+            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            data_sources.append(data_source)
         return data_sources
 
     def create_data_ingestion_run(
         self, data_ingestion_run: CreateDataIngestionRun
     ) -> DataIngestionRun:
-        created_data_ingestion_run = self.client.create_run(
+        params = {
+            "entity_type": MLRunTypes.DATA_INGESTION_RUN.value,
+            "collection_name": data_ingestion_run.collection_name,
+            "data_source_fqn": data_ingestion_run.data_source_fqn,
+        }
+        run = self.client.create_run(
             ml_repo=self.ml_repo_name,
             run_name=data_ingestion_run.collection_name,
-            tags=DataIngestionRunTags(
-                collection_name=data_ingestion_run.collection_name,
-                data_source_fqn=data_ingestion_run.data_source_fqn,
-                status=DataIngestionRunStatus.INITIALIZED.value,
-            ).to_mlfoundry_tags(),
+            tags={
+                **params,
+                "status": DataIngestionRunStatus.INITIALIZED.value,
+            },
         )
-        created_data_ingestion_run.log_params(
-            param_dict=DataIngestionRunParams(
-                collection_name=data_ingestion_run.collection_name,
-                data_source_fqn=data_ingestion_run.data_source_fqn,
-                data_ingestion_mode=data_ingestion_run.data_ingestion_mode,
-                parser_config=data_ingestion_run.parser_config,
-                raise_error_on_failure=data_ingestion_run.raise_error_on_failure,
-            ).to_mlfoundry_params()
-        )
-        created_data_ingestion_run.end()
-        return DataIngestionRun(
-            name=created_data_ingestion_run.run_name,
+        created_data_ingestion_run = DataIngestionRun(
+            name=run.run_name,
             collection_name=data_ingestion_run.collection_name,
             data_source_fqn=data_ingestion_run.data_source_fqn,
             data_ingestion_mode=data_ingestion_run.data_ingestion_mode,
@@ -387,6 +302,11 @@ class MLFoundry(BaseMetadataStore):
             raise_error_on_failure=data_ingestion_run.raise_error_on_failure,
             status=DataIngestionRunStatus.INITIALIZED,
         )
+        self._save_entity_to_run(
+            run=run, metadata=created_data_ingestion_run.dict(), params=params
+        )
+        run.end()
+        return created_data_ingestion_run
 
     def get_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
@@ -394,19 +314,11 @@ class MLFoundry(BaseMetadataStore):
         run = self._get_run_by_name(run_name=data_ingestion_run_name, no_cache=no_cache)
         if not run:
             return None
-        run_params = DataIngestionRunParams.from_mlfoundry_params(
-            params=run.get_params()
+        data_ingestion_run = DataIngestionRun.parse_obj(
+            self._get_entity_from_run(run=run)
         )
-        run_tags = DataIngestionRunTags.from_mlfoundry_tags(params=run.get_tags())
-        data_ingestion_run = DataIngestionRun(
-            name=run.run_name,
-            collection_name=run_params.collection_name,
-            data_source_fqn=run_params.data_source_fqn,
-            data_ingestion_mode=DataIngestionMode(run_params.data_ingestion_mode),
-            parser_config=run_params.parser_config,
-            raise_error_on_failure=run_params.raise_error_on_failure,
-            status=DataIngestionRunStatus(run_tags.status),
-        )
+        run_tags = run.get_tags()
+        data_ingestion_run.status = DataIngestionRunStatus(run_tags.get("status"))
         return data_ingestion_run
 
     def get_data_ingestion_runs(
@@ -414,27 +326,16 @@ class MLFoundry(BaseMetadataStore):
     ) -> List[DataIngestionRun]:
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.entity_type = '{json.dumps(MLRunTypes.DATA_INGESTION_RUN.value)}' and params.collection_name = '{json.dumps(collection_name)}' and params.data_source_fqn = '{json.dumps(data_source_fqn)}'",
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}' and params.data_source_fqn = '{data_source_fqn}'",
         )
         data_ingestion_runs: List[DataIngestionRun] = []
         for run in runs:
-            run_params = DataIngestionRunParams.from_mlfoundry_params(
-                params=run.get_params()
+            data_ingestion_run = DataIngestionRun.parse_obj(
+                self._get_entity_from_run(run=run)
             )
-            run_tags = DataIngestionRunTags.from_mlfoundry_tags(params=run.get_tags())
-            data_ingestion_runs.append(
-                DataIngestionRun(
-                    name=run.run_name,
-                    collection_name=run_params.collection_name,
-                    data_source_fqn=run_params.data_source_fqn,
-                    data_ingestion_mode=DataIngestionMode(
-                        run_params.data_ingestion_mode
-                    ),
-                    parser_config=run_params.parser_config,
-                    raise_error_on_failure=run_params.raise_error_on_failure,
-                    status=DataIngestionRunStatus(run_tags.status),
-                )
-            )
+            run_tags = run.get_tags()
+            data_ingestion_run.status = DataIngestionRunStatus(run_tags.get("status"))
+            data_ingestion_runs.append(data_ingestion_run)
         return data_ingestion_runs
 
     def delete_collection(self, collection_name: str, include_runs=False):
@@ -444,7 +345,7 @@ class MLFoundry(BaseMetadataStore):
         if include_runs:
             collection_inderer_job_runs = self.client.search_runs(
                 ml_repo=self.ml_repo_name,
-                filter_string=f"params.entity_type = '{json.dumps(MLRunTypes.DATA_INGESTION_RUN.value)}' and params.collection_name = '{json.dumps(collection_name)}'",
+                filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'",
             )
             for collection_inderer_job_run in collection_inderer_job_runs:
                 collection_inderer_job_run.delete()
@@ -474,3 +375,22 @@ class MLFoundry(BaseMetadataStore):
                 404, f"Data ingestion run {data_ingestion_run_name} not found."
             )
         data_ingestion_run.log_metrics(metric_dict=metric_dict, step=step)
+
+    def log_errors_for_data_ingestion_run(
+        self, data_ingestion_run_name: str, errors: Dict[str, Any]
+    ):
+        data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
+        if not data_ingestion_run:
+            raise HTTPException(
+                404, f"Data ingestion run {data_ingestion_run_name} not found."
+            )
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            file_path = os.path.join(tmpdirname, "error.json")
+            with open(file_path, "w") as f:
+                f.write(json.dumps(errors))
+            artifact = data_ingestion_run.log_artifact(
+                name=data_ingestion_run.run_name,
+                artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
+                description="This artifact contains the errors during run",
+            )
+        data_ingestion_run.log_errors(errors=errors)

@@ -19,6 +19,10 @@ from backend.types import DataIngestionMode
 
 
 async def ingest_data_to_collection(inputs: DataIngestionConfig):
+    logger.info("+------------------------------------------------------------+")
+    logger.info("| Ingesting data to collection                               |")
+    logger.info(f"| Data Ingestion Mode - {inputs.data_ingestion_mode.value}       |")
+    logger.info("+------------------------------------------------------------+")
     try:
         parsers_map = get_parsers_configurations(inputs.parser_config)
 
@@ -33,6 +37,8 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )
+
+        failed_document_ids = []
 
         # Create a temp dir to store the data
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -65,7 +71,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 metric_dict={"num_files": docs_to_index_count},
             )
-            failed_document_ids = []
+
             # Batch processing the documents
             for i in range(0, docs_to_index_count, inputs.batch_size):
                 documents_to_be_processed = loaded_documents[i : i + inputs.batch_size]
@@ -88,11 +94,11 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                         )
 
                     if len(documents_to_be_uppserted) == 0:
-                        logger.warning(f"No chunks to index in batch {i+1}")
+                        logger.warning(f"No chunks to index in batch {i}")
                         continue
 
                     logger.info(
-                        f"Total chunks to index in batch {i+1}: {len(documents_to_be_uppserted)}"
+                        f"Total chunks to index in batch {i}: {len(documents_to_be_uppserted)}"
                     )
                     # Upserted all the documents_to_be_ingested
                     vector_db_client.upsert_documents(
@@ -102,7 +108,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                         == DataIngestionMode.INCREMENTAL,
                     )
                 except Exception as e:
-                    logger.error(e)
+                    logger.exception(e)
                     if inputs.raise_error_on_failure:
                         raise e
                     failed_document_ids.extend(
@@ -123,24 +129,28 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 if id not in updated_document_ids:
                     document_ids_to_be_deleted.append(id)
             logger.info(
-                f"Deleting {len(document_ids_to_be_deleted)} documents from the collection"
+                f"Deleting {len(document_ids_to_be_deleted)} documents from the collection as they are deleted from source"
             )
+            logger.info(document_ids_to_be_deleted)
             vector_db_client.delete_documents(document_ids=document_ids_to_be_deleted)
-
-        if len(failed_document_ids) > 0:
-            logger.error(
-                f"Failed to index {len(failed_document_ids)} documents: {failed_document_ids}"
-            )
-            logger.error(failed_document_ids)
-            return
 
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=CollectionIndexerJobRunStatus.COMPLETED,
         )
 
+        if len(failed_document_ids) > 0:
+            logger.error(
+                f"Failed to ingest {len(failed_document_ids)} documents. Document IDs:"
+            )
+            logger.error(failed_document_ids)
+            METADATA_STORE_CLIENT.log_errors_for_data_ingestion_run(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                errors={"failed_document_ids": failed_document_ids},
+            )
+
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=CollectionIndexerJobRunStatus.FAILED,

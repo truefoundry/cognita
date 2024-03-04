@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from ast import Dict
+from typing import Any, List, Optional
 
 from backend.types import (
+    AssociateDataSourceWithCollectionDto,
     Collection,
     CreateCollection,
     CreateDataIngestionRun,
@@ -31,7 +33,9 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(self, names: Optional[List[str]]) -> List[Collection]:
+    def get_collections(
+        self,
+    ) -> List[Collection]:
         """
         Get all collections from the metadata store
         """
@@ -67,6 +71,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
     ) -> DataIngestionRun | None:
@@ -92,6 +97,27 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def associate_data_source_with_collection(
+        self,
+        create_collection_data_source_association: AssociateDataSourceWithCollectionDto,
+    ) -> Collection:
+        """
+        Associate a data source with a collection in the metadata store
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def unassociate_data_source_with_collection(
+        self,
+        collection_name: str,
+        data_source_fqn: str,
+    ) -> Collection:
+        """
+        Unassociate a data source with a collection in the metadata store
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def update_data_ingestion_run_status(
         self,
         data_ingestion_run_name: str,
@@ -111,6 +137,15 @@ class BaseMetadataStore(ABC):
     ):
         """
         Log metrics for a data ingestion run in the metadata store
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def log_errors_for_data_ingestion_run(
+        self, data_ingestion_run_name: str, errors: Dict[str, Any]
+    ):
+        """
+        Log errors for a data ingestion run in the metadata store
         """
         raise NotImplementedError()
 

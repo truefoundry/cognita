@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Path
 
 from backend.server.services.collection import CollectionService
-from backend.types import CreateCollection, CreateDataIngestionRun
+from backend.types import (
+    AssociateDataSourceWithCollectionDto,
+    CreateCollection,
+    CreateDataIngestionRun,
+    IngestDataToCollectionDto,
+    UnassociateDataSourceWithCollectionDto,
+)
 
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
@@ -16,9 +22,23 @@ def create_collection(request: CreateCollection):
     return CollectionService.create_collection(request)
 
 
-@router.post("/data_ingestion_run")
-async def ingest_data(data_ingestion_run: CreateDataIngestionRun):
-    return await CollectionService.ingest_data(data_ingestion_run=data_ingestion_run)
+@router.post("/associate_data_source")
+async def associate_data_source_to_collection(
+    request: AssociateDataSourceWithCollectionDto,
+):
+    return CollectionService.associate_data_source_with_collection(request=request)
+
+
+@router.post("/unassociate_data_source")
+async def unassociate_data_source_from_collection(
+    request: UnassociateDataSourceWithCollectionDto,
+):
+    return CollectionService.unassociate_data_source_with_collection(request=request)
+
+
+@router.post("/ingest")
+async def ingest_data(request: IngestDataToCollectionDto):
+    return await CollectionService.ingest_data(request=request)
 
 
 @router.delete("/{collection_name}")

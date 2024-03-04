@@ -157,8 +157,83 @@ class DataIngestionRun(BaseDataIngestionRun):
     name: str = Field(
         title="Name of the data ingestion run",
     )
-    status: DataIngestionRunStatus = Field(
+    status: Optional[DataIngestionRunStatus] = Field(
         title="Status of the data ingestion run",
+    )
+
+
+class BaseDataSource(BaseModel):
+    type: str = Field(
+        title="Type of the data source",
+    )
+    uri: str = Field(
+        title="A unique identifier for the data source",
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        title="Additional config for your data source"
+    )
+
+
+class CreateDataSource(BaseDataSource):
+    pass
+
+
+class DataSource(BaseDataSource):
+    fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
+
+
+class AssociatedDataSources(BaseModel):
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
+    parser_config: ParserConfig = Field(
+        title="Parser configuration for the data transformation", default_factory=dict
+    )
+    data_source: Optional[DataSource] = Field(
+        title="Data source associated with the collection"
+    )
+
+
+class IngestDataToCollectionDto(BaseModel):
+    collection_name: str = Field(
+        title="Name of the collection",
+    )
+
+    data_source_fqn: Optional[str] = Field(
+        title="Fully qualified name of the data source",
+    )
+
+    data_ingestion_mode: DataIngestionMode = Field(
+        default=DataIngestionMode.INCREMENTAL,
+        title="Data ingestion mode for the data ingestion",
+    )
+
+    raise_error_on_failure: Optional[bool] = Field(
+        title="Flag to configure weather to raise error on failure or not. Default is True",
+        default=True,
+    )
+
+
+class AssociateDataSourceWithCollectionDto(BaseModel):
+    collection_name: str = Field(
+        title="Name of the collection",
+    )
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
+    parser_config: ParserConfig = Field(
+        title="Parser configuration for the data transformation", default_factory=dict
+    )
+
+
+class UnassociateDataSourceWithCollectionDto(BaseModel):
+    collection_name: str = Field(
+        title="Name of the collection",
+    )
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
     )
 
 
@@ -180,28 +255,8 @@ class CreateCollection(BaseCollection):
 
 
 class Collection(BaseCollection):
-    pass
-
-
-class BaseDataSource(BaseModel):
-    type: str = Field(
-        title="Type of the data source",
-    )
-    uri: str = Field(
-        title="A unique identifier for the data source",
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        title="Additional config for your data source", default_factory=dict
-    )
-
-
-class CreateDataSource(BaseDataSource):
-    pass
-
-
-class DataSource(BaseDataSource):
-    fqn: str = Field(
-        title="Fully qualified name of the data source",
+    associated_data_sources: Dict[str, AssociatedDataSources] = Field(
+        title="Data sources associated with the collection", default_factory=dict
     )
 
 

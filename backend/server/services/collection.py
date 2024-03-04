@@ -10,18 +10,18 @@ from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.types import (
+    AssociateDataSourceWithCollectionDto,
     CreateCollection,
     CreateDataIngestionRun,
     DataIngestionRunStatus,
+    IngestDataToCollectionDto,
 )
 
 
 class CollectionService:
     def list_collections():
         try:
-            vector_db_client = get_vector_db_client(config=settings.VECTOR_DB_CONFIG)
-            collection_names = vector_db_client.get_collections()
-            collections = METADATA_STORE_CLIENT.get_collections(names=collection_names)
+            collections = METADATA_STORE_CLIENT.get_collections()
             return JSONResponse(
                 content={"collections": [obj.dict() for obj in collections]}
             )
@@ -45,70 +45,127 @@ class CollectionService:
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
 
-    async def ingest_data(data_ingestion_run: CreateDataIngestionRun):
+    async def ingest_data(request: IngestDataToCollectionDto):
         try:
             collection = METADATA_STORE_CLIENT.get_collection_by_name(
-                collection_name=data_ingestion_run.collection_name, no_cache=True
+                collection_name=request.collection_name, no_cache=True
             )
             if not collection:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Collection with name {data_ingestion_run.collection_name} does not exist.",
+                    detail=f"Collection with name {request.collection_name} does not exist.",
                 )
 
-            data_source = METADATA_STORE_CLIENT.get_data_source_from_fqn(
-                fqn=data_ingestion_run.data_source_fqn
-            )
-            if not data_source:
+            if not collection.associated_data_sources:
                 raise HTTPException(
-                    status_code=404,
-                    detail=f"Data source with fqn {data_ingestion_run.data_source_fqn} does not exist.",
+                    status_code=400,
+                    detail=f"Collection {request.collection_name} does not have any associated data sources.",
+                )
+            associated_data_sources_to_be_ingested = []
+            if request.data_source_fqn:
+                associated_data_sources_to_be_ingested = [
+                    collection.associated_data_sources.get(request.data_source_fqn)
+                ]
+            else:
+                associated_data_sources_to_be_ingested = (
+                    collection.associated_data_sources.values()
                 )
 
-            created_data_ingestion_run = (
-                METADATA_STORE_CLIENT.create_data_ingestion_run(
-                    data_ingestion_run=data_ingestion_run
+            data_ingestion_runs = []
+            for associated_data_source in associated_data_sources_to_be_ingested:
+                print("running for", associated_data_source.data_source_fqn)
+                data_ingestion_run = CreateDataIngestionRun(
+                    collection_name=collection.name,
+                    data_source_fqn=associated_data_source.data_source_fqn,
+                    embedder_config=collection.embedder_config,
+                    parser_config=associated_data_source.parser_config,
+                    vector_db_config=settings.VECTOR_DB_CONFIG,
+                    data_ingestion_mode=request.data_ingestion_mode,
+                    raise_error_on_failure=request.raise_error_on_failure,
                 )
-            )
-            if settings.DEBUG_MODE:
-                await ingest_data_to_collection(
-                    inputs=DataIngestionConfig(
-                        collection_name=data_ingestion_run.collection_name,
+                created_data_ingestion_run = (
+                    METADATA_STORE_CLIENT.create_data_ingestion_run(
+                        data_ingestion_run=data_ingestion_run
+                    )
+                )
+                try:
+                    if settings.DEBUG_MODE:
+                        await ingest_data_to_collection(
+                            inputs=DataIngestionConfig(
+                                collection_name=created_data_ingestion_run.collection_name,
+                                data_ingestion_run_name=created_data_ingestion_run.name,
+                                data_source=associated_data_source.data_source,
+                                embedder_config=collection.embedder_config,
+                                parser_config=created_data_ingestion_run.parser_config,
+                                vector_db_config=settings.VECTOR_DB_CONFIG,
+                                data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                                raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                            )
+                        )
+                        created_data_ingestion_run.status = (
+                            DataIngestionRunStatus.COMPLETED
+                        )
+                    else:
+                        if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Job FQN and Job Component Name are required to trigger the job",
+                            )
+                        trigger_job(
+                            application_fqn=settings.JOB_FQN,
+                            component_name=settings.JOB_COMPONENT_NAME,
+                            params={
+                                "collection_name": created_data_ingestion_run.collection_name,
+                                "data_ingestion_run_name": created_data_ingestion_run.name,
+                            },
+                        )
+                except Exception as exp:
+                    logger.exception(exp)
+                    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
                         data_ingestion_run_name=created_data_ingestion_run.name,
-                        data_source=data_source,
-                        embedder_config=collection.embedder_config,
-                        parser_config=created_data_ingestion_run.parser_config,
-                        vector_db_config=settings.VECTOR_DB_CONFIG,
-                        data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                        raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                        status=DataIngestionRunStatus.FAILED,
                     )
-                )
-            else:
-                if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Job FQN and Job Component Name are required to trigger the job",
-                    )
-                trigger_job(
-                    application_fqn=settings.JOB_FQN,
-                    component_name=settings.JOB_COMPONENT_NAME,
-                    params={
-                        "collection_name": created_data_ingestion_run.collection_name,
-                        "data_ingestion_run_name": created_data_ingestion_run.name,
-                    },
-                )
+                    created_data_ingestion_run.status = DataIngestionRunStatus.FAILED
+                    data_ingestion_runs.append(created_data_ingestion_run.dict())
+                    continue
+                data_ingestion_runs.append(created_data_ingestion_run.dict())
             return JSONResponse(
                 status_code=201,
-                content={"data_ingestion_run": created_data_ingestion_run.dict()},
+                content={"data_ingestion_runs": data_ingestion_runs},
             )
         except HTTPException as exp:
             raise exp
         except Exception as exp:
             logger.exception(exp)
-            METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-                data_ingestion_run_name=created_data_ingestion_run.name,
-                status=DataIngestionRunStatus.FAILED,
+            raise HTTPException(status_code=500, detail=str(exp))
+
+    def associate_data_source_with_collection(
+        request: AssociateDataSourceWithCollectionDto,
+    ):
+        try:
+            collection = METADATA_STORE_CLIENT.associate_data_source_with_collection(
+                create_collection_data_source_association=request
             )
+            return JSONResponse(content={"collection": collection.dict()})
+        except HTTPException as exp:
+            raise exp
+        except Exception as exp:
+            logger.exception(exp)
+            raise HTTPException(status_code=500, detail=str(exp))
+
+    def unassociate_data_source_with_collection(
+        request: AssociateDataSourceWithCollectionDto,
+    ):
+        try:
+            collection = METADATA_STORE_CLIENT.unassociate_data_source_with_collection(
+                collection_name=request.collection_name,
+                data_source_fqn=request.data_source_fqn,
+            )
+            return JSONResponse(content={"collection": collection.dict()})
+        except HTTPException as exp:
+            raise exp
+        except Exception as exp:
+            logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
 
     def delete_collection(collection_name: str):

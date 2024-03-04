@@ -20,7 +20,7 @@ async def main():
     )
     if not data_ingestion_run:
         raise ValueError(
-            f"Data ingestion run with name {arguments.indexer_job_run_name} not found"
+            f"Data ingestion run with name {arguments.data_ingestion_run_name} not found"
         )
     data_source = METADATA_STORE_CLIENT.get_data_source_from_fqn(
         fqn=data_ingestion_run.data_source_fqn
