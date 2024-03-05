@@ -9,7 +9,7 @@ from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import get_base_document_id
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.metadata_store.models import CollectionIndexerJobRunStatus
+from backend.types import DataIngestionRunStatus
 from backend.modules.parsers.parser import (
     get_parser_for_extension,
     get_parsers_configurations,
@@ -29,7 +29,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
         # Set the status of the collection run to running
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=CollectionIndexerJobRunStatus.DATA_LOADING_STARTED,
+            status=DataIngestionRunStatus.DATA_LOADING_STARTED,
         )
         embeddings = get_embedder(
             embedder_config=inputs.embedder_config,
@@ -53,20 +53,21 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
 
             METADATA_STORE_CLIENT.update_data_ingestion_run_status(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=CollectionIndexerJobRunStatus.CHUNKING_STARTED,
+                status=DataIngestionRunStatus.CHUNKING_STARTED,
             )
 
             # Count number of documents/files/urls loaded
             docs_to_index_count = len(loaded_documents)
+            logger.info(f"Documents to index: {docs_to_index_count}")
+
             if docs_to_index_count == 0:
                 logger.warning("No documents to found")
                 METADATA_STORE_CLIENT.update_data_ingestion_run_status(
                     data_ingestion_run_name=inputs.data_ingestion_run_name,
-                    status=CollectionIndexerJobRunStatus.COMPLETED,
+                    status=DataIngestionRunStatus.COMPLETED,
                 )
                 return
 
-            logger.info("Total docs to index: %s", docs_to_index_count)
             METADATA_STORE_CLIENT.log_metrics_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 metric_dict={"num_files": docs_to_index_count},
@@ -78,9 +79,11 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 documents_to_be_uppserted: List[Document] = []
                 try:
                     for index, doc in enumerate(documents_to_be_processed):
+                        # Get parser for required file extension
                         parser = get_parser_for_extension(
                             file_extension=doc.file_extension, parsers_map=parsers_map
                         )
+                        # chunk the given document
                         chunks = await parser.get_chunks(
                             document=doc,
                             max_chunk_size=inputs.parser_config.chunk_size,
@@ -136,7 +139,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
 
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=CollectionIndexerJobRunStatus.COMPLETED,
+            status=DataIngestionRunStatus.COMPLETED,
         )
 
         if len(failed_document_ids) > 0:
@@ -153,6 +156,6 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
         logger.exception(e)
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=CollectionIndexerJobRunStatus.FAILED,
+            status=DataIngestionRunStatus.FAILED,
         )
         raise e

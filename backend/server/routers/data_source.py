@@ -8,6 +8,7 @@ router = APIRouter(prefix="/v1/datasource", tags=["datasource"])
 
 @router.get("/")
 def list_data_source():
+    """Get data sources"""
     return DataSourceService.list_data_sources()
 
 
@@ -15,4 +16,5 @@ def list_data_source():
 def add_data_source(
     data_source: CreateDataSource,
 ):
+    """Create a data source for the given collection"""
     return DataSourceService.create_data_source(data_source=data_source)

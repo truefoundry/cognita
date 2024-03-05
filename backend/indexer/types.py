@@ -13,6 +13,9 @@ from backend.types import (
 
 
 class DataIngestionConfig(BaseModel):
+    """
+    Configuration to store Data Ingestion Configuration
+    """
     collection_name: str = Field(
         title="a unique name to your collection",
     )

@@ -4,6 +4,10 @@ from backend.types import LLMConfig, RetrieverConfig
 
 
 class SampleQueryInput(BaseModel):
+    """
+    Model for Query input. 
+    Requires a collection name, retriever configuration, query, LLM configuration and prompt template.
+    """
     collection_name: str = Field(
         default=None,
         title="Collection name on which to search",

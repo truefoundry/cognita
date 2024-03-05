@@ -81,6 +81,7 @@ class SampleQueryController:
             )
 
             # Get the answer
+            logger.info(f"Request query: {request.query}")
             outputs = qa({"query": request.query})
 
             return {

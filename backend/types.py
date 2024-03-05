@@ -28,6 +28,9 @@ class DocumentMetadata(BaseModel):
 
 
 class EmbedderConfig(BaseModel):
+    """
+    Embedder configuration
+    """
     provider: str = Field(
         title="Provider of the embedder",
     )
@@ -38,6 +41,9 @@ class EmbedderConfig(BaseModel):
 
 
 class ParserConfig(BaseModel):
+    """
+    Parser configuration
+    """
 
     chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=500)
 
@@ -54,6 +60,9 @@ class ParserConfig(BaseModel):
 
 
 class VectorDBConfig(BaseModel):
+    """
+    Vector db configuration
+    """
     provider: str
     url: Optional[str] = None
     api_key: Optional[str] = None
@@ -61,28 +70,43 @@ class VectorDBConfig(BaseModel):
 
 
 class MetadataStoreConfig(BaseModel):
+    """
+    Metadata store configuration
+    """
     provider: str
     config: Optional[dict] = None
 
 
 class EmbeddingCacheConfig(BaseModel):
+    """
+    Embedding cache configuration
+    """
     provider: str
     url: Optional[str] = None
     config: Optional[dict] = None
 
 
 class LoadedDocument(BaseModel):
+    """
+    Scanned document configuration
+    """
     filepath: str
     file_extension: str
     metadata: DocumentMetadata
 
 
 class LLMConfig(BaseModel):
+    """
+    LLM configuration
+    """
     name: str = Field(title="Name of the model from the Truefoundry LLM Gateway")
     parameters: dict = None
 
 
 class RetrieverConfig(BaseModel):
+    """
+    Retriever configuration
+    """
     search_type: Literal["mmr", "similarity"] = Field(
         default="similarity",
         title="""Defines the type of search that the Retriever should perform. Can be "similarity" (default), "mmr", or "similarity_score_threshold".""",
@@ -116,6 +140,9 @@ class RetrieverConfig(BaseModel):
 
 
 class DataIngestionRunStatus(str, enum.Enum):
+    """
+    Defined run status for data ingestion job run into vector db
+    """
     INITIALIZED = "INITIALIZED"
     RUNNING = "RUNNING"
     DATA_LOADING_STARTED = "DATA_LOADING_STARTED"
@@ -126,6 +153,9 @@ class DataIngestionRunStatus(str, enum.Enum):
 
 
 class BaseDataIngestionRun(BaseModel):
+    """
+    Base data ingestion run configuration
+    """
     collection_name: str = Field(
         title="Name of the collection",
     )
@@ -163,6 +193,9 @@ class DataIngestionRun(BaseDataIngestionRun):
 
 
 class BaseDataSource(BaseModel):
+    """
+    Data source configuration
+    """
     type: str = Field(
         title="Type of the data source",
     )
@@ -185,6 +218,9 @@ class DataSource(BaseDataSource):
 
 
 class AssociatedDataSources(BaseModel):
+    """
+    Associated data source configuration
+    """
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
@@ -197,6 +233,9 @@ class AssociatedDataSources(BaseModel):
 
 
 class IngestDataToCollectionDto(BaseModel):
+    """
+    Configuration to ingest data to collection
+    """
     collection_name: str = Field(
         title="Name of the collection",
     )
@@ -217,6 +256,9 @@ class IngestDataToCollectionDto(BaseModel):
 
 
 class AssociateDataSourceWithCollectionDto(BaseModel):
+    """
+    Configuration to associate data source to collection
+    """
     collection_name: str = Field(
         title="Name of the collection",
     )
@@ -229,6 +271,9 @@ class AssociateDataSourceWithCollectionDto(BaseModel):
 
 
 class UnassociateDataSourceWithCollectionDto(BaseModel):
+    """
+    Configuration to unassociate data source to collection
+    """
     collection_name: str = Field(
         title="Name of the collection",
     )
@@ -238,6 +283,9 @@ class UnassociateDataSourceWithCollectionDto(BaseModel):
 
 
 class BaseCollection(BaseModel):
+    """
+    Base collection configuration
+    """
     name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character",
@@ -266,6 +314,9 @@ class UploadToDataDirectoryDto(BaseModel):
 
 
 class ModelType(str, Enum):
+    """
+    Model types available in LLM gateway
+    """
     completion = "completion"
     chat = "chat"
     embedding = "embedding"
