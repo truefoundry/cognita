@@ -2,7 +2,7 @@ This directory contains the primary code for the backend including a FastAPI ser
 
 ### Running code locally
 
-Prerequisite: follow [here](../../GETTING_STARTED.md) and fetch following values
+Store the following values in local .env file
 
 ```
 VECTOR_DB_CONFIG =
@@ -12,7 +12,7 @@ JOB_FQN =
 JOB_COMPONENT_NAME =
 TFY_API_KEY =
 TFY_HOST =
-EMBEDDING_CACHE_CONFI G=
+EMBEDDING_CACHE_CONFIG=
 DEBUG_MODE =
 ```
 
