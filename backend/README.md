@@ -5,15 +5,12 @@ This directory contains the primary code for the backend including a FastAPI ser
 Store the following values in local .env file
 
 ```
-VECTOR_DB_CONFIG =
-METADATA_STORE_CONFIG =
-TFY_SERVICE_ROOT_PATH =
-JOB_FQN =
-JOB_COMPONENT_NAME =
+VECTOR_DB_CONFIG = '{"url": "<vectordb url here>", "provider": "<any of chroma/qdrant/weaviate>"}'
+METADATA_STORE_CONFIG = '{"provider": "mlfoundry", "config": {"ml_repo_name": "<ml-repo name here>"}}'
+TFY_SERVICE_ROOT_PATH = '/'
 TFY_API_KEY =
-TFY_HOST =
-EMBEDDING_CACHE_CONFIG=
-DEBUG_MODE =
+TFY_HOST = <Truefoundry host for your account here>
+DEBUG_MODE = true
 ```
 
 1. Go to the root directory of this repository
