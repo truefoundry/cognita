@@ -4,7 +4,6 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
-from qdrant_client.conversions.common_types import PayloadSchemaType
 
 from backend.constants import DOCUMENT_ID_METADATA_KEY
 from backend.logger import logger
@@ -62,7 +61,7 @@ class QdrantVectorDB(BaseVectorDB):
         self.qdrant_client.create_payload_index(
             collection_name=self.collection_name,
             field_name=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-            field_schema=PayloadSchemaType.KEYWORD,
+            field_schema=models.PayloadSchemaType.KEYWORD,
         )
         return
 
