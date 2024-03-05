@@ -4,6 +4,10 @@ from pydantic import BaseModel
 
 
 class ParsedIndexingArguments(BaseModel):
+    """
+    Configuration for storing indexing arguments.
+    Requires a collection name (already exisiting) and a unique name for the data ingestion run.
+    """
     collection_name: str
     data_ingestion_run_name: str
 

@@ -8,6 +8,9 @@ from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserC
 
 
 class CollectionIndexerJobRunStatus(str, enum.Enum):
+    """
+    Configuration for job run status allowed for indexer job
+    """
     INITIALIZED = "INITIALIZED"
     RUNNING = "RUNNING"
     DATA_LOADING_STARTED = "DATA_LOADING_STARTED"
@@ -18,6 +21,9 @@ class CollectionIndexerJobRunStatus(str, enum.Enum):
 
 
 class CollectionIndexerJobRunBase(BaseModel):
+    """
+    Base configuration for Collection Indexer Job Run
+    """
     data_source: DataSource
     parser_config: ParserConfig
     data_ingestion_mode: DataIngestionMode

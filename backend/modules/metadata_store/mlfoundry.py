@@ -25,9 +25,13 @@ from backend.types import (
 
 
 class MLRunTypes(str, enum.Enum):
+    """
+    Configuration defining types of ML Runs allowed
+    """
     COLLECTION = "COLLECTION"
     DATA_INGESTION_RUN = "DATA_INGESTION_RUN"
     DATA_SOURCE = "DATA_SOURCE"
+
 class MLFoundry(BaseMetadataStore):
     ml_runs: dict[str, mlfoundry.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
@@ -65,6 +69,10 @@ class MLFoundry(BaseMetadataStore):
             raise exp
 
     def create_collection(self, collection: CreateCollection) -> Collection:
+        """
+        Create a collection from given CreateCollection object. 
+        It primarly has collection name, collection description and embedder congfiguration
+        """
         existing_collection = self.get_collection_by_name(
             collection_name=collection.name, no_cache=True
         )
@@ -153,6 +161,7 @@ class MLFoundry(BaseMetadataStore):
     def get_collection_by_name(
         self, collection_name: str, no_cache: bool = False
     ) -> Collection | None:
+        """Get collection from given collection name."""
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
         if not ml_run:
             return None
@@ -161,6 +170,7 @@ class MLFoundry(BaseMetadataStore):
         )
 
     def get_collections(self) -> List[Collection]:
+        """Get all the collections for the given client"""
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",

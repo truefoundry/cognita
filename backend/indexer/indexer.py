@@ -58,6 +58,8 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
 
             # Count number of documents/files/urls loaded
             docs_to_index_count = len(loaded_documents)
+            logger.info(f"Documents to index: {docs_to_index_count}")
+
             if docs_to_index_count == 0:
                 logger.warning("No documents to found")
                 METADATA_STORE_CLIENT.update_data_ingestion_run_status(
@@ -66,7 +68,6 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 )
                 return
 
-            logger.info("Total docs to index: %s", docs_to_index_count)
             METADATA_STORE_CLIENT.log_metrics_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 metric_dict={"num_files": docs_to_index_count},
@@ -78,9 +79,11 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 documents_to_be_uppserted: List[Document] = []
                 try:
                     for index, doc in enumerate(documents_to_be_processed):
+                        # Get parser for required file extension
                         parser = get_parser_for_extension(
                             file_extension=doc.file_extension, parsers_map=parsers_map
                         )
+                        # chunk the given document
                         chunks = await parser.get_chunks(
                             document=doc,
                             max_chunk_size=inputs.parser_config.chunk_size,
