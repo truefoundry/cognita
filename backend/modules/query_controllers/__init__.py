@@ -1,3 +1,4 @@
-from backend.modules.query_controllers.sample_controller.controller import (
-    SampleQueryController,
-)
+from backend.modules.query_controllers.default.controller import DefaultQueryController
+from backend.modules.query_controllers.query_controller import register_query_controller
+
+register_query_controller("default_controller", DefaultQueryController)

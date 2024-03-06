@@ -16,8 +16,6 @@ class WebLoader(BaseLoader):
     This loader handles web URLs
     """
 
-    type = "web"
-
     def _remove_empty_lines(self, text):
         lines = text.split("\n")
         non_empty_lines = [line for line in lines if line.strip() != ""]

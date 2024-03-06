@@ -3,28 +3,21 @@ from abc import ABC, abstractmethod
 
 from langchain.docstore.document import Document
 
-from backend.types import LoadedDocument, ParserConfig
+from backend.types import LoadedDocument
 
 PARSER_REGISTRY = {}
 
 
-def register(cls):
+def register_parser(name: str, cls):
     """
-    Registers all the available parsers using `BaseParser` class.
+    Registers all the available parsers.
     """
     global PARSER_REGISTRY
-    name = cls.name
-    # logger.debug("Loading parser: " + str(name))
-    supported_extensions = cls.supported_file_extensions
-    if not name:
-        raise ValueError(
-            f"static attribute `name` needs to be a non-empty string on class {cls.__name__}"
-        )
     if name in PARSER_REGISTRY:
         raise ValueError(
-            f"Error while registering class {cls.__name__}, `name` already taken by {PARSER_REGISTRY[name].__name__}"
+            f"Error while registering class {cls.__name__} already taken by {PARSER_REGISTRY[name].__name__}"
         )
-    PARSER_REGISTRY[name] = {"cls": cls, "supported_extensions": supported_extensions}
+    PARSER_REGISTRY[name] = cls
 
 
 class BaseParser(ABC):
@@ -33,43 +26,10 @@ class BaseParser(ABC):
     It contains the common attributes and methods that each parser should implement.
     """
 
-    def __init_subclass__(cls, **kwargs):
-        """
-        Special method in Python for class initialization. This method is called whenever a subclass is declared.
-
-        Parameters:
-            **kwargs: Additional keyword arguments.
-        """
-        super().__init_subclass__(**kwargs)
-        register(cls)
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """
-        Abstract method. This should return the name of the parser.
-
-        Returns:
-            str: A string representing the name of the parser.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def supported_file_extensions(self) -> typing.List[str]:
-        """
-        Abstract method. This should return a list of supported file extensions by the parser.
-
-        Returns:
-            typing.List[str]: A list of strings representing the supported file extensions.
-        """
-        pass
-
     @abstractmethod
     async def get_chunks(
         self,
         document: LoadedDocument,
-        max_chunk_size,
         *args,
         **kwargs,
     ) -> typing.List[Document]:
@@ -85,40 +45,6 @@ class BaseParser(ABC):
         pass
 
 
-def get_parsers_map():
-    """
-    Returns a mapping of file extensions to parser names.
-    """
-    global PARSER_REGISTRY
-    file_extension_to_parsers_map = {}
-    for parser_name, parser_entry in PARSER_REGISTRY.items():
-        supported_extensions = parser_entry["supported_extensions"]
-        for supported_extension in supported_extensions:
-            if supported_extension not in file_extension_to_parsers_map:
-                file_extension_to_parsers_map[supported_extension] = []
-            file_extension_to_parsers_map[supported_extension].append(parser_name)
-
-    return file_extension_to_parsers_map
-
-
-def get_parsers_configurations(parser_config: ParserConfig):
-    """
-    Return parsers mapping given the input parser configuration.
-    """
-    input_parsers_config = parser_config.parser_map
-    parsers_map = get_parsers_map()
-    for file_type in parsers_map.keys():
-        if (
-            file_type in input_parsers_config
-            and input_parsers_config[file_type] in parsers_map[file_type]
-        ):
-            parsers_map[file_type] = [input_parsers_config[file_type]]
-        if len(parsers_map[file_type]) > 1:
-            parsers_map[file_type] = [parsers_map[file_type][0]]
-        parsers_map[file_type] = parsers_map[file_type][0]
-    return parsers_map
-
-
 def get_parser_for_extension(
     file_extension, parsers_map, *args, **kwargs
 ) -> BaseParser:
@@ -131,4 +57,21 @@ def get_parser_for_extension(
     name = parsers_map[file_extension]
     if name not in PARSER_REGISTRY:
         raise ValueError(f"No parser registered with name {name}")
-    return PARSER_REGISTRY[name]["cls"](*args, **kwargs)
+    return PARSER_REGISTRY[name](*args, **kwargs)
+
+
+def list_parsers():
+    """
+    Returns a list of all the registered parsers.
+
+    Returns:
+        List[dict]: A list of all the registered parsers.
+    """
+    global PARSER_REGISTRY
+    return [
+        {
+            "type": type,
+            "class": cls.__name__,
+        }
+        for type, cls in PARSER_REGISTRY.items()
+    ]

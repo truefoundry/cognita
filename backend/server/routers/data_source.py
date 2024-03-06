@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from backend.server.services.data_source import DataSourceService
 from backend.types import CreateDataSource
 
-router = APIRouter(prefix="/v1/datasource", tags=["datasource"])
+router = APIRouter(prefix="/v1/data_source", tags=["data_source"])
 
 
 @router.get("/")

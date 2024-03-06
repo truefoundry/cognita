@@ -12,19 +12,18 @@ class MarkdownParser(BaseParser):
     Custom Markdown parser for extracting chunks from Markdown files.
     """
 
-    name = "MarkdownParser"
+    max_chunk_size: int
     supported_file_extensions = [".md"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, max_chunk_size: int = 1000, *args, **kwargs):
         """
         Initializes the MarkdownParser object.
         """
-        pass
+        self.max_chunk_size = max_chunk_size
 
     async def get_chunks(
         self,
         document: LoadedDocument,
-        max_chunk_size: int,
         *args,
         **kwargs,
     ) -> typing.List[Document]:
@@ -56,17 +55,17 @@ class MarkdownParser(BaseParser):
             ("####", "Header4"),
         ]
         chunks_arr = self._recurse_split(
-            content, {}, 0, headers_to_split_on, max_chunk_size
+            content, {}, 0, headers_to_split_on, self.max_chunk_size
         )
         final_chunks = []
-        lastAddedChunkSize = max_chunk_size + 1
+        lastAddedChunkSize = self.max_chunk_size + 1
         for chunk in chunks_arr:
             page_content = self._include_headers_in_content(
                 content=chunk.page_content,
                 metadata=chunk.metadata,
             )
             chunk_length = len(page_content)
-            if chunk_length + lastAddedChunkSize <= max_chunk_size:
+            if chunk_length + lastAddedChunkSize <= self.max_chunk_size:
                 lastAddedChunk: Document = final_chunks.pop()
                 lastAddedChunk.page_content = (
                     f"{lastAddedChunk.page_content}\n{page_content}"

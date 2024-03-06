@@ -9,13 +9,9 @@ from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import get_base_document_id
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.types import DataIngestionRunStatus
-from backend.modules.parsers.parser import (
-    get_parser_for_extension,
-    get_parsers_configurations,
-)
+from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db import get_vector_db_client
-from backend.types import DataIngestionMode
+from backend.types import DataIngestionMode, DataIngestionRunStatus
 
 
 async def ingest_data_to_collection(inputs: DataIngestionConfig):
@@ -24,8 +20,6 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
     logger.info(f"| Data Ingestion Mode - {inputs.data_ingestion_mode.value}       |")
     logger.info("+------------------------------------------------------------+")
     try:
-        parsers_map = get_parsers_configurations(inputs.parser_config)
-
         # Set the status of the collection run to running
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
@@ -48,7 +42,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
             ).load_data(
                 data_source=inputs.data_source,
                 dest_dir=tmpdirname,
-                allowed_extensions=parsers_map.keys(),
+                allowed_extensions=inputs.parser_config.parser_map.keys(),
             )
 
             METADATA_STORE_CLIENT.update_data_ingestion_run_status(
@@ -81,12 +75,13 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                     for index, doc in enumerate(documents_to_be_processed):
                         # Get parser for required file extension
                         parser = get_parser_for_extension(
-                            file_extension=doc.file_extension, parsers_map=parsers_map
+                            file_extension=doc.file_extension,
+                            parsers_map=inputs.parser_config.parser_map,
+                            max_chunk_size=inputs.parser_config.chunk_size,
                         )
                         # chunk the given document
                         chunks = await parser.get_chunks(
                             document=doc,
-                            max_chunk_size=inputs.parser_config.chunk_size,
                         )
                         documents_to_be_uppserted.extend(chunks)
                         logger.info("%s -> %s chunks", doc.filepath, len(chunks))

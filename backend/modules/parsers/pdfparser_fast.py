@@ -11,24 +11,16 @@ from backend.types import LoadedDocument
 class PdfParserUsingPyMuPDF(BaseParser):
     """
     PdfParserUsingPyMuPDF is a parser class for extracting text from PDF files using PyMuPDF library.
-
-    Attributes:
-        name (str): The name of the parser.
-        supported_file_extensions (List[str]): List of supported file extensions (e.g., ['.pdf']).
     """
 
-    name = "PdfParserFast"
     supported_file_extensions = [".pdf"]
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, max_chunk_size: int = 1000, *args, **kwargs):
         """
         Initializes the PdfParserUsingPyMuPDF object.
         """
-        pass
+        self.max_chunk_size = max_chunk_size
 
-    async def get_chunks(
-        self, document: LoadedDocument, max_chunk_size: int, *args, **kwargs
-    ):
+    async def get_chunks(self, document: LoadedDocument, *args, **kwargs):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
 
@@ -74,10 +66,10 @@ class PdfParserUsingPyMuPDF(BaseParser):
                 text = re.sub(" +", " ", text).strip()
 
                 # Create a Document object per page with page-specific metadata
-                if len(text) > max_chunk_size:
+                if len(text) > self.max_chunk_size:
                     # Split the text into chunks of size less than or equal to max_chunk_size
                     text_splitter = RecursiveCharacterTextSplitter(
-                        chunk_size=max_chunk_size, chunk_overlap=0
+                        chunk_size=self.max_chunk_size, chunk_overlap=0
                     )
                     text_splits = text_splitter.split_text(text)
                     texts = [
