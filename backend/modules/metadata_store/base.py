@@ -81,7 +81,7 @@ class BaseMetadataStore(ABC):
 
     @abstractmethod
     def get_data_ingestion_runs(
-        self, collection_name: str, data_source_fqn: str
+        self, collection_name: str, data_source_fqn: str = None
     ) -> List[DataIngestionRun]:
         """
         Get all data ingestion runs from the metadata store

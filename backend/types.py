@@ -361,6 +361,6 @@ class ListDataIngestionRunsDto(BaseModel):
     collection_name: str = Field(
         title="Name of the collection",
     )
-    data_source_fqn: str = Field(
-        title="Fully qualified name of the data source",
+    data_source_fqn: Optional[str] = Field(
+        title="Fully qualified name of the data source", default=None
     )

@@ -390,14 +390,19 @@ class MLFoundry(BaseMetadataStore):
         return data_ingestion_run
 
     def get_data_ingestion_runs(
-        self, collection_name: str, data_source_fqn: str
+        self, collection_name: str, data_source_fqn: str = None
     ) -> List[DataIngestionRun]:
         logger.debug(
             f"[Metadata Store] Listing all data ingestion runs for collection: {collection_name} & data source: {data_source_fqn}"
         )
+        filter_str = f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'"
+        if data_source_fqn:
+            filter_str = (
+                filter_str + f" and params.data_source_fqn = '{data_source_fqn}'"
+            )
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
-            filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}' and params.data_source_fqn = '{data_source_fqn}'",
+            filter_string=filter_str,
         )
         data_ingestion_runs: List[DataIngestionRun] = []
         for run in runs:
@@ -452,7 +457,7 @@ class MLFoundry(BaseMetadataStore):
             raise HTTPException(
                 404, f"Data ingestion run {data_ingestion_run_name} not found."
             )
-        data_ingestion_run.set_tags({"status": json.dumps(status.value)})
+        data_ingestion_run.set_tags({"status": status.value})
         logger.debug(
             f"[Metadata Store] Updated status of data ingestion run {data_ingestion_run_name} to {status}"
         )
