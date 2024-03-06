@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     """
 
     DOCUMENT_ID_SEPARATOR = "::"
-
+    LOG_LEVEL: str = "info"
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
     TFY_SERVICE_ROOT_PATH: Optional[str] = "/"
@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     DEBUG_MODE: bool = False
 
     DEBUG_MODE = os.getenv("DEBUG_MODE", "false") == "true"
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
     TFY_SERVICE_ROOT_PATH = os.getenv("TFY_SERVICE_ROOT_PATH", "")

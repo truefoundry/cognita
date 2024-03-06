@@ -3,9 +3,9 @@ from fastapi import APIRouter, Path
 from backend.server.services.collection import CollectionService
 from backend.types import (
     AssociateDataSourceWithCollectionDto,
-    CreateCollection,
-    CreateDataIngestionRun,
+    CreateCollectionDto,
     IngestDataToCollectionDto,
+    ListDataIngestionRunsDto,
     UnassociateDataSourceWithCollectionDto,
 )
 
@@ -19,7 +19,7 @@ def get_collections():
 
 
 @router.post("/")
-def create_collection(request: CreateCollection):
+def create_collection(request: CreateCollectionDto):
     """API to create a collection"""
     return CollectionService.create_collection(request)
 
@@ -52,7 +52,12 @@ def delete_collection(collection_name: str = Path(title="Collection name")):
     return CollectionService.delete_collection(collection_name)
 
 
-@router.get("/data_ingestion_run/{data_ingestion_run_name}/status")
+@router.post("/data_ingestion_runs/list")
+def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
+    return CollectionService.list_data_ingestion_runs(request)
+
+
+@router.get("/data_ingestion_runs/{data_ingestion_run_name}/status")
 def get_collection_status(
     data_ingestion_run_name: str = Path(title="Data Ingestion Run name"),
 ):

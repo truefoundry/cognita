@@ -10,17 +10,21 @@ from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.types import (
+    AssociateDataSourceWithCollection,
     AssociateDataSourceWithCollectionDto,
     CreateCollection,
+    CreateCollectionDto,
     CreateDataIngestionRun,
     DataIngestionRunStatus,
     IngestDataToCollectionDto,
+    ListDataIngestionRunsDto,
 )
 
 
 class CollectionService:
     def list_collections():
         try:
+            logger.debug("Listing all the collections...")
             collections = METADATA_STORE_CLIENT.get_collections()
             return JSONResponse(
                 content={"collections": [obj.dict() for obj in collections]}
@@ -29,15 +33,34 @@ class CollectionService:
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
 
-    def create_collection(collection: CreateCollection):
+    def create_collection(collection: CreateCollectionDto):
         try:
-            collection = METADATA_STORE_CLIENT.create_collection(collection=collection)
+            logger.debug(f"Creating collection {collection.name}...")
+            created_collection = METADATA_STORE_CLIENT.create_collection(
+                collection=CreateCollection(
+                    name=collection.name,
+                    description=collection.description,
+                    embedder_config=collection.embedder_config,
+                )
+            )
             vector_db_client = get_vector_db_client(
                 config=settings.VECTOR_DB_CONFIG, collection_name=collection.name
             )
             vector_db_client.create_collection(get_embedder(collection.embedder_config))
+            if collection.associated_data_sources:
+                for data_source in collection.associated_data_sources:
+                    METADATA_STORE_CLIENT.associate_data_source_with_collection(
+                        collection_name=collection.name,
+                        data_source_association=AssociateDataSourceWithCollection(
+                            data_source_fqn=data_source.data_source_fqn,
+                            parser_config=data_source.parser_config,
+                        ),
+                    )
+                created_collection = METADATA_STORE_CLIENT.get_collection_by_name(
+                    collection_name=collection.name
+                )
             return JSONResponse(
-                content={"collection": collection.dict()}, status_code=201
+                content={"collection": created_collection.dict()}, status_code=201
             )
         except HTTPException as exp:
             raise exp
@@ -144,7 +167,11 @@ class CollectionService:
     ):
         try:
             collection = METADATA_STORE_CLIENT.associate_data_source_with_collection(
-                create_collection_data_source_association=request
+                collection_name=request.collection_name,
+                data_source_association=AssociateDataSourceWithCollection(
+                    data_source_fqn=request.data_source_fqn,
+                    parser_config=request.parser_config,
+                ),
             )
             return JSONResponse(content={"collection": collection.dict()})
         except HTTPException as exp:
@@ -198,4 +225,12 @@ class CollectionService:
                 "status": data_ingestion_run.status.value,
                 "message": f"Data ingestion job run {data_ingestion_run.name} in {data_ingestion_run.status.value}. Check logs for more details.",
             }
+        )
+
+    def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
+        data_ingestion_runs = METADATA_STORE_CLIENT.get_data_ingestion_runs(
+            request.collection_name, request.data_source_fqn
+        )
+        return JSONResponse(
+            content={"data_ingestion_runs": [obj.dict() for obj in data_ingestion_runs]}
         )

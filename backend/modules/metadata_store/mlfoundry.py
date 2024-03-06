@@ -10,9 +10,10 @@ import mlflow
 import mlfoundry
 from fastapi import HTTPException
 
+from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
 from backend.types import (
-    AssociateDataSourceWithCollectionDto,
+    AssociateDataSourceWithCollection,
     AssociatedDataSources,
     Collection,
     CreateCollection,
@@ -40,10 +41,16 @@ class MLFoundry(BaseMetadataStore):
         self.ml_repo_name = config.get("ml_repo_name", None)
         if not self.ml_repo_name:
             raise Exception("config.ml_repo_name is not set.")
+        logger.info(
+            f"[Metadata Store] Initializing MLFoundry Metadata Store: {self.ml_repo_name}"
+        )
         logging.getLogger("mlfoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = mlfoundry.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
+        logger.info(
+            f"[Metadata Store] Initialized MLFoundry Metadata Store: {self.ml_repo_name}"
+        )
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
@@ -73,10 +80,14 @@ class MLFoundry(BaseMetadataStore):
         Create a collection from given CreateCollection object. 
         It primarly has collection name, collection description and embedder congfiguration
         """
+        logger.debug(f"[Metadata Store] Creating collection {collection.name}")
         existing_collection = self.get_collection_by_name(
             collection_name=collection.name, no_cache=True
         )
         if existing_collection:
+            logger.error(
+                f"[Metadata Store] Existing collection found with name {collection.name}"
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Collection with name {collection.name} already exists.",
@@ -100,6 +111,7 @@ class MLFoundry(BaseMetadataStore):
             run=run, metadata=created_collection.dict(), params=params
         )
         run.end()
+        logger.debug(f"[Metadata Store] Collection Saved")
         return created_collection
 
     def _get_entity_from_run(
@@ -159,18 +171,25 @@ class MLFoundry(BaseMetadataStore):
         artifact.update()
 
     def get_collection_by_name(
-        self, collection_name: str, no_cache: bool = False
+        self, collection_name: str, no_cache: bool = True
     ) -> Collection | None:
         """Get collection from given collection name."""
+        logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
         if not ml_run:
+            logger.debug(
+                f"[Metadata Store] Collection with name {collection_name} not found"
+            )
             return None
-        return self._polulate_collection(
+        collection = self._polulate_collection(
             Collection.parse_obj(self._get_entity_from_run(run=ml_run))
         )
+        logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
+        return collection
 
     def get_collections(self) -> List[Collection]:
         """Get all the collections for the given client"""
+        logger.debug(f"[Metadata Store] Listing all collection")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
@@ -179,6 +198,7 @@ class MLFoundry(BaseMetadataStore):
         for ml_run in ml_runs:
             collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
             collections.append(self._polulate_collection(collection))
+        logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
         return collections
 
     def _polulate_collection(self, collection: Collection):
@@ -193,35 +213,45 @@ class MLFoundry(BaseMetadataStore):
 
     def associate_data_source_with_collection(
         self,
-        create_collection_data_source_association: AssociateDataSourceWithCollectionDto,
+        collection_name: str,
+        data_source_association: AssociateDataSourceWithCollection,
     ) -> Collection:
+        logger.debug(
+            f"[Metadata Store] Associating data_source {data_source_association.data_source_fqn} to collection {collection_name}"
+        )
         collection_run = self._get_run_by_name(
-            run_name=create_collection_data_source_association.collection_name,
+            run_name=collection_name,
             no_cache=True,
         )
         if not collection_run:
             raise HTTPException(
                 404,
-                f"Collection {create_collection_data_source_association.collection_name} not found.",
+                f"Collection {collection_name} not found.",
             )
-        # Always do this to avoid run conditions
+        # Always do this to avoid race conditions
         collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
         associated_data_source = AssociatedDataSources(
-            data_source_fqn=create_collection_data_source_association.data_source_fqn,
-            parser_config=create_collection_data_source_association.parser_config,
+            data_source_fqn=data_source_association.data_source_fqn,
+            parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[
-            create_collection_data_source_association.data_source_fqn
-        ] = associated_data_source
+        collection.associated_data_sources[data_source_association.data_source_fqn] = (
+            associated_data_source
+        )
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
-        return collection
+        logger.debug(
+            f"[Metadata Store] Associated data_source {data_source_association.data_source_fqn} to collection {collection_name}"
+        )
+        return self._polulate_collection(collection)
 
     def unassociate_data_source_with_collection(
         self,
         collection_name: str,
         data_source_fqn: str,
     ) -> Collection:
+        logger.debug(
+            f"[Metadata Store] Unassociating data_source {data_source_fqn} to collection {collection_name}"
+        )
         collection_run = self._get_run_by_name(
             run_name=collection_name,
             no_cache=True,
@@ -235,9 +265,15 @@ class MLFoundry(BaseMetadataStore):
         collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
         collection.associated_data_sources.pop(data_source_fqn)
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
-        return collection
+        logger.debug(
+            f"[Metadata Store] Unassociated data_source {data_source_fqn} to collection {collection_name}"
+        )
+        return self._polulate_collection(collection)
 
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
+        logger.debug(
+            f"[Metadata Store] Creating new data_source of type {data_source.type}"
+        )
         fqn = get_data_source_fqn(data_source)
 
         existing_data_source = self.get_data_source_from_fqn(fqn=fqn)
@@ -263,20 +299,26 @@ class MLFoundry(BaseMetadataStore):
             run=run, metadata=created_data_source.dict(), params=params
         )
         run.end()
+        logger.debug(
+            f"[Metadata Store] Created new data_source of type {data_source.type}"
+        )
         return created_data_source
 
     def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
+        logger.debug(f"[Metadata Store] Getting data_source by {fqn}")
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}' and params.data_source_fqn = '{fqn}'",
         )
         for run in runs:
             data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            logger.debug(f"[Metadata Store] Fetched Data Source with {fqn}")
             return data_source
-
+        logger.debug(f"[Metadata Store] Data Source with {fqn} not found")
         return None
 
     def get_data_sources(self) -> List[DataSource]:
+        logger.debug(f"[Metadata Store] Listing all data sources")
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
@@ -285,11 +327,15 @@ class MLFoundry(BaseMetadataStore):
         for run in runs:
             data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
             data_sources.append(data_source)
+        logger.debug(f"[Metadata Store] Listed {len(len(data_sources))} data sources")
         return data_sources
 
     def create_data_ingestion_run(
         self, data_ingestion_run: CreateDataIngestionRun
     ) -> DataIngestionRun:
+        logger.debug(
+            f"[Metadata Store] Creating new ingestion run for collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
+        )
         params = {
             "entity_type": MLRunTypes.DATA_INGESTION_RUN.value,
             "collection_name": data_ingestion_run.collection_name,
@@ -316,24 +362,39 @@ class MLFoundry(BaseMetadataStore):
             run=run, metadata=created_data_ingestion_run.dict(), params=params
         )
         run.end()
+        logger.debug(
+            f"[Metadata Store] Created a ingestion run for collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
+        )
         return created_data_ingestion_run
 
     def get_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
     ) -> DataIngestionRun | None:
+        logger.debug(
+            f"[Metadata Store] Getitng ingestion run {data_ingestion_run_name}"
+        )
         run = self._get_run_by_name(run_name=data_ingestion_run_name, no_cache=no_cache)
         if not run:
+            logger.debug(
+                f"[Metadata Store] Ingestion run with name {data_ingestion_run_name} not found"
+            )
             return None
         data_ingestion_run = DataIngestionRun.parse_obj(
             self._get_entity_from_run(run=run)
         )
         run_tags = run.get_tags()
         data_ingestion_run.status = DataIngestionRunStatus(run_tags.get("status"))
+        logger.debug(
+            f"[Metadata Store] Fetched Ingestion run with name {data_ingestion_run_name}"
+        )
         return data_ingestion_run
 
     def get_data_ingestion_runs(
         self, collection_name: str, data_source_fqn: str
     ) -> List[DataIngestionRun]:
+        logger.debug(
+            f"[Metadata Store] Listing all data ingestion runs for collection: {collection_name} & data source: {data_source_fqn}"
+        )
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}' and params.data_source_fqn = '{data_source_fqn}'",
@@ -346,32 +407,55 @@ class MLFoundry(BaseMetadataStore):
             run_tags = run.get_tags()
             data_ingestion_run.status = DataIngestionRunStatus(run_tags.get("status"))
             data_ingestion_runs.append(data_ingestion_run)
+        logger.debug(
+            f"[Metadata Store] Listed {len(data_ingestion_runs)} data ingestion runs for collection: {collection_name} & data source: {data_source_fqn}"
+        )
         return data_ingestion_runs
 
     def delete_collection(self, collection_name: str, include_runs=False):
+        logger.debug(f"[Metadata Store] Deleting colelction {collection_name}")
         collection = self._get_run_by_name(run_name=collection_name, no_cache=True)
         if not collection:
+            logger.debug(
+                f"[Metadata Store] Collection {collection_name} not found to delete."
+            )
             return
         if include_runs:
-            collection_inderer_job_runs = self.client.search_runs(
+            logger.debug(
+                f"[Metadata Store] Fetching all data ingestion runs for {collection_name} to delete"
+            )
+            data_ingestion_runs = self.client.search_runs(
                 ml_repo=self.ml_repo_name,
                 filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'",
             )
-            for collection_inderer_job_run in collection_inderer_job_runs:
+            logger.debug(
+                f"[Metadata Store] Found {len(data_ingestion_runs)} data ingestion runs for {collection_name} to delete"
+            )
+            for collection_inderer_job_run in data_ingestion_runs:
                 collection_inderer_job_run.delete()
+            logger.debug(
+                f"[Metadata Store] Deleted {len(data_ingestion_runs)} data ingestion runs for {collection_name}"
+            )
         collection.delete()
+        logger.debug(f"[Metadata Store] Deleted colelction {collection_name}")
 
     def update_data_ingestion_run_status(
         self,
         data_ingestion_run_name: str,
         status: DataIngestionRunStatus,
     ):
+        logger.debug(
+            f"[Metadata Store] Updating status of data ingestion run {data_ingestion_run_name} to {status}"
+        )
         data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
         if not data_ingestion_run:
             raise HTTPException(
                 404, f"Data ingestion run {data_ingestion_run_name} not found."
             )
         data_ingestion_run.set_tags({"status": json.dumps(status.value)})
+        logger.debug(
+            f"[Metadata Store] Updated status of data ingestion run {data_ingestion_run_name} to {status}"
+        )
 
     def log_metrics_for_data_ingestion_run(
         self,
@@ -379,16 +463,25 @@ class MLFoundry(BaseMetadataStore):
         metric_dict: dict[str, int | float],
         step: int = 0,
     ):
+        logger.debug(
+            f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
+        )
         data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
         if not data_ingestion_run:
             raise HTTPException(
                 404, f"Data ingestion run {data_ingestion_run_name} not found."
             )
         data_ingestion_run.log_metrics(metric_dict=metric_dict, step=step)
+        logger.debug(
+            f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
+        )
 
     def log_errors_for_data_ingestion_run(
         self, data_ingestion_run_name: str, errors: Dict[str, Any]
     ):
+        logger.debug(
+            f"[Metadata Store] Logging errors for data ingestion run {data_ingestion_run_name}"
+        )
         data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
         if not data_ingestion_run:
             raise HTTPException(
@@ -403,3 +496,6 @@ class MLFoundry(BaseMetadataStore):
                 artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
                 description="This artifact contains the errors during run",
             )
+        logger.debug(
+            f"[Metadata Store] Logged errors for data ingestion run {data_ingestion_run_name}"
+        )
