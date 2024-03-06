@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from backend.types import LLMConfig, RetrieverConfig
 
 
-class SampleQueryInput(BaseModel):
+class DefaultQueryInput(BaseModel):
     """
     Model for Query input. 
     Requires a collection name, retriever configuration, query, LLM configuration and prompt template.

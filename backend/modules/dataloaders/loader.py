@@ -7,29 +7,28 @@ from backend.types import DataSource, LoadedDocument
 LOADER_REGISTRY = {}
 
 
-def register(cls):
+def register_dataloader(type: str, cls):
     """
     Registers all the available loaders using `BaseLoader` class
 
     Args:
+        type: The type of the loader to be registered.
         cls: The loader class to be registered.
 
     Returns:
         None
     """
     global LOADER_REGISTRY
-    loader_type = cls.type
-
     # Validate and add the loader to the registry.
-    if not loader_type:
+    if not type:
         raise ValueError(
             f"static attribute `name` needs to be a non-empty string on class {cls.__name__}"
         )
-    if loader_type in LOADER_REGISTRY:
+    if type in LOADER_REGISTRY:
         raise ValueError(
-            f"Error while registering class {cls.__name__}, `name` already taken by {LOADER_REGISTRY[loader_type].__name__}"
+            f"Error while registering class {cls.__name__}, `name` already taken by {LOADER_REGISTRY[type].__name__}"
         )
-    LOADER_REGISTRY[loader_type] = cls
+    LOADER_REGISTRY[type] = cls
 
 
 class BaseLoader(ABC):
@@ -37,11 +36,6 @@ class BaseLoader(ABC):
     Base class for all loaders. The loaders are responsible for loading the data
     from the source and storing it in the destination directory.
     """
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Register the subclass automatically when it is defined.
-        register(cls)
 
     @abstractmethod
     def load_data(
@@ -74,3 +68,16 @@ def get_loader_for_data_source(type, *args, **kwargs) -> BaseLoader:
     if type not in LOADER_REGISTRY:
         raise ValueError(f"No loader registered with type {type}")
     return LOADER_REGISTRY[type](*args, **kwargs)
+
+
+def list_dataloaders():
+    """
+    Returns a list of all the registered loaders.
+
+    Returns:
+        List[dict]: A list of all the registered loaders.
+    """
+    global LOADER_REGISTRY
+    return [
+        {"type": type, "class": cls.__name__} for type, cls in LOADER_REGISTRY.items()
+    ]

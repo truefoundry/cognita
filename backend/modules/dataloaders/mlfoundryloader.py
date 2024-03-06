@@ -15,8 +15,6 @@ class MlFoundryLoader(BaseLoader):
     This loader handles mlfoundry data directory fqn.
     """
 
-    type = "mlfoundry"
-
     def load_data(
         self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:

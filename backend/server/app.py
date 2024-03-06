@@ -2,8 +2,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.modules import query_controllers
-from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
+from backend.modules.query_controllers.query_controller import QUERY_CONTROLLER_REGISTRY
 from backend.server.routers.collection import router as collection_router
 from backend.server.routers.components import router as components_router
 from backend.server.routers.data_source import router as datasource_router

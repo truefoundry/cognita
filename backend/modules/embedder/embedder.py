@@ -70,3 +70,16 @@ def get_embedder(
         namespace=embedder_config.model,
     )
     return embedder
+
+
+def list_embedders():
+    """
+    Returns a list of all the registered embedders.
+
+    Returns:
+        List[dict]: A list of all the registered embedders.
+    """
+    global EMBEDDER_REGISTRY
+    return [
+        {"type": type, "class": cls.__name__} for type, cls in EMBEDDER_REGISTRY.items()
+    ]

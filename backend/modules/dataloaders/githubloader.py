@@ -15,8 +15,6 @@ class GithubLoader(BaseLoader):
     This loader handles Git repositories.
     """
 
-    type = "github"
-
     def load_data(
         self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:

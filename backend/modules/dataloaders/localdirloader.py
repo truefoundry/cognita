@@ -13,8 +13,6 @@ class LocalDirLoader(BaseLoader):
     This loader handles local directories.
     """
 
-    type = "local"
-
     def load_data(
         self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:

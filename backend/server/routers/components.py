@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from backend.modules.dataloaders.loader import LOADER_REGISTRY
-from backend.modules.embedder.embedder import EMBEDDER_REGISTRY
-from backend.modules.parsers.parser import PARSER_REGISTRY
-from backend.server.decorators import QUERY_CONTROLLER_REGISTRY
+from backend.modules.dataloaders.loader import list_dataloaders
+from backend.modules.embedder.embedder import list_embedders
+from backend.modules.parsers.parser import list_parsers
+from backend.modules.query_controllers.query_controller import list_query_controllers
 
 router = APIRouter(prefix="/v1/components", tags=["components"])
 
@@ -11,36 +11,26 @@ router = APIRouter(prefix="/v1/components", tags=["components"])
 @router.get("/parsers")
 def get_parsers():
     """Get available parsers from the registered parsers"""
-    parsers = []
-    for key, value in PARSER_REGISTRY.items():
-        parsers.append(
-            {"name": key, "supported_extensions": value.get("supported_extensions")}
-        )
+    parsers = list_parsers()
     return parsers
 
 
 @router.get("/embedders")
 def get_embedders():
     """Get available embedders from registered embedders"""
-    embedders = []
-    for key, _ in EMBEDDER_REGISTRY.items():
-        embedders.append({"name": key})
+    embedders = list_embedders()
     return embedders
 
 
-@router.get("/data_loaders")
-def get_data_loaders():
+@router.get("/dataloaders")
+def get_dataloaders():
     """Get available data loaders from registered data loaders"""
-    data_loaders = []
-    for key, _ in LOADER_REGISTRY.items():
-        data_loaders.append({"name": key})
+    data_loaders = list_dataloaders()
     return data_loaders
 
 
 @router.get("/query_controllers")
 def get_query_controllers():
     """Get available query controllers from registered query controllers"""
-    query_controllers = []
-    for key, value in QUERY_CONTROLLER_REGISTRY.items():
-        query_controllers.append({"name": key})
+    query_controllers = list_query_controllers()
     return query_controllers
