@@ -67,7 +67,7 @@ def get_embedder(
     embedder = CacheBackedEmbeddings.from_bytes_store(
         underlying_embeddings=base_embedder,
         document_embedding_cache=store,
-        namespace=embedder_config.model,
+        namespace=embedder_config.config.get("model", "default"),
     )
     return embedder
 
