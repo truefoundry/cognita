@@ -1,10 +1,16 @@
 import logging
 import sys
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+from backend.settings import settings
+
+LOG_LEVEL = logging.getLevelName(settings.LOG_LEVEL.upper())
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOG_LEVEL)
+formatter = logging.Formatter(
+    "%(levelname)s:    %(asctime)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s"
+)
 handler = logging.StreamHandler(stream=sys.stdout)
-handler.setLevel(logging.INFO)
+handler.setLevel(LOG_LEVEL)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
