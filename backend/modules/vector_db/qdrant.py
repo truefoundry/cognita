@@ -13,10 +13,10 @@ from backend.types import VectorDBConfig
 MAX_SCROLL_LIMIT = int(1e9)
 BATCH_SIZE = 1000
 class QdrantVectorDB(BaseVectorDB):
-    def __init__(self, config: VectorDBConfig, collection_name: str = None):
+
+    def __init__(self, config: VectorDBConfig):
         self.url = config.url
         self.api_key = config.api_key
-        self.collection_name = collection_name
         self.port = 443 if self.url.startswith("https://") else 6333
         self.prefix = config.config.get("prefix", None) if config.config else None
         self.prefer_grpc = False if self.url.startswith("https://") else True
@@ -28,7 +28,7 @@ class QdrantVectorDB(BaseVectorDB):
             prefix=self.prefix,
         )
 
-    def create_collection(self, embeddings: Embeddings):
+    def create_collection(self, collection_name: str, embeddings: Embeddings):
         # No provision to create a empty collection
         # We do a workaround by creating a dummy document and deleting it
         logger.debug(f"[Vector Store] Creating new collection {self.collection_name}")
@@ -40,7 +40,7 @@ class QdrantVectorDB(BaseVectorDB):
                 )
             ],
             embedding=embeddings,
-            collection_name=self.collection_name,
+            collection_name=collection_name,
             url=self.url,
             api_key=self.api_key,
             prefer_grpc=self.prefer_grpc,
@@ -48,7 +48,7 @@ class QdrantVectorDB(BaseVectorDB):
             prefix=self.prefix,
         )
         self.qdrant_client.delete(
-            collection_name=self.collection_name,
+            collection_name=collection_name,
             points_selector=models.FilterSelector(
                 filter=models.Filter(
                     must=[
@@ -61,14 +61,16 @@ class QdrantVectorDB(BaseVectorDB):
             ),
         )
         self.qdrant_client.create_payload_index(
-            collection_name=self.collection_name,
+            collection_name=collection_name,
             field_name=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         logger.debug(f"[Vector Store] Created new collection {self.collection_name}")
         return
 
-    def _get_records_to_be_upserted(self, document_ids: List[str], incremental: bool):
+    def _get_records_to_be_upserted(
+        self, collection_name: str, document_ids: List[str], incremental: bool
+    ):
         if not incremental:
             return []
         # For incremental deletion, we delete the documents with the same document_id
@@ -113,6 +115,7 @@ class QdrantVectorDB(BaseVectorDB):
 
     def upsert_documents(
         self,
+        collection_name: str,
         documents,
         embeddings: Embeddings,
         incremental: bool = True,
@@ -135,7 +138,7 @@ class QdrantVectorDB(BaseVectorDB):
         # Add Documents
         Qdrant(
             client=self.qdrant_client,
-            collection_name=self.collection_name,
+            collection_name=collection_name,
             embeddings=embeddings,
         ).add_documents(documents=documents)
         logger.debug(
@@ -148,7 +151,7 @@ class QdrantVectorDB(BaseVectorDB):
                 f"[Vector Store] Deleting {len(documents)} outdated documents from collection {self.collection_name}"
             )
             self.qdrant_client.delete(
-                collection_name=self.collection_name,
+                collection_name=collection_name,
                 points_selector=models.PointIdsList(
                     points=record_ids_to_be_upserted,
                 ),
@@ -185,10 +188,12 @@ class QdrantVectorDB(BaseVectorDB):
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
-            collection_name=self.collection_name,
+            collection_name=collection_name,
         )
 
-    def list_documents_in_collection(self, base_document_id: str = None) -> List[str]:
+    def list_documents_in_collection(
+        self, collection_name: str, base_document_id: str = None
+    ) -> List[str]:
         """
         List all documents in a collection
         """
@@ -239,7 +244,7 @@ class QdrantVectorDB(BaseVectorDB):
         )
         return list(document_ids_set)
 
-    def delete_documents(self, document_ids: List[str]):
+    def delete_documents(self, collection_name: str, document_ids: List[str]):
         """
         Delete documents from the collection
         """
@@ -247,7 +252,7 @@ class QdrantVectorDB(BaseVectorDB):
             f"[Vector Store] Deleting {len(document_ids)} documents from collection {self.collection_name}"
         )
         try:
-            self.qdrant_client.get_collection(collection_name=self.collection_name)
+            self.qdrant_client.get_collection(collection_name=collection_name)
         except Exception as exp:
             logger.debug(exp)
             return

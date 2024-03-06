@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Extra, Field, constr
 
+from backend.modules.metadata_store.base import generate_document_id
+
 
 class DataIngestionMode(str, Enum):
     """
@@ -98,6 +100,21 @@ class LoadedDocument(BaseModel):
     filepath: str
     file_extension: str
     metadata: DocumentMetadata
+
+
+class DataPoint(BaseModel):
+    data_source_fqn: str
+    data_point_hash: str
+    data_point_uri: str
+    local_path: Optional[str]
+    data_extension: Optional[str]
+    metadata: Optional[Dict[str, str]]
+
+    @property
+    def data_point_id(self) -> str:
+        return generate_document_id(
+            data_source=self.data_source_fqn, path=self.data_point_uri
+        )
 
 
 class LLMConfig(BaseModel):

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from backend.types import DataSource, LoadedDocument
+from backend.types import DataPoint, DataSource, LoadedDocument
 
 # A global registry to store all available loaders.
 LOADER_REGISTRY = {}
@@ -38,19 +38,35 @@ class BaseLoader(ABC):
     """
 
     @abstractmethod
-    def load_data(
-        self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
-    ) -> List[LoadedDocument]:
+    def list_data_points(self, data_source: DataSource) -> List[DataPoint]:
         """
-        Load data function that downloads the data from the source URI and stores it in the destination directory.
+        List the data points from the source.
 
         Args:
-            data_source (DataSource): Source URI with protocol `supported_protocol`.
-            dest_dir (str): Destination directory where the data will be stored.
-            allowed_extensions (List[str]): A list of allowed file extensions.
+            data_source (DataSource): The data source from which the data points are to be listed.
 
         Returns:
-            List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
+            List[DataPoint]: The list of data points.
+        """
+        pass
+
+    @abstractmethod
+    def load_data_points(
+        self,
+        data_source: DataSource,
+        data_points: List[DataPoint],
+        dest_dir: str,
+    ) -> List[DataPoint]:
+        """
+        Load the data points from the source to the destination directory.
+
+        Args:
+            data_source (DataSource): The data source from which the data points are to be loaded.
+            data_points (List[DataPoint]): The list of data points to be loaded.
+            dest_dir (str): The destination directory to store the loaded data.
+
+        Returns:
+            List[DataPoint]: The list of loaded documents.
         """
         pass
 

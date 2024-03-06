@@ -8,7 +8,7 @@ from langchain.schema.vectorstore import VectorStore
 
 class BaseVectorDB(ABC):
     @abstractmethod
-    def create_collection(self, embeddings: Embeddings):
+    def create_collection(self, collection_name: str, embeddings: Embeddings):
         """
         Create a collection in the vector database
         """
@@ -17,6 +17,7 @@ class BaseVectorDB(ABC):
     @abstractmethod
     def upsert_documents(
         self,
+        collection_name: str,
         documents: List[Document],
         embeddings: Embeddings,
         incremental: bool = True,
@@ -34,30 +35,48 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_collection(self):
+    def delete_collection(self, collection_name: str):
         """
         Delete a collection from the vector database
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_vector_store(self, embeddings: Embeddings) -> VectorStore:
+    def get_vector_store(
+        self, collection_name: str, embeddings: Embeddings
+    ) -> VectorStore:
         """
         Get vector store
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def list_documents_in_collection(self, base_document_id: str = None) -> List[dict]:
+    def list_documents_in_collection(
+        self, collection_name: str, base_document_id: str = None
+    ) -> List[dict]:
         """
         List all documents in a collection
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_documents(self, document_ids: List[str]):
+    def delete_documents(self, collection_name: str, document_ids: List[str]):
         """
         Delete documents from the collection with given `document_ids`
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_vector_ids(self, collection_name: str):
+        """
+        Get vectors from the collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def delete_vectors(self, vector_ids: List[str]):
+        """
+        Delete vectors from the collection
         """
         raise NotImplementedError()
 

@@ -9,12 +9,29 @@ from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import get_base_document_id
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.parsers.parser import get_parser_for_extension
+from backend.modules.parsers.parser import (
+    get_parser_for_extension,
+    get_parsers_configurations,
+)
 from backend.modules.vector_db import get_vector_db_client
-from backend.types import DataIngestionMode, DataIngestionRunStatus
+from backend.types import DataIngestionMode, DataIngestionRunStatus, DataPoint
 
 
-async def ingest_data_to_collection(inputs: DataIngestionConfig):
+async def sync_data_to_collection(inputs: DataIngestionConfig):
+    data_source_loader = get_loader_for_data_source(inputs.data_source.type)
+    data_points_to_be_ingested: List[DataPoint] = data_source_loader.list_data_points(
+        data_source=inputs.data_source
+    )
+    existing_vector_ids = .get_all_vector_ids(
+    if inputs.data_ingestion_mode == DataIngestionMode.FULL:
+
+    logger.info(f"Data points to be ingested: {len(data_points_to_be_ingested)}")
+    await ingest_data_to_collection(inputs=inputs, data_points=data_points_to_be_ingested)
+
+
+async def ingest_data_to_collection(
+    inputs: DataIngestionConfig, data_points: List[DataPoint]
+):
     logger.info("+------------------------------------------------------------+")
     logger.info("| Ingesting data to collection                               |")
     logger.info(f"| Data Ingestion Mode - {inputs.data_ingestion_mode.value}       |")
@@ -31,47 +48,47 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
         vector_db_client = get_vector_db_client(
             config=inputs.vector_db_config, collection_name=inputs.collection_name
         )
+        data_source_loader = get_loader_for_data_source(inputs.data_source.type)
 
         failed_document_ids = []
+        data_points_count = len(data_points)
 
-        # Create a temp dir to store the data
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            # Load the data from the source to the dest dir
-            loaded_documents = get_loader_for_data_source(
-                inputs.data_source.type
-            ).load_data(
-                data_source=inputs.data_source,
-                dest_dir=tmpdirname,
-                allowed_extensions=inputs.parser_config.parser_map.keys(),
-            )
+        # Batch processing the documents
+        for i in range(0, data_points_count, inputs.batch_size):
+            data_points_to_be_processed = data_points[i : i + inputs.batch_size]
+            documents_to_be_upserted: List[Document] = []
+            try:
+                # Create a temp dir to store the data
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    # Load the data from the source to the dest dir
+                    documents_to_be_processed = data_source_loader.load_data_points(
+                        data_source=inputs.data_source,
+                        data_points=data_points_to_be_processed,
+                        dest_dir=tmpdirname,
+                    )
 
-            METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=DataIngestionRunStatus.CHUNKING_STARTED,
-            )
+                    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+                        data_ingestion_run_name=inputs.data_ingestion_run_name,
+                        status=DataIngestionRunStatus.CHUNKING_STARTED,
+                    )
 
-            # Count number of documents/files/urls loaded
-            docs_to_index_count = len(loaded_documents)
-            logger.info(f"Documents to index: {docs_to_index_count}")
+                    # Count number of documents/files/urls loaded
+                    docs_to_index_count = len(documents_to_be_processed)
+                    logger.info(f"Documents to index: {docs_to_index_count}")
 
-            if docs_to_index_count == 0:
-                logger.warning("No documents to found")
-                METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-                    data_ingestion_run_name=inputs.data_ingestion_run_name,
-                    status=DataIngestionRunStatus.COMPLETED,
-                )
-                return
+                    if docs_to_index_count == 0:
+                        logger.warning("No documents to found")
+                        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+                            data_ingestion_run_name=inputs.data_ingestion_run_name,
+                            status=DataIngestionRunStatus.COMPLETED,
+                        )
+                        return
 
-            METADATA_STORE_CLIENT.log_metrics_for_data_ingestion_run(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                metric_dict={"num_files": docs_to_index_count},
-            )
+                    METADATA_STORE_CLIENT.log_metrics_for_data_ingestion_run(
+                        data_ingestion_run_name=inputs.data_ingestion_run_name,
+                        metric_dict={"num_files": docs_to_index_count},
+                    )
 
-            # Batch processing the documents
-            for i in range(0, docs_to_index_count, inputs.batch_size):
-                documents_to_be_processed = loaded_documents[i : i + inputs.batch_size]
-                documents_to_be_uppserted: List[Document] = []
-                try:
                     for index, doc in enumerate(documents_to_be_processed):
                         logger.info(
                             f"[{i + index + 1}/{len(docs_to_index_count)}] Processing document"
@@ -86,7 +103,7 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                         chunks = await parser.get_chunks(
                             document=doc,
                         )
-                        documents_to_be_uppserted.extend(chunks)
+                        documents_to_be_upserted.extend(chunks)
                         logger.info("%s -> %s chunks", doc.filepath, len(chunks))
                         METADATA_STORE_CLIENT.log_metrics_for_data_ingestion_run(
                             data_ingestion_run_name=inputs.data_ingestion_run_name,
@@ -94,46 +111,28 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                             step=index,
                         )
 
-                    if len(documents_to_be_uppserted) == 0:
+                    if len(documents_to_be_upserted) == 0:
                         logger.warning(f"No chunks to index in batch {i}")
                         continue
 
                     logger.info(
-                        f"Total chunks to index in batch {i}: {len(documents_to_be_uppserted)}"
+                        f"Total chunks to index in batch {i}: {len(documents_to_be_upserted)}"
                     )
                     # Upserted all the documents_to_be_ingested
                     vector_db_client.upsert_documents(
-                        documents=documents_to_be_uppserted,
+                        documents=documents_to_be_upserted,
                         embeddings=embeddings,
                         incremental=inputs.data_ingestion_mode
                         == DataIngestionMode.INCREMENTAL,
                     )
-                except Exception as e:
-                    logger.exception(e)
-                    if inputs.raise_error_on_failure:
-                        raise e
-                    failed_document_ids.extend(
-                        [doc.metadata._document_id for doc in documents_to_be_processed]
-                    )
+            except Exception as e:
+                logger.exception(e)
+                if inputs.raise_error_on_failure:
+                    raise e
+                failed_document_ids.extend(
+                    [doc.metadata._document_id for doc in documents_to_be_processed]
+                )
 
-        if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-            # Delete the documents that are present in vector db but not in source loaded documents
-            base_document_id = get_base_document_id(inputs.data_source)
-            existing_document_ids = vector_db_client.list_documents_in_collection(
-                base_document_id=base_document_id
-            )
-            updated_document_ids = set(
-                [doc.metadata._document_id for doc in loaded_documents]
-            )
-            document_ids_to_be_deleted = []
-            for id in existing_document_ids:
-                if id not in updated_document_ids:
-                    document_ids_to_be_deleted.append(id)
-            logger.info(
-                f"Deleting {len(document_ids_to_be_deleted)} documents from the collection as they are deleted from source"
-            )
-            logger.info(document_ids_to_be_deleted)
-            vector_db_client.delete_documents(document_ids=document_ids_to_be_deleted)
 
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
