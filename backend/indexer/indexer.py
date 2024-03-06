@@ -73,6 +73,9 @@ async def ingest_data_to_collection(inputs: DataIngestionConfig):
                 documents_to_be_uppserted: List[Document] = []
                 try:
                     for index, doc in enumerate(documents_to_be_processed):
+                        logger.info(
+                            f"[{i + index + 1}/{len(docs_to_index_count)}] Processing document"
+                        )
                         # Get parser for required file extension
                         parser = get_parser_for_extension(
                             file_extension=doc.file_extension,
