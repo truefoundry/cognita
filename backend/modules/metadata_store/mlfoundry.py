@@ -41,10 +41,16 @@ class MLFoundry(BaseMetadataStore):
         self.ml_repo_name = config.get("ml_repo_name", None)
         if not self.ml_repo_name:
             raise Exception("config.ml_repo_name is not set.")
+        logger.info(
+            f"[Metadata Store] Initializing MLFoundry Metadata Store: {self.ml_repo_name}"
+        )
         logging.getLogger("mlfoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = mlfoundry.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
+        logger.info(
+            f"[Metadata Store] Initialized MLFoundry Metadata Store: {self.ml_repo_name}"
+        )
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
