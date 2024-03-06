@@ -10,7 +10,8 @@ from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig
 
-
+MAX_SCROLL_LIMIT = int(1e9)
+BATCH_SIZE = 1000
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig, collection_name: str = None):
         self.url = config.url
@@ -74,26 +75,37 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(
             f"[Vector Store] Incremental Ingestion: Fetching documents for {len(document_ids)} document ids for collection {self.collection_name}"
         )
-        records, _ = self.qdrant_client.scroll(
-            collection_name=self.collection_name,
-            scroll_filter=models.Filter(
-                should=[
-                    models.FieldCondition(
-                        key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                        match=models.MatchAny(
-                            any=document_ids,
-                        ),
-                    ),
-                ]
-            ),
-            limit=self.qdrant_client.count(
+        stop = False
+        offset = None
+        record_ids_to_be_upserted = []
+        while stop is not True:
+            records, next_offset = self.qdrant_client.scroll(
                 collection_name=self.collection_name,
-            ).count
-            or 1000,
-            with_payload=False,
-            with_vectors=False,
-        )
-        record_ids_to_be_upserted = [record.id for record in records]
+                scroll_filter=models.Filter(
+                    should=[
+                        models.FieldCondition(
+                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                            match=models.MatchAny(
+                                any=document_ids,
+                            ),
+                        ),
+                    ]
+                ),
+                limit=BATCH_SIZE,
+                offset=offset,
+                with_payload=False,
+                with_vectors=False,
+            )
+            for record in records:
+                record_ids_to_be_upserted.append(record.id)
+                if len(record_ids_to_be_upserted) > MAX_SCROLL_LIMIT:
+                    stop = True
+                    break
+            if next_offset is None:
+                stop = True
+            else:
+                offset = next_offset
+
         logger.debug(
             f"[Vector Store] Incremental Ingestion: collection={self.collection_name} Addition={len(document_ids)}, Updates={len(record_ids_to_be_upserted)}"
         )
@@ -141,6 +153,16 @@ class QdrantVectorDB(BaseVectorDB):
                     points=record_ids_to_be_upserted,
                 ),
             )
+            for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
+                record_ids_to_be_processed = record_ids_to_be_upserted[
+                    i : i + BATCH_SIZE
+                ]
+                self.qdrant_client.delete(
+                    collection_name=self.collection_name,
+                    points_selector=models.PointIdsList(
+                        points=record_ids_to_be_processed,
+                    ),
+                )
             logger.debug(
                 f"[Vector Store] Deleted {len(documents)} outdated documents from collection {self.collection_name}"
             )
@@ -173,37 +195,45 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(
             f"[Vector Store] Listing all documents with base document id {base_document_id} for collection {self.collection_name}"
         )
-        records, _ = self.qdrant_client.scroll(
-            collection_name=self.collection_name,
-            scroll_filter=models.Filter(
-                should=(
-                    [
-                        models.FieldCondition(
-                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                            match=models.MatchText(
-                                text=base_document_id,
-                            ),
-                        ),
-                    ]
-                    if base_document_id
-                    else None
-                )
-            ),
-            limit=self.qdrant_client.count(
-                collection_name=self.collection_name,
-            ).count
-            or 1000,
-            with_payload=[f"metadata.{DOCUMENT_ID_METADATA_KEY}"],
-            with_vectors=False,
-        )
+        stop = False
+        offset = None
         document_ids_set = set()
-        for record in records:
-            if record.payload.get("metadata") and record.payload.get("metadata").get(
-                DOCUMENT_ID_METADATA_KEY
-            ):
-                document_ids_set.add(
-                    record.payload.get("metadata").get(DOCUMENT_ID_METADATA_KEY)
-                )
+        while stop is not True:
+            records, next_offset = self.qdrant_client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=models.Filter(
+                    should=(
+                        [
+                            models.FieldCondition(
+                                key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                                match=models.MatchText(
+                                    text=base_document_id,
+                                ),
+                            ),
+                        ]
+                        if base_document_id
+                        else None
+                    )
+                ),
+                limit=BATCH_SIZE,
+                with_payload=[f"metadata.{DOCUMENT_ID_METADATA_KEY}"],
+                with_vectors=False,
+                offset=offset,
+            )
+            for record in records:
+                if record.payload.get("metadata") and record.payload.get(
+                    "metadata"
+                ).get(DOCUMENT_ID_METADATA_KEY):
+                    document_ids_set.add(
+                        record.payload.get("metadata").get(DOCUMENT_ID_METADATA_KEY)
+                    )
+                if len(document_ids_set) > MAX_SCROLL_LIMIT:
+                    stop = True
+                    break
+            if next_offset is None:
+                stop = True
+            else:
+                offset = next_offset
         logger.debug(
             f"[Vector Store] Found {len(document_ids_set)} documents with base document id {base_document_id} for collection {self.collection_name}"
         )
@@ -222,19 +252,22 @@ class QdrantVectorDB(BaseVectorDB):
             logger.debug(exp)
             return
         # https://qdrant.tech/documentation/concepts/filtering/#full-text-match
-        self.qdrant_client.delete(
-            collection_name=self.collection_name,
-            points_selector=models.FilterSelector(
-                filter=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
-                            match=models.MatchAny(any=document_ids),
-                        ),
-                    ],
-                )
-            ),
-        )
+
+        for i in range(0, len(document_ids), BATCH_SIZE):
+            document_ids_to_be_processed = document_ids[i : i + BATCH_SIZE]
+            self.qdrant_client.delete(
+                collection_name=self.collection_name,
+                points_selector=models.FilterSelector(
+                    filter=models.Filter(
+                        must=[
+                            models.FieldCondition(
+                                key=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
+                                match=models.MatchAny(any=document_ids_to_be_processed),
+                            ),
+                        ],
+                    )
+                ),
+            )
         logger.debug(
             f"[Vector Store] Deleted {len(document_ids)} documents from collection {self.collection_name}"
         )
