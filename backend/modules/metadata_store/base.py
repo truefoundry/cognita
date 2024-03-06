@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from backend.types import (
-    AssociateDataSourceWithCollectionDto,
+    AssociateDataSourceWithCollection,
     Collection,
     CreateCollection,
     CreateDataIngestionRun,
@@ -24,7 +24,7 @@ class BaseMetadataStore(ABC):
 
     @abstractmethod
     def get_collection_by_name(
-        self, collection_name: str, no_cache: bool = False
+        self, collection_name: str, no_cache: bool = True
     ) -> Collection | None:
         """
         Get a collection from the metadata store by name
@@ -98,7 +98,8 @@ class BaseMetadataStore(ABC):
     @abstractmethod
     def associate_data_source_with_collection(
         self,
-        create_collection_data_source_association: AssociateDataSourceWithCollectionDto,
+        collection_name: str,
+        data_source_association: AssociateDataSourceWithCollection,
     ) -> Collection:
         """
         Associate a data source with a collection in the metadata store

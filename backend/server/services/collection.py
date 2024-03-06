@@ -10,8 +10,10 @@ from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db import get_vector_db_client
 from backend.settings import settings
 from backend.types import (
+    AssociateDataSourceWithCollection,
     AssociateDataSourceWithCollectionDto,
     CreateCollection,
+    CreateCollectionDto,
     CreateDataIngestionRun,
     DataIngestionRunStatus,
     IngestDataToCollectionDto,
@@ -29,15 +31,33 @@ class CollectionService:
             logger.exception(exp)
             raise HTTPException(status_code=500, detail=str(exp))
 
-    def create_collection(collection: CreateCollection):
+    def create_collection(collection: CreateCollectionDto):
         try:
-            collection = METADATA_STORE_CLIENT.create_collection(collection=collection)
+            created_collection = METADATA_STORE_CLIENT.create_collection(
+                collection=CreateCollection(
+                    name=collection.name,
+                    description=collection.description,
+                    embedder_config=collection.embedder_config,
+                )
+            )
             vector_db_client = get_vector_db_client(
                 config=settings.VECTOR_DB_CONFIG, collection_name=collection.name
             )
             vector_db_client.create_collection(get_embedder(collection.embedder_config))
+            if collection.associated_data_sources:
+                for data_source in collection.associated_data_sources:
+                    METADATA_STORE_CLIENT.associate_data_source_with_collection(
+                        collection_name=collection.name,
+                        data_source_association=AssociateDataSourceWithCollection(
+                            data_source_fqn=data_source.data_source_fqn,
+                            parser_config=data_source.parser_config,
+                        ),
+                    )
+                created_collection = METADATA_STORE_CLIENT.get_collection_by_name(
+                    collection_name=collection.name
+                )
             return JSONResponse(
-                content={"collection": collection.dict()}, status_code=201
+                content={"collection": created_collection.dict()}, status_code=201
             )
         except HTTPException as exp:
             raise exp
@@ -144,7 +164,11 @@ class CollectionService:
     ):
         try:
             collection = METADATA_STORE_CLIENT.associate_data_source_with_collection(
-                create_collection_data_source_association=request
+                collection_name=request.collection_name,
+                data_source_association=AssociateDataSourceWithCollection(
+                    data_source_fqn=request.data_source_fqn,
+                    parser_config=request.parser_config,
+                ),
             )
             return JSONResponse(content={"collection": collection.dict()})
         except HTTPException as exp:

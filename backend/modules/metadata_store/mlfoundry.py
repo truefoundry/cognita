@@ -12,7 +12,7 @@ from fastapi import HTTPException
 
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
 from backend.types import (
-    AssociateDataSourceWithCollectionDto,
+    AssociateDataSourceWithCollection,
     AssociatedDataSources,
     Collection,
     CreateCollection,
@@ -159,7 +159,7 @@ class MLFoundry(BaseMetadataStore):
         artifact.update()
 
     def get_collection_by_name(
-        self, collection_name: str, no_cache: bool = False
+        self, collection_name: str, no_cache: bool = True
     ) -> Collection | None:
         """Get collection from given collection name."""
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
@@ -193,29 +193,30 @@ class MLFoundry(BaseMetadataStore):
 
     def associate_data_source_with_collection(
         self,
-        create_collection_data_source_association: AssociateDataSourceWithCollectionDto,
+        collection_name: str,
+        data_source_association: AssociateDataSourceWithCollection,
     ) -> Collection:
         collection_run = self._get_run_by_name(
-            run_name=create_collection_data_source_association.collection_name,
+            run_name=collection_name,
             no_cache=True,
         )
         if not collection_run:
             raise HTTPException(
                 404,
-                f"Collection {create_collection_data_source_association.collection_name} not found.",
+                f"Collection {collection_name} not found.",
             )
-        # Always do this to avoid run conditions
+        # Always do this to avoid race conditions
         collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
         associated_data_source = AssociatedDataSources(
-            data_source_fqn=create_collection_data_source_association.data_source_fqn,
-            parser_config=create_collection_data_source_association.parser_config,
+            data_source_fqn=data_source_association.data_source_fqn,
+            parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[
-            create_collection_data_source_association.data_source_fqn
-        ] = associated_data_source
+        collection.associated_data_sources[data_source_association.data_source_fqn] = (
+            associated_data_source
+        )
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
-        return collection
+        return self._polulate_collection(collection)
 
     def unassociate_data_source_with_collection(
         self,

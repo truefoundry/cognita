@@ -255,7 +255,20 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
 
-class AssociateDataSourceWithCollectionDto(BaseModel):
+class AssociateDataSourceWithCollection(BaseModel):
+    """
+    Configuration to associate data source to collection
+    """
+
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
+    parser_config: ParserConfig = Field(
+        title="Parser configuration for the data transformation", default_factory=dict
+    )
+
+
+class AssociateDataSourceWithCollectionDto(AssociateDataSourceWithCollection):
     """
     Configuration to associate data source to collection
     """
@@ -305,6 +318,12 @@ class CreateCollection(BaseCollection):
 class Collection(BaseCollection):
     associated_data_sources: Dict[str, AssociatedDataSources] = Field(
         title="Data sources associated with the collection", default_factory=dict
+    )
+
+
+class CreateCollectionDto(CreateCollection):
+    associated_data_sources: Optional[List[AssociateDataSourceWithCollection]] = Field(
+        title="Data sources associated with the collection"
     )
 
 
