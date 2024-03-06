@@ -30,6 +30,7 @@ class QdrantVectorDB(BaseVectorDB):
     def create_collection(self, embeddings: Embeddings):
         # No provision to create a empty collection
         # We do a workaround by creating a dummy document and deleting it
+        logger.debug(f"[Vector Store] Creating new collection {self.collection_name}")
         Qdrant.from_documents(
             documents=[
                 Document(
@@ -63,12 +64,16 @@ class QdrantVectorDB(BaseVectorDB):
             field_name=f"metadata.{DOCUMENT_ID_METADATA_KEY}",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
+        logger.debug(f"[Vector Store] Created new collection {self.collection_name}")
         return
 
     def _get_records_to_be_upserted(self, document_ids: List[str], incremental: bool):
         if not incremental:
             return []
         # For incremental deletion, we delete the documents with the same document_id
+        logger.debug(
+            f"[Vector Store] Incremental Ingestion: Fetching documents for {len(document_ids)} document ids for collection {self.collection_name}"
+        )
         records, _ = self.qdrant_client.scroll(
             collection_name=self.collection_name,
             scroll_filter=models.Filter(
@@ -89,8 +94,8 @@ class QdrantVectorDB(BaseVectorDB):
             with_vectors=False,
         )
         record_ids_to_be_upserted = [record.id for record in records]
-        logger.info(
-            f"Vectors Ingestion: addition: {len(document_ids)}, update: {len(record_ids_to_be_upserted)}"
+        logger.debug(
+            f"[Vector Store] Incremental Ingestion: collection={self.collection_name} Addition={len(document_ids)}, Updates={len(record_ids_to_be_upserted)}"
         )
         return record_ids_to_be_upserted
 
@@ -104,6 +109,9 @@ class QdrantVectorDB(BaseVectorDB):
             logger.warning("No documents to index")
             return
         # get record IDs to be upserted
+        logger.debug(
+            f"[Vector Store] Upserting {len(documents)} documents to collection {self.collection_name}"
+        )
         record_ids_to_be_upserted: List[str] = self._get_records_to_be_upserted(
             document_ids=[
                 document.metadata.get(DOCUMENT_ID_METADATA_KEY)
@@ -118,11 +126,14 @@ class QdrantVectorDB(BaseVectorDB):
             collection_name=self.collection_name,
             embeddings=embeddings,
         ).add_documents(documents=documents)
+        logger.debug(
+            f"[Vector Store] Added {len(documents)} documents to collection {self.collection_name}"
+        )
 
         # Delete Documents
         if len(record_ids_to_be_upserted):
-            logger.info(
-                f"Deleting {len(record_ids_to_be_upserted)} duplicate vectors from the collection"
+            logger.debug(
+                f"[Vector Store] Deleting {len(documents)} outdated documents from collection {self.collection_name}"
             )
             self.qdrant_client.delete(
                 collection_name=self.collection_name,
@@ -130,17 +141,25 @@ class QdrantVectorDB(BaseVectorDB):
                     points=record_ids_to_be_upserted,
                 ),
             )
+            logger.debug(
+                f"[Vector Store] Deleted {len(documents)} outdated documents from collection {self.collection_name}"
+            )
 
     def get_collections(self) -> List[str]:
+        logger.debug(f"[Vector Store] Fetching collections")
         collections = self.qdrant_client.get_collections().collections
+        logger.debug(f"[Vector Store] Fetched {len(collections)} collections")
         return [collection.name for collection in collections]
 
     def delete_collection(self):
-        return self.qdrant_client.delete_collection(
-            collection_name=self.collection_name
-        )
+        logger.debug(f"[Vector Store] Deleting {self.collection_name} collection")
+        self.qdrant_client.delete_collection(collection_name=self.collection_name)
+        logger.debug(f"[Vector Store] Deleted {self.collection_name} collection")
 
     def get_vector_store(self, embeddings: Embeddings):
+        logger.debug(
+            f"[Vector Store] Getting vector store for collection {self.collection_name}"
+        )
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
@@ -151,6 +170,9 @@ class QdrantVectorDB(BaseVectorDB):
         """
         List all documents in a collection
         """
+        logger.debug(
+            f"[Vector Store] Listing all documents with base document id {base_document_id} for collection {self.collection_name}"
+        )
         records, _ = self.qdrant_client.scroll(
             collection_name=self.collection_name,
             scroll_filter=models.Filter(
@@ -182,12 +204,18 @@ class QdrantVectorDB(BaseVectorDB):
                 document_ids_set.add(
                     record.payload.get("metadata").get(DOCUMENT_ID_METADATA_KEY)
                 )
+        logger.debug(
+            f"[Vector Store] Found {len(document_ids_set)} documents with base document id {base_document_id} for collection {self.collection_name}"
+        )
         return list(document_ids_set)
 
     def delete_documents(self, document_ids: List[str]):
         """
         Delete documents from the collection
         """
+        logger.debug(
+            f"[Vector Store] Deleting {len(document_ids)} documents from collection {self.collection_name}"
+        )
         try:
             self.qdrant_client.get_collection(collection_name=self.collection_name)
         except Exception as exp:
@@ -207,6 +235,10 @@ class QdrantVectorDB(BaseVectorDB):
                 )
             ),
         )
+        logger.debug(
+            f"[Vector Store] Deleted {len(document_ids)} documents from collection {self.collection_name}"
+        )
 
     def get_vector_client(self):
+        logger.debug(f"[Vector Store] Getting Qdrant client")
         return self.qdrant_client

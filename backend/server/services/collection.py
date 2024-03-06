@@ -17,12 +17,14 @@ from backend.types import (
     CreateDataIngestionRun,
     DataIngestionRunStatus,
     IngestDataToCollectionDto,
+    ListDataIngestionRunsDto,
 )
 
 
 class CollectionService:
     def list_collections():
         try:
+            logger.debug("Listing all the collections...")
             collections = METADATA_STORE_CLIENT.get_collections()
             return JSONResponse(
                 content={"collections": [obj.dict() for obj in collections]}
@@ -33,6 +35,7 @@ class CollectionService:
 
     def create_collection(collection: CreateCollectionDto):
         try:
+            logger.debug(f"Creating collection {collection.name}...")
             created_collection = METADATA_STORE_CLIENT.create_collection(
                 collection=CreateCollection(
                     name=collection.name,
@@ -222,4 +225,12 @@ class CollectionService:
                 "status": data_ingestion_run.status.value,
                 "message": f"Data ingestion job run {data_ingestion_run.name} in {data_ingestion_run.status.value}. Check logs for more details.",
             }
+        )
+
+    def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
+        data_ingestion_runs = METADATA_STORE_CLIENT.get_data_ingestion_runs(
+            request.collection_name, request.data_source_fqn
+        )
+        return JSONResponse(
+            content={"data_ingestion_runs": [obj.dict() for obj in data_ingestion_runs]}
         )
