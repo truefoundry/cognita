@@ -6,7 +6,7 @@ import mlfoundry
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseLoader
 from backend.modules.metadata_store.base import generate_document_id
-from backend.types import BaseDataSource, DocumentMetadata, LoadedDocument
+from backend.types import DataSource, DocumentMetadata, LoadedDocument
 from backend.utils import unzip_file
 
 
@@ -16,13 +16,13 @@ class ArtifactLoader(BaseLoader):
     """
 
     def load_data(
-        self, data_source: BaseDataSource, dest_dir: str, allowed_extensions: List[str]
+        self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
     ) -> List[LoadedDocument]:
         """
         Loads data from an MLFoundry data directory specified by the given source URI.
 
         Args:
-            data_source (BaseDataSource): Artifact FQN (artifact:truefoundry/prathamesh-merck/test:1).
+            data_source (DataSource): Artifact FQN (artifact:truefoundry/prathamesh-merck/test:1).
             dest_dir (str): The destination directory where the data directory will be downloaded to.
             allowed_extensions (List[str]): A list of allowed file extensions.
 
