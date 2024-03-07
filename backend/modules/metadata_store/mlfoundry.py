@@ -327,7 +327,7 @@ class MLFoundry(BaseMetadataStore):
         for run in runs:
             data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
             data_sources.append(data_source)
-        logger.debug(f"[Metadata Store] Listed {len(len(data_sources))} data sources")
+        logger.debug(f"[Metadata Store] Listed {len(data_sources)} data sources")
         return data_sources
 
     def create_data_ingestion_run(
