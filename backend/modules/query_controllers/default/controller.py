@@ -3,7 +3,8 @@ from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.openai import ChatOpenAI
+# from langchain_community.chat_models.openai import ChatOpenAI
+from langchain.chat_models.openai import ChatOpenAI
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
@@ -82,7 +83,10 @@ class DefaultQueryController:
 
             # Get the answer
             logger.info(f"Request query: {request.query}")
-            outputs = qa({"query": request.query})
+
+            # Can't use ainvoke here as Qdrant uses grpc for the retrieval, 
+            # which terminates as the client grpc is set to false
+            outputs = qa.invoke({"query": request.query})
 
             return {
                 "answer": outputs["result"],
