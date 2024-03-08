@@ -434,12 +434,12 @@ class MLFoundry(BaseMetadataStore):
                 filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'",
             )
             logger.debug(
-                f"[Metadata Store] Found {len(data_ingestion_runs)} data ingestion runs for {collection_name} to delete"
+                f"[Metadata Store] Found {len(list(data_ingestion_runs))} data ingestion runs for {collection_name} to delete"
             )
             for collection_inderer_job_run in data_ingestion_runs:
                 collection_inderer_job_run.delete()
             logger.debug(
-                f"[Metadata Store] Deleted {len(data_ingestion_runs)} data ingestion runs for {collection_name}"
+                f"[Metadata Store] Deleted {len(list(data_ingestion_runs))} data ingestion runs for {collection_name}"
             )
         collection.delete()
         logger.debug(f"[Metadata Store] Deleted colelction {collection_name}")
