@@ -193,7 +193,6 @@ async def ingest_data_points(
                     f"{DATA_POINT_HASH_METADATA_KEY}": loaded_data_point.data_point_hash,
                 }
             )
-            logger.info(f"Updated metadata for data point with: {chunk.metadata}")
             documents_to_be_upserted.append(chunk)
         logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
 
