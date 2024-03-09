@@ -9,11 +9,16 @@ from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.types import (AssociateDataSourceWithCollection,
-                           AssociateDataSourceWithCollectionDto,
-                           CreateCollection, CreateCollectionDto,
-                           CreateDataIngestionRun, DataIngestionRunStatus,
-                           IngestDataToCollectionDto, ListDataIngestionRunsDto)
+from backend.types import (
+    AssociateDataSourceWithCollection,
+    AssociateDataSourceWithCollectionDto,
+    CreateCollection,
+    CreateCollectionDto,
+    CreateDataIngestionRun,
+    DataIngestionRunStatus,
+    IngestDataToCollectionDto,
+    ListDataIngestionRunsDto,
+)
 
 
 class CollectionService:

@@ -29,9 +29,11 @@ class MLRunTypes(str, enum.Enum):
     """
     Configuration defining types of ML Runs allowed
     """
+
     COLLECTION = "COLLECTION"
     DATA_INGESTION_RUN = "DATA_INGESTION_RUN"
     DATA_SOURCE = "DATA_SOURCE"
+
 
 class MLFoundry(BaseMetadataStore):
     ml_runs: dict[str, mlfoundry.MlFoundryRun] = {}
@@ -77,7 +79,7 @@ class MLFoundry(BaseMetadataStore):
 
     def create_collection(self, collection: CreateCollection) -> Collection:
         """
-        Create a collection from given CreateCollection object. 
+        Create a collection from given CreateCollection object.
         It primarly has collection name, collection description and embedder congfiguration
         """
         logger.debug(f"[Metadata Store] Creating collection {collection.name}")
@@ -246,9 +248,9 @@ class MLFoundry(BaseMetadataStore):
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[data_source_association.data_source_fqn] = (
-            associated_data_source
-        )
+        collection.associated_data_sources[
+            data_source_association.data_source_fqn
+        ] = associated_data_source
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
         logger.debug(

@@ -11,7 +11,7 @@ Features
 In accordance with RBI guidelines, cardholder can activate the card by following one or more below mentioned ways: 
 * Making a transaction using the [Credit Card](/personal/pay/cards/credit-cards "/personal/pay/cards/credit-cards"),
 * To use the card via OTP or IVR, setting PIN for the card, and enabling card controls such as online transactions, enabling international transactions etc.
-For more details on RBI prescribed card activation, [Click Here](https://www.hdfcbank.com/personal/pay/cards/credit-cards/credit-card-activation-guidelines)   
+For more details on RBI prescribed card activation, [Click Here](https://www.hdfcbank.com/personal/pay/cards/credit-cards/credit-card-activation-guidelines) 
 ​​​​​​​
 **Note:** 
 * Cashback will be redeemable only on Swiggy Application as Swiggy Money. For more details on Swiggy Money please [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Swiggy HDFC Bank Credit Card/tncs-swiggy.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Swiggy HDFC Bank Credit Card/tncs-swiggy.pdf")
@@ -19,7 +19,7 @@ For more details on RBI prescribed card activation, [Click Here](https://www.hdf
 * Cashback can be redeemed only post downloading the Swiggy App and linking the card with Swiggy app
 #### Card Linking
 Card Linking
-Customers who have applied for the card through HDFC Bank portal need to link the card on the Swiggy app in order to earn cashback on eligible transactions made with the card. Card linking is a mandatory step for Swiggy one membership unlocking and cash back posting in Swiggy Money. (Note: In order to link the card, customer should install the Swiggy app first)  
+Customers who have applied for the card through HDFC Bank portal need to link the card on the Swiggy app in order to earn cashback on eligible transactions made with the card. Card linking is a mandatory step for Swiggy one membership unlocking and cash back posting in Swiggy Money. (Note: In order to link the card, customer should install the Swiggy app first)
 Please follow the below steps to link your Swiggy HDFC Bank Credit with Swiggy app –  
 1. Go to Credit Card page in the Swiggy app by clicking on the Accounts section on the top right side, and
 2. then selecting Swiggy HDFC Bank Credit Card
@@ -67,7 +67,7 @@ Cashback is not applicable on transactions less than Rs. 100
 Swiggy Money will expire post 1 year of earning the cashback.  
 For more details on Redemption and Validity on Swiggy Money,  please refer to Terms and Conditions [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Swiggy HDFC Bank Credit Card/tncs-swiggy.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Swiggy HDFC Bank Credit Card/tncs-swiggy.pdf")
 [FAQs](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Swiggy HDFC Bank Credit Card/FAQs-Swiggy-HDFC-Bank-Credit-Card.pdf)
-    
+
 ## Eligibility
 **Swiggy HDFC Bank Credit Card**
 Eligibility:
@@ -76,8 +76,8 @@ Age: Min 21 years & Max 60 Years
 Net Monthly Income > ₹25,000
 **For Self Employed Indian national**
 Age: Min 21 years & Max 65 Years
-ITR > Rs 6 Lakhs per annum  
-    
+ITR > Rs 6 Lakhs per annum
+
 ## Fees and Charges
 Joining Fee / Renewal Membership Fee – ₹500 /- + Applicable Charges
 Spend ₹2,00,000 or more in a year, before your Credit Card renewal date and get your renewal fee waived off 

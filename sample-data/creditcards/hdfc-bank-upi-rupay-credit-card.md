@@ -21,7 +21,7 @@ Interest Free Credit Period
 ​​​​​Avail up to 50 days of interest free period on your HDFC Bank UPI RuPay Credit Card from the date of purchase (subject to the submission of the charge by the Merchant).
 #### Revolving Credit
 Revolving Credit
-Enjoy Revolving Credit on your HDFC Bank UPI RuPay Credit Card at nominal interest rate. Please refer to the Fees and Charges section for more details.  
+Enjoy Revolving Credit on your HDFC Bank UPI RuPay Credit Card at nominal interest rate. Please refer to the Fees and Charges section for more details.
 #### Renewal offer
 Renewal offer
 Get renewal membership fee waived off by spending ₹25,000 and above in an annual year
@@ -41,9 +41,9 @@ Reward Point/Cashback Redemption & Validity
 | 0.25 | 0.25 | 0.25 | 0.25 |
 To Know more about UPI purchases on Credit card, [click here](/personal/rupay-cc-on-upi "/personal/rupay-cc-on-upi")
 [FAQs](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/HDFC Bank UPI RuPay Credit Card/RuPay-UPI-Credit-Card-FAQs.pdf)
-    
 
-    
+
+
 ## Fees and Charges
 Joining/ Renewal Membership Fee - ₹99/- + Applicable Taxes (Festive Season Offer!!!)
 Spend ₹25,000 or more in an annual year, before your Credit Card renewal date and get your renewal fee waived off from 2nd year onwards

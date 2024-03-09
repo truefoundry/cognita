@@ -15,7 +15,7 @@ Reward Type
 Reward Point
 #### Club Marriott membership
 Club Marriott membership
-Complimentary Club Marriott membership for first year that offers up to 20% discounts for Dining and stay across Asia – Pacific region. View details [here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/Club_Marriott_Membership_T_C.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/Club_Marriott_Membership_T_C.pdf")  
+Complimentary Club Marriott membership for first year that offers up to 20% discounts for Dining and stay across Asia – Pacific region. View details [here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/Club_Marriott_Membership_T_C.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/Club_Marriott_Membership_T_C.pdf")
 #### Hotel & Dining Benefit
 Hotel & Dining Benefit
 * Book stay for 3-nights and pay for two at participating ITC hotels.
@@ -32,7 +32,7 @@ Additional Features
 * **Revolving Credit :** Enjoy Revolving Credit on your HDFC Bank Infinia Credit Card at nominal interest rate. Refer to the Fees and Charges section to know more [click here](/personal/pay/cards/credit-cards/infinia-credit-card/fees-and-charges "/personal/pay/cards/credit-cards/infinia-credit-card/fees-and-charges").
 #### Concierge
 Concierge
-Global Personal Concierge – 24 X 7  
+Global Personal Concierge – 24 X 7
 Customize your travel, entertainment, and business experiences with our Global Concierge Assistance
 **Here are some of the services provided by our concierge.**
 * Golf Booking
@@ -41,13 +41,13 @@ Customize your travel, entertainment, and business experiences with our Global C
 * International gift delivery
 * Event planning and referrals
 * Airport VIP service (meet-and-greet) and much more.
-* Toll Free No.: 1800 118 887 Landline No.: 022 42320226  
-Email ID: Infinia.support@smartbuyoffers.co​​​​​  
+* Toll Free No.: 1800 118 887 Landline No.: 022 42320226
+Email ID: Infinia.support@smartbuyoffers.co​​​​​
 [Click here](https://www.hdfcbank.com/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/3a9d119b-53ba-4768-bb88-57c3630cbed0? "https://www.hdfcbank.com/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/3a9d119b-53ba-4768-bb88-57c3630cbed0?") for Concierge T&C
-HDFC Bank Customer Service  
-**Customer care numbers:**  
-Toll Free: 1800 266 3310  
-Landline: 022-6171 7606 (For customers travelling overseas)  
+HDFC Bank Customer Service
+**Customer care numbers:**
+Toll Free: 1800 266 3310
+Landline: 022-6171 7606 (For customers travelling overseas)
 E-mail: infinia.services@hdfcbank.com
 #### Lounge Access
 Lounge Access
@@ -62,8 +62,8 @@ Get additional 15% off on all your bill payments via Swiggy Dineout (20k + rest
 In line with the acquisition of Dineout by Swiggy, Dineout Passport will be withdrawn from the market.  Hence, effective from 15thFeb'23, Dineout passport membership will be discontinued  
 #### Fuel Surcharge Waiver
 Fuel Surcharge Waiver
-1% fuel surcharge waiver at all fuel stations across India   
-on transactions between Rs.400 and Rs.1,00,000​​​​​​​  
+1% fuel surcharge waiver at all fuel stations across India 
+on transactions between Rs.400 and Rs.1,00,000​​​​​​​
 **Note -**No Reward Points are earned on fuel transactions
 [Details](https://www.hdfcbank.com/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/f849e5bd-6f27-4851-a835-7c0954ec60f0? "https://www.hdfcbank.com/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/f849e5bd-6f27-4851-a835-7c0954ec60f0?")
 #### Welcome Benefit
@@ -95,7 +95,7 @@ Reward Point/CashBack Redemption & Validity
 **A.Reward Points** **Accrual:**
 * Earn 5 Reward Points on every Rs.150 retail\* spends including Insurance, Utilities and Education​
 * Earn up to 10 times Reward Points\* on your travel and shopping spends on [Smartbuy](https://offers.smartbuy.hdfcbank.com/infinia "https://offers.smartbuy.hdfcbank.com/infinia")
-**B.Reward Points** **Redemption:**  
+**B.Reward Points** **Redemption:**
 You can redeem your Reward Points on [Smartbuy](https://offers.smartbuy.hdfcbank.com/infinia "https://offers.smartbuy.hdfcbank.com/infinia") or Netbanking.
 **Reward Points can be redeemed for:**
 * Flight and Hotel Bookings via Smartbuy at a value of 1 RP = Rs 1
@@ -105,10 +105,10 @@ You can redeem your Reward Points on [Smartbuy](https://offers.smartbuy.hdfcban
 * Cashback at a value of 1 RP = Rs 0.30
 \*Please [click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/RP-Program-TnC.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Infinia/RP-Program-TnC.pdf") to know more
 [FAQs](/personal/need-help/faqs#/infinia "FAQs")
-    
+
 ## Eligibility
 Membership for the **HDFC Bank Infinia Credit Card** is By Invite Only
-    
+
 ## Fees and Charges
 INFINIA Metal Edition
 * Joining/Renewal Membership Fee – Rs. 12,500 + Applicable Taxes. [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Manage Your Credit Cards PDFs/MITC 1.64.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Manage Your Credit Cards PDFs/MITC 1.64.pdf") to view details of HDFC Bank Infinia Metal Edition Fees and Charges

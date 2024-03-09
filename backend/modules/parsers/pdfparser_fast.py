@@ -14,6 +14,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
     """
 
     supported_file_extensions = [".pdf"]
+
     def __init__(self, max_chunk_size: int = 1000, *args, **kwargs):
         """
         Initializes the PdfParserUsingPyMuPDF object.

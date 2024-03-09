@@ -22,16 +22,16 @@ Additional Features
 Get up to 20 % savings off on all your restaurant bill payments via Swiggy Dineout (20k + restaurants) (Offer inclusive of Restaurant and Swiggy Discount). Offer valid only on payments done via Swiggy App.
 #### Fuel Surcharge Waiver
 Fuel Surcharge Waiver
-1% Fuel Surcharge waiver on fuel transactions (Minimum transaction of ₹400, Maximum transaction of ₹5,000 & Maximum waiver of ₹250 per statement cycle)  
+1% Fuel Surcharge waiver on fuel transactions (Minimum transaction of ₹400, Maximum transaction of ₹5,000 & Maximum waiver of ₹250 per statement cycle)
 #### Welcome/Renewal Benefit
 Welcome/Renewal Benefit
-500 CashPoints (applicable only on payment of membership fee)  
+500 CashPoints (applicable only on payment of membership fee)
 #### Renewal Offer
 Renewal Offer
-Get renewal membership fee waived off by spending ₹50,000 and above in an annual year  
+Get renewal membership fee waived off by spending ₹50,000 and above in an annual year
 #### Smart EMI
 Smart EMI
-HDFC Bank Freedom Credit Card comes with an option to convert your big spends into EMI after purchase. To know more [click here](/personal/borrow/loan-against-assets/smartemi "/personal/borrow/loan-against-assets/smartemi")  
+HDFC Bank Freedom Credit Card comes with an option to convert your big spends into EMI after purchase. To know more [click here](/personal/borrow/loan-against-assets/smartemi "/personal/borrow/loan-against-assets/smartemi")
 #### Contactless Payment
 Contactless Payment
 The HDFC Bank Freedom Credit Card is enabled for contactless payments, facilitating fast, convenient and secure payments at retail outlets. To see if your Card is contactless, look for the contactless network symbol on your Card.
@@ -48,7 +48,7 @@ Reward Points/Cashback Redemption & Validity
 **Rewards value table**
 |  |  |  |  |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 
+|
 |  |
 | --- |
 | **1 RP Equivalent to** |
@@ -60,18 +60,18 @@ Reward Points/Cashback Redemption & Validity
 |  |
 | [FAQs](/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/0c8931ba-b4d4-437f-9bb9-84b41d896657?#/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/CASH BACK/Freedom Card New/HDFC-Bank-Freedom-Credit-Card.pdf "HDFC-Bank-Freedom-Credit-Card.pdf") |
 |  |
-    
+
 ## Eligibility
 HDFC Bank Freedom Credit Card Eligibility:
 **Salaried**
-Indian nationality. Age: Min 21 yrs. & Max 60 Yrs.,   
+Indian nationality. Age: Min 21 yrs. & Max 60 Yrs., 
 Income: Gross Monthly Income> ₹12,000
 **Self Employed**
 Indian nationality. Age: Min 21 yrs. & Max 65 Yrs., Income: ITR > ₹6.0 Lakhs per annum
-    
+
 ## Fees and Charges
 Joining/Renewal Membership Fee – ₹500/- + Applicable Taxes
 Spend ₹50,000 or more in a year, before your Credit Card renewal date and get your renewal fee waived off 
 Please [click here](/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/2af3fe6b-fac1-4934-82c7-dfaab0c572f4?#/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Manage Your Credit Cards PDFs/MITC 1.64.pdf "MITC 1.64.pdf") for detailed fees and charges applicable on your HDFC Bank Freedom Credit Card
-**NOTE:** For card sourced starting 01-11- 2020, Below T&Cs is applicable    
+**NOTE:** For card sourced starting 01-11- 2020, Below T&Cs is applicable  
 The Bank reserves the right to cancel the Card in case the Card remains inactive and is not used for effecting any transaction for a continuous period of 6 (Six) months after prior written notice sent on the email address and/or phone number and/or communication address, registered in the records of the Bank.

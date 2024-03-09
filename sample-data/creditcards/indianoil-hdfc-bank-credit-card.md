@@ -15,12 +15,12 @@ Key Features
 Additional Features
 * Complimentary IndianOil XTRAREWARDSTM Program (IXRP) membership
 * **Revolving Credit :** Enjoy Revolving Credit on your IndianOil HDFC Bank Credit Card at nominal interest rate. Please refer to the Fees and Charges section.
-* **Zero Lost card liability :** In the unfortunate event of you losing your IndianOil HDFC Bank Credit Card, report it immediately to our 24-hour call centre. After reporting the loss, you have zero liability on any fraudulent transactions made on your Credit Card.  
+* **Zero Lost card liability :** In the unfortunate event of you losing your IndianOil HDFC Bank Credit Card, report it immediately to our 24-hour call centre. After reporting the loss, you have zero liability on any fraudulent transactions made on your Credit Card.
 ​​​​​​​
 * **Interest Free Credit Period :** Up to 50 days of interest free period on your IndianOil HDFC Bank Credit Card from the date of purchase (subject to the submission of the charge by the Merchant)
 #### Fuel Surcharge Waiver
 Fuel Surcharge Waiver
-1% fuel surcharge waiver at all fuel stations across India   
+1% fuel surcharge waiver at all fuel stations across India 
 ​​​​​​​(on minimum trasaction of ₹400. Max CashBack of ₹250 per statement cycle)
 #### Renewal Offer
 Renewal Offer
@@ -31,14 +31,14 @@ IndianOil HDFC Bank Credit Card comes with an option to convert your big spend
 #### Contactless Payment
 Contactless Payment
 * The IndianOil HDFC Bank Credit Card is enabled for contactless payments, facilitating fast, convenient and secure payments at retail outlets.
-* To see if your credit card is contactless, look for the contactless network symbol  on your card  
+* To see if your credit card is contactless, look for the contactless network symbol  on your card
 (Please note that in India, payment through contactless mode is allowed for a maximum of ₹5000 for a single transaction where you are not asked to input your Credit Card PIN. However, if the amount is higher than or equal to ₹5000, the Card holder has to enter the Credit Card PIN for security reasons)
 #### Reward Point/CashBack Redemption & Validity
 Reward Point/CashBack Redemption & Validity
 **Fuel Points Accrual :**
 * Fuel Point is an exclusive Rewards metric system created only for IndianOil HDFC Bank Credit Card holders.
 * Earn Fuel Points on retail spends with the IndianOil HDFC Bank Credit Card
-* Earn accelerated 5% Fuel Points on spends at IndianOil outlets, Groceries and Bill payments.  
+* Earn accelerated 5% Fuel Points on spends at IndianOil outlets, Groceries and Bill payments.
 (Accelerated 5% Fuel Points benefit will be given only for fuel transactions on IndianOil Retail Outlets. Fuel transactions on all other Fuel Outlets will get 1 Fuel Point for every Rs. 150/- spent)
 **Fuel Point Redemption :**
 * Redeem Fuel Points for Free Fuel using the complimentary IndianOil XTRAREWARDSTM Program (IXRP) membership. Redemption at participating IndianOil Petrol Outlet by converting Fuel Points into XRP (where 1 FP = 96 Paise). [Click here](https://v.hdfcbank.com/htdocs/common/HTML_IOCL/LP.html "https://v.hdfcbank.com/htdocs/common/HTML_IOCL/LP.html") to know more
@@ -57,7 +57,7 @@ To locate your nearest IndianOil Petrol Outlet, [click here](https://ind01.safel
 3. There will be no Reward Points accrual on Spends made on Rental and Government category payments
 4. Points + Pay - A maximum of 70% can be paid using Reward Points and the other 30% to be made by payment modes(Cash/Cards/UPI etc.)
 [FAQs](/personal/need-help/faqs#/indianoil-hdfc-bank-credit-card)
-    
+
 ## Eligibility
 IndianOil HDFC Bank Credit Card Eligibility:​​​​​​​
 **For Salaried Indian National:**
@@ -66,12 +66,12 @@ IndianOil HDFC Bank Credit Card Eligibility:​​​​​​​
 **For Self Employed Indian National:**
 * Age: Min 21 years & Max 65 Years
 * Annual Income: ITR > Rs 6 Lakhs per annum
-    
+
 ## Fees and Charges
 * Joining/Renewal Membership Fee – Rs. 500/- plus Applicable Taxes
 * [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Manage Your Credit Cards PDFs/MITC 1.64.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Manage Your Credit Cards PDFs/MITC 1.64.pdf") to view details of your IndianOil HDFC Bank Credit Card fees and charges
 For card sourced effective 01-11- 2020, Below T&Cs are applicable  
-1. The Bank reserves the right to cancel the Card in case the Card remains inactive and is not used for effecting any transaction for a continuous period of 6 (Six) months after prior written notice sent on the email address and/or phone number and/or communication address, registered in the records of the Bank.  
-1% Fee on Rental transactions - from the 2nd rental transaction done every calendar month  
-​​​​​​​  
+1. The Bank reserves the right to cancel the Card in case the Card remains inactive and is not used for effecting any transaction for a continuous period of 6 (Six) months after prior written notice sent on the email address and/or phone number and/or communication address, registered in the records of the Bank.
+1% Fee on Rental transactions - from the 2nd rental transaction done every calendar month
+​​​​​​​
 1% Mark-Up to be applicable on all International DCC transactions

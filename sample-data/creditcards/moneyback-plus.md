@@ -16,23 +16,23 @@ For detailed Terms and conditions [Click here](/content/api/contentstream-id/723
 #### Additional Features
 Additional Features
 **Zero lost Card liability :** In the unfortunate event of losing your HDFC Bank Moneyback+ Credit Card, report it immediately to our 24-hour call centre. On reporting the loss immediately, you have zero liability on any fraudulent transactions made on your Credit Card. 
-**Interest Free Credit Period :** Avail up to 50 days of interest free period on your HDFC Bank Moneyback+ Credit Card from the date of purchase (subject to the submission of the charge by the Merchant).  
-​​​​​​​  
+**Interest Free Credit Period :** Avail up to 50 days of interest free period on your HDFC Bank Moneyback+ Credit Card from the date of purchase (subject to the submission of the charge by the Merchant).
+​​​​​​​
 **Revolving Credit :** Enjoy Revolving Credit on your HDFC Bank Moneyback+ Credit Card at nominal interest rate. Please refer to the Fees and Charges section for more details.
-**Exclusive Dining Privileges :**Enjoy amazing dining benefits with Good Food Trail program.  
-Get up to 20 % savings off on all your restaurant bill payments via Swiggy Dineout (20k + restaurants) (Offer inclusive of Restaurant and Swiggy Discount). Offer valid only on payments done via Swiggy App.  
+**Exclusive Dining Privileges :**Enjoy amazing dining benefits with Good Food Trail program.
+Get up to 20 % savings off on all your restaurant bill payments via Swiggy Dineout (20k + restaurants) (Offer inclusive of Restaurant and Swiggy Discount). Offer valid only on payments done via Swiggy App.
 #### Fuel Surcharge Waiver
 Fuel Surcharge Waiver
 1% Fuel Surcharge waiver on fuel transactions (Minimum transaction of ₹400, Maximum transaction of ₹5,000 & Maximum waiver of ₹250 per statement cycle)
 #### Welcome/Renewal Benefit
 Welcome/Renewal Benefit
-500 Cash Points (applicable only  on payment of membership fee)  
+500 Cash Points (applicable only  on payment of membership fee)
 #### Quarterly Spend based benefit
 Quarterly Spend based benefit
 Every Calendar quarter, get a gift voucher worth ₹500 on spends of ₹50,000 & above. Earn up to ₹2,000 worth gift vouchers in a year.
 #### Renewal Offer
 Renewal Offer
-Get renewal membership fee waived off by spending ₹50,000 and above in an annual year  
+Get renewal membership fee waived off by spending ₹50,000 and above in an annual year
 #### Smart EMI
 Smart EMI
 HDFC Bank MoneyBack+ Credit Card comes with an option to convert your big spends into EMI after purchase. To know more [click here](/personal/borrow/loan-against-assets/smartemi "/personal/borrow/loan-against-assets/smartemi")
@@ -51,7 +51,7 @@ Reward Point/Cashback Redemption & Validity
 * CashPoints earned on your HDFC Bank MoneyBack+ Credit Card are valid only for 2 years from the date of transaction. e.g. if you receive Reward Points in August 2021, same will expire in August 2023
 |  |  |  |  |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 
+|
 |  |
 | --- |
 | **1 RP Equivalent to** |
@@ -62,7 +62,7 @@ Reward Point/Cashback Redemption & Validity
  |
 | [FAQs](/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/1256ebd5-a8e6-49d3-b4ba-54a93a0acb51?#/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Commercial/HDFC Bank MoneyBack/HDFC-Bank-MoneyBack-Credit-Card-FAQs.pdf "HDFC-Bank-MoneyBack-Credit-Card-FAQs.pdf") |
 |  |
-    
+
 ## Eligibility
 **HDFC Bank MoneyBack+ Credit Card Eligibility**:
 **Salaried**
@@ -70,7 +70,7 @@ Reward Point/Cashback Redemption & Validity
 * Income: Gross Monthly Income> ₹20,000
 **Self Employed**
 * Indian nationality. Age: Min 21 yrs. & Max 65 Yrs., Income: ITR > ₹6.0 Lakhs per annum
-    
+
 ## Fees and Charges
 * Joining/Renewal Membership Fee – ₹500/- + Applicable Taxes
 * Spend ₹50,000 or more in a year, before your Credit Card renewal date and get your renewal fee waived off

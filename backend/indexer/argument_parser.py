@@ -11,6 +11,7 @@ class ParsedIndexingArguments(BaseModel):
     Configuration for storing indexing arguments.
     Requires a collection name (already exisiting) and data source fqn.
     """
+
     collection_name: str
     data_source_fqn: str
     data_ingestion_mode: DataIngestionMode

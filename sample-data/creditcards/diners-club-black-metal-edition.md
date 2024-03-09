@@ -4,7 +4,7 @@
 ## Features
 #### Reward Type
 Reward Type
-Reward Points  
+Reward Points
 #### Key Features
 Key Features
 * Metal Card
@@ -42,7 +42,7 @@ Golfing Benefits
 6 Complimentary Golf games every quarter across the finest courses in the world
 To book a golf game, reach out to concierge via:
 Call: 1800 118 887 | 022 42320226 , Email: dinersblack.support@smartbuyoffers.co
-[Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Privilege/HDFC_Diners_Website_T_C_v2.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Privilege/HDFC_Diners_Website_T_C_v2.pdf") for T&C  
+[Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Privilege/HDFC_Diners_Website_T_C_v2.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Privilege/HDFC_Diners_Website_T_C_v2.pdf") for T&C
 #### Dining Benefits
 Dining Benefits
 Earn 2X on weekend dining at standalone resturants capped at 1000 reward points per day. [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Diners-club-black-metal-T-and-C.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Diners-club-black-metal-T-and-C.pdf") for T&C
@@ -61,7 +61,7 @@ Smart EMI
 HDFC Bank Diners Club Black Metal Credit Card comes with an option to convert your big spends into EMI after purchase. To know more click here
 #### Contactless Payment
 Contactless Payment
-The HDFC Bank Diners Club Black Metal Credit Card is enabled for contactless payments on HDFC Bank POS machines, facilitating fast, convenient and secure payments at retail outlets. Tap the reverse side of the Black Metal card on the HDFC Bank POS machine to enjoy contactless payments.  
+The HDFC Bank Diners Club Black Metal Credit Card is enabled for contactless payments on HDFC Bank POS machines, facilitating fast, convenient and secure payments at retail outlets. Tap the reverse side of the Black Metal card on the HDFC Bank POS machine to enjoy contactless payments.
 (Please note that in India, payment through contactless mode is allowed for a maximum of ₹5000 for a single transaction without the need to input your Credit Card PIN. However, if the amount is higher than or equal to ₹5000, the Card holder has to enter the Credit Card PIN for security reasons)
 #### Insurance/Comprehensive protection & Nominee details for Insurance
 Insurance/Comprehensive protection & Nominee details for Insurance
@@ -75,7 +75,7 @@ Credit Liability Cover of up to ₹9 Lakh
 Reward Point/CashBack Redemption & Validity
 * **Reward Points Accrual:**
 * Earn 5 Reward Points for every ₹ 150/- retail spend
-* Upto 10X Reward Points on spends via SmartBuy  
+* Upto 10X Reward Points on spends via SmartBuy
 ​​​​​​​
 * **Rewards Points Redemption:**• Redeem Rewards points for booking flight tickets / hotels across airlines and choice of hotels. To book: [https://offers.smartbuy.hdfcbank.com/diners](https://offers.smartbuy.hdfcbank.com/diners "https://offers.smartbuy.hdfcbank.com/diners") ( 1 Reward Point = 1 Rupee).For flight and hotel bookings, HDFC Bank Diners Club Black Metal card members can redeem upto maximum of 70% of booking value through Reward Points. Rest will have to be paid via Credit Card.
 • Airmiles conversion through Smartbuy / Netbanking at a value of 1RP = 1 airmile. Please complete Frequent Flyer registration before attempting Airmiles redemption.    
@@ -87,12 +87,12 @@ Reward Point/CashBack Redemption & Validity
 | Airmiles | 1.00 AirMile |
 | Product Catalogue (vouchers/products) | Upto ₹. 0.50 |
 | Cash back | ₹. 0.30 |
-For detailed T&C on Reward Points Program [click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Rewards-TnC-Diners-Black-Metal.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Rewards-TnC-Diners-Black-Metal.pdf")  
+For detailed T&C on Reward Points Program [click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Rewards-TnC-Diners-Black-Metal.pdf "/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Rewards-TnC-Diners-Black-Metal.pdf")
 #### Treat the foodie in you
 Treat the foodie in you
 Enjoy amazing dining benefits with Good Food Trail program
 Get up to 25 % savings off on all your restaurant bill payments via Swiggy Dineout (20k + restaurants), ( Offer inclusive of Restaurant and Swiggy Discount. Offer valid only on payments done Swiggy App)
-    
+
 ## Eligibility
 HDFC Bank Diners Club Black Metal Credit Card Eligibility:
 **For Salaried Indian national**
@@ -101,7 +101,7 @@ HDFC Bank Diners Club Black Metal Credit Card Eligibility:
 **For Self Employed  Indian national**
 * Age: Min 21 yrs & Max 65 yrs
 * Income: ITR > Rs 21 Lakhs per annum for self-employed customers
-    
+
 ## Fees and Charges
 * Joining/Renewal Membership Fee – Rs. 10,000/- plus Applicable Taxes
 * Spend ₹ 8 Lakhs in 12 Months and get Renewal Fee waived for next renewal year

@@ -17,7 +17,6 @@ def decapitalize(s):
 
 
 class WeaviateVectorDB(BaseVectorDB):
-
     def __init__(self, config: VectorDBConfig):
         self.url = config.url
         self.api_key = config.api_key

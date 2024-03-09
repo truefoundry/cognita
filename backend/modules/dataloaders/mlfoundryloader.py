@@ -13,6 +13,7 @@ class MlFoundryLoader(BaseDataLoader):
     """
     This loader handles mlfoundry data directory fqn.
     """
+
     def load_data_point(
         self,
         data_source: DataSource,
