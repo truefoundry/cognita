@@ -78,6 +78,11 @@ class QdrantVectorDB(BaseVectorDB):
             field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
+        self.qdrant_client.create_payload_index(
+            collection_name=collection_name,
+            field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
         logger.debug(f"[Vector Store] Created new collection {collection_name}")
         return
 

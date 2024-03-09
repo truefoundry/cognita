@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from backend.constants import FQN_SEPARATOR
+from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
 from backend.types import (
     AssociateDataSourceWithCollection,
     Collection,
@@ -153,6 +153,16 @@ class BaseMetadataStore(ABC):
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:
     return f"{FQN_SEPARATOR}".join([data_source.type, data_source.uri])
+
+
+def get_data_source_fqn_from_document_metadata(
+    document_metadata: Dict[str, str]
+) -> str | None:
+    if document_metadata and document_metadata.get(DATA_POINT_FQN_METADATA_KEY):
+        parts = document_metadata.get(DATA_POINT_FQN_METADATA_KEY).split(FQN_SEPARATOR)
+        if len(parts) == 3:
+            return f"{FQN_SEPARATOR}".join(parts[:2])
+
 
 # A global registry to store all available metadata store.
 METADATA_STORE_REGISTRY = {}
