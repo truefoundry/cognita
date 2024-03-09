@@ -9,16 +9,11 @@ from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.types import (
-    AssociateDataSourceWithCollection,
-    AssociateDataSourceWithCollectionDto,
-    CreateCollection,
-    CreateCollectionDto,
-    CreateDataIngestionRun,
-    DataIngestionRunStatus,
-    IngestDataToCollectionDto,
-    ListDataIngestionRunsDto,
-)
+from backend.types import (AssociateDataSourceWithCollection,
+                           AssociateDataSourceWithCollectionDto,
+                           CreateCollection, CreateCollectionDto,
+                           CreateDataIngestionRun, DataIngestionRunStatus,
+                           IngestDataToCollectionDto, ListDataIngestionRunsDto)
 
 
 class CollectionService:
@@ -50,14 +45,14 @@ class CollectionService:
             if collection.associated_data_sources:
                 for data_source in collection.associated_data_sources:
                     METADATA_STORE_CLIENT.associate_data_source_with_collection(
-                        collection_name=collection.name,
+                        collection_name=created_collection.name,
                         data_source_association=AssociateDataSourceWithCollection(
                             data_source_fqn=data_source.data_source_fqn,
                             parser_config=data_source.parser_config,
                         ),
                     )
                 created_collection = METADATA_STORE_CLIENT.get_collection_by_name(
-                    collection_name=collection.name
+                    collection_name=created_collection.name
                 )
             return JSONResponse(
                 content={"collection": created_collection.dict()}, status_code=201
