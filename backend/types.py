@@ -319,6 +319,11 @@ class IngestDataToCollectionDto(BaseModel):
         default=True,
     )
 
+    run_as_job: bool = Field(
+        title="Flag to configure weather to run the ingestion as a job or not. Default is False",
+        default=False,
+    )
+
 
 class AssociateDataSourceWithCollection(BaseModel):
     """

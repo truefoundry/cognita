@@ -69,12 +69,18 @@ class CollectionService:
                 collection_name=request.collection_name, no_cache=True
             )
             if not collection:
+                logger.error(
+                    f"Collection with name {request.collection_name} does not exist."
+                )
                 raise HTTPException(
                     status_code=404,
                     detail=f"Collection with name {request.collection_name} does not exist.",
                 )
 
             if not collection.associated_data_sources:
+                logger.error(
+                    f"Collection {request.collection_name} does not have any associated data sources."
+                )
                 raise HTTPException(
                     status_code=400,
                     detail=f"Collection {request.collection_name} does not have any associated data sources.",
@@ -90,8 +96,11 @@ class CollectionService:
                 )
 
             for associated_data_source in associated_data_sources_to_be_ingested:
-                print("running for", associated_data_source.data_source_fqn)
-                if settings.DEBUG_MODE:
+                logger.debug(
+                    "Starting ingestion for data source fqn: ",
+                    associated_data_source.data_source_fqn,
+                )
+                if not request.run_as_job:
                     data_ingestion_run = CreateDataIngestionRun(
                         collection_name=collection.name,
                         data_source_fqn=associated_data_source.data_source_fqn,
@@ -119,6 +128,9 @@ class CollectionService:
                     created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
                 else:
                     if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
+                        logger.error(
+                            "Job FQN and Job Component Name are required to trigger the job"
+                        )
                         raise HTTPException(
                             status_code=500,
                             detail="Job FQN and Job Component Name are required to trigger the job",

@@ -20,9 +20,7 @@ class Settings(BaseSettings):
     TFY_HOST: Optional[str]
     TFY_LLM_GATEWAY_URL: str
     EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
-    DEBUG_MODE: bool = False
 
-    DEBUG_MODE = os.getenv("DEBUG_MODE", "false") == "true"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")

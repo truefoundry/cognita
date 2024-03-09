@@ -10,7 +10,6 @@ METADATA_STORE_CONFIG = '{"provider": "mlfoundry", "config": {"ml_repo_name": "<
 TFY_SERVICE_ROOT_PATH = '/'
 TFY_API_KEY =
 TFY_HOST = <Truefoundry host for your account here>
-DEBUG_MODE = true
 ```
 
 1. Go to the root directory of this repository
@@ -35,8 +34,6 @@ pip install -r backend/requirements.txt
 4. Set environment variables
 
 Copy the file .env.example to .env and set the values for the following variables. This is assuming we will be using OpenAI for the embeddings and LLM initially.
-
-Note: To run the indexer job too locally, add `DEBUG_MODE=true` as env
 
 5. Run the Server
 
