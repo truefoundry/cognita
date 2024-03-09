@@ -64,6 +64,7 @@ class BaseVectorDB(ABC):
     def list_data_point_vectors(
         self,
         collection_name: str,
+        data_source_fqn: str,
         batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
     ) -> List[DataPointVector]:
         """

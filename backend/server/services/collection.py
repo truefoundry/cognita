@@ -44,7 +44,8 @@ class CollectionService:
                 )
             )
             VECTOR_STORE_CLIENT.create_collection(
-                get_embedder(collection.embedder_config)
+                collection_name=collection.name,
+                embeddings=get_embedder(collection.embedder_config),
             )
             if collection.associated_data_sources:
                 for data_source in collection.associated_data_sources:
@@ -96,37 +97,31 @@ class CollectionService:
             for associated_data_source in associated_data_sources_to_be_ingested:
                 print("running for", associated_data_source.data_source_fqn)
                 if settings.DEBUG_MODE:
-                    try:
-                        data_ingestion_run = CreateDataIngestionRun(
-                            collection_name=collection.name,
-                            data_source_fqn=associated_data_source.data_source_fqn,
+                    data_ingestion_run = CreateDataIngestionRun(
+                        collection_name=collection.name,
+                        data_source_fqn=associated_data_source.data_source_fqn,
+                        embedder_config=collection.embedder_config,
+                        parser_config=associated_data_source.parser_config,
+                        data_ingestion_mode=request.data_ingestion_mode,
+                        raise_error_on_failure=request.raise_error_on_failure,
+                    )
+                    created_data_ingestion_run = (
+                        METADATA_STORE_CLIENT.create_data_ingestion_run(
+                            data_ingestion_run=data_ingestion_run
+                        )
+                    )
+                    await sync_data_source_to_collection(
+                        inputs=DataIngestionConfig(
+                            collection_name=created_data_ingestion_run.collection_name,
+                            data_ingestion_run_name=created_data_ingestion_run.name,
+                            data_source=associated_data_source.data_source,
                             embedder_config=collection.embedder_config,
-                            parser_config=associated_data_source.parser_config,
-                            data_ingestion_mode=request.data_ingestion_mode,
-                            raise_error_on_failure=request.raise_error_on_failure,
+                            parser_config=created_data_ingestion_run.parser_config,
+                            data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                            raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
                         )
-                        created_data_ingestion_run = (
-                            METADATA_STORE_CLIENT.create_data_ingestion_run(
-                                data_ingestion_run=data_ingestion_run
-                            )
-                        )
-                        await sync_data_source_to_collection(
-                            inputs=DataIngestionConfig(
-                                collection_name=created_data_ingestion_run.collection_name,
-                                data_ingestion_run_name=created_data_ingestion_run.name,
-                                data_source=associated_data_source.data_source,
-                                embedder_config=collection.embedder_config,
-                                parser_config=created_data_ingestion_run.parser_config,
-                                data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                                raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                            )
-                        )
-                        created_data_ingestion_run.status = (
-                            DataIngestionRunStatus.COMPLETED
-                        )
-                    except Exception as exp:
-                        logger.exception(exp)
-                        continue
+                    )
+                    created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
                 else:
                     if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
                         raise HTTPException(
@@ -139,6 +134,10 @@ class CollectionService:
                         params={
                             "collection_name": collection.name,
                             "data_source_fqn": associated_data_source.data_source_fqn,
+                            "data_ingestion_mode": request.data_ingestion_mode.value,
+                            "raise_error_on_failure": (
+                                "True" if request.raise_error_on_failure else "False"
+                            ),
                         },
                     )
             return JSONResponse(
@@ -186,7 +185,7 @@ class CollectionService:
 
     def delete_collection(collection_name: str):
         try:
-            VECTOR_STORE_CLIENT.delete_collection()
+            VECTOR_STORE_CLIENT.delete_collection(collection_name=collection_name)
             METADATA_STORE_CLIENT.delete_collection(collection_name, include_runs=True)
             return JSONResponse(content={"deleted": True})
         except HTTPException as exp:

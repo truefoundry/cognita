@@ -1,6 +1,7 @@
 import tempfile
 from typing import Dict, List
 
+from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
@@ -16,20 +17,20 @@ from backend.types import (
 )
 
 
-def get_data_point_id_to_hash_map(
+def get_data_point_fqn_to_hash_map(
     data_point_vectors: List[DataPointVector],
 ) -> Dict[str, str]:
     """
-    Returns a map of data point id to hash
+    Returns a map of data point fqn to hash
     """
-    data_point_id_to_hash: Dict[str, str] = {}
+    data_point_fqn_to_hash: Dict[str, str] = {}
     for data_point_vector in data_point_vectors:
-        if data_point_vector.data_point_id not in data_point_id_to_hash:
-            data_point_id_to_hash[data_point_vector.data_point_id] = (
+        if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
+            data_point_fqn_to_hash[data_point_vector.data_point_fqn] = (
                 data_point_vector.data_point_hash
             )
 
-    return data_point_id_to_hash
+    return data_point_fqn_to_hash
 
 
 async def sync_data_source_to_collection(inputs: DataIngestionConfig):
@@ -39,9 +40,10 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     )
     try:
         existing_data_point_vectors = VECTOR_STORE_CLIENT.list_data_point_vectors(
-            collection_name=inputs.collection_name
+            collection_name=inputs.collection_name,
+            data_source_fqn=inputs.data_source.fqn,
         )
-        existing_data_point_id_to_hash = get_data_point_id_to_hash_map(
+        existing_data_point_fqn_to_hash = get_data_point_fqn_to_hash_map(
             data_point_vectors=existing_data_point_vectors
         )
 
@@ -52,7 +54,7 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         logger.exception(e)
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
+            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
         )
         raise e
     METADATA_STORE_CLIENT.update_data_ingestion_run_status(
@@ -62,7 +64,8 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     try:
 
         await _sync_data_source_to_collection(
-            inputs=inputs, existing_data_point_id_to_hash=existing_data_point_id_to_hash
+            inputs=inputs,
+            existing_data_point_fqn_to_hash=existing_data_point_fqn_to_hash,
         )
     except Exception as e:
         logger.exception(e)
@@ -71,6 +74,10 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
         )
         raise e
+    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        data_ingestion_run_name=inputs.data_ingestion_run_name,
+        status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
+    )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
         METADATA_STORE_CLIENT.update_data_ingestion_run_status(
@@ -96,19 +103,20 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
 
 
 async def _sync_data_source_to_collection(
-    inputs: DataIngestionConfig, existing_data_point_id_to_hash: Dict[str, str] = None
+    inputs: DataIngestionConfig, existing_data_point_fqn_to_hash: Dict[str, str] = None
 ):
-    failed_data_point_ids = []
+    failed_data_point_fqns = []
     documents_ingested_count = 0
     # Create a temp dir to store the data
     with tempfile.TemporaryDirectory() as tmpdirname:
         # Load the data from the source to the dest dir
+        logger.info("Loading data from data source")
         data_source_loader = get_loader_for_data_source(inputs.data_source.type)
         loaded_data_points_batch_iterator = (
             data_source_loader.load_filtered_data_points_from_data_source(
                 data_source=inputs.data_source,
                 dest_dir=tmpdirname,
-                existing_data_point_id_to_hash=existing_data_point_id_to_hash,
+                existing_data_point_fqn_to_hash=existing_data_point_fqn_to_hash,
                 batch_size=inputs.batch_size,
                 data_ingestion_mode=inputs.data_ingestion_mode,
             )
@@ -128,22 +136,18 @@ async def _sync_data_source_to_collection(
                 logger.exception(e)
                 if inputs.raise_error_on_failure:
                     raise e
-                failed_data_point_ids.extend(
-                    [doc.data_point_id for doc in loaded_data_points_batch]
+                failed_data_point_fqns.extend(
+                    [doc.data_point_fqn for doc in loaded_data_points_batch]
                 )
 
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
-        )
-        if len(failed_data_point_ids) > 0:
+        if len(failed_data_point_fqns) > 0:
             logger.error(
-                f"Failed to ingest {len(failed_data_point_ids)} data points. Data Point IDs:"
+                f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
-            logger.error(failed_data_point_ids)
+            logger.error(failed_data_point_fqns)
             METADATA_STORE_CLIENT.log_errors_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
-                errors={"failed_data_point_ids": failed_data_point_ids},
+                errors={"failed_data_point_fqns": failed_data_point_fqns},
             )
 
 
@@ -157,11 +161,11 @@ async def ingest_data_points(
     )
     documents_to_be_upserted = []
     logger.info(
-        f"Processing documents - new: {len(loaded_data_points)} completed: {documents_ingested_count}"
+        f"Processing {len(loaded_data_points)} new documents and completed: {documents_ingested_count}"
     )
     for index, loaded_data_point in enumerate(loaded_data_points):
         logger.info(
-            f"Parsing documents - new: [{index+1}/{len(loaded_data_points)}] completed: {documents_ingested_count}"
+            f"[{index+1}/{len(loaded_data_points)}/{documents_ingested_count}] Parsing [{index+1}/{len(loaded_data_points)}] new document"
         )
         # Get parser for required file extension
         parser = get_parser_for_extension(
@@ -169,12 +173,27 @@ async def ingest_data_points(
             parsers_map=inputs.parser_config.parser_map,
             max_chunk_size=inputs.parser_config.chunk_size,
         )
+        if parser is None:
+            logger.warning(
+                f"Could not parse data point {loaded_data_point.data_point_fqn} as no parser found for file extension: {loaded_data_point.file_extension}"
+            )
+            continue
         # chunk the given document
         chunks = await parser.get_chunks(
-            document=loaded_data_point,
+            loaded_data_point=loaded_data_point,
         )
+        # Update data source metadata
         for chunk in chunks:
-            chunk = chunk.metadata.update(loaded_data_point.metadata)
+            if loaded_data_point.metadata:
+                chunk.metadata.update(loaded_data_point.metadata)
+            # Most importantly, update the metadata with data point fqn and hash
+            chunk.metadata.update(
+                {
+                    f"{DATA_POINT_FQN_METADATA_KEY}": loaded_data_point.data_point_fqn,
+                    f"{DATA_POINT_HASH_METADATA_KEY}": loaded_data_point.data_point_hash,
+                }
+            )
+            logger.info(f"Updated metadata for data point with: {chunk.metadata}")
             documents_to_be_upserted.append(chunk)
         logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
 
@@ -189,6 +208,7 @@ async def ingest_data_points(
     )
     # Upserted all the documents_to_be_ingested
     VECTOR_STORE_CLIENT.upsert_documents(
+        collection_name=inputs.collection_name,
         documents=documents_to_be_upserted,
         embeddings=embeddings,
         incremental=inputs.data_ingestion_mode == DataIngestionMode.INCREMENTAL,

@@ -41,7 +41,7 @@ class BaseDataLoader(ABC):
         self,
         data_source: DataSource,
         dest_dir: str,
-        existing_data_point_id_to_hash: Dict[str, str],
+        existing_data_point_fqn_to_hash: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
@@ -51,7 +51,7 @@ class BaseDataLoader(ABC):
         Args:
             data_source (DataSource): The data source from which the data points are to be loaded.
             dest_dir (str): The destination directory to store the loaded data.
-            existing_data_point_id_to_hash (Dict[str, str]): A dictionary of existing data points.
+            existing_data_point_fqn_to_hash (Dict[str, str]): A dictionary of existing data points.
             batch_size (int): The batch size to be used for loading data points.
             data_ingestion_mode (DataIngestionMode): The data ingestion mode to be used.
         Returns:

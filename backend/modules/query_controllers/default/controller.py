@@ -36,6 +36,7 @@ class DefaultQueryController:
                 raise HTTPException(status_code=404, detail="Collection not found")
 
             vector_store = VECTOR_STORE_CLIENT.get_vector_store(
+                collection_name=collection.name,
                 embeddings=get_embedder(collection.embedder_config),
             )
 
@@ -78,7 +79,7 @@ class DefaultQueryController:
 
             # Get the answer
             logger.info(f"Request query: {request.query}")
-            outputs = qa({"query": request.query})
+            outputs = await qa.ainvoke({"query": request.query})
 
             return {
                 "answer": outputs["result"],

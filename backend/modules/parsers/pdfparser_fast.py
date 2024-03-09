@@ -5,7 +5,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
-from backend.types import LoadedDocument
+from backend.types import LoadedDataPoint
 
 
 class PdfParserUsingPyMuPDF(BaseParser):
@@ -20,17 +20,11 @@ class PdfParserUsingPyMuPDF(BaseParser):
         """
         self.max_chunk_size = max_chunk_size
 
-    async def get_chunks(self, document: LoadedDocument, *args, **kwargs):
+    async def get_chunks(self, loaded_data_point: LoadedDataPoint, *args, **kwargs):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
-
-        Parameters:
-            file_path (str): Path of the PDF file to be processed.
-
-        Returns:
-            List[Document]: A list of Document objects, each representing a chunk of extracted text.
         """
-        filepath = document.filepath
+        filepath = loaded_data_point.local_filepath
         final_texts = []
         final_tables = []
         try:
@@ -51,7 +45,6 @@ class PdfParserUsingPyMuPDF(BaseParser):
                                 "page_num": page.number,
                                 "type": "table",
                                 "table_num": ix,
-                                **(document.metadata if document.metadata else {}),
                             },
                         )
                     ]
@@ -78,7 +71,6 @@ class PdfParserUsingPyMuPDF(BaseParser):
                             metadata={
                                 "page_num": page.number,
                                 "type": "text",
-                                **(document.metadata if document.metadata else {}),
                             },
                         )
                         for text_split in text_splits
@@ -91,7 +83,6 @@ class PdfParserUsingPyMuPDF(BaseParser):
                             metadata={
                                 "page_num": page.number,
                                 "type": "text",
-                                **(document.metadata if document.metadata else {}),
                             },
                         )
                     )

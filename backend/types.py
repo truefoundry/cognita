@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, constr
 
-from backend.modules.metadata_store.base import generate_document_id
+from backend.constants import FQN_SEPARATOR
 
 
 class DataIngestionMode(str, Enum):
@@ -22,7 +22,7 @@ class DataPoint(BaseModel):
     Data point describes a single data point in the data source
     Properties:
         data_source_fqn (str): Fully qualified name of the data source
-        data_point_id (str): Unique identifier for the data point with respect to the data source
+        data_point_fqn (str): Fully qualified name for the data point with respect to the data source
         data_point_uri (str): URI for the data point for given data source. It could be url, file path or any other identifier
         data_point_hash (str): Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source
         metadata (Optional[Dict[str, str]]): Additional metadata for the data point
@@ -45,10 +45,8 @@ class DataPoint(BaseModel):
     )
 
     @property
-    def data_point_id(self) -> str:
-        return generate_document_id(
-            data_source=self.data_source_fqn, path=self.data_point_uri
-        )
+    def data_point_fqn(self) -> str:
+        return f"{FQN_SEPARATOR}".join([self.data_source_fqn, self.data_point_uri])
 
 
 class DataPointVector(BaseModel):
@@ -56,14 +54,14 @@ class DataPointVector(BaseModel):
     Data point vector describes a single data point in the vector store
     Additional Properties:
         data_point_vector_id (str): Unique identifier for the data point with respect to the vector store
-        data_point_id (str): Unique identifier for the data point with respect to the data source
+        data_point_fqn (str): Unique identifier for the data point with respect to the data source
         data_point_hash (str): Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source
     """
 
     data_point_vector_id: str = Field(
         title="Unique identifier for the data point with respect to the vector store",
     )
-    data_point_id: str = Field(
+    data_point_fqn: str = Field(
         title="Unique identifier for the data point with respect to the data source",
     )
     data_point_hash: str = Field(

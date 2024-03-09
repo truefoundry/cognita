@@ -44,6 +44,10 @@ Note: To run the indexer job too locally, add `DEBUG_MODE=true` as env
 uvicorn --host 0.0.0.0 --port 8080 backend.server.app:app --reload
 ```
 
+```
+python -m backend.indexer.main --collection_name "test0403" --data_source_fqn "mlfoundry::data-dir:truefoundry/tfy-docs-rag/tfycc1" --raise_error_on_failure "False"
+```
+
 # Development
 
 # Folder structure

@@ -46,7 +46,7 @@ class WebLoader(BaseDataLoader):
         self,
         data_source: DataSource,
         dest_dir: str,
-        existing_data_point_id_to_hash: Dict[str, str],
+        existing_data_point_fqn_to_hash: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
@@ -86,17 +86,22 @@ class WebLoader(BaseDataLoader):
             # If the data ingestion mode is incremental, check if the data point already exists.
             if (
                 data_ingestion_mode == DataIngestionMode.INCREMENTAL
-                and existing_data_point_id_to_hash.get(data_point.data_point_id)
-                and existing_data_point_id_to_hash.get(data_point.data_point_id)
+                and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
+                and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
                 == data_point.data_point_hash
             ):
                 continue
 
             loaded_data_points.append(
                 LoadedDataPoint(
-                    **data_point, local_filepath=full_dest_path, file_extension=".md"
+                    data_point_hash=data_point.data_point_hash,
+                    data_point_uri=data_point.data_point_uri,
+                    data_source_fqn=data_point.data_source_fqn,
+                    local_filepath=full_dest_path,
+                    file_extension=".md",
                 )
             )
-            if len(loaded_data_points) == batch_size:
+            if len(loaded_data_points) >= batch_size:
                 yield loaded_data_points
                 loaded_data_points.clear()
+        yield loaded_data_points

@@ -4,7 +4,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import MarkdownHeaderTextSplitter, MarkdownTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
-from backend.types import LoadedDocument
+from backend.types import LoadedDataPoint
 
 
 class MarkdownParser(BaseParser):
@@ -23,23 +23,14 @@ class MarkdownParser(BaseParser):
 
     async def get_chunks(
         self,
-        document: LoadedDocument,
+        loaded_data_point: LoadedDataPoint,
         *args,
         **kwargs,
     ) -> typing.List[Document]:
         """
         Extracts chunks of content from a given Markdown file.
-
-        Parameters:
-            filepath (str): The path to the Markdown file.
-
-        Returns:
-            typing.List[Document]: A list of Document objects representing the extracted chunks.
-
-        Note:
-            The UnstructuredMarkdownLoader is used to load the markdown file.
         """
-        filepath = document.filepath
+        filepath = loaded_data_point.local_filepath
         content = None
         with open(filepath, "r") as f:
             content = f.read()
@@ -70,12 +61,10 @@ class MarkdownParser(BaseParser):
                 lastAddedChunk.page_content = (
                     f"{lastAddedChunk.page_content}\n{page_content}"
                 )
-                lastAddedChunk.metadata.update(document.metadata)
                 final_chunks.append(lastAddedChunk)
                 lastAddedChunkSize = chunk_length + lastAddedChunkSize
                 continue
             lastAddedChunkSize = chunk_length
-            chunk.metadata.update(document.metadata)
             final_chunks.append(
                 Document(
                     page_content=page_content,

@@ -5,7 +5,7 @@ from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
 
-from backend.constants import DATA_POINT_HASH_METADATA_KEY, DATA_POINT_ID_METADATA_KEY
+from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
@@ -36,7 +36,7 @@ class QdrantVectorDB(BaseVectorDB):
             documents=[
                 Document(
                     page_content="Initial document",
-                    metadata={f"{DATA_POINT_ID_METADATA_KEY}": "__init__"},
+                    metadata={f"{DATA_POINT_FQN_METADATA_KEY}": "__init__"},
                 )
             ],
             embedding=embeddings,
@@ -53,7 +53,7 @@ class QdrantVectorDB(BaseVectorDB):
                 filter=models.Filter(
                     must=[
                         models.FieldCondition(
-                            key=f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                            key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                             match=models.MatchText(text="__init__"),
                         ),
                     ],
@@ -62,20 +62,20 @@ class QdrantVectorDB(BaseVectorDB):
         )
         self.qdrant_client.create_payload_index(
             collection_name=collection_name,
-            field_name=f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+            field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         logger.debug(f"[Vector Store] Created new collection {collection_name}")
         return
 
     def _get_records_to_be_upserted(
-        self, collection_name: str, document_ids: List[str], incremental: bool
+        self, collection_name: str, data_point_fqns: List[str], incremental: bool
     ):
         if not incremental:
             return []
         # For incremental deletion, we delete the documents with the same document_id
         logger.debug(
-            f"[Vector Store] Incremental Ingestion: Fetching documents for {len(document_ids)} document ids for collection {collection_name}"
+            f"[Vector Store] Incremental Ingestion: Fetching documents for {len(data_point_fqns)} data point fqns for collection {collection_name}"
         )
         stop = False
         offset = None
@@ -86,9 +86,9 @@ class QdrantVectorDB(BaseVectorDB):
                 scroll_filter=models.Filter(
                     should=[
                         models.FieldCondition(
-                            key=f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                            key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                             match=models.MatchAny(
-                                any=document_ids,
+                                any=data_point_fqns,
                             ),
                         ),
                     ]
@@ -109,7 +109,7 @@ class QdrantVectorDB(BaseVectorDB):
                 offset = next_offset
 
         logger.debug(
-            f"[Vector Store] Incremental Ingestion: collection={collection_name} Addition={len(document_ids)}, Updates={len(record_ids_to_be_upserted)}"
+            f"[Vector Store] Incremental Ingestion: collection={collection_name} Addition={len(data_point_fqns)}, Updates={len(record_ids_to_be_upserted)}"
         )
         return record_ids_to_be_upserted
 
@@ -125,13 +125,17 @@ class QdrantVectorDB(BaseVectorDB):
             return
         # get record IDs to be upserted
         logger.debug(
-            f"[Vector Store] Upserting {len(documents)} documents to collection {collection_name}"
+            f"[Vector Store] Adding {len(documents)} documents to collection {collection_name}"
         )
+        data_point_fqns = []
+        for document in documents:
+            if document.metadata.get(DATA_POINT_FQN_METADATA_KEY):
+                data_point_fqns.append(
+                    document.metadata.get(DATA_POINT_FQN_METADATA_KEY)
+                )
         record_ids_to_be_upserted: List[str] = self._get_records_to_be_upserted(
-            document_ids=[
-                document.metadata.get(DATA_POINT_ID_METADATA_KEY)
-                for document in documents
-            ],
+            collection_name=collection_name,
+            data_point_fqns=data_point_fqns,
             incremental=incremental,
         )
 
@@ -149,12 +153,6 @@ class QdrantVectorDB(BaseVectorDB):
         if len(record_ids_to_be_upserted):
             logger.debug(
                 f"[Vector Store] Deleting {len(documents)} outdated documents from collection {collection_name}"
-            )
-            self.qdrant_client.delete(
-                collection_name=collection_name,
-                points_selector=models.PointIdsList(
-                    points=record_ids_to_be_upserted,
-                ),
             )
             for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
                 record_ids_to_be_processed = record_ids_to_be_upserted[
@@ -196,7 +194,7 @@ class QdrantVectorDB(BaseVectorDB):
         return self.qdrant_client
 
     def list_data_point_vectors(
-        self, collection_name: str, batch_size: int = BATCH_SIZE
+        self, collection_name: str, data_source_fqn: str, batch_size: int = BATCH_SIZE
     ) -> List[DataPointVector]:
         logger.debug(
             f"[Vector Store] Listing all data point vectors for collection {collection_name}"
@@ -209,9 +207,19 @@ class QdrantVectorDB(BaseVectorDB):
                 collection_name=collection_name,
                 limit=batch_size,
                 with_payload=[
-                    f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                    f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                     f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
                 ],
+                scroll_filter=models.Filter(
+                    should=[
+                        models.FieldCondition(
+                            key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
+                            match=models.MatchText(
+                                text=data_source_fqn,
+                            ),
+                        ),
+                    ]
+                ),
                 with_vectors=False,
                 offset=offset,
             )
@@ -219,13 +227,13 @@ class QdrantVectorDB(BaseVectorDB):
                 metadata: dict = record.payload.get("metadata")
                 if (
                     metadata
-                    and metadata.get(DATA_POINT_ID_METADATA_KEY)
+                    and metadata.get(DATA_POINT_FQN_METADATA_KEY)
                     and metadata.get(DATA_POINT_HASH_METADATA_KEY)
                 ):
                     data_point_vectors.append(
                         DataPointVector(
                             data_point_vector_id=record.id,
-                            data_point_id=metadata.get(DATA_POINT_ID_METADATA_KEY),
+                            data_point_fqn=metadata.get(DATA_POINT_FQN_METADATA_KEY),
                             data_point_hash=metadata.get(DATA_POINT_HASH_METADATA_KEY),
                         )
                     )
@@ -295,7 +303,7 @@ class QdrantVectorDB(BaseVectorDB):
                     should=(
                         [
                             models.FieldCondition(
-                                key=f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                                key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                                 match=models.MatchText(
                                     text=base_document_id,
                                 ),
@@ -306,16 +314,16 @@ class QdrantVectorDB(BaseVectorDB):
                     )
                 ),
                 limit=BATCH_SIZE,
-                with_payload=[f"metadata.{DATA_POINT_ID_METADATA_KEY}"],
+                with_payload=[f"metadata.{DATA_POINT_FQN_METADATA_KEY}"],
                 with_vectors=False,
                 offset=offset,
             )
             for record in records:
                 if record.payload.get("metadata") and record.payload.get(
                     "metadata"
-                ).get(DATA_POINT_ID_METADATA_KEY):
+                ).get(DATA_POINT_FQN_METADATA_KEY):
                     document_ids_set.add(
-                        record.payload.get("metadata").get(DATA_POINT_ID_METADATA_KEY)
+                        record.payload.get("metadata").get(DATA_POINT_FQN_METADATA_KEY)
                     )
                 if len(document_ids_set) > MAX_SCROLL_LIMIT:
                     stop = True
@@ -351,7 +359,7 @@ class QdrantVectorDB(BaseVectorDB):
                     filter=models.Filter(
                         must=[
                             models.FieldCondition(
-                                key=f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                                key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                                 match=models.MatchAny(any=document_ids_to_be_processed),
                             ),
                         ],
@@ -379,7 +387,7 @@ class QdrantVectorDB(BaseVectorDB):
                 collection_name=collection_name,
                 limit=BATCH_SIZE,
                 with_payload=[
-                    f"metadata.{DATA_POINT_ID_METADATA_KEY}",
+                    f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
                     f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
                 ],
                 with_vectors=False,
@@ -389,13 +397,13 @@ class QdrantVectorDB(BaseVectorDB):
                 metadata: dict = record.payload.get("metadata")
                 if (
                     metadata
-                    and metadata.get(DATA_POINT_ID_METADATA_KEY)
+                    and metadata.get(DATA_POINT_FQN_METADATA_KEY)
                     and metadata.get(DATA_POINT_HASH_METADATA_KEY)
                 ):
                     document_vector_points.append(
                         DataPointVector(
                             point_id=record.id,
-                            document_id=metadata.get(DATA_POINT_ID_METADATA_KEY),
+                            document_id=metadata.get(DATA_POINT_FQN_METADATA_KEY),
                             document_hash=metadata.get(DATA_POINT_HASH_METADATA_KEY),
                         )
                     )

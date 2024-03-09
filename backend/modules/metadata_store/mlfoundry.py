@@ -317,16 +317,16 @@ class MLFoundry(BaseMetadataStore):
         return created_data_source
 
     def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
-        logger.debug(f"[Metadata Store] Getting data_source by {fqn}")
+        logger.debug(f"[Metadata Store] Getting data_source by fqn {fqn}")
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}' and params.data_source_fqn = '{fqn}'",
         )
         for run in runs:
             data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
-            logger.debug(f"[Metadata Store] Fetched Data Source with {fqn}")
+            logger.debug(f"[Metadata Store] Fetched Data Source with fqn {fqn}")
             return data_source
-        logger.debug(f"[Metadata Store] Data Source with {fqn} not found")
+        logger.debug(f"[Metadata Store] Data Source with fqn {fqn} not found")
         return None
 
     def get_data_sources(self) -> List[DataSource]:
@@ -446,12 +446,12 @@ class MLFoundry(BaseMetadataStore):
                 filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'",
             )
             logger.debug(
-                f"[Metadata Store] Found {len(data_ingestion_runs)} data ingestion runs for {collection_name} to delete"
+                f"[Metadata Store] Found data ingestion runs for {collection_name} to delete"
             )
             for collection_inderer_job_run in data_ingestion_runs:
                 collection_inderer_job_run.delete()
             logger.debug(
-                f"[Metadata Store] Deleted {len(data_ingestion_runs)} data ingestion runs for {collection_name}"
+                f"[Metadata Store] Deleted data ingestion runs for {collection_name}"
             )
         collection.delete()
         logger.debug(f"[Metadata Store] Deleted colelction {collection_name}")

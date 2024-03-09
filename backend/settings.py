@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     Settings class to hold all the environment variables
     """
 
-    DOCUMENT_ID_SEPARATOR = "::"
     LOG_LEVEL: str = "info"
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig

@@ -3,7 +3,8 @@ from abc import ABC, abstractmethod
 
 from langchain.docstore.document import Document
 
-from backend.types import LoadedDocument
+from backend.logger import logger
+from backend.types import LoadedDataPoint
 
 PARSER_REGISTRY = {}
 
@@ -26,10 +27,13 @@ class BaseParser(ABC):
     It contains the common attributes and methods that each parser should implement.
     """
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     @abstractmethod
     async def get_chunks(
         self,
-        document: LoadedDocument,
+        loaded_data_point: LoadedDataPoint,
         *args,
         **kwargs,
     ) -> typing.List[Document]:
@@ -37,7 +41,7 @@ class BaseParser(ABC):
         Abstract method. This should asynchronously read a file and return its content in chunks.
 
         Parameters:
-            document (LoadedDocument): Loaded Document to read and parse.
+            loaded_data_point (LoadedDataPoint): Loaded Document to read and parse.
 
         Returns:
             typing.List[Document]: A list of Document objects, each representing a chunk of the file.
@@ -52,7 +56,8 @@ def get_parser_for_extension(
     Given the file_extension and parsers mapping, return the appropriate mapper.
     """
     if file_extension not in parsers_map:
-        raise ValueError(f"Loaded doc with extension {file_extension} is not supported")
+        logger.error(f"Loaded doc with extension {file_extension} is not supported")
+        return None
     global PARSER_REGISTRY
     name = parsers_map[file_extension]
     if name not in PARSER_REGISTRY:
