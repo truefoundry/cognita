@@ -97,8 +97,7 @@ class CollectionService:
 
             for associated_data_source in associated_data_sources_to_be_ingested:
                 logger.debug(
-                    "Starting ingestion for data source fqn: ",
-                    associated_data_source.data_source_fqn,
+                    f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
                 )
                 if not request.run_as_job:
                     data_ingestion_run = CreateDataIngestionRun(
