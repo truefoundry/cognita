@@ -1,17 +1,15 @@
 import os
-import shutil
-from typing import List
+from typing import Dict, Iterator, List
 
 import markdownify
 from bs4 import BeautifulSoup as Soup
 from langchain.document_loaders.recursive_url_loader import RecursiveUrlLoader
 
-from backend.modules.dataloaders.loader import BaseLoader
-from backend.modules.metadata_store.base import generate_document_id
-from backend.types import DataSource, DocumentMetadata, LoadedDocument
+from backend.modules.dataloaders.loader import BaseDataLoader
+from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
 
 
-class WebLoader(BaseLoader):
+class WebLoader(BaseDataLoader):
     """
     This loader handles web URLs
     """
@@ -36,56 +34,74 @@ class WebLoader(BaseLoader):
             content = content[5:]
         return content
 
-    def load_data(
-        self, data_source: DataSource, dest_dir: str, allowed_extensions: List[str]
-    ) -> List[LoadedDocument]:
-        """
-        Loads data from a local directory specified by the given source URI.
+    def load_data_point(
+        self,
+        data_source: DataSource,
+        dest_dir: str,
+        data_point: DataPoint,
+    ) -> LoadedDataPoint:
+        raise NotImplementedError("Method not implemented")
 
-        Args:
-            data_source (DataSource): The source URI of the website
-            dest_dir (str): The destination directory where the data will be copied to.
-            allowed_extensions (List[str]): A list of allowed file extensions.
-        Returns:
-            List[LoadedDocument]: A list of LoadedDocument objects containing metadata.
+    def load_filtered_data_points_from_data_source(
+        self,
+        data_source: DataSource,
+        dest_dir: str,
+        existing_data_point_fqn_to_hash: Dict[str, str],
+        batch_size: int,
+        data_ingestion_mode: DataIngestionMode,
+    ) -> Iterator[List[LoadedDataPoint]]:
+        """
+        Loads data from a web URL specified by the given source URI.
         """
         max_depth = data_source.metadata.get("max_depth", 2)
         print("WebLoader -> max_depth: ", max_depth)
-        loader = RecursiveUrlLoader(
+        self.loader = RecursiveUrlLoader(
             url=data_source.uri,
             max_depth=max_depth,
             extractor=lambda x: self._remove_empty_lines(
                 markdownify.markdownify(self._remove_tags(x))
             ),
         )
-        documents = loader.load()
+        webpages = self.loader.load()
 
-        loaded_documents: List[LoadedDocument] = []
-        for i, doc in enumerate(documents):
+        loaded_data_points: List[LoadedDataPoint] = []
+        for i, doc in enumerate(webpages):
             title: str = doc.metadata.get("title")
             url: str = doc.metadata.get("source")
             if title is None or url is None:
                 continue
 
             file_name = f"file_{i}.md"
-            dest_path = os.path.join(dest_dir, file_name)
+            full_dest_path = os.path.join(dest_dir, file_name)
 
-            with open(dest_path, "w") as f:
+            with open(full_dest_path, "w") as f:
                 f.write(doc.page_content)
 
-            _document_id = generate_document_id(data_source=data_source, path=url)
-
-            loaded_documents.append(
-                LoadedDocument(
-                    filepath=dest_path,
-                    file_extension=".md",
-                    metadata=DocumentMetadata(
-                        _document_id=_document_id,
-                        title=title,
-                        source=url,
-                        description=doc.metadata.get("description"),
-                    ),
-                )
+            data_point = DataPoint(
+                data_source_fqn=data_source.fqn,
+                data_point_uri=url,
+                data_point_hash=f"{os.path.getsize(full_dest_path)}",
             )
 
-        return loaded_documents
+            # If the data ingestion mode is incremental, check if the data point already exists.
+            if (
+                data_ingestion_mode == DataIngestionMode.INCREMENTAL
+                and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
+                and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
+                == data_point.data_point_hash
+            ):
+                continue
+
+            loaded_data_points.append(
+                LoadedDataPoint(
+                    data_point_hash=data_point.data_point_hash,
+                    data_point_uri=data_point.data_point_uri,
+                    data_source_fqn=data_point.data_source_fqn,
+                    local_filepath=full_dest_path,
+                    file_extension=".md",
+                )
+            )
+            if len(loaded_data_points) >= batch_size:
+                yield loaded_data_points
+                loaded_data_points.clear()
+        yield loaded_data_points

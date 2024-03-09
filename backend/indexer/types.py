@@ -1,15 +1,6 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
-from backend.types import (
-    DataIngestionMode,
-    DataSource,
-    EmbedderConfig,
-    MetadataStoreConfig,
-    ParserConfig,
-    VectorDBConfig,
-)
+from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserConfig
 
 
 class DataIngestionConfig(BaseModel):
@@ -30,9 +21,6 @@ class DataIngestionConfig(BaseModel):
     )
     parser_config: ParserConfig = Field(
         title="Parser configuration to parse the documents.",
-    )
-    vector_db_config: VectorDBConfig = Field(
-        title="Vector DB config to store the indexed documents.",
     )
     data_ingestion_mode: DataIngestionMode = Field(title="Data ingestion mode")
     raise_error_on_failure: bool = Field(default=True, title="Raise error on failure")

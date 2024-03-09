@@ -16,3 +16,4 @@ repo-data/
 tempDir/
 !**/.env.example
 .ipynb_checkpoints/
+deploy.*.py

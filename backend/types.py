@@ -2,7 +2,9 @@ import enum
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Extra, Field, constr
+from pydantic import BaseModel, Field, constr
+
+from backend.constants import FQN_SEPARATOR
 
 
 class DataIngestionMode(str, Enum):
@@ -15,16 +17,73 @@ class DataIngestionMode(str, Enum):
     FULL = "FULL"
 
 
-class DocumentMetadata(BaseModel):
+class DataPoint(BaseModel):
     """
-    Document metadata saved in vector store
-    _document_id: str unique identifier for the document source
+    Data point describes a single data point in the data source
+    Properties:
+        data_source_fqn (str): Fully qualified name of the data source
+        data_point_fqn (str): Fully qualified name for the data point with respect to the data source
+        data_point_uri (str): URI for the data point for given data source. It could be url, file path or any other identifier
+        data_point_hash (str): Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source
+        metadata (Optional[Dict[str, str]]): Additional metadata for the data point
     """
 
-    _document_id: str
+    data_source_fqn: str = Field(
+        title="Fully qualified name of the data source",
+    )
 
-    class Config:
-        extra = Extra.allow
+    data_point_uri: str = Field(
+        title="URI for the data point for given data source. It could be url, file path or any other identifier",
+    )
+
+    data_point_hash: str = Field(
+        title="Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source",
+    )
+
+    metadata: Optional[Dict[str, str]] = Field(
+        title="Additional metadata for the data point",
+    )
+
+    @property
+    def data_point_fqn(self) -> str:
+        return f"{FQN_SEPARATOR}".join([self.data_source_fqn, self.data_point_uri])
+
+
+class DataPointVector(BaseModel):
+    """
+    Data point vector describes a single data point in the vector store
+    Additional Properties:
+        data_point_vector_id (str): Unique identifier for the data point with respect to the vector store
+        data_point_fqn (str): Unique identifier for the data point with respect to the data source
+        data_point_hash (str): Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source
+    """
+
+    data_point_vector_id: str = Field(
+        title="Unique identifier for the data point with respect to the vector store",
+    )
+    data_point_fqn: str = Field(
+        title="Unique identifier for the data point with respect to the data source",
+    )
+    data_point_hash: str = Field(
+        title="Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source",
+    )
+
+
+class LoadedDataPoint(DataPoint):
+    """
+    Loaded data point describes a single data point in the data source after loading it as local file
+    Additional Properties:
+        local_filepath (str): Local file path of the data point
+        file_extension (str): File extension of the data point
+    Parent: DataPoint
+    """
+
+    local_filepath: str = Field(
+        title="Local file path of the loaded data point",
+    )
+    file_extension: Optional[str] = Field(
+        title="File extension of the loaded data point",
+    )
 
 
 class EmbedderConfig(BaseModel):
@@ -90,16 +149,6 @@ class EmbeddingCacheConfig(BaseModel):
     config: Optional[dict] = None
 
 
-class LoadedDocument(BaseModel):
-    """
-    Scanned document configuration
-    """
-
-    filepath: str
-    file_extension: str
-    metadata: DocumentMetadata
-
-
 class LLMConfig(BaseModel):
     """
     LLM configuration
@@ -152,12 +201,15 @@ class DataIngestionRunStatus(str, enum.Enum):
     """
 
     INITIALIZED = "INITIALIZED"
-    RUNNING = "RUNNING"
-    DATA_LOADING_STARTED = "DATA_LOADING_STARTED"
-    CHUNKING_STARTED = "CHUNKING_STARTED"
-    EMBEDDING_STARTED = "EMBEDDING_STARTED"
+    FETCHING_EXISTING_VECTORS = "FETCHING_EXISTING_VECTORS"
+    FETCHING_EXISTING_VECTORS_FAILED = "FETCHING_EXISTING_VECTORS_FAILED"
+    DATA_INGESTION_STARTED = "DATA_INGESTION_STARTED"
+    DATA_INGESTION_COMPLETED = "DATA_INGESTION_COMPLETED"
+    DATA_INGESTION_FAILED = "DATA_INGESTION_FAILED"
+    DATA_CLEANUP_STARTED = "DATA_CLEANUP_STARTED"
+    DATA_CLEANUP_FAILED = "DATA_CLEANUP_FAILED"
     COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
+    ERROR = "ERROR"
 
 
 class BaseDataIngestionRun(BaseModel):

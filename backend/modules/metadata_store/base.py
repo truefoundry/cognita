@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
+from backend.constants import FQN_SEPARATOR
 from backend.types import (
     AssociateDataSourceWithCollection,
     Collection,
@@ -10,9 +11,9 @@ from backend.types import (
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
+    MetadataStoreConfig,
 )
 
-DOCUMENT_ID_SEPARATOR = "::"
 
 class BaseMetadataStore(ABC):
     @abstractmethod
@@ -151,35 +152,35 @@ class BaseMetadataStore(ABC):
 
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:
-    return f"{DOCUMENT_ID_SEPARATOR}".join([data_source.type, data_source.uri])
+    return f"{FQN_SEPARATOR}".join([data_source.type, data_source.uri])
+
+# A global registry to store all available metadata store.
+METADATA_STORE_REGISTRY = {}
 
 
-def get_base_document_id(data_source: DataSource) -> str | None:
+def register_metadata_store(provider: str, cls):
     """
-    Generates unique document id for a given data source. We use the following format:
-    <fqn>
-    This will be used to identify the source in the database.
+    Registers all the available metadata store.
+
+    Args:
+        provider: The type of the metadata store to be registered.
+        cls: The metadata store class to be registered.
+
+    Returns:
+        None
     """
-    return data_source.fqn
+    global METADATA_STORE_REGISTRY
+    if provider in METADATA_STORE_REGISTRY:
+        raise ValueError(
+            f"Error while registering class {cls.__name__} already taken by {METADATA_STORE_REGISTRY[provider].__name__}"
+        )
+    METADATA_STORE_REGISTRY[provider] = cls
 
 
-def generate_document_id(data_source: DataSource, path: str):
-    """
-    Generates unique document id for a given document. We use the following format:
-    <type>::<source_uri>::<path>
-    This will be used to identify the document in the database.
-    """
-    return f"{DOCUMENT_ID_SEPARATOR}".join([data_source.fqn, path])
-
-
-def retrieve_data_source_fqn_from_document_id(_document_id: str):
-    """
-    Retrives params from document id for a given document. We use the following format:
-    <type>::<source_uri>::<path>
-    This will be used to identify the document in the database.
-    reverse for `generate_document_id`
-    """
-    parts = _document_id.split(DOCUMENT_ID_SEPARATOR)
-    if len(parts) == 3:
-        return f"{DOCUMENT_ID_SEPARATOR}".join([parts[0], parts[1]])
-    return None
+def get_metadata_store_client(
+    config: MetadataStoreConfig,
+) -> BaseMetadataStore:
+    if config.provider in METADATA_STORE_REGISTRY:
+        return METADATA_STORE_REGISTRY[config.provider](config=config.config)
+    else:
+        raise ValueError(f"Unknown metadata store type: {config.provider}")

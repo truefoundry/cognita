@@ -9,7 +9,7 @@ from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.default.types import DefaultQueryInput
-from backend.modules.vector_db import get_vector_db_client
+from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
 
@@ -35,11 +35,8 @@ class DefaultQueryController:
             if collection is None:
                 raise HTTPException(status_code=404, detail="Collection not found")
 
-            vector_db_client = get_vector_db_client(
-                config=settings.VECTOR_DB_CONFIG,
-                collection_name=request.collection_name,
-            )
-            vector_store = vector_db_client.get_vector_store(
+            vector_store = VECTOR_STORE_CLIENT.get_vector_store(
+                collection_name=collection.name,
                 embeddings=get_embedder(collection.embedder_config),
             )
 
@@ -82,7 +79,7 @@ class DefaultQueryController:
 
             # Get the answer
             logger.info(f"Request query: {request.query}")
-            outputs = qa({"query": request.query})
+            outputs = await qa.ainvoke({"query": request.query})
 
             return {
                 "answer": outputs["result"],
