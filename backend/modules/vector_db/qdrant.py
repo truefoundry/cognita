@@ -15,13 +15,14 @@ MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
-        if config.local:
+        if config.local is True:
             self.local = True
             self.location = ":memory:"
             self.qdrant_client = QdrantClient(
                 location=self.location,
             )
         else:
+            self.local = False
             self.url = config.url
             self.api_key = config.api_key
             self.port = 443 if self.url.startswith("https://") else 6333
@@ -50,7 +51,7 @@ class QdrantVectorDB(BaseVectorDB):
             collection_name=collection_name,
             **(
                 {"location": self.location}
-                if self.location
+                if self.local
                 else {
                     "url": self.url,
                     "api_key": self.api_key,
