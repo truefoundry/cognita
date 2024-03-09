@@ -1,8 +1,8 @@
 {
   "collection_name": "<collection_name>",
   "data_source": {
-    "type": "mlfoundry",
-    "uri": "<mlfoundry-data-directory-fqn>"
+    "type": "local",
+    "uri": "sample-data/creditcards"
   },
   "parser_config": {
     "chunk_size": 400,
