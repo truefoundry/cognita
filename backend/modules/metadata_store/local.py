@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
-from backend.modules.vector_db import get_vector_db_client
+from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
     AssociateDataSourceWithCollection,
@@ -66,11 +66,9 @@ class LocalMetadataStore(BaseMetadataStore):
         self.data_ingestion_runs = []
         vector_db_config = settings.VECTOR_DB_CONFIG
         if vector_db_config.local:
-            vector_db_store_config = get_vector_db_client(
-                config=vector_db_config, collection_name=self.collection.name
-            )
-            vector_db_store_config.create_collection(
-                get_embedder(self.local_metadata.embedder_config)
+            VECTOR_STORE_CLIENT.create_collection(
+                collection_name=self.collection.name,
+                embeddings=get_embedder(self.local_metadata.embedder_config),
             )
 
     def create_collection(self, collection) -> Collection:
