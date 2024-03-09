@@ -5,7 +5,8 @@ from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
 
-from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
+from backend.constants import (DATA_POINT_FQN_METADATA_KEY,
+                               DATA_POINT_HASH_METADATA_KEY)
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
@@ -13,20 +14,26 @@ from backend.types import DataPointVector, VectorDBConfig
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 class QdrantVectorDB(BaseVectorDB):
-
     def __init__(self, config: VectorDBConfig):
-        self.url = config.url
-        self.api_key = config.api_key
-        self.port = 443 if self.url.startswith("https://") else 6333
-        self.prefix = config.config.get("prefix", None) if config.config else None
-        self.prefer_grpc = False if self.url.startswith("https://") else True
-        self.qdrant_client = QdrantClient(
-            url=self.url,
-            **({"api_key": self.api_key} if self.api_key else {}),
-            port=self.port,
-            prefer_grpc=self.prefer_grpc,
-            prefix=self.prefix,
-        )
+        if config.local:
+            self.local = True
+            self.location = ":memory:"
+            self.qdrant_client = QdrantClient(
+                location=self.location,
+            )
+        else:
+            self.url = config.url
+            self.api_key = config.api_key
+            self.port = 443 if self.url.startswith("https://") else 6333
+            self.prefix = config.config.get("prefix", None) if config.config else None
+            self.prefer_grpc = False if self.url.startswith("https://") else True
+            self.qdrant_client = QdrantClient(
+                url=self.url,
+                **({"api_key": self.api_key} if self.api_key else {}),
+                port=self.port,
+                prefer_grpc=self.prefer_grpc,
+                prefix=self.prefix,
+            )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
         # No provision to create a empty collection
@@ -41,11 +48,17 @@ class QdrantVectorDB(BaseVectorDB):
             ],
             embedding=embeddings,
             collection_name=collection_name,
-            url=self.url,
-            api_key=self.api_key,
-            prefer_grpc=self.prefer_grpc,
-            port=self.port,
-            prefix=self.prefix,
+            **(
+                {"location": self.location}
+                if self.location
+                else {
+                    "url": self.url,
+                    "api_key": self.api_key,
+                    "prefer_grpc": self.prefer_grpc,
+                    "port": self.port,
+                    "prefix": self.prefix,
+                }
+            ),
         )
         self.qdrant_client.delete(
             collection_name=collection_name,

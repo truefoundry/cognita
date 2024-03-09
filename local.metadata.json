@@ -1,0 +1,19 @@
+{
+  "collection_name": "<collection_name>",
+  "data_source": {
+    "type": "mlfoundry",
+    "uri": "<mlfoundry-data-directory-fqn>"
+  },
+  "parser_config": {
+    "chunk_size": 400,
+    "parser_map": {
+      ".md": "MarkdownParser"
+    }
+  },
+  "embedder_config": {
+    "provider": "default",
+    "config": {
+      "model": "<model-fqn-from-llm-gateway>"
+    }
+  }
+}
