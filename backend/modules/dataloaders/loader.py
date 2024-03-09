@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, Iterator, List
 
-from backend.types import DataPoint, DataSource, LoadedDocument
+from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
 
 # A global registry to store all available loaders.
 LOADER_REGISTRY = {}
@@ -31,47 +31,54 @@ def register_dataloader(type: str, cls):
     LOADER_REGISTRY[type] = cls
 
 
-class BaseLoader(ABC):
+class BaseDataLoader(ABC):
     """
-    Base class for all loaders. The loaders are responsible for loading the data
-    from the source and storing it in the destination directory.
+    Base data loader class. Data loader is responsible for detecting, filtering and then loading data points to be ingested.
     """
 
     @abstractmethod
-    def list_data_points(self, data_source: DataSource) -> List[DataPoint]:
-        """
-        List the data points from the source.
-
-        Args:
-            data_source (DataSource): The data source from which the data points are to be listed.
-
-        Returns:
-            List[DataPoint]: The list of data points.
-        """
-        pass
-
-    @abstractmethod
-    def load_data_points(
+    def load_filtered_data_points_from_data_source(
         self,
         data_source: DataSource,
-        data_points: List[DataPoint],
         dest_dir: str,
-    ) -> List[DataPoint]:
+        existing_data_point_id_to_hash: Dict[str, str],
+        batch_size: int,
+        data_ingestion_mode: DataIngestionMode,
+    ) -> Iterator[List[LoadedDataPoint]]:
         """
-        Load the data points from the source to the destination directory.
-
+        Sync the data source, filter data points and load them from the source to the destination directory.
+        This method returns the loaded data points in batches as an iterator.
         Args:
             data_source (DataSource): The data source from which the data points are to be loaded.
-            data_points (List[DataPoint]): The list of data points to be loaded.
             dest_dir (str): The destination directory to store the loaded data.
-
+            existing_data_point_id_to_hash (Dict[str, str]): A dictionary of existing data points.
+            batch_size (int): The batch size to be used for loading data points.
+            data_ingestion_mode (DataIngestionMode): The data ingestion mode to be used.
         Returns:
-            List[DataPoint]: The list of loaded documents.
+            Iterator[List[LoadedDataPoint]]: An iterator of list of loaded data points.
+        """
+        pass
+
+    @abstractmethod
+    def load_data_point(
+        self,
+        data_source: DataSource,
+        dest_dir: str,
+        data_point: DataPoint,
+    ) -> LoadedDataPoint:
+        """
+        Load a single data point from the source to the destination directory.
+        Args:
+            data_source (DataSource): The data source from which the data points are to be loaded.
+            dest_dir (str): The destination directory to store the loaded data.
+            data_point (DataPoint): The data point to be loaded.
+        Returns:
+            LoadedDataPoint: The loaded data point.
         """
         pass
 
 
-def get_loader_for_data_source(type, *args, **kwargs) -> BaseLoader:
+def get_loader_for_data_source(type, *args, **kwargs) -> BaseDataLoader:
     """
     Returns the object of the loader class for given type
 

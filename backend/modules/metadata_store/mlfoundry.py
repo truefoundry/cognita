@@ -219,6 +219,7 @@ class MLFoundry(BaseMetadataStore):
         logger.debug(
             f"[Metadata Store] Associating data_source {data_source_association.data_source_fqn} to collection {collection_name}"
         )
+
         collection_run = self._get_run_by_name(
             run_name=collection_name,
             no_cache=True,
@@ -227,6 +228,17 @@ class MLFoundry(BaseMetadataStore):
             raise HTTPException(
                 404,
                 f"Collection {collection_name} not found.",
+            )
+        data_source = self.get_data_source_from_fqn(
+            data_source_association.data_source_fqn
+        )
+        if not data_source:
+            logger.debug(
+                f"[Metadata Store] data source with fqn {data_source_association.data_source_fqn} not found"
+            )
+            raise HTTPException(
+                404,
+                f"data source with fqn {data_source_association.data_source_fqn} not found",
             )
         # Always do this to avoid race conditions
         collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
@@ -449,18 +461,22 @@ class MLFoundry(BaseMetadataStore):
         data_ingestion_run_name: str,
         status: DataIngestionRunStatus,
     ):
-        logger.debug(
-            f"[Metadata Store] Updating status of data ingestion run {data_ingestion_run_name} to {status}"
-        )
-        data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
-        if not data_ingestion_run:
-            raise HTTPException(
-                404, f"Data ingestion run {data_ingestion_run_name} not found."
+        try:
+            logger.debug(
+                f"[Metadata Store] Updating status of data ingestion run {data_ingestion_run_name} to {status}"
             )
-        data_ingestion_run.set_tags({"status": status.value})
-        logger.debug(
-            f"[Metadata Store] Updated status of data ingestion run {data_ingestion_run_name} to {status}"
-        )
+            data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
+            if not data_ingestion_run:
+                logger.error(
+                    f"[Metadata Store] data ingestion run {data_ingestion_run_name} not found"
+                )
+                return
+            data_ingestion_run.set_tags({"status": status.value})
+            logger.debug(
+                f"[Metadata Store] Updated status of data ingestion run {data_ingestion_run_name} to {status}"
+            )
+        except Exception as e:
+            logger.exception(e)
 
     def log_metrics_for_data_ingestion_run(
         self,
@@ -468,39 +484,45 @@ class MLFoundry(BaseMetadataStore):
         metric_dict: dict[str, int | float],
         step: int = 0,
     ):
-        logger.debug(
-            f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
-        )
-        data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
-        if not data_ingestion_run:
-            raise HTTPException(
-                404, f"Data ingestion run {data_ingestion_run_name} not found."
+        try:
+            logger.debug(
+                f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
             )
-        data_ingestion_run.log_metrics(metric_dict=metric_dict, step=step)
-        logger.debug(
-            f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
-        )
+            data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
+            if not data_ingestion_run:
+                logger.error(
+                    f"[Metadata Store] data ingestion run {data_ingestion_run_name} not found"
+                )
+                return
+            data_ingestion_run.log_metrics(metric_dict=metric_dict, step=step)
+            logger.debug(
+                f"[Metadata Store] Logging metrics for data ingestion run {data_ingestion_run_name}"
+            )
+        except Exception as e:
+            logger.exception(e)
 
     def log_errors_for_data_ingestion_run(
         self, data_ingestion_run_name: str, errors: Dict[str, Any]
     ):
-        logger.debug(
-            f"[Metadata Store] Logging errors for data ingestion run {data_ingestion_run_name}"
-        )
-        data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
-        if not data_ingestion_run:
-            raise HTTPException(
-                404, f"Data ingestion run {data_ingestion_run_name} not found."
+        try:
+            logger.debug(
+                f"[Metadata Store] Logging errors for data ingestion run {data_ingestion_run_name}"
             )
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            file_path = os.path.join(tmpdirname, "error.json")
-            with open(file_path, "w") as f:
-                f.write(json.dumps(errors))
-            data_ingestion_run.log_artifact(
-                name=data_ingestion_run.run_name,
-                artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
-                description="This artifact contains the errors during run",
+            data_ingestion_run = self._get_run_by_name(run_name=data_ingestion_run_name)
+            if not data_ingestion_run:
+                logger.error(f"Data ingestion run {data_ingestion_run_name} not found")
+                return
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                file_path = os.path.join(tmpdirname, "error.json")
+                with open(file_path, "w") as f:
+                    f.write(json.dumps(errors))
+                data_ingestion_run.log_artifact(
+                    name=data_ingestion_run.run_name,
+                    artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
+                    description="This artifact contains the errors during run",
+                )
+            logger.debug(
+                f"[Metadata Store] Logged errors for data ingestion run {data_ingestion_run_name}"
             )
-        logger.debug(
-            f"[Metadata Store] Logged errors for data ingestion run {data_ingestion_run_name}"
-        )
+        except Exception as e:
+            logger.exception(e)

@@ -5,7 +5,7 @@ import weaviate
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.weaviate import Weaviate
 
-from backend.constants import DOCUMENT_ID_METADATA_KEY
+from backend.constants import DATA_POINT_ID_METADATA_KEY
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import VectorDBConfig
 
@@ -36,7 +36,7 @@ class WeaviateVectorDB(BaseVectorDB):
                 "class": collection_name.capitalize(),
                 "properties": [
                     {
-                        "name": f"{DOCUMENT_ID_METADATA_KEY}",
+                        "name": f"{DATA_POINT_ID_METADATA_KEY}",
                         "dataType": ["text"],
                     },
                 ],
@@ -84,7 +84,7 @@ class WeaviateVectorDB(BaseVectorDB):
             index_name=collection_name.capitalize(),  # Weaviate stores the index name as capitalized
             text_key="text",
             by_text=False,
-            attributes=[f"{DOCUMENT_ID_METADATA_KEY}"],
+            attributes=[f"{DATA_POINT_ID_METADATA_KEY}"],
         )
 
     def list_documents_in_collection(
@@ -96,7 +96,7 @@ class WeaviateVectorDB(BaseVectorDB):
         # https://weaviate.io/developers/weaviate/search/aggregate#retrieve-groupedby-properties
         response = (
             self.weaviate_client.query.aggregate(collection_name.capitalize())
-            .with_group_by_filter([f"{DOCUMENT_ID_METADATA_KEY}"])
+            .with_group_by_filter([f"{DATA_POINT_ID_METADATA_KEY}"])
             .with_fields("groupedBy { value }")
             .do()
         )
@@ -118,7 +118,7 @@ class WeaviateVectorDB(BaseVectorDB):
         res = self.weaviate_client.batch.delete_objects(
             class_name=collection_name.capitalize(),
             where={
-                "path": [f"{DOCUMENT_ID_METADATA_KEY}"],
+                "path": [f"{DATA_POINT_ID_METADATA_KEY}"],
                 "operator": "ContainsAny",
                 "valueTextArray": document_ids,
             },

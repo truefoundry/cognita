@@ -5,6 +5,9 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStore
 
+from backend.constants import DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+from backend.types import DataPointVector
+
 
 class BaseVectorDB(ABC):
     @abstractmethod
@@ -51,38 +54,31 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def list_documents_in_collection(
-        self, collection_name: str, base_document_id: str = None
-    ) -> List[dict]:
+    def get_vector_client(self):
         """
-        List all documents in a collection
+        Get vector client
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_documents(self, collection_name: str, document_ids: List[str]):
-        """
-        Delete documents from the collection with given `document_ids`
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_vector_ids(self, collection_name: str):
+    def list_data_point_vectors(
+        self,
+        collection_name: str,
+        batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+    ) -> List[DataPointVector]:
         """
         Get vectors from the collection
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_vectors(self, vector_ids: List[str]):
+    def delete_data_point_vectors(
+        self,
+        collection_name: str,
+        data_point_vectors: List[DataPointVector],
+        batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+    ):
         """
         Delete vectors from the collection
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_vector_client(self):
-        """
-        Get vector client
         """
         raise NotImplementedError()
