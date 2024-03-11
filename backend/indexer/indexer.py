@@ -148,6 +148,9 @@ async def _sync_data_source_to_collection(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 errors={"failed_data_point_fqns": failed_data_point_fqns},
             )
+            raise Exception(
+                f"Failed to ingest {len(failed_data_point_fqns)} data points"
+            )
 
 
 async def ingest_data_points(
