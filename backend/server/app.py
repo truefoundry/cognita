@@ -31,8 +31,8 @@ def status():
 
 
 app.include_router(components_router)
-app.include_router(collection_router)
 app.include_router(datasource_router)
+app.include_router(collection_router)
 app.include_router(internal_router)
 
 # Register Query Controllers dynamically as FastAPI routers
