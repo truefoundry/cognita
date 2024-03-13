@@ -45,11 +45,12 @@ class LocalMetadataStore(BaseMetadataStore):
         with open(self.path) as f:
             data = json.load(f)
             self.local_metadata = LocalMetadata.parse_obj(data)
+        self.fqn = get_data_source_fqn(data_source=self.local_metadata.data_source)
         self.data_source = DataSource(
             type=self.local_metadata.data_source.type,
             uri=self.local_metadata.data_source.uri,
             metadata=self.local_metadata.data_source.metadata,
-            fqn=get_data_source_fqn(data_source=self.local_metadata.data_source),
+            fqn=self.fqn,
         )
         self.parser_config = self.local_metadata.parser_config
         associated_data_sources = {}
@@ -75,7 +76,7 @@ class LocalMetadataStore(BaseMetadataStore):
         return self.collection
 
     def get_collection_by_name(
-        self, collection_name: str, no_cache: bool = True
+        self, collection_name: str = None, no_cache: bool = True
     ) -> Collection | None:
         return self.collection
 
@@ -86,8 +87,8 @@ class LocalMetadataStore(BaseMetadataStore):
 
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         return self.data_source
-
-    def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
+    
+    def get_data_source_from_fqn(self, fqn: str = None) -> DataSource | None:
         return self.data_source
 
     def get_data_sources(self) -> List[DataSource]:
