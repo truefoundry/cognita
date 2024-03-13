@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 import mlfoundry
@@ -22,7 +23,7 @@ class InternalService:
         # Create a new data directory.
         dataset = mlfoundry_client.create_data_directory(
             settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
-            req.collection_name,
+            str(uuid.uuid4()),
         )
 
         artifact_repo = MlFoundryArtifactsRepository(
