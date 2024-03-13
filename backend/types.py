@@ -401,7 +401,6 @@ class CreateCollectionDto(CreateCollection):
 
 
 class UploadToDataDirectoryDto(BaseModel):
-    collection_name: str
     filepaths: List[str]
 
 
