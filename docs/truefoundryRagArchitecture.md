@@ -6,7 +6,7 @@ Overall the RAG architecture is composed of several entities
 
 1. **Data Sources** - These are the places that contain your documents to be indexed. Usually these are S3 buckets, databases, TrueFoundry Artifacts or even local disk
 
-2. **Collection Metadata Store** - This store contains metadata about the collection themselves. A collection refers to a set of documents from one or more data sources combined. For each collection, the collection metadata stores
+2. **Metadata Store** - This store contains metadata about the collection themselves. A collection refers to a set of documents from one or more data sources combined. For each collection, the collection metadata stores
 
     - Name of the collection
     - Name of the associated Vector DB collection
