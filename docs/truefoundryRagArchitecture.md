@@ -43,7 +43,7 @@ Overall the RAG architecture is composed of several entities
 1. The data source associated with the collection are **scanned** for all data points (files)
 1. The job compares the VectorDB state with data source state to figure out **newly added files, updated files and deleted files**. The new and updated files are **downloaded**
 1. The newly added files and updated files are **parsed and chunked** into smaller pieces each with their own metadata
-1. The chunks are **embedded** using models like `text-ada-002` on TrueFoundry's AI Gateway
+1. The chunks are **embedded** using models like `text-ada-002` on TrueFoundry's LLM Gateway
 1. The embedded chunks are put into VectorDB with auto generated and provided metadata
 
 ### Question-Answering using API Server
