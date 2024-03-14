@@ -59,9 +59,19 @@ To be able to **Query** on your own documents, follow the steps below:
 
 7.  In order to use default OpenAI embedder. Please get an **OpenAI API Key**. You can get your API Key [here](https://platform.openai.com/account/api-keys)
 
-8.  Open your Terminal on parent folder
+8.  Qdrant Deployment
+    To store and retrieve vectors we setup a vector database in this case Qdrant. You can also setup other databases like Chroma, Weviate,
 
-9.  Create a virtual env (\*\*python >= 3.10 required)
+    -   Go to deployments tab
+    -   Select Applications
+    -   Select your workspace name for deployment
+    -   Select Qdrant
+    -   Enter the name of Qdrant DB
+    -   Click Submit
+
+    Qdrant will be deployed on your instance, and an endpoint will be available in Qdrant dashboard keep it handy, this will be referred as `VECTOR_DB_CONFIG` url.
+
+9.  Open your Terminal on parent folder and create a virtual env (\*\*python >= 3.10 required)
 
     ```
       python3 -m venv ./venv
@@ -81,16 +91,19 @@ To be able to **Query** on your own documents, follow the steps below:
     sfy login --host <paste your TFY_HOST here>
     ```
 
-12. Setup .env file
+12. Setup .env file (Example given below)
 
     ```
     # For truefoundry setup
-    # VECTOR_DB_CONFIG = '{"url": "https://qdrant-prathamesh.tfy-ctl-euwe1-devtest.devtest.truefoundry.tech", "provider": "qdrant"}'
-    # METADATA_STORE_CONFIG = '{"provider": "mlfoundry", "config": {"ml_repo_name": "prathamesh-merck"}}'
+    # VECTOR_DB_CONFIG = '{"url": "<vectordb url here from 8.>", "provider": "<any of chroma/qdrant/weaviate>"}'
+    VECTOR_DB_CONFIG = '{"url": "https://qdrant-test.tfy-ctl-euwe1-org.org.truefoundry.tech", "provider": "qdrant"}'
+
+    # METADATA_STORE_CONFIG = '{"provider": "mlfoundry", "config": {"ml_repo_name": "<ml-repo name here>"}}'
+    METADATA_STORE_CONFIG = '{"provider": "mlfoundry", "config": {"ml_repo_name": "test"}}'
 
     # For local setup
-    TFY_API_KEY = "<YOUR_API_KEY>" # (From 6.)
-    TFY_HOST = "" # (From 1.)
+    TFY_API_KEY = "<YOUR_API_KEY From 6.>"
+    TFY_HOST = "<TFY_HOST From 1.">
 
     TFY_SERVICE_ROOT_PATH = '/'
 

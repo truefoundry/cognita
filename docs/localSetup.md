@@ -2,6 +2,8 @@
 
 ---
 
+This file contains instructions for running the RAG application locally without any additional Truefoundry dependencies
+
 ### Repository Cloning and Environment Setup:
 
 -   Clone the repo: `git clone https://github.com/truefoundry/docs-qa-playground.git`
@@ -9,6 +11,7 @@
     -   Create venv: `python -m venv ./venv`
     -   Activate venv: `source ./venv/bin/activate`
     -   Install required packages: `pip install -r requirements.txt`
+    -   Install jupyter notebook: `pip install jupyter notebook`
 -   Local version requires setting up `local.metadata.json` to be filled up
     -   Example:
         ```json
@@ -39,8 +42,10 @@
     -   This will run Qdrant at http://localhost:6333 ensure the same is present in the `VECTOR_DB_CONFIG` url (env file)
     -   Qdrant UI will be available at: `http://localhost:6333/dashboard`
 -   Setup `.env` file
+
     -   Create a `.env` file or copy from `.env.sample`
     -   Enter the following values:
+
         ```env
         # For local setup
         METADATA_STORE_CONFIG='{"provider":"local","config":{"path":"local.metadata.json"}}'
@@ -51,4 +56,5 @@
         DEBUG_MODE = true
         LOG_LEVEL = "DEBUG"
         ```
+
 -   Now the setup is done, you can run your RAG locally, an example notebook is provided by the name `RAG_local.ipynb`

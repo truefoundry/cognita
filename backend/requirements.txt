@@ -17,4 +17,3 @@ mlfoundry==0.10.6
 servicefoundry==0.10.1
 markdownify==0.11.6
 gunicorn==21.2.0
-jupyter
