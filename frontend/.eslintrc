@@ -1,0 +1,52 @@
+{
+  "extends": [
+    "airbnb-typescript",
+    "airbnb/hooks",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "plugins": ["react", "@typescript-eslint", "import", "simple-import-sort"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "linebreak-style": "off",
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "no-tabs": ["off"],
+    "quotes": ["off"],
+    "indent": ["off"],
+    "semi": ["off"],
+    "curly": ["off"],
+    "brace-style": ["off"],
+    "no-console": ["warn"],
+    "@typescript-eslint/semi": ["warn", "never"],
+    "@typescript-eslint/indent": ["off"],
+    "@typescript-eslint/quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "@typescript-eslint/comma-dangle": ["warn", "only-multiline"],
+    "@typescript-eslint/brace-style": ["error", "1tbs"],
+    "@typescript-eslint/ban-ts-comment": ["off"],
+    "@typescript-eslint/prefer-ts-expect-error": ["off"],
+    "import/no-extraneous-dependencies": ["error", { "devDependencies": true }],
+    "import/extensions": 0,
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error"
+  }
+}

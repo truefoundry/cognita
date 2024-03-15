@@ -1,0 +1,47 @@
+import { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { forwardRef } from 'react'
+import classNames from 'classnames'
+
+export const EXT_ICONS_MAP: { readonly [key: string]: any } = {}
+
+interface IconProps {
+  icon: string | IconProp
+  color?: string
+  className?: string
+  onClick?: (e: React.MouseEvent) => void
+  size?: number
+  forwardedRef?: React.Ref<HTMLElement>
+}
+
+const IconProvider = ({
+  icon,
+  color,
+  size = 0.75,
+  className,
+  onClick,
+  forwardedRef,
+}: IconProps) => {
+  return EXT_ICONS_MAP[icon as string] ? (
+    <img
+      ref={forwardedRef}
+      src={EXT_ICONS_MAP[icon as string]}
+      style={{ height: `${size}rem`, width: 'auto' }}
+      className={classNames(className)}
+    />
+  ) : (
+    <FontAwesomeIcon
+      forwardedRef={forwardedRef}
+      icon={icon as IconProp}
+      style={{ color, fontSize: `${size}rem` }}
+      className={classNames('text-xs', className)}
+      onClick={onClick}
+    />
+  )
+}
+
+export default React.memo(
+  forwardRef<HTMLElement, IconProps>((props, ref) => (
+    <IconProvider {...props} forwardedRef={ref} />
+  ))
+)
