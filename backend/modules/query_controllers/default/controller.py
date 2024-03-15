@@ -3,8 +3,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.openai import ChatOpenAI
-from langchain_community.embeddings.openai import OpenAIEmbeddings
+from langchain_openai.chat_models import ChatOpenAI
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
@@ -38,9 +37,7 @@ class DefaultQueryController:
 
             vector_store = VECTOR_STORE_CLIENT.get_vector_store(
                 collection_name=collection.name,
-                embeddings=OpenAIEmbeddings(
-                    model=collection.embedder_config.config['model'],
-                ),
+                embeddings=get_embedder(collection.embedder_config),
             )
 
             # Get the LLM

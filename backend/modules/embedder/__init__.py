@@ -1,4 +1,4 @@
 from backend.modules.embedder.embedder import register_embedder
-from backend.modules.embedder.truefoundry_embedder import DefaultEmbeddings
+from langchain_openai.embeddings import OpenAIEmbeddings
 
-register_embedder("default", DefaultEmbeddings)
+register_embedder("default", OpenAIEmbeddings)

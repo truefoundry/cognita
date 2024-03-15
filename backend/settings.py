@@ -44,14 +44,19 @@ class Settings(BaseSettings):
 
     if not METADATA_STORE_CONFIG:
         raise ValueError("METADATA_STORE_CONFIG is not set")
+    
+    if not OPENAI_API_KEY:
 
-    if not TFY_API_KEY:
-        raise ValueError("TFY_API_KEY is not set")
+        if not TFY_API_KEY:
+            raise ValueError("TFY_API_KEY is not set")
 
-    if not TFY_LLM_GATEWAY_URL:
-        if not TFY_HOST:
-            raise ValueError("TFY_HOST is not set")
-        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
+        if not TFY_LLM_GATEWAY_URL:
+            if not TFY_HOST:
+                raise ValueError("TFY_HOST is not set")
+            TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
+
+        os.environ["OPENAI_API_KEY"] = TFY_API_KEY
+        os.environ["OPENAI_API_BASE"] = f"{TFY_LLM_GATEWAY_URL}/openai"
 
     try:
         VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
@@ -64,9 +69,4 @@ class Settings(BaseSettings):
     except Exception as e:
         raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
     
-    if OPENAI_API_KEY == "" and TFY_API_KEY != "" and TFY_LLM_GATEWAY_URL != "":
-        os.environ["OPENAI_API_KEY"] = TFY_API_KEY
-        os.environ["OPENAI_API_BASE"] = f"{TFY_LLM_GATEWAY_URL}/openai"
-
-
 settings = Settings()
