@@ -40,29 +40,32 @@ class QdrantVectorDB(BaseVectorDB):
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-        try:
-            collection_info = self.qdrant_client.get_collection(collection_name=collection_name)
-        except Exception:
-            logger.debug(f"[Vector Store] Creating new collection {collection_name}")
-            self.qdrant_client.create_collection(
-                collection_name=collection_name, 
-                vectors_config=VectorParams(
-                    size=1536, # embedding dimension 
-                    distance=Distance.COSINE,
-                ),
-            )
-            self.qdrant_client.create_payload_index(
-                collection_name=collection_name,
-                field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
-                field_schema=models.PayloadSchemaType.KEYWORD,
-            )
-            self.qdrant_client.create_payload_index(
-                collection_name=collection_name,
-                field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
-                field_schema=models.PayloadSchemaType.KEYWORD,
-            )
-            logger.debug(f"[Vector Store] Created new collection {collection_name}")
-        return
+
+        logger.debug(f"[Vector Store] Creating new collection {collection_name}")
+
+        # Calculate embedding size
+        partial_embeddings = embeddings.embed_documents(["Initial document"])
+        vector_size = len(partial_embeddings[0])
+
+        self.qdrant_client.create_collection(
+            collection_name=collection_name, 
+            vectors_config=VectorParams(
+                size=vector_size, # embedding dimension 
+                distance=Distance.COSINE,
+            ),
+        )
+        self.qdrant_client.create_payload_index(
+            collection_name=collection_name,
+            field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        self.qdrant_client.create_payload_index(
+            collection_name=collection_name,
+            field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+        logger.debug(f"[Vector Store] Created new collection {collection_name}")
+
 
     def _get_records_to_be_upserted(
         self, collection_name: str, data_point_fqns: List[str], incremental: bool
