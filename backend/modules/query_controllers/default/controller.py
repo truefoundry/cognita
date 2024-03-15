@@ -4,6 +4,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_community.chat_models.openai import ChatOpenAI
+from langchain_community.embeddings.openai import OpenAIEmbeddings
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
@@ -37,14 +38,14 @@ class DefaultQueryController:
 
             vector_store = VECTOR_STORE_CLIENT.get_vector_store(
                 collection_name=collection.name,
-                embeddings=get_embedder(collection.embedder_config),
+                embeddings=OpenAIEmbeddings(
+                    model=collection.embedder_config.config['model'],
+                ),
             )
 
             # Get the LLM
             llm = ChatOpenAI(
                 model=request.model_configuration.name,
-                api_key=settings.TFY_API_KEY,
-                base_url=f"{settings.TFY_LLM_GATEWAY_URL}/openai",
             )
 
             # Create the retriever using langchain VectorStoreRetriever
