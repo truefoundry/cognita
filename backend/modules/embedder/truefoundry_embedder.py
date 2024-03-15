@@ -1,3 +1,0 @@
-from servicefoundry.langchain import TrueFoundryEmbeddings
-
-DefaultEmbeddings = TrueFoundryEmbeddings
