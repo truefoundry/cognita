@@ -18,7 +18,7 @@ class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
         if config.local is True:
             self.local = True
-            self.location = ":memory:"
+            self.location = config.url
             self.qdrant_client = QdrantClient(
                 location=self.location,
             )
