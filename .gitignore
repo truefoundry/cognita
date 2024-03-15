@@ -18,3 +18,4 @@ tempDir/
 .ipynb_checkpoints/
 deploy.*.py
 ragenv
+requests.json
