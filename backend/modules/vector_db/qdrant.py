@@ -4,6 +4,8 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
+from qdrant_client.http.models import VectorParams, Distance
+
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
@@ -20,7 +22,7 @@ class QdrantVectorDB(BaseVectorDB):
             self.local = True
             self.location = config.url
             self.qdrant_client = QdrantClient(
-                location=self.location,
+                path="./qdrant_db",
             )
         else:
             self.local = False
@@ -38,54 +40,28 @@ class QdrantVectorDB(BaseVectorDB):
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-        # No provision to create a empty collection
-        # We do a workaround by creating a dummy document and deleting it
-        logger.debug(f"[Vector Store] Creating new collection {collection_name}")
-        Qdrant.from_documents(
-            documents=[
-                Document(
-                    page_content="Initial document",
-                    metadata={f"{DATA_POINT_FQN_METADATA_KEY}": "__init__"},
-                )
-            ],
-            embedding=embeddings,
-            collection_name=collection_name,
-            **(
-                {"location": self.location}
-                if self.local
-                else {
-                    "url": self.url,
-                    "api_key": self.api_key,
-                    "prefer_grpc": self.prefer_grpc,
-                    "port": self.port,
-                    "prefix": self.prefix,
-                }
-            ),
-        )
-        self.qdrant_client.delete(
-            collection_name=collection_name,
-            points_selector=models.FilterSelector(
-                filter=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
-                            match=models.MatchText(text="__init__"),
-                        ),
-                    ],
-                )
-            ),
-        )
-        self.qdrant_client.create_payload_index(
-            collection_name=collection_name,
-            field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
-        self.qdrant_client.create_payload_index(
-            collection_name=collection_name,
-            field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
-        logger.debug(f"[Vector Store] Created new collection {collection_name}")
+        try:
+            collection_info = self.qdrant_client.get_collection(collection_name=collection_name)
+        except Exception:
+            logger.debug(f"[Vector Store] Creating new collection {collection_name}")
+            self.qdrant_client.create_collection(
+                collection_name=collection_name, 
+                vectors_config=VectorParams(
+                    size=1536, # embedding dimension 
+                    distance=Distance.COSINE,
+                ),
+            )
+            self.qdrant_client.create_payload_index(
+                collection_name=collection_name,
+                field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            self.qdrant_client.create_payload_index(
+                collection_name=collection_name,
+                field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+            )
+            logger.debug(f"[Vector Store] Created new collection {collection_name}")
         return
 
     def _get_records_to_be_upserted(
