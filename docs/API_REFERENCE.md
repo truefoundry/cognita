@@ -22,6 +22,7 @@ This group of API list down different components of RAG that are registered.
     ```
 
     Current available parsers include: `MarkdownParser`, `PdfParserUsingPyMuPDF`, `TextParser`.
+    To add your own sources refer `backend/modules/parsers/README.md`
 
 -   GET `/v1/components/embedders`: Returns a list of available embedders.
 
@@ -40,6 +41,7 @@ This group of API list down different components of RAG that are registered.
     -H 'accept: application/json'
     ```
     Current available dataloaders are: `github`, `local`, `web`, `mlfoundry`, `artifact`.
+    To add your own sources refer `backend/modules/dataloaders/README.md`
 
 ### Data Sources
 
