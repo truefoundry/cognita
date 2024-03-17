@@ -94,6 +94,7 @@ def answer(query):
 
 
 if __name__ == "__main__":
+    
     # Run only when u have to ingest data
     print("Ingesting Data....")
     asyncio.run(ingest())

@@ -11,7 +11,6 @@ This file contains instructions for running the RAG application locally without 
     -   Create venv: `python -m venv ./venv`
     -   Activate venv: `source ./venv/bin/activate`
     -   Install required packages: `pip install -r requirements.txt`
-    -   Install jupyter notebook: `pip install jupyter notebook`
 -   Local version requires setting up `local.metadata.json` to be filled up
 
     -   Example:
@@ -35,10 +34,6 @@ This file contains instructions for running the RAG application locally without 
                 model: openai-devtest/text-embedding-ada-002
         ```
 
--   Setup Qdrant (Docker):
-    -   `docker run -p 6333:6333 qdrant/qdrant -v $(pwd)/qdrant_storage:/qdrant/storage`
-    -   This will run Qdrant at http://localhost:6333 ensure the same is present in the `VECTOR_DB_CONFIG` url (env file)
-    -   Qdrant UI will be available at: `http://localhost:6333/dashboard`
 -   Setup `.env` file
 
     -   Create a `.env` file or copy from `.env.sample`
@@ -46,8 +41,8 @@ This file contains instructions for running the RAG application locally without 
 
         ```env
         # For local setup
-        METADATA_STORE_CONFIG='{"provider":"local","config":{"path":"local.metadata.json"}}'
-        VECTOR_DB_CONFIG='{"provider":"qdrant","local":true, "url":"http://localhost:6333"}'
+        METADATA_STORE_CONFIG='{"provider":"local","config":{"path":"local.metadata.yaml"}}'
+        VECTOR_DB_CONFIG='{"provider":"qdrant","local":true}'
 
         TFY_API_KEY = <YOUR_TF_API_KEY>
         TFY_SERVICE_ROOT_PATH = '/'
@@ -55,4 +50,6 @@ This file contains instructions for running the RAG application locally without 
         LOG_LEVEL = "DEBUG"
         ```
 
--   Now the setup is done, you can run your RAG locally, an example notebook is provided by the name `RAG_local.ipynb`
+    -   You can also provide `OPENAI_API_KEY` here.
+
+-   Now the setup is done, you can run your RAG locally, an example python script is provided by the name `local_rag.py`. The script has code for ingesting data into vector db and answering the query.
