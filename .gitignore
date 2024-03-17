@@ -19,3 +19,4 @@ tempDir/
 deploy.*.py
 ragenv
 requests.json
+qdrant_db

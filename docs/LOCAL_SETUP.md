@@ -13,30 +13,28 @@ This file contains instructions for running the RAG application locally without 
     -   Install required packages: `pip install -r requirements.txt`
     -   Install jupyter notebook: `pip install jupyter notebook`
 -   Local version requires setting up `local.metadata.json` to be filled up
+
     -   Example:
-        ```json
-        {
-            "collection_name": "testcollection", // should be [A-Za-z0-9]
-            "data_source": {
-                "type": "local",
-                // Sample data is provided under ./sample-data/
-                "uri": "sample-data/creditcards" // Local data source path
-            },
-            "parser_config": {
-                "chunk_size": 400,
-                "parser_map": {
-                    ".md": "MarkdownParser"
-                }
-            },
-            "embedder_config": {
-                "provider": "default",
-                "config": {
-                    // Embedding Model from TFY
-                    "model": "openai-devtest/text-embedding-ada-002"
-                }
-            }
-        }
+
+        ```yaml
+        collection_name: testcollection
+        # Sample data is provided under ./sample-data/
+        data_source:
+            type: local
+            # Local data source path
+            uri: sample-data/creditcards
+        parser_config:
+            chunk_size: 400
+            parser_map:
+                # Since data is markdown type, we use the MarkdownParser
+                ".md": MarkdownParser
+        embedder_config:
+            provider: default
+            config:
+                # Embedding Model from TFY
+                model: openai-devtest/text-embedding-ada-002
         ```
+
 -   Setup Qdrant (Docker):
     -   `docker run -p 6333:6333 qdrant/qdrant -v $(pwd)/qdrant_storage:/qdrant/storage`
     -   This will run Qdrant at http://localhost:6333 ensure the same is present in the `VECTOR_DB_CONFIG` url (env file)
