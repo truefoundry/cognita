@@ -1,4 +1,4 @@
-import json
+import yaml
 import random
 import string
 from typing import List
@@ -43,7 +43,7 @@ class LocalMetadataStore(BaseMetadataStore):
         if not self.path:
             raise ValueError("path is required for local metadata store")
         with open(self.path) as f:
-            data = json.load(f)
+            data = yaml.safe_load(f)
             self.local_metadata = LocalMetadata.parse_obj(data)
         self.fqn = get_data_source_fqn(data_source=self.local_metadata.data_source)
         self.data_source = DataSource(
