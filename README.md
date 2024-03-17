@@ -1,5 +1,4 @@
-# RAG and QA on Docs Playground
-==================================
+# QA on Docs using RAG Playground
 
 ## Introduction
 
@@ -13,19 +12,19 @@ Its quite easy to build an end to end RAG system on your own documents in a Jupy
 
 This is an opensource framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. 
 
-** Getting Started **
+### Getting Started
 
 You can play around with the code locally in a notebook or using the UI component that ships along with the code. [Follow the steps here](docs/LOCAL_SETUP.md) to run the code locally. You can index a local set of documents and check the responses. 
 
-** Code Architecture **
+### Code Architecture
 
 You can read about the RAG architecture and how the codebase manifests it [here](docs/ARCHITECTURE.md)
 
-** Customizing the Code for your usecase **
+### Customizing the Code for your usecase
 
 This RAG codebase makes it really easy to switch between parsers, loaders, models and retrievers. To understand how to change or add any code for your own usecase, follow the guide here: [Customizing the Code](docs/CUSTOMIZING.md)
 
-** API Reference **
+### API Reference
 
 To understand all the APIs exposed by this code, please read the docs [here](docs/RUN.md)
 
