@@ -3,6 +3,7 @@ WORKDIR /build
 COPY package.json yarn.lock .npmrc ./
 RUN yarn install
 COPY . .
+COPY .env.example .env
 ENV NODE_OPTIONS="--max-old-space-size=6144"
 RUN yarn build:prod
 
