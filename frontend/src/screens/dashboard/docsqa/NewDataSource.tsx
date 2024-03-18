@@ -7,7 +7,11 @@ import Spinner from '@/components/base/atoms/Spinner'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
 import { DOCS_QA_MAX_UPLOAD_SIZE_MB } from '@/stores/constants'
-import { useAddDataSourceMutation, useGetDataLoadersQuery, useUploadDataToDataDirectoryMutation } from '@/stores/qafoundry'
+import {
+  useAddDataSourceMutation,
+  useGetDataLoadersQuery,
+  useUploadDataToDataDirectoryMutation,
+} from '@/stores/qafoundry'
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
 import { MenuItem, Select } from '@mui/material'
@@ -34,7 +38,7 @@ interface NewDataSourceProps {
   onClose: () => void
 }
 
-const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
+const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedDataSourceType, setSelectedDataSourceType] = useState('')
   const [dataSourceUri, setDataSourceUri] = useState('')
@@ -169,24 +173,22 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
             <div>
               <Spinner center big />
             </div>
-            <p className="mt-4">
-              Data Source is being created...
-            </p>
+            <p className="mt-4">Data Source is being created...</p>
           </div>
         )}
-        <div className="font-bold font-lab text-2xl py-2 border-b border-gray-200 px-4">
+        <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
           Create New Data Source
         </div>
         <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
           <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
-            Documents that are uploaded will be accessible to the public.
-            Please do not upload any confidential or sensitive data.
+            Documents that are uploaded will be accessible to the public. Please
+            do not upload any confidential or sensitive data.
           </div>
           <div className="mb-4 w-full"></div>
           <div>
             <div className="mb-2">
               <label>
-                <div className="label-text font-lab mb-1">
+                <div className="label-text font-inter mb-1">
                   Data Source Type
                 </div>
                 <Select
@@ -229,7 +231,7 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
                 }
                 onDrop={isSaving ? undefined : handleDrop}
               >
-                <span className="label-text font-lab mb-1">
+                <span className="label-text font-inter mb-1">
                   Choose files or a zip to upload
                 </span>
                 <div
@@ -259,10 +261,7 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
                     id="dropzone-file"
                     type="file"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFiles([
-                        ...files,
-                        ...getUniqueFiles(e.target.files),
-                      ])
+                      setFiles([...files, ...getUniqueFiles(e.target.files)])
                     }
                     multiple
                   />
@@ -271,11 +270,13 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
             ) : (
               <>
                 <label htmlFor="collection-name-input">
-                  <span className="label-text font-lab mb-1">
+                  <span className="label-text font-inter mb-1">
                     {selectedDataSourceType === 'github'
                       ? 'GitHub Repo URL'
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Data Directory FQN'
+                      : selectedDataSourceType === 'artifact'
+                      ? 'FQN'
                       : 'URL'}
                   </span>
                 </label>
@@ -287,6 +288,8 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
                       ? 'Enter GitHub Repo URL'
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Enter Data Directory FQN'
+                      : selectedDataSourceType === 'artifact'
+                      ? 'Enter Artifact FQN'
                       : 'Enter Web URL'
                   }`}
                   value={dataSourceUri}
@@ -326,7 +329,7 @@ const NewDataSource = ({ open, onClose } : NewDataSourceProps) => {
                       <div className="flex items-center gap-2">
                         {idx + 1}.
                         <div className="flex flex-col gap-1">
-                          <div className="font-lab text-sm leading-4">
+                          <div className="font-inter text-sm leading-4">
                             {file.name}
                           </div>
                           <DarkTooltip title={`${file.size} bytes`}>

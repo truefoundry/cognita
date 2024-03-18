@@ -8,7 +8,7 @@ const TenantNotFound = () => {
         <img src={icon} />
         <div className="divider sm:divider-horizontal" />
         <div className="flex flex-col gap-2">
-          <h2 className="font-lab font-black text-6xl">Page unavailable</h2>
+          <h2 className="font-inter font-black text-6xl">Page unavailable</h2>
           <p className="font-semibold">
             Your Truefoundry site is currently unavailable.
             <br />

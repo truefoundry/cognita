@@ -1,70 +1,33 @@
 type: service
 env:
-  VITE_QA_FOUNDRY_URL: "https://docs-qa-be-tfy-docs-rag-8080.tfy-ctl-euwe1-devtest.devtest.truefoundry.tech"
-  VITE_DOCS_QA_ENABLE_STANDALONE: "true"
-  VITE_DOCS_QA_DELETE_COLLECTIONS: "false"
-  VITE_DOCS_QA_ENABLE_REDIRECT: "false"
-  VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: "200"
-  VITE_DOCS_QA_SEARCH_PAYLOAD_PATCH: '{}'
-name: truefoundry-rag
+  VITE_QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
+name: docs-qa
 image:
   type: build
   build_source:
     type: git
-    repo_url: >-
-      https://github.com/truefoundry/truefoundry-frontend-app?id=clgf5sxvb000016qq7kaqgh1w
+    repo_url: https://github.com/truefoundry/docs-qa-playground
     branch_name: main
-    ref: 0a67654015dff23710c076186ca11b4f7377b645
+    ref: 5666e97fd665827faee0d741821aad13fa86baff
   build_spec:
     type: dockerfile
-    dockerfile_path: ./Dockerfile
-    build_context_path: ./
-    build_args:
-      VITE_SKIP_SENTRY_SOURCE_MAP: "true"
+    dockerfile_path: ./frontend/Dockerfile
+    build_context_path: ./frontend
 ports:
-  - port: 5000
+  - host: docs-qa.tfy-gcp-standard-usce1.devtest.truefoundry.tech
+    port: 5000
     expose: true
-    host: app.devtest.truefoundry.tech
     protocol: TCP
+    app_protocol: http
+mounts: []
 replicas: 1
 resources:
-  cpu_request: 0.03
-  cpu_limit: 0.05
+  node:
+    type: node_selector
+    capacity_type: spot_fallback_on_demand
+  cpu_request: 0.2
+  cpu_limit: 0.5
   memory_request: 200
-  memory_limit: 300
-  ephemeral_storage_request: 100
-  ephemeral_storage_limit: 200
-rollout_strategy:
-  type: rolling_update
-  max_surge_percentage: 25
-  max_unavailable_percentage: 0
-kustomize:
-  additions:
-    - kind: VirtualService
-      spec:
-        http:
-          - match:
-              - uri:
-                  prefix: /api/tfy-build/
-            route:
-              - destination:
-                  host: tfy-build-server.truefoundry.svc.cluster.local
-                  port:
-                    number: 5000
-            rewrite:
-              uri: /
-          - route:
-            - weight: 100
-              destination:
-                host: truefoundry-frontend-app
-                port:
-                  number: 5000
-        hosts:
-          - app.devtest.truefoundry.tech
-          - '*.tenants.devtest.truefoundry.tech'
-        gateways:
-          - istio-system/tfy-wildcard
-      metadata:
-        name: truefoundry-frontend-app-proxy-vs
-        namespace: truefoundry
-      apiVersion: networking.istio.io/v1alpha3
+  memory_limit: 500
+  ephemeral_storage_request: 1000
+  ephemeral_storage_limit: 2000

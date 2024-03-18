@@ -162,8 +162,7 @@ const config = {
         'Consolas',
         'monospace',
       ],
-      lab: ['Lab Grotesque', 'system-ui'],
-      fira: ['Fira Code'],
+      inter: ['Inter', 'system-ui'],
     },
   },
   plugins: [

@@ -38,7 +38,7 @@ const NoCollections = ({ notSelected }: { notSelected?: boolean }) => {
         <div className="flex justify-center items-center">
           <div className="h-[160px] w-[160px] rounded-xl border border-gray-250 flex justify-center items-center flex-col pt-6">
             <img src={DocsDataPng} className="w-[73px]" />
-            <p className="text-center font-[700] font-lab mt-4 mb-4">
+            <p className="text-center font-[700] font-inter mt-4 mb-4">
               Your Data
             </p>
           </div>
@@ -48,7 +48,9 @@ const NoCollections = ({ notSelected }: { notSelected?: boolean }) => {
           </div>
           <div className="h-[160px] w-[160px] rounded-xl border border-gray-250 flex justify-end items-center flex-col pt-6">
             <img src={SearchIcon} className="h-[71px]" />
-            <p className="text-center font-[700] font-lab mt-4 mb-4">DocsQA</p>
+            <p className="text-center font-[700] font-inter mt-4 mb-4">
+              DocsQA
+            </p>
           </div>
           <div className="flex items-center">
             <div className="w-[40px] h-[1px] bg-black"></div>
@@ -67,7 +69,7 @@ const NoCollections = ({ notSelected }: { notSelected?: boolean }) => {
                 Response
               </div>
             </div>
-            <p className="text-center font-[700] font-lab mt-2 mb-4">App</p>
+            <p className="text-center font-[700] font-inter mt-2 mb-4">App</p>
           </div>
         </div>
       </div>
