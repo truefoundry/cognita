@@ -23,8 +23,8 @@ RAGFoundry is an opensource framework to organize your RAG codebase along with a
 -   [🛠️ Project Architecture](#️🛠️-project-architecture)
     -   [⚙️ RAG Components](#rag-components)
     -   [💾 Data indexing](#data-indexing)
-    -   [Question-Answering using API Server](#question-answering-using-api-server)
-    -   [Code Structure](#code-structure)
+    -   [❓Question-Answering using API Server](#❓question-answering-using-api-server)
+    -   [💻 Code Structure](#💻-code-structure)
     -   [Customizing the code for your usecase](#customizing-the-code-for-your-usecase)
 -   [💡 Writing your Query Controller (QnA)](#💡-writing-your-query-controller-qna)
 -   [🔑 API Reference](#🔑-api-reference)
@@ -210,7 +210,7 @@ Overall the RAG architecture is composed of several entities
 1. The chunks are **embedded** using models like `text-ada-002` on TrueFoundry's LLM Gateway
 1. The embedded chunks are put into VectorDB with auto generated and provided metadata
 
-## Question-Answering using API Server:
+## ❓Question-Answering using API Server:
 
 1. Users sends a request with their query
 
@@ -228,7 +228,7 @@ Overall the RAG architecture is composed of several entities
 
     **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
 
-## Code Structure:
+## 💻 Code Structure:
 
 Entire codebase lives in `backend/` Think of this as RAG components abstractions
 
