@@ -120,7 +120,7 @@ const NewCollection = ({ open, onClose }: NewCollectionProps) => {
             <p className="mt-4">Collection is being submitted</p>
           </div>
         )}
-        <div className="font-bold font-lab text-2xl py-2 border-b border-gray-200 px-4">
+        <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
           Create a new document collection
         </div>
         <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
@@ -130,7 +130,9 @@ const NewCollection = ({ open, onClose }: NewCollectionProps) => {
           </div>
           <div className="mb-4">
             <label htmlFor="collection-name-input">
-              <span className="label-text font-lab mb-1">Collection name</span>
+              <span className="label-text font-inter mb-1">
+                Collection name
+              </span>
               <small>
                 {' '}
                 * Should only contain lowercase alphanumeric character
@@ -161,7 +163,9 @@ const NewCollection = ({ open, onClose }: NewCollectionProps) => {
           </div>
           <div className="flex gap-7 w-full">
             <div className="w-full">
-              <span className="label-text font-lab mb-1">Embedding Model</span>
+              <span className="label-text font-inter mb-1">
+                Embedding Model
+              </span>
               <Select
                 id="datasets"
                 value={selectedEmbeddingModel}

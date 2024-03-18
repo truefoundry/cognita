@@ -19,7 +19,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
         {image}
         <div className="divider sm:divider-horizontal" />
         <div className="flex flex-col gap-2">
-          <h2 className="font-lab font-black text-8xl">
+          <h2 className="font-inter font-black text-8xl">
             {statusCode} <span className="text-6xl">Error</span>
           </h2>
           <p className="font-semibold">

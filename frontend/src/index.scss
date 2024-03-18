@@ -8,37 +8,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
 @import '@fortawesome/fontawesome-svg-core/styles.css';
 
 @import '@/assets/css/toast.css';
-
-@font-face {
-  font-family: 'Lab Grotesque';
-  src: url('@/assets/fonts/lab/LabGrotesque-Bold.woff2') format('woff2');
-  font-weight: 600;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Lab Grotesque';
-  src: url('@/assets/fonts/lab/LabGrotesque-Black.woff2') format('woff2');
-  font-weight: 800;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Lab Grotesque';
-  src: url('@/assets/fonts/lab/LabGrotesque-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Fira Code';
-  src: url('@/assets/fonts/fira/FiraCode-VariableFont_wght.ttf');
-  font-weight: 600;
-  font-display: swap;
-}
 
 ::-moz-selection {
   /* Code for Firefox */
@@ -700,7 +674,7 @@ pre.terymnal-input.termynalInput {
   right: 0.25rem;
   transform: translateY(-50%);
   padding: 0 0.25rem;
-  @apply bg-gray-100 font-lab text-gray-500;
+  @apply bg-gray-100 font-inter text-gray-500;
 }
 
 .input-suffix-transparent {
@@ -715,7 +689,7 @@ pre.terymnal-input.termynalInput {
   right: 0.25rem;
   transform: translateY(-50%);
   padding: 0 0.25rem;
-  @apply font-lab text-gray-500
+  @apply font-inter text-gray-500
 }
 
 span.flex-input[contenteditable] {

@@ -5,7 +5,7 @@ import notify from '@/components/base/molecules/Notify'
 import {
   Collection,
   useAddDocsToCollectionMutation,
-  useGetDataSourcesQuery
+  useGetDataSourcesQuery,
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
@@ -99,7 +99,7 @@ const AddDataSourceToCollection = ({
                 </p>
               </div>
             )}
-            <div className="font-bold font-lab text-2xl py-2 border-b border-gray-200 px-4">
+            <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
               Add data source to collection
             </div>
             <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
@@ -111,7 +111,7 @@ const AddDataSourceToCollection = ({
               <div>
                 <div className="mb-4">
                   <label>
-                    <div className="label-text font-lab mb-1">
+                    <div className="label-text font-inter mb-1">
                       Data Source FQN
                     </div>
                     <Select
@@ -145,18 +145,26 @@ const AddDataSourceToCollection = ({
                 </div>
                 {selectedDataSource !== 'none' && (
                   <>
-                    <div className='flex text-sm mb-1'>
+                    <div className="flex text-sm mb-1">
                       <div>Type :</div>
                       &nbsp;
-                      <div className='capitalize'>
-                        {dataSources?.filter(source => source.fqn === selectedDataSource)[0].type}
+                      <div className="capitalize">
+                        {
+                          dataSources?.filter(
+                            (source) => source.fqn === selectedDataSource
+                          )[0].type
+                        }
                       </div>
                     </div>
-                    <div className='flex text-sm'>
+                    <div className="flex text-sm">
                       <div>URI :</div>
                       &nbsp;
                       <div>
-                        {dataSources?.filter(source => source.fqn === selectedDataSource)[0].uri}
+                        {
+                          dataSources?.filter(
+                            (source) => source.fqn === selectedDataSource
+                          )[0].uri
+                        }
                       </div>
                     </div>
                   </>

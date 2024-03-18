@@ -37,7 +37,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ...nativeProps
     } = props
     const classes = classnames(
-      'btn gap-2 font-lab normal-case flex-nowrap whitespace-nowrap outline-none',
+      'btn gap-2 font-inter normal-case flex-nowrap whitespace-nowrap outline-none',
       'disabled:cursor-not-allowed disabled:bg-[#F0F7FF] disabled:text-gray-500 dark:bg-blue-purple',
       {
         'cursor-not-allowed border-gray-300': loading || disabled,
