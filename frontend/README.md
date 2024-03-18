@@ -68,7 +68,7 @@ cp .env.example .env
 Sample .env file:
 
 ```bash
-VITE_QA_FOUNDRY_URL=<Backend Server URL>
+VITE_QA_FOUNDRY_URL=http://localhost:8080/
 VITE_DOCS_QA_ENABLE_STANDALONE=true
 VITE_DOCS_QA_DELETE_COLLECTIONS=false
 VITE_DOCS_QA_STANDALONE_PATH=/
