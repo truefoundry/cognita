@@ -1,14 +1,14 @@
 type: service
 env:
-  QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
+  VITE_QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
 name: docs-qa
 image:
   type: build
   build_source:
     type: git
     repo_url: https://github.com/truefoundry/docs-qa-playground
-    branch_name: ss_cleanup
-    ref: 2fe721d5a77192e59dd9f6423da1cb213c77fee6
+    branch_name: main
+    ref: 5666e97fd665827faee0d741821aad13fa86baff
   build_spec:
     type: dockerfile
     dockerfile_path: ./frontend/Dockerfile
