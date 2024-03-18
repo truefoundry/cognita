@@ -499,7 +499,7 @@ This API is used for managing the collections. Each collection has embedder conf
 
     -   Sample Response:
 
-        ```json
+        ```
         {
             "collections": [
                 {
