@@ -1,25 +1,20 @@
 type: service
 env:
-  VITE_QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
-  VITE_DOCS_QA_ENABLE_REDIRECT: 'false'
-  VITE_DOCS_QA_STANDALONE_PATH: /
-  VITE_DOCS_QA_DELETE_COLLECTIONS: 'false'
-  VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: '200'
+  QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
 name: docs-qa
 image:
   type: build
   build_source:
     type: git
-    repo_url: >-
-      https://github.com/truefoundry/tf-rag-frontend?id=clifjraeq0cfx1hd7dfguhjid
-    branch_name: main
-    ref: 5666e97fd665827faee0d741821aad13fa86baff
+    repo_url: https://github.com/truefoundry/docs-qa-playground
+    branch_name: ss_cleanup
+    ref: 2fe721d5a77192e59dd9f6423da1cb213c77fee6
   build_spec:
     type: dockerfile
-    dockerfile_path: ./Dockerfile
-    build_context_path: ./
+    dockerfile_path: ./frontend/Dockerfile
+    build_context_path: ./frontend
 ports:
-  - host: test-docs-qa.tfy-gcp-standard-usce1.devtest.truefoundry.tech
+  - host: docs-qa.tfy-gcp-standard-usce1.devtest.truefoundry.tech
     port: 5000
     expose: true
     protocol: TCP
