@@ -141,13 +141,16 @@ pip install -r requirements.txt
     METADATA_STORE_CONFIG='{"provider":"local","config":{"path":"local.metadata.yaml"}}'
     VECTOR_DB_CONFIG='{"provider":"qdrant","local":true}'
 
-    TFY_API_KEY = <YOUR_TF_API_KEY>
     TFY_SERVICE_ROOT_PATH = '/'
     DEBUG_MODE = true
     LOG_LEVEL = "DEBUG"
-    ```
 
-> You can also provide `OPENAI_API_KEY` here.
+    # Add OPENAI_API_KEY for LLMs and Embedding
+    # OPENAI_API_KEY=
+
+    # Else if using TF LLM GATEWAY, add TFY_API_KEY
+    # TFY_API_KEY=
+    ```
 
 -   Now the setup is done, you can run your RAG locally, an example python script is provided in the `local` folder. To run the script, from root folder:
     -   First, ingest the data: `python -m local.ingest`
@@ -292,6 +295,33 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 
 -   Finally, register the loader in `backend/modules/dataloaders/__init__.py`
 
+-   Testing a dataloader on localdir, in root dir, copy the following code as `test.py` and execute it. We show how to test an existing `LocalDirLoader` here:
+
+    ```python
+    from backend.modules.dataloaders import LocalDirLoader
+    from backend.types import DataSource
+
+    data_source = DataSource(
+        type="local",
+        uri="sample-data/creditcards",
+        fqn="xyz://dummy"
+    )
+
+    loader = LocalDirLoader()
+
+    # This yeilds a generator
+    loaded_data_pts = loader.load_filtered_data_points_from_data_source(
+        data_source=data_source,
+        dest_dir="test/creditcards",
+        existing_data_point_fqn_to_hash={},
+        batch_size=1,
+        data_ingestion_mode="append"
+    )
+
+    for data_pt in loaded_data_pts:
+        print(data_pt)
+    ```
+
 ### Customizing Embedder:
 
 -   The codebase currently uses `OpenAIEmbeddings` you can registered as `default`.
@@ -302,6 +332,30 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 -   You can write your own parser by inherting the `BaseParser` class from `backend/modules/parsers/parser.py`
 
 -   Finally, register the parser in `backend/modules/parsers/__init__.py`
+
+-   Testing a Parser on a local file, in root dir, copy the following code as `test.py` and execute it. Here we show how we can test existing `MarkdownParser`:
+
+    ```python
+    import os
+    import asyncio
+    from backend.types import LoadedDataPoint
+    from backend.modules.parsers import MarkdownParser
+
+    async def get_chunks(filepath, **kwargs):
+        loader_data_point = LoadedDataPoint(
+            local_filepath=filepath,
+            file_extension=os.path.splitext(filepath)[1],
+            data_point_uri="xyz://dummy",
+            data_source_fqn="xyz://dummy",
+            data_point_hash="dummy",
+        )
+        parser = MarkdownParser(**kwargs)
+        return await parser.get_chunks(loaded_data_point=loader_data_point)
+
+
+    chunks =  asyncio.run(get_chunks(filepath="sample-data/creditcards/diners-club-black-metal-edition.md", chunk_size=None, chunk_overlap=0))
+    print(chunks)
+    ```
 
 ### Adding Custom VectorDB:
 
