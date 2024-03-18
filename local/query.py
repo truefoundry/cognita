@@ -1,8 +1,10 @@
-# Fill up local.metadata.json
-# Load the env file for local setup
-from backend.settings import Settings
-import asyncio
 
+# This is a simple script to test the retrieval QA chain
+# Make sure the data is ingested in Qdrant DB before running this script
+
+from backend.settings import Settings
+
+from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.modules.embedder.embedder import get_embedder
 
@@ -13,29 +15,8 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_openai.chat_models import ChatOpenAI
 
 
-# Data ingestion
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.types import IngestDataToCollectionDto
-from backend.server.services.collection import CollectionService
-
-
 
 settings = Settings()
-
-
-async def ingest():
-    collection = METADATA_STORE_CLIENT.get_collection_by_name(no_cache=True)
-    data_source = METADATA_STORE_CLIENT.get_data_source_from_fqn()
-
-    # Create a data ingestion request
-    # It requires collection name
-    # Data source FQN
-    request = IngestDataToCollectionDto(
-        collection_name = collection.name,
-        data_source_fqn = data_source.fqn,
-    )
-
-    await CollectionService.ingest_data(request=request)
 
 def answer(query):
         
@@ -94,12 +75,6 @@ def answer(query):
 
 
 if __name__ == "__main__":
-    
-    # Run only when u have to ingest data
-    print("Ingesting Data....")
-    asyncio.run(ingest())
-
-
     query = "What is a credit card?"
     ans = answer(query=query)
     print(ans['answer'])

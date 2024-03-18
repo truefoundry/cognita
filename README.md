@@ -2,7 +2,7 @@
 
 ## QA on Docs using RAG Playground
 
-Its quite easy to build an end to end RAG system on your own documents using Langchain or LlamaIndex. However, deploying the rag system in a scalable way requires us to solve a lot of problems listed below:
+Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG system on your own documents using Langchain or LlamaIndex. However, deploying the rag system in a scalable way requires us to solve a lot of problems listed below:
 
 1. **Updating documents**: While we can index the documents one time, most production systems will need to keep the index updated with the latest documents. This requires a system to keep track of the documents and update the index when new documents are added or old documents are updated.
 2. **Authorization**: We need to ensure that only authorized users can access the documents - this requires storing custom metadata per document and filtering the documents based on the user's access level.
@@ -32,7 +32,7 @@ RAGFoundry is an opensource framework to organize your RAG codebase along with a
 
 # ✨ Getting Started
 
-Starting with RAGFoundry is easy! You can play around with the code locally using the python [script](local_rag.py) or using the UI component that ships along with the code.
+You can play around with the code locally using the python [script](local/query.py) or using the [UI component](frontend/README.md) that ships with the code.
 
 # 🐍 Installing Python and Setting Up a Virtual Environment
 
@@ -160,7 +160,11 @@ pip install -r requirements.txt
 
 > You can also provide `OPENAI_API_KEY` here.
 
--   Now the setup is done, you can run your RAG locally, an example python script is provided by the name [`local_rag.py`](local_rag.py). The script has code for ingesting data into vector db and answering the query.
+-   Now the setup is done, you can run your RAG locally, an example python script is provided in the `local` folder. To run the script,
+    -   First, ingest the data: `python -m local.ingest`
+    -   Run the Query: `python -m local.query`
+
+by the name [`local_rag.py`](local_rag.py). The script has code for ingesting data into vector db and answering the query.
 
 # 🛠️ Project Architecture
 

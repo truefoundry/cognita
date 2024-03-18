@@ -65,12 +65,6 @@ class LocalMetadataStore(BaseMetadataStore):
             associated_data_sources=associated_data_sources,
         )
         self.data_ingestion_runs = []
-        vector_db_config = settings.VECTOR_DB_CONFIG
-        if vector_db_config.local:
-            VECTOR_STORE_CLIENT.create_collection(
-                collection_name=self.collection.name,
-                embeddings=get_embedder(self.local_metadata.embedder_config),
-            )
 
     def create_collection(self, collection) -> Collection:
         return self.collection
@@ -154,7 +148,7 @@ class LocalMetadataStore(BaseMetadataStore):
     ):
         data_ingestion_run = self.get_data_ingestion_run(data_ingestion_run_name)
         logger.info(
-            f"Updating status of data ingestion run {data_ingestion_run_name} from {data_ingestion_run.status} to {status}"
+            f"Updating status of data ingestion run {data_ingestion_run_name} to {status}"
         )
 
     def log_metrics_for_data_ingestion_run(
