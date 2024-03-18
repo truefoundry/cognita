@@ -160,11 +160,9 @@ pip install -r requirements.txt
 
 > You can also provide `OPENAI_API_KEY` here.
 
--   Now the setup is done, you can run your RAG locally, an example python script is provided in the `local` folder. To run the script,
+-   Now the setup is done, you can run your RAG locally, an example python script is provided in the `local` folder. To run the script, from root folder:
     -   First, ingest the data: `python -m local.ingest`
     -   Run the Query: `python -m local.query`
-
-by the name [`local_rag.py`](local_rag.py). The script has code for ingesting data into vector db and answering the query.
 
 # 🛠️ Project Architecture
 
