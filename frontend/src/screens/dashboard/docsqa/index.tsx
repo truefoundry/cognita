@@ -3,7 +3,6 @@ import Button from '@/components/base/atoms/Button'
 import Input from '@/components/base/atoms/Input'
 import Markdown from '@/components/base/atoms/Markdown'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
-import { DOCS_QA_SEARCH_PAYLOAD_PATCH } from '@/stores/constants'
 import {
   CollectionQueryDto,
   useGetAllEnabledChatModelsQuery,
@@ -55,7 +54,7 @@ const DocsQA = () => {
             filter: {},
           },
         },
-        DOCS_QA_SEARCH_PAYLOAD_PATCH || {}
+        {}
       )
       const res: any = await searchAnswer(params)
       if (res?.error) {

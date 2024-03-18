@@ -13,16 +13,9 @@ interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 const Link: React.FC<LinkProps> = (props) => {
-  const {
-    text,
-    icon,
-    rounded,
-    iconClasses,
-    className,
-    ...nativeProps
-  } = props
+  const { text, icon, rounded, iconClasses, className, ...nativeProps } = props
   const classes = classnames(
-    'btn gap-2 font-lab normal-case flex-nowrap whitespace-nowrap',
+    'btn gap-2 font-inter normal-case flex-nowrap whitespace-nowrap',
     'disabled:cursor-not-allowed disabled:opacity-50 disabled:text-white/100 dark:bg-blue-purple',
     {
       'rounded-md': rounded,

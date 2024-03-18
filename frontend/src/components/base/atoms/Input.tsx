@@ -77,7 +77,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const inputClasses = classNames(
       'input border-blue-500 dark:bg-neutral border w-full bg-gray-100 focus:outline-none',
-      'dark:placeholder:text-gray-300 font-500 leading-4 font-lab p-3 placeholder-gray-450',
+      'dark:placeholder:text-gray-300 font-500 leading-4 font-inter p-3 placeholder-gray-450',
       {
         'hover:cursor-text': readOnly,
       },
@@ -88,7 +88,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div
         className={classNames(
           'form-control text-gray-700 dark:text-white',
-          wrapperClasses,
+          wrapperClasses
         )}
       >
         {text && (
