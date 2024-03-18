@@ -1,11 +1,9 @@
 type: service
 env:
-  VITE_QA_FOUNDRY_URL: "https://docs-qa-be-tfy-docs-rag-8080.tfy-ctl-euwe1-devtest.devtest.truefoundry.tech"
-  VITE_DOCS_QA_ENABLE_STANDALONE: "true"
+  VITE_QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
   VITE_DOCS_QA_DELETE_COLLECTIONS: "false"
   VITE_DOCS_QA_ENABLE_REDIRECT: "false"
   VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: "200"
-  VITE_DOCS_QA_SEARCH_PAYLOAD_PATCH: '{}'
 name: truefoundry-rag
 image:
   type: build

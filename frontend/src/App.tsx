@@ -10,13 +10,10 @@ import AppRoutes from '@/router'
 import theme from './materialTheme'
 import Fallback from './components/base/molecules/ScreenFallbackLoader'
 import history from './router/history'
-import {
-  DOCS_QA_STANDALONE_PATH,
-  IS_DOCS_QA_STANDALONE_ENABLED,
-} from './stores/constants'
+import { DOCS_QA_STANDALONE_PATH } from './stores/constants'
 
 const getBaseName = () => {
-  return IS_DOCS_QA_STANDALONE_ENABLED && DOCS_QA_STANDALONE_PATH
+  return DOCS_QA_STANDALONE_PATH
     ? '/' + DOCS_QA_STANDALONE_PATH
     : undefined
 }
