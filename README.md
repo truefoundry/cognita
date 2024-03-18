@@ -10,17 +10,15 @@ Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG syst
 4. **Semantic Caching**: Caching the results can help reduce and latency in a lot of cases.
 5. **Reusability**: RAG modules comprises of multiple components like dataloaders, parsers, vectorDB and retriever. We need to ensure that these components are reusable across different usecases, while also enabling each usecase to customize to the fullest extent.
 
-RAGFoundry is an opensource framework to organize your RAG codebase along with a frontend to play around with different RAG customizations.
-
--   [✨ Getting Started](#getting-started)
+-   [✨ Getting Started](#✨-getting-started)
 -   [🐍 Installing Python and Setting Up a Virtual Environment](#🐍-installing-python-and-setting-up-a-virtual-environment)
     -   [Installing Python](#installing-python)
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
--   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-deploy-with-pip)
+-   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
     -   [Install necessary packages](#install-necessary-packages)
     -   [Setting up Yaml](#setting-up-yaml)
     -   [Setting up .env file](#setting-up-env-file)
--   [🛠️ Project Architecture](#️🛠️-project-architecture)
+-   [🛠️ Project Architecture](#🛠️-project-architecture)
     -   [⚙️ RAG Components](#rag-components)
     -   [💾 Data indexing](#data-indexing)
     -   [❓Question-Answering using API Server](#❓question-answering-using-api-server)
@@ -32,7 +30,7 @@ RAGFoundry is an opensource framework to organize your RAG codebase along with a
 
 # ✨ Getting Started
 
-You can play around with the code locally using the python [script](local/query.py) or using the [UI component](frontend/README.md) that ships with the code.
+RAGFoundry is an opensource framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. You can play around with the code locally using the python [script](#🚀-quickstart-running-rag-locally) or using the [UI component](frontend/README.md) that ships with the code.
 
 # 🐍 Installing Python and Setting Up a Virtual Environment
 
@@ -69,22 +67,13 @@ Python usually comes pre-installed on most Linux distributions. If it's not, you
 
 It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
 
-### Install the virtualenv package:
-
-First, ensure you have pip installed (it comes with Python if you're using version 3.4 and above).
-Install virtualenv by running:
-
-```
-pip install virtualenv
-```
-
 ### Create a Virtual Environment:
 
 Navigate to your project's directory in the terminal.
 Run the following command to create a virtual environment named venv (you can name it anything you like):
 
 ```
-python3 -m virtualenv venv
+python3 -m venv ./venv
 ```
 
 ### Activate the Virtual Environment:
