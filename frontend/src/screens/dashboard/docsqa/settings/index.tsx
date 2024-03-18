@@ -14,7 +14,9 @@ import DataSourcesTable from './DataSourcesTable'
 
 const DocsQASettings = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(searchParams.get('newCollectionOpen') === 'true')
+  const [newCollectionModalOpen, setNewCollectionModalOpen] = useState(
+    searchParams.get('newCollectionOpen') === 'true'
+  )
   const [selectedCollection, setSelectedCollection] = useState<
     Collection | undefined
   >()
@@ -63,8 +65,10 @@ const DocsQASettings = () => {
     if (collections) {
       if (!selectedCollection) {
         setSelectedCollection(collections[0])
-      } else  {
-        setSelectedCollection(collections.find((c) => c.name === selectedCollection.name))
+      } else {
+        setSelectedCollection(
+          collections.find((c) => c.name === selectedCollection.name)
+        )
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,6 +78,10 @@ const DocsQASettings = () => {
     setSelectedDataSourceFqn(fqn)
     setRunsHistoryDrawerOpen(true)
   }
+
+  useEffect(() => {
+    setNewCollectionModalOpen(searchParams.get('newCollectionOpen') === 'true')
+  }, [searchParams])
 
   return (
     <>
@@ -137,7 +145,7 @@ const DocsQASettings = () => {
                 onClick={() => setOpenDataSourceLinkForm(true)}
               />
             </div>
-            <div className='bg-[#f7fbff] h-[calc(100%-70px)] p-4'>
+            <div className="bg-[#f7fbff] h-[calc(100%-70px)] p-4">
               <DataSourcesTable
                 collectionName={selectedCollection.name}
                 rows={associatedDataSourcesRows}
