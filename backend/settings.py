@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import orjson
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
 
@@ -15,9 +15,11 @@ class Settings(BaseSettings):
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
     TFY_SERVICE_ROOT_PATH: Optional[str] = "/"
+    JOB_FQN: Optional[str] = ""
+    JOB_COMPONENT_NAME: Optional[str] = ""
     TFY_API_KEY: str
-    OPENAI_API_KEY: Optional[str]
-    TFY_HOST: Optional[str]
+    OPENAI_API_KEY: Optional[str] = ""
+    TFY_HOST: Optional[str] = ""
     TFY_LLM_GATEWAY_URL: str
     EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
 
@@ -32,7 +34,7 @@ class Settings(BaseSettings):
     TFY_HOST = os.getenv("TFY_HOST", "")
     TFY_LLM_GATEWAY_URL = os.getenv("TFY_LLM_GATEWAY_URL", "")
     EMBEDDING_CACHE_CONFIG = (
-        EmbeddingCacheConfig.parse_obj(
+        EmbeddingCacheConfig.model_validate(
             orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
         )
         if os.getenv("EMBEDDING_CACHE_CONFIG", None)
@@ -59,11 +61,11 @@ class Settings(BaseSettings):
         os.environ["OPENAI_API_BASE"] = f"{TFY_LLM_GATEWAY_URL}/openai"
 
     try:
-        VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
+        VECTOR_DB_CONFIG = VectorDBConfig.model_validate(orjson.loads(VECTOR_DB_CONFIG))
     except Exception as e:
         raise ValueError(f"VECTOR_DB_CONFIG is invalid: {e}")
     try:
-        METADATA_STORE_CONFIG = MetadataStoreConfig.parse_obj(
+        METADATA_STORE_CONFIG = MetadataStoreConfig.model_validate(
             orjson.loads(METADATA_STORE_CONFIG)
         )
     except Exception as e:
