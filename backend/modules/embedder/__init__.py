@@ -1,4 +1,5 @@
-from backend.modules.embedder.embedder import register_embedder
-from langchain_openai.embeddings import OpenAIEmbeddings
+from servicefoundry.langchain.truefoundry_embeddings import TrueFoundryEmbeddings
 
-register_embedder("default", OpenAIEmbeddings)
+from backend.modules.embedder.embedder import register_embedder
+
+register_embedder("default", TrueFoundryEmbeddings)
