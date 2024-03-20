@@ -3,7 +3,7 @@ langchain==0.1.9
 langchain-community==0.0.24
 langchain-openai==0.0.8
 openai==1.14.0
-tiktoken==0.5.1
+tiktoken==0.6.0
 uvicorn==0.23.2
 fastapi==0.104.1
 qdrant-client==1.7.3

@@ -43,7 +43,7 @@ class InternalService:
     def get_enabled_models(
         model_type: Optional[ModelType] = Query(default=None),
     ):
-        url = f"{settings.TFY_LLM_GATEWAY_URL}/api/model/enabled{f'?model_types={model_type.value}' if model_type else ''}"
+        url = f"{settings.TFY_LLM_GATEWAY_URL}/api/model/enabled"
         headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
         try:
             response = requests.get(url=url, headers=headers)
@@ -54,7 +54,9 @@ class InternalService:
         enabled_models = []
         for provider_accounts in data.values():
             for models in provider_accounts.values():
-                enabled_models.extend(models)
+                for model in models:
+                    if model_type is None or model_type in model["types"]:
+                        enabled_models.append(model)
 
         return JSONResponse(
             content={"models": enabled_models},
