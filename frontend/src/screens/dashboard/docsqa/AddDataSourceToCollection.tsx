@@ -137,7 +137,7 @@ const AddDataSourceToCollection = ({
                       </MenuItem>
                       {dataSources?.map((source: any) => (
                         <MenuItem value={source.fqn} key={source.fqn}>
-                          <span className="capitalize">{source.fqn}</span>
+                          <span>{source.fqn}</span>
                         </MenuItem>
                       ))}
                     </Select>
@@ -148,7 +148,7 @@ const AddDataSourceToCollection = ({
                     <div className="flex text-sm mb-1">
                       <div>Type :</div>
                       &nbsp;
-                      <div className="capitalize">
+                      <div>
                         {
                           dataSources?.filter(
                             (source) => source.fqn === selectedDataSource
