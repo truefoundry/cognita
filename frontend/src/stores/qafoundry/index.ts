@@ -99,7 +99,9 @@ export const qafoundryApi = createApi({
       query: () => ({
         url: '/v1/collections/',
         responseHandler: (response) =>
-          response.json().then((data: { collections: Collection[] }) => data.collections),
+          response
+            .json()
+            .then((data: { collections: Collection[] }) => data.collections),
       }),
       providesTags: ['Collections'],
     }),
@@ -137,7 +139,9 @@ export const qafoundryApi = createApi({
         method: 'GET',
         providesTags: ['DataSources'],
         responseHandler: (response) =>
-          response.json().then((data: { data_sources: DataSource[] }) => data.data_sources),
+          response
+            .json()
+            .then((data: { data_sources: DataSource[] }) => data.data_sources),
       }),
     }),
     getDataIngestionRuns: builder.query<DataIngestionRun[], any>({
@@ -149,7 +153,12 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
         responseHandler: (response) =>
-          response.json().then((data: { data_ingestion_runs: DataIngestionRun[] }) => data.data_ingestion_runs),
+          response
+            .json()
+            .then(
+              (data: { data_ingestion_runs: DataIngestionRun[] }) =>
+                data.data_ingestion_runs
+            ),
       }),
     }),
 
@@ -214,6 +223,7 @@ export const qafoundryApi = createApi({
         data_source_fqn: string
         data_ingestion_mode: string
         raise_error_on_failure: boolean
+        run_as_job: boolean
       }) => ({
         url: '/v1/collections/ingest',
         body: payload,

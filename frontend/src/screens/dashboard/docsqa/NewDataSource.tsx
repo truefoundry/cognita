@@ -256,8 +256,8 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                         Click or Drag &amp; Drop to upload files
                       </span>
                       <span className="block">
-                        Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • PDF,
-                        zip, txt, py, md
+                        Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
+                        txt, md
                       </span>
                     </p>
                   </div>
