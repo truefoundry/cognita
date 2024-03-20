@@ -5,8 +5,8 @@ from backend.modules.dataloaders.localdirloader import LocalDirLoader
 from backend.modules.dataloaders.mlfoundryloader import MlFoundryLoader
 from backend.modules.dataloaders.webloader import WebLoader
 
-register_dataloader("github", GithubLoader)
 register_dataloader("local", LocalDirLoader)
-register_dataloader("web", WebLoader)
 register_dataloader("mlfoundry", MlFoundryLoader)
 register_dataloader("artifact", ArtifactLoader)
+register_dataloader("web", WebLoader)
+register_dataloader("github", GithubLoader)
