@@ -282,7 +282,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Data Directory FQN'
                       : selectedDataSourceType === 'artifact'
-                      ? 'FQN'
+                      ? 'Artifact Version FQN'
                       : 'URL'}
                   </span>
                 </label>
@@ -295,7 +295,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Enter Data Directory FQN'
                       : selectedDataSourceType === 'artifact'
-                      ? 'Enter Artifact FQN'
+                      ? 'Enter Artifact Version FQN'
                       : 'Enter Web URL'
                   }`}
                   value={dataSourceUri}
