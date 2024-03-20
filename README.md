@@ -412,7 +412,7 @@ Following section documents all the associated APIs that are used in RAG applica
 
 ---
 
-If you run the server locally using the command: `uvicorn --host 0.0.0.0 --port 8080 backend.server.app:app --reload`
+If you run the server locally using the command: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload`
 Then, Swagger doc will be available at: `http://localhost:8080/`
 
 ### Components
