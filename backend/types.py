@@ -41,7 +41,6 @@ class DataPoint(BaseModel):
     )
 
     metadata: Optional[Dict[str, str]] = Field(
-        default=None,
         title="Additional metadata for the data point",
     )
 
@@ -83,7 +82,6 @@ class LoadedDataPoint(DataPoint):
         title="Local file path of the loaded data point",
     )
     file_extension: Optional[str] = Field(
-        default=None,
         title="File extension of the loaded data point",
     )
 
@@ -252,7 +250,6 @@ class DataIngestionRun(BaseDataIngestionRun):
         title="Name of the data ingestion run",
     )
     status: Optional[DataIngestionRunStatus] = Field(
-        default=DataIngestionRunStatus.INITIALIZED,
         title="Status of the data ingestion run",
     )
 
@@ -269,7 +266,6 @@ class BaseDataSource(BaseModel):
         title="A unique identifier for the data source",
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        default=None,
         title="Additional config for your data source"
     )
 
@@ -296,7 +292,6 @@ class AssociatedDataSources(BaseModel):
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
-        default=None,
         title="Data source associated with the collection"
     )
 
@@ -311,7 +306,6 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
     data_source_fqn: Optional[str] = Field(
-        default=None,
         title="Fully qualified name of the data source",
     )
 
@@ -378,12 +372,11 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: constr(pattern=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
+    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character",
     )
     description: Optional[str] = Field(
-        default=None,
         title="a description for your collection",
     )
     embedder_config: EmbedderConfig = Field(
@@ -403,7 +396,6 @@ class Collection(BaseCollection):
 
 class CreateCollectionDto(CreateCollection):
     associated_data_sources: Optional[List[AssociateDataSourceWithCollection]] = Field(
-        default=[],
         title="Data sources associated with the collection"
     )
 
@@ -427,6 +419,5 @@ class ListDataIngestionRunsDto(BaseModel):
         title="Name of the collection",
     )
     data_source_fqn: Optional[str] = Field(
-        default=None,
-        title="Fully qualified name of the data source",
+        title="Fully qualified name of the data source", default=None
     )
