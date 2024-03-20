@@ -8,9 +8,8 @@ uvicorn==0.23.2
 fastapi==0.104.1
 qdrant-client==1.7.3
 python-dotenv==1.0.0
-weaviate-client==4.5.4
-pydantic==2.6.4
-pydantic-settings==2.2.1
+weaviate-client==3.25.3
+pydantic==1.10.12
 orjson==3.9.15
 PyMuPDF==1.23.6
 redis==5.0.1

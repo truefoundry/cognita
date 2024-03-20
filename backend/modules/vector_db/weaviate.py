@@ -4,71 +4,43 @@ from typing import List
 import weaviate
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.weaviate import Weaviate
-import weaviate.classes as wvc
-
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, VectorDBConfig
-
-from backend.logger import logger
-
-BATCH_SIZE = 1000
+from backend.types import VectorDBConfig
 
 
-def decapitalize(s: str) -> str:
+def decapitalize(s):
     if not s:
         return s
     return s[0].lower() + s[1:]
 
-def capitalize_first_letter(string: str) -> str:
-    """
-    Capitalize only the first letter of the `string`.
-    """
-
-    if len(string) == 1:
-        return string.capitalize()
-    return string[0].capitalize() + string[1:]
-
 
 class WeaviateVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
-        self.weaviate_client = None
-        if config.local is True:
-            self.local = True
-            self.host = config.config.get('host', 'localhost')
-            self.port = int(config.config.get('port', 8080))
-            self.grpc_port = int(config.config.get('grpc_port', 50051)) 
-
-
-            self.weaviate_client = weaviate.connect_to_custom(
-                http_host=self.host,
-                http_port=self.port,
-                http_secure=False,
-                grpc_host=self.host,
-                grpc_port=self.grpc_port,
-                grpc_secure=False,
-            )
-
-            if self.weaviate_client.is_ready():
-                logger.info("Weaviate is ready")
-            else:
-                raise Exception("Weaviate is not ready")
+        self.url = config.url
+        self.api_key = config.api_key
+        self.weaviate_client = weaviate.Client(
+            url=self.url,
+            **(
+                {"auth_client_secret": weaviate.AuthApiKey(api_key=self.api_key)}
+                if self.api_key
+                else {}
+            ),
+        )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-
-        if self.weaviate_client:
-            logger.debug(f"[Weaviate Vector Store] Creating new collection {capitalize_first_letter(collection_name)}")
-            self.weaviate_client.collections.create(
-                name=capitalize_first_letter(collection_name),
-                description=f"Collection by the name of {capitalize_first_letter(collection_name)}",
-                properties=[
-                    wvc.config.Property(
-                        name=f"{DATA_POINT_FQN_METADATA_KEY}",
-                        data_type=wvc.config.DataType.TEXT,
-                    ),
+        self.weaviate_client.schema.create_class(
+            {
+                "class": collection_name.capitalize(),
+                "properties": [
+                    {
+                        "name": f"{DATA_POINT_FQN_METADATA_KEY}",
+                        "dataType": ["text"],
+                    },
                 ],
-            )
+            }
+        )
 
     def upsert_documents(
         self,
@@ -102,8 +74,7 @@ class WeaviateVectorDB(BaseVectorDB):
         self,
         collection_name: str,
     ):
-        logger.debug(f"[Weaviate Vector Store] Deleting collection {capitalize_first_letter(collection_name)}")
-        return self.weaviate_client.collections.delete(capitalize_first_letter(collection_name))
+        return self.weaviate_client.schema.delete_class(collection_name.capitalize())
 
     def get_vector_store(self, collection_name: str, embeddings: Embeddings):
         return Weaviate(
@@ -157,19 +128,3 @@ class WeaviateVectorDB(BaseVectorDB):
 
     def get_vector_client(self):
         return self.weaviate_client
-    
-    def list_data_point_vectors(
-        self,
-        collection_name: str,
-        data_source_fqn: str,
-        batch_size: int = BATCH_SIZE,
-    ) -> List[DataPointVector]:
-        pass 
-
-    def delete_data_point_vectors(
-        self,
-        collection_name: str,
-        data_point_vectors: List[DataPointVector],
-        batch_size: int = BATCH_SIZE,
-    ):
-        pass
