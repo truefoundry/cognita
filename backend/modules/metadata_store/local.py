@@ -6,10 +6,7 @@ from typing import List
 from pydantic import BaseModel
 
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
-from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
-from backend.settings import settings
 from backend.types import (
     AssociateDataSourceWithCollection,
     AssociatedDataSources,
@@ -44,7 +41,7 @@ class LocalMetadataStore(BaseMetadataStore):
             raise ValueError("path is required for local metadata store")
         with open(self.path) as f:
             data = yaml.safe_load(f)
-            self.local_metadata = LocalMetadata.parse_obj(data)
+            self.local_metadata = LocalMetadata.model_validate(data)
         self.fqn = get_data_source_fqn(data_source=self.local_metadata.data_source)
         self.data_source = DataSource(
             type=self.local_metadata.data_source.type,
