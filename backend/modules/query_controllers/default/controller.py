@@ -3,7 +3,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_openai.chat_models import ChatOpenAI
+from servicefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
@@ -41,7 +41,7 @@ class DefaultQueryController:
             )
 
             # Get the LLM
-            llm = ChatOpenAI(
+            llm = TrueFoundryChat(
                 model=request.model_configuration.name,
             )
 
