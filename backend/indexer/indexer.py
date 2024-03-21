@@ -34,6 +34,26 @@ def get_data_point_fqn_to_hash_map(
 
 
 async def sync_data_source_to_collection(inputs: DataIngestionConfig):
+    """
+    Synchronizes the data source to the collection by performing the following steps:
+    1. Updates the data ingestion run status to indicate that existing vectors are being fetched.
+    2. Retrieves the existing data point vectors from the vector store.
+    3. Logs the total number of existing data point vectors in the collection.
+    4. Updates the data ingestion run status to indicate that data ingestion has started.
+    5. Calls the _sync_data_source_to_collection function to perform the actual data ingestion.
+    6. Updates the data ingestion run status to indicate the completion of data ingestion.
+    7. If the data ingestion mode is set to FULL, deletes the outdated data point vectors from the vector store.
+    8. Updates the data ingestion run status to indicate the completion of data cleanup.
+
+    Args:
+        inputs (DataIngestionConfig): The configuration for data ingestion.
+
+    Raises:
+        Exception: If any error occurs during data ingestion or cleanup.
+
+    Returns:
+        None
+    """
     METADATA_STORE_CLIENT.update_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
@@ -104,6 +124,20 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
 async def _sync_data_source_to_collection(
     inputs: DataIngestionConfig, existing_data_point_fqn_to_hash: Dict[str, str] = None
 ):
+    """
+    Synchronizes data from a data source to a collection.
+
+    Args:
+        inputs (DataIngestionConfig): The configuration for data ingestion.
+        existing_data_point_fqn_to_hash (Dict[str, str], optional): A dictionary mapping data point FQNs to their hashes. Defaults to None.
+
+    Raises:
+        Exception: If failed to ingest any data points.
+
+    Returns:
+        None
+    """
+    
     failed_data_point_fqns = []
     documents_ingested_count = 0
     # Create a temp dir to store the data
@@ -158,6 +192,22 @@ async def ingest_data_points(
     loaded_data_points: List[LoadedDataPoint],
     documents_ingested_count: int,
 ):
+    """
+    Ingests data points into the vector store for a given batch.
+
+    Args:
+        inputs (DataIngestionConfig): The configuration for data ingestion.
+        loaded_data_points (List[LoadedDataPoint]): The list of loaded data points to be ingested.
+        documents_ingested_count (int): The count of documents already ingested.
+
+    Returns:
+        None: If no documents are found to index in the given batch.
+
+    Raises:
+        None
+
+    """
+    
     embeddings = get_embedder(
         embedder_config=inputs.embedder_config,
     )
