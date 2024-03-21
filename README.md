@@ -16,8 +16,8 @@ Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG syst
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
 -   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
     -   [Install necessary packages](#install-necessary-packages)
-    -   [Setting up Yaml](#setting-up-yaml)
     -   [Setting up .env file](#setting-up-env-file)
+    -   [Executing the Code](#executing-the-code)
 -   [🛠️ Project Architecture](#🛠️-project-architecture)
     -   [⚙️ RAG Components](#rag-components)
     -   [💾 Data indexing](#data-indexing)
@@ -106,31 +106,6 @@ Following are the instructions for running the RAG application locally without a
 pip install -r requirements.txt
 ```
 
-## Setting up YAML:
-
--   Local version requires `local.metadata.yaml` to be filled up
-
-    -   Example:
-
-        ```yaml
-        collection_name: testcollection
-        # Sample data is provided under ./sample-data/
-        data_source:
-            type: local
-            # Local data source path
-            uri: sample-data/creditcards
-        parser_config:
-            chunk_size: 400
-            parser_map:
-                # Since data is markdown type, we use the MarkdownParser
-                ".md": MarkdownParser
-        embedder_config:
-            provider: default
-            config:
-                # Embedding Model from TFY
-                model: openai-devtest/text-embedding-ada-002
-        ```
-
 ## Setting up .env file:
 
 -   Create a `.env` file or copy from `.env.sample`
@@ -152,9 +127,79 @@ pip install -r requirements.txt
     # TFY_API_KEY=
     ```
 
--   Now the setup is done, you can run your RAG locally, an example python script is provided in the `local` folder. To run the script, from root folder:
-    -   First, ingest the data: `python -m local.ingest`
+    > Setting up `TFY_API_KEY` or `OPENAI_API_KEY` is optional, you can use opensource LLMs and Embeddings if required (Discussed later).
+
+-   Now the setup is done, you can run your RAG locally.
+
+## Executing the Code:
+
+-   Repository offers two categories of examples that demostrate running your own RAG.
+
+    -   One using OpenAI functions, OpenAI compatible LLMs and Embeddings. Can be used either by setting `TFY_API_KEY` or `OPENAI_API_KEY`
+    -   Another using entirely OpenSource LLMs (th' [Ollama](https://ollama.com/library)) and OpenSource Embeddings (e.g: [mixbread](https://www.mixedbread.ai/blog/mxbai-embed-large-v1)).
+        > Both of these scripts can be used as a reference for your own use case.
+    -   Sample scripts are in the `local` folder.
+
+-   To run RAG locally using OpenAI compatible functions,
+
+    -   Setup Yaml in `local.metadata.yaml`
+
+        -   Example:
+
+        ```yaml
+        collection_name: testcollection
+        # Sample data is provided under ./sample-data/
+        data_source:
+            type: local
+            # Local data source path
+            uri: sample-data/creditcards
+        parser_config:
+            chunk_size: 400
+            parser_map:
+                # Since data is markdown type, we use the MarkdownParser
+                ".md": MarkdownParser
+        embedder_config:
+            provider: default
+            config:
+                # Embedding Model from TFY
+                # Can also use OpenAI model directly
+                # Or an opensrc embedding registered in embedder module
+                model: openai-devtest/text-embedding-ada-002
+        ```
+
+    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
     -   Run the Query: `python -m local.query`
+
+-   To run RAG locally using OpenSource LLMs and Embeddings,
+    -   Setup Yaml in `local.metadata.yaml`
+        -   Example:
+        ```yaml
+        collection_name: testcollection
+        # Sample data is provided under ./sample-data/
+        data_source:
+            type: local
+            # Local data source path
+            uri: sample-data/creditcards
+        parser_config:
+            chunk_size: 400
+            parser_map:
+                # Since data is markdown type, we use the MarkdownParser
+                ".md": MarkdownParser
+        embedder_config:
+            provider: mixbread
+            config:
+                # Model name from HuggingFace model hub
+                # Registered in embedder module of backend
+                model: mixedbread-ai/mxbai-embed-large-v1
+        ```
+    -   This requires using Opensource LLM, Embeddings and Reranking modules.
+        -   For LLM download ollama: https://ollama.com/download
+        -   For Embeddings: `pip install -r backend/embedder/embedding.requirements.txt`
+        -   For Reranking: `pip install -r backend/embedder/reranker.requirements.txt`
+    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
+    -   Run the Query: `python -m local.query_opensrc`
+    -   The Query function uses, `gemma:2b` from Ollama. Make sure you have the corresponding LLM, `ollama pull gemma:2b` else replace the corresponding LLM with the LLM of your choice.
+    -   The script also uses a document reranker, `mixedbread-ai/mxbai-rerank-xsmall-v1` to effectively rerank and find top relavant documents.
 
 # 🛠️ Project Architecture
 
@@ -326,6 +371,7 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 
 -   The codebase currently uses `OpenAIEmbeddings` you can registered as `default`.
 -   You can register your custom embeddings in `backend/modules/embedder/__init__.py`
+-   You can also add your own embedder an example of which is given under `backend/modules/embedder/mixbread_embedder.py`. It inherits langchain embedding class.
 
 ### Customizing Parsers:
 
@@ -362,6 +408,11 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 -   To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
 
 -   Register the vectordb under `backend/modules/vector_db/__init__.py`
+
+### Rerankers:
+
+-   Rerankers are used to sort relavant documents such that top k docs can be used as context effectively reducing the context and prompt in general.
+-   Sample reranker is written under `backend/modules/reranker/mxbai_reranker.py`
 
 # 💡 Writing your Query Controller (QnA):
 
@@ -582,11 +633,11 @@ This API is used for managing the collections. Each collection has embedder conf
 
 ### Retrievers
 
-Any registered question answer API is showcased here. To add your own retriever refer: `backend/modules/query_controllers/README.md`
+Any registered question answer API is showcased here. You can add your own retriever at : `backend/modules/query_controllers/`. Refer to `examples` folder for more info.
 
 ---
 
--   POST `/retrievers/answer`: Sample answer method to answer the question using the context from the collection.
+-   POST `/retrievers/openai/answer`: Sample answer method to answer the question using the context from the collection.
 
     -   It requires the following fields as payload:
 
@@ -615,7 +666,7 @@ Any registered question answer API is showcased here. To add your own retriever 
 
         ```curl
         curl -X 'POST' \
-          'http://localhost:8080/retrievers/answer' \
+          'http://localhost:8080/retrievers/openai/answer' \
           -H 'accept: application/json' \
           -H 'Content-Type: application/json' \
           -d '{

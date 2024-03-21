@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Body
 from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
@@ -8,21 +8,21 @@ from langchain_openai.chat_models import ChatOpenAI
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.default.types import DefaultQueryInput
+from backend.modules.query_controllers.examples.openai.types import DefaultQueryInput, DEFAULT_QUERY
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
-from backend.settings import settings
 
 
-@query_controller()
-class DefaultQueryController:
+@query_controller("/openai")
+class OpenAIQueryController:
     """
-    Default Query Controller
-    uses langchain retrieval qa to answer the query
+    OpenAI Query Controller
+    Uses OpenAI Embeddings and OpenAI Chat Models
+    Uses langchain retrieval qa to answer the query
     """
 
     @post("/answer")
-    async def answer(self, request: DefaultQueryInput):
+    async def answer(self, request: DefaultQueryInput = Body(DEFAULT_QUERY)):
         """
         Sample answer method to answer the question using the context from the collection
         """

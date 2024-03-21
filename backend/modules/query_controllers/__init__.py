@@ -1,4 +1,6 @@
-from backend.modules.query_controllers.default.controller import DefaultQueryController
 from backend.modules.query_controllers.query_controller import register_query_controller
+from backend.modules.query_controllers.examples.openai.controller import OpenAIQueryController
+from backend.modules.query_controllers.examples.opensrc.controller import OpenSourceQueryController
 
-register_query_controller("default_controller", DefaultQueryController)
+register_query_controller("openai_controller", OpenAIQueryController)
+register_query_controller("opensrc_controller", OpenSourceQueryController)

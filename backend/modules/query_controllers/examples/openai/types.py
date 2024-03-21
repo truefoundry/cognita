@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from backend.types import LLMConfig, RetrieverConfig
 
 
+
 class DefaultQueryInput(BaseModel):
     """
     Model for Query input.
@@ -23,3 +24,18 @@ class DefaultQueryInput(BaseModel):
         default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
+
+
+DEFAULT_QUERY = DefaultQueryInput(
+    collection_name="ps01",
+    retriever_config={
+        "search_type": "similarity",
+        "k": 20,
+    },
+    query="What are the features of Diners club black metal edition?",
+    model_configuration=LLMConfig(
+        name= "openai-devtest/gpt-3-5-turbo",
+        parameters={"temperature": 0.1}
+    ),
+    prompt_template="Given the context, answer the question.\n\nContext: {context}\n'''Question: {question}\nAnswer:"
+).dict()
