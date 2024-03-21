@@ -228,7 +228,7 @@ Entire codebase lives in `backend/` Think of this as RAG components abstractions
 
 ```
 .
-|-- Dockerfile.merck
+|-- Dockerfile
 |-- README.md
 |-- __init__.py
 |-- backend/
