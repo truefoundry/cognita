@@ -43,7 +43,7 @@ class InternalService:
     def get_enabled_models(
         model_type: Optional[ModelType] = Query(default=None),
     ):
-        url = f"{settings.TFY_LLM_GATEWAY_URL}/api/model/enabled"
+        url = f"{settings.TFY_HOST}/api/svc/v1/llm-gateway/model/enabled"
         headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
         try:
             response = requests.get(url=url, headers=headers)
