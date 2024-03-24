@@ -1,6 +1,14 @@
 from pydantic import BaseModel, Field
+from typing import Literal
 
 from backend.types import LLMConfig, RetrieverConfig
+
+class DefaultLLMConfig(LLMConfig):
+    """
+    Configuration for LLM Configuration
+    """
+    # You can add your custom providers too as per usecase
+    provider: Literal["openai", "ollama"] = Field(title="Model provider")
 
 
 
@@ -19,22 +27,21 @@ class DefaultQueryInput(BaseModel):
         title="Retriever configuration",
     )
     query: str = Field(title="Question to search for", max_length=1000)
-    model_configuration: LLMConfig
+    model_configuration: DefaultLLMConfig
     prompt_template: str = Field(
-        default="""Here is the context information:\n\n'''\n{context}\n'''\n\nQuestion: {question}\nAnswer:""",
         title="Prompt Template to use for generating answer to the question using the context",
     )
 
-
 DEFAULT_QUERY = DefaultQueryInput(
-    collection_name="ps01",
+    collection_name="testcollection",
     retriever_config={
         "search_type": "similarity",
         "k": 20,
     },
     query="What are the features of Diners club black metal edition?",
-    model_configuration=LLMConfig(
-        name= "openai-devtest/gpt-3-5-turbo",
+    model_configuration=DefaultLLMConfig(
+        name= "gemma:2b",
+        provider="ollama",
         parameters={"temperature": 0.1}
     ),
     prompt_template="Given the context, answer the question.\n\nContext: {context}\n'''Question: {question}\nAnswer:"

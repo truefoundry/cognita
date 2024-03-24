@@ -154,8 +154,7 @@ class LLMConfig(BaseModel):
     """
     LLM configuration
     """
-
-    name: str = Field(title="Name of the model from the Truefoundry LLM Gateway")
+    name: str = Field(title="Name of the model")
     parameters: dict = None
 
 

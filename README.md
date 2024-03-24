@@ -292,7 +292,8 @@ Entire codebase lives in `backend/` Think of this as RAG components abstractions
 |   |   |-- embedder/
 |   |   |   |-- __init__.py
 |   |   |   |-- embedder.py
-|   |   |   `-- truefoundry_embedder.py
+|   |   |   -- mixbread_embedder.py
+|   |   |   `-- embedding.requirements.txt
 |   |   |-- metadata_store/
 |   |   |   |-- base.py
 |   |   |   |-- client.py
@@ -303,11 +304,13 @@ Entire codebase lives in `backend/` Think of this as RAG components abstractions
 |   |   |   |-- pdfparser_fast.py
 |   |   |   `-- ...
 |   |   |-- query_controllers/
-|   |   |   |-- README.md
 |   |   |   |-- default/
 |   |   |   |   |-- controller.py
 |   |   |   |   `-- types.py
 |   |   |   |-- query_controller.py
+|   |   |-- reranker/
+|   |   |   |-- mxbai_reranker.py
+|   |   |   |-- reranker.requirements.txt
 |   |   |   `-- ...
 |   |   `-- vector_db/
 |   |       |-- __init__.py
@@ -455,11 +458,11 @@ class MyCustomController():
 from backend.modules.query_controllers.sample_controller.controller import MyCustomController
 ```
 
-> As an example, we have implemented `sample_controller`. Please refer for better understanding
+> As an example, we have implemented sample controller in `backend/modules/query_controllers/default`. Please refer for better understanding
 
 # 🔑 API Reference
 
-Following section documents all the associated APIs that are used in RAG application.
+Following section documents important APIs that are used in RAG application.
 
 ---
 
@@ -480,7 +483,7 @@ This group of API list down different components of RAG that are registered.
     -H 'accept: application/json'
     ```
 
-    Current available parsers include: `MarkdownParser`, `PdfParserUsingPyMuPDF`, `TextParser`.
+    Current available parsers include: `MarkdownParser`, `PdfParserFast`, `TextParser`.
     To add your own sources refer `backend/modules/parsers/README.md`
 
 -   GET `/v1/components/embedders`: Returns a list of available embedders.
@@ -491,7 +494,7 @@ This group of API list down different components of RAG that are registered.
     -H 'accept: application/json'
     ```
 
-    Current available `default` embeddings include: `TrueFoundryEmbeddings`
+    Current available `default` embeddings include: `OpenAIEmbeddings`, `MixBreadEmbeddings`
 
 -   `/v1/components/dataloaders`: Returns a list of available data loaders.
     ```curl
@@ -528,11 +531,13 @@ This API is used for creating/listing a new data source. Data source is one thro
         ```
     -   Attributes:
 
-        -   `type` (str): The type of the data source. This field is required. One of `mlfoundry` or `local`.
-        -   `uri` (str): A unique identifier for the data source. This field is required. This can be FQN of MLRepo or FQN of Artifact with version number from Truefoundry or local folder path.
-        -   `metadata` (Optional[Dict[str, Any]]): Any additional configuration for the data source. This field is optional.
+            -   `type` (str): The type of the data source. This field is required. One of `mlfoundry` or `local`.
+            -   `uri` (str): A unique identifier for the data source. This field is required. This can be FQN of MLRepo or FQN of Artifact with version number from Truefoundry or local folder path.
+            -   `metadata` (Optional[Dict[str, Any]]): Any additional configuration for the data source. This field is optional.
 
-        This API returns a `unique data source fqn` that is then used to associate it with the collection.
+            This API returns a `unique data source fqn` that is then used to associate it with the collection.
+
+    > When using locally, data source is automatically initialized from `local.metadata.yaml`
 
 ### Collection
 
@@ -550,46 +555,33 @@ This API is used for managing the collections. Each collection has embedder conf
 
     -   Sample Response:
 
-        ```
+        ```json
         {
             "collections": [
                 {
-                    // name of the collection
-                    "name": "ps01",
-
-                    // description of the collection
-                    "description": "test collection for open src repo",
-
-                    // embedder configuration used to index the data into the collection
+                    "name": "testcollection",
+                    "description": null,
                     "embedder_config": {
-                        // provider - default, if you init your own embedder add that as provider
-                        "provider": "default",
+                        "provider": "mixbread",
                         "config": {
-                            // embedder model name
-                            "model": "openai-devtest/text-embedding-ada-002"
+                            "model": "mixedbread-ai/mxbai-embed-large-v1"
                         }
                     },
                     "associated_data_sources": {
-                        // currently one associated data source in this collection th' mlfoundry data dir
-                        "mlfoundry::data-dir:truefoundry/prathamesh-merck/reindexing-exp": {
-                            // fqn of that data src
-                            "data_source_fqn": "mlfoundry::data-dir:truefoundry/prathamesh/reindexing-exp",
-                            // parser configuration
+                        "local::sample-data/creditcards": {
+                            "data_source_fqn": "local::sample-data/creditcards",
                             "parser_config": {
-                                "chunk_size": 500,
+                                "chunk_size": 400,
                                 "chunk_overlap": 0,
                                 "parser_map": {
-                                    ".pdf": "PdfParserFast",
-                                    ".txt": "TextParser",
                                     ".md": "MarkdownParser"
                                 }
                             },
-                            // data src config similar to POST /v1/data_source
                             "data_source": {
-                                "type": "mlfoundry",
-                                "uri": "data-dir:truefoundry/prathamesh/reindexing-exp",
+                                "type": "local",
+                                "uri": "sample-data/creditcards",
                                 "metadata": null,
-                                "fqn": "mlfoundry::data-dir:truefoundry/prathamesh/reindexing-exp"
+                                "fqn": "local::sample-data/creditcards"
                             }
                         }
                     }
@@ -598,37 +590,64 @@ This API is used for managing the collections. Each collection has embedder conf
         }
         ```
 
--   POST `/v1/collections/`: Creates a new collection.
-    -   This API creates a collection, it requires payload of the form:
-        -   ```json
+-   POST `/v1/collections/`: Creates a new collection. - This API creates a collection, it requires payload of the form: -
+
+    ```json
+    {
+        "name": "collectionName",
+        "description": "string",
+        "embedder_config": {
+            "provider": "string",
+            "config": {}
+        },
+        "associated_data_sources": [
             {
-                "name": "collectionName",
-                "description": "string",
-                "embedder_config": {
-                    "provider": "string",
-                    "config": {}
-                },
-                "associated_data_sources": [
-                    {
-                        "data_source_fqn": "string",
-                        "parser_config": {
-                            "chunk_size": 500,
-                            "chunk_overlap": 0,
-                            "parser_map": {
-                                ".md": "MarkdownParser",
-                                ".pdf": "PdfParserFast",
-                                ".txt": "TextParser"
-                            }
-                        }
+                "data_source_fqn": "string",
+                "parser_config": {
+                    "chunk_size": 500,
+                    "chunk_overlap": 0,
+                    "parser_map": {
+                        ".md": "MarkdownParser",
+                        ".pdf": "PdfParserFast",
+                        ".txt": "TextParser"
                     }
-                ]
+                }
             }
-            ```
--   POST `/v1/collections/{collection_name}`: Deletes an already exisiting collection.
+        ]
+    }
+    ```
+
+    > When using locally, collection is automatically initialized from `local.metadata.yaml`
+
+-   DELETE `/v1/collections/{collection_name}`: Deletes an already exisiting collection.
     ```curl
     curl -X 'DELETE' \
       'http://localhost:8080/v1/collections/xyz' \
       -H 'accept: application/json'
+    ```
+
+### Data Indexing
+
+-   POST `v1/collections/ingest`: Ingest data into the colleciton.
+    ```curl
+        {
+            "collection_name": "",
+            "data_source_fqn": "",
+            "data_ingestion_mode": "INCREMENTAL",
+            "raise_error_on_failure": true,
+            "run_as_job": false
+        }
+    ```
+    -   To run locally either use `python -m local.ingest` or following API request:
+        > collection name and data source fqn are taken from `GET` `/v1/collections/`
+    ```json
+    {
+        "collection_name": "testcollection",
+        "data_source_fqn": "local::sample-data/creditcards",
+        "data_ingestion_mode": "INCREMENTAL",
+        "raise_error_on_failure": true,
+        "run_as_job": false
+    }
     ```
 
 ### Retrievers
@@ -657,6 +676,7 @@ Any registered question answer API is showcased here. You can add your own retri
 
         -   `model_configuration (LLMConfig)`: The configuration for the Language Model that will be used to generate the answer to the question using the context. This in turn requires following fields:
 
+            -   `provider(Literal["openai", "ollama"])`: Provider of LLM
             -   `name (str)`: Name of the model from the Truefoundry LLM Gateway
             -   `parameters (dict)`: Any optional parameters of the model like max_tokens, etc
 
@@ -666,76 +686,95 @@ Any registered question answer API is showcased here. You can add your own retri
 
         ```curl
         curl -X 'POST' \
-          'http://localhost:8080/retrievers/openai/answer' \
-          -H 'accept: application/json' \
-          -H 'Content-Type: application/json' \
-          -d '{
-          "collection_name": "ps01",
-          "retriever_config": {
-            "search_type": "similarity",
-            "k": 4,
-            "fetch_k": 20,
-            "filter": {}
-          },
-          "query": "What is credit card",
-          "model_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
-            "parameters": {}
-          },
-          "prompt_template": "Here is the context information:\n\n'\'''\'''\''\n{context}\n'\'''\'''\''\n\nQuestion: {question}\nAnswer:"
-        }'
+            'http://localhost:8000/retrievers/answer' \
+            -H 'accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d '{
+            "collection_name": "testcollection",
+            "retriever_config": {
+                "search_type": "similarity",
+                "k": 20,
+                "fetch_k": 20
+            },
+            "query": "What are the features of Diners club black metal edition?",
+            "model_configuration": {
+                "name": "gemma:2b",
+                "parameters": {
+                "temperature": 0.1
+                },
+                "provider": "ollama"
+            },
+            "prompt_template": "Given the context, answer the question.\n\nContext: {context}\n'\'''\'''\''Question: {question}\nAnswer:"
+        }
         ```
 
     -   Response:
         ```json
         {
-            "answer": "A credit card is a payment card issued by a financial institution that allows the cardholder to borrow funds to make purchases, with the promise to repay the borrowed amount along with any applicable interest and fees. Credit cards typically have a credit limit, which is the maximum amount that the cardholder can borrow. They are widely used for making purchases, both online and in-person, and often come with benefits such as rewards points, cashback, and other perks.",
+            "answer": "The features of Diners club black metal edition are:\n\n* Smart EMI\n* Key Features\n    * Metal Card\n    * Unlimited Airport Lounge Access\n    * 6 Complimentary Golf games every quarter across the finest courses in the world\n    * Complimentary Annual memberships of Club Marriott, Amazon Prime, Swiggy One as Welcome Benefit\n    * 10,000 Bonus Reward Points on spends of ₹ 4 lakh every calendar quarter\n    * 2X Reward Points on Weekend Dining\n    * 5 Reward Points for every ₹ 150 spent",
             "docs": [
                 {
-                    "page_content": "# [Freedom card new](https://www.hdfcbank.com/personal/pay/cards/credit-cards/freedom-card-new)\n## Features\n#### Contactless Payment\nContactless Payment\nThe HDFC Bank Freedom Credit Card is enabled for contactless payments, facilitating fast, convenient and secure payments at retail outlets. To see if your Card is contactless, look for the contactless network symbol on your Card.",
+                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Smart EMI\nSmart EMI\nHDFC Bank Diners Club Black Metal Credit Card comes with an option to convert your big spends into EMI after purchase. To know more click here",
                     "metadata": {
-                        "Header1": "[Freedom card new](https://www.hdfcbank.com/personal/pay/cards/credit-cards/freedom-card-new)",
+                        "Header4": "Smart EMI",
                         "Header2": "Features",
+                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
+                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
+                        "_data_point_hash": "9635",
+                        "_id": "ba8852d56ea146ccb549388d10aeb946",
+                        "_collection_name": "testcollection"
+                    },
+                    "type": "Document"
+                },
+                {
+                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Key Features\nKey Features\n* Metal Card\n* Unlimited Airport Lounge Access\n* 6 Complimentary Golf games every quarter across the finest courses in the world\n* Complimentary Annual memberships of Club Marriott, Amazon Prime, Swiggy One as Welcome Benefit\n* 10,000 Bonus Reward Points on spends of ₹ 4 lakh every calendar quarter\n* 2X Reward Points on Weekend Dining\n* 5 Reward Points for every ₹ 150 spent",
+                    "metadata": {
+                        "Header4": "Key Features",
+                        "Header2": "Features",
+                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
+                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
+                        "_data_point_hash": "9635",
+                        "_id": "5830cf944447420a9d904ae8b0d57559",
+                        "_collection_name": "testcollection"
+                    },
+                    "type": "Document"
+                },
+                {
+                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Contactless Payment\nContactless Payment\nThe HDFC Bank Diners Club Black Metal Credit Card is enabled for contactless payments on HDFC Bank POS machines, facilitating fast, convenient and secure payments at retail outlets. Tap the reverse side of the Black Metal card on the HDFC Bank POS machine to enjoy contactless payments.",
+                    "metadata": {
                         "Header4": "Contactless Payment",
-                        "_document_id": "mlfoundry::data-dir:truefoundry/prathamesh-merck/reindexing-exp::freedom-card-new.md",
-                        "_id": "cb10dd50-695b-4c26-a2be-a73fcb09e2ba",
-                        "_collection_name": "ps01"
+                        "Header2": "Features",
+                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
+                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
+                        "_data_point_hash": "9635",
+                        "_id": "503864c47c104d7dadd8213de4d34481",
+                        "_collection_name": "testcollection"
                     },
                     "type": "Document"
                 },
                 {
-                    "page_content": "# [Freedom card new](https://www.hdfcbank.com/personal/pay/cards/credit-cards/freedom-card-new)\n## Features\n#### Reward Points/Cashback Redemption & Validity\n* CashPoints can also be used for redemption against travel benefits like Flight & Hotel bookings and also on Rewards Catalogue at the SmartBuy Rewards Portal, wherein Credit Card members can redeem up to a maximum of 50% of the booking value through CashPoints at a value of 1 CashPoint = ₹0.15 and the rest of the amount will have to be paid via the Credit Card. To know more on Rewards catalouge, [click here](/personal/pay/cards/credit-cards/simple-rewards-program",
+                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Dining Benefits\nEarn 2X on weekend dining at standalone resturants capped at 1000 reward points per day. [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Diners-club-black-metal-T-and-C.pdf \"/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal",
                     "metadata": {
-                        "Header1": "[Freedom card new](https://www.hdfcbank.com/personal/pay/cards/credit-cards/freedom-card-new)",
+                        "Header4": "Dining Benefits",
                         "Header2": "Features",
-                        "Header4": "Reward Points/Cashback Redemption & Validity",
-                        "_document_id": "mlfoundry::data-dir:truefoundry/prathamesh-merck/reindexing-exp::freedom-card-new.md",
-                        "_id": "74d476a3-77f5-46e0-bc69-a49472f20243",
-                        "_collection_name": "ps01"
+                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
+                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
+                        "_data_point_hash": "9635",
+                        "_id": "71477795920c4f898b50289e6ec89499",
+                        "_collection_name": "testcollection"
                     },
                     "type": "Document"
                 },
                 {
-                    "page_content": "# [Hdfc bank upi rupay credit card](https://www.hdfcbank.com/personal/pay/cards/credit-cards/hdfc-bank-upi-rupay-credit-card)\n## Features\n#### Revolving Credit\nRevolving Credit\nEnjoy Revolving Credit on your HDFC Bank UPI RuPay Credit Card at nominal interest rate. Please refer to the Fees and Charges section for more details.",
+                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Additional Features\nAdditional Features\n**Interest Free Credit Period:** Up to 50 days of interest free credit period on your HDFC Bank Diners Club Black Credit Card from the date of purchase. (subject to the submission of the charge by the Merchant)\n**Credit liability cover:** ₹ 9 lakh\n**Foreign Currency Markup:** 2% on all your foreign currency spends.",
                     "metadata": {
-                        "Header1": "[Hdfc bank upi rupay credit card](https://www.hdfcbank.com/personal/pay/cards/credit-cards/hdfc-bank-upi-rupay-credit-card)",
+                        "Header4": "Additional Features",
                         "Header2": "Features",
-                        "Header4": "Revolving Credit",
-                        "_document_id": "mlfoundry::data-dir:truefoundry/prathamesh-merck/reindexing-exp::hdfc-bank-upi-rupay-credit-card.md",
-                        "_id": "30a72a77-5055-48be-b0ba-18adcf06ed5e",
-                        "_collection_name": "ps01"
-                    },
-                    "type": "Document"
-                },
-                {
-                    "page_content": "# [Hdfc bank upi rupay credit card](https://www.hdfcbank.com/personal/pay/cards/credit-cards/hdfc-bank-upi-rupay-credit-card)\n## Features\n#### Reward Point/Cashback Redemption & Validity\n* CashPoints can also be used for redemption against travel benefits like Flight & Hotel bookings and also on Rewards Catalogue at the SmartBuy Rewards Portal, wherein Credit Card members can redeem up to a maximum of 50% of the booking value through CashPoints at a value of 1 CashPoint = ₹0.25 and the rest of the amount will have to be paid via the Credit Card. To know more on Rewards catalouge, [click here](/personal/pay/cards/credit-cards/claim-rewards",
-                    "metadata": {
-                        "Header1": "[Hdfc bank upi rupay credit card](https://www.hdfcbank.com/personal/pay/cards/credit-cards/hdfc-bank-upi-rupay-credit-card)",
-                        "Header2": "Features",
-                        "Header4": "Reward Point/Cashback Redemption & Validity",
-                        "_document_id": "mlfoundry::data-dir:truefoundry/prathamesh-merck/reindexing-exp::hdfc-bank-upi-rupay-credit-card.md",
-                        "_id": "a544165f-0542-43cc-a38b-154344ae5d16",
-                        "_collection_name": "ps01"
+                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
+                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
+                        "_data_point_hash": "9635",
+                        "_id": "c837ae1717124b69aa3b8861f82d48d0",
+                        "_collection_name": "testcollection"
                     },
                     "type": "Document"
                 }

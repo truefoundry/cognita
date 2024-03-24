@@ -64,6 +64,18 @@ class LocalMetadataStore(BaseMetadataStore):
             embedder_config=self.local_metadata.embedder_config,
             associated_data_sources=associated_data_sources,
         )
+
+        get_collection = VECTOR_STORE_CLIENT.get_collections()
+        if not self.local_metadata.collection_name in get_collection:
+            VECTOR_STORE_CLIENT.create_collection(
+                collection_name=self.local_metadata.collection_name,
+                embeddings=get_embedder(self.local_metadata.embedder_config),
+            )
+            self.data_ingestion_runs = []
+            logger.debug(f"Local metadata store initialized with {self.local_metadata}")
+        else:
+            logger.debug(f"Collection {self.local_metadata.collection_name} already present in local")
+        
         self.data_ingestion_runs = []
 
     def create_collection(self, collection) -> Collection:
