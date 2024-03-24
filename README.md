@@ -138,7 +138,7 @@ pip install -r requirements.txt
     -   One using OpenAI functions, OpenAI compatible LLMs and Embeddings. Can be used either by setting `TFY_API_KEY` or `OPENAI_API_KEY`
     -   Another using entirely OpenSource LLMs (th' [Ollama](https://ollama.com/library)) and OpenSource Embeddings (e.g: [mixbread](https://www.mixedbread.ai/blog/mxbai-embed-large-v1)).
         > Both of these scripts can be used as a reference for your own use case.
-    -   Sample scripts are in the `local` folder.
+    -   Sample scripts for data ingestion and execution are given in the `local` folder.
 
 -   To run RAG locally using OpenAI compatible functions,
 
@@ -167,7 +167,7 @@ pip install -r requirements.txt
                 model: openai-devtest/text-embedding-ada-002
         ```
 
-    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
+    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest` or using [API](#🔑-api-reference)
 
 -   To run RAG locally using OpenSource LLMs and Embeddings,
     -   Setup Yaml in `local.metadata.yaml`
