@@ -167,7 +167,7 @@ pip install -r requirements.txt
                 model: openai-devtest/text-embedding-ada-002
         ```
 
-    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest` or using [API](#🔑-api-reference)
+    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest` or using [API](#🔑-api-reference) `Data Indexing` Section.
 
 -   To run RAG locally using OpenSource LLMs and Embeddings,
     -   Setup Yaml in `local.metadata.yaml`
