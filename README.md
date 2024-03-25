@@ -198,7 +198,7 @@ pip install -r requirements.txt
     -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
     -   The Query function uses, `gemma:2b` from Ollama. Make sure you have the corresponding LLM, `ollama pull gemma:2b` else replace the corresponding LLM with the LLM of your choice.
     -   The script also uses a document reranker, `mixedbread-ai/mxbai-rerank-xsmall-v1` to effectively rerank and find top relavant documents.
--   Execute: `python -m local.run`
+-   Execute: `python -m local.run` or by Using Swagger [API](#🔑-api-reference) `Retrievers` Section.
 
 # 🛠️ Project Architecture
 

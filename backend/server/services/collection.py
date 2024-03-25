@@ -46,7 +46,6 @@ class CollectionService:
                 )
             )
 
-            print(created_collection.dict())
             VECTOR_STORE_CLIENT.create_collection(
                 collection_name=collection.name,
                 embeddings=get_embedder(collection.embedder_config),
