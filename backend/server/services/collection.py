@@ -26,6 +26,8 @@ class CollectionService:
         try:
             logger.debug("Listing all the collections...")
             collections = METADATA_STORE_CLIENT.get_collections()
+            if collections is None:
+                return JSONResponse(content={"collections": []})
             return JSONResponse(
                 content={"collections": [obj.dict() for obj in collections]}
             )
@@ -43,6 +45,7 @@ class CollectionService:
                     embedder_config=collection.embedder_config,
                 )
             )
+
             VECTOR_STORE_CLIENT.create_collection(
                 collection_name=collection.name,
                 embeddings=get_embedder(collection.embedder_config),

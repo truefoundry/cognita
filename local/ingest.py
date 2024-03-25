@@ -18,19 +18,10 @@ async def ingest():
 
     collection = METADATA_STORE_CLIENT.get_collection_by_name(no_cache=True)
 
-    VECTOR_STORE_CLIENT.delete_collection(collection_name=collection.name)
-       
-    VECTOR_STORE_CLIENT.create_collection(
-        collection_name=collection.name,
-        embeddings=get_embedder(collection.embedder_config),
-    )
-    
-    
     data_source = METADATA_STORE_CLIENT.get_data_source_from_fqn()
 
     # Create a data ingestion request
-    # It requires collection name
-    # Data source FQN
+    # It requires collection name & data source FQN
     request = IngestDataToCollectionDto(
         collection_name = collection.name,
         data_source_fqn = data_source.fqn,

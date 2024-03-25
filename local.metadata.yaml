@@ -10,7 +10,7 @@ parser_config:
         # Since data is markdown type, we use the MarkdownParser
         ".md": MarkdownParser
 embedder_config:
-    provider: default
+    provider: mixbread
     config:
-        # Embedding Model from TFY
-        model: openai-devtest/text-embedding-ada-002
+        # Model name from MixBread (HuggingFace model hub)
+        model: mixedbread-ai/mxbai-embed-large-v1
