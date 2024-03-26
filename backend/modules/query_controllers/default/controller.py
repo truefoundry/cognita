@@ -3,6 +3,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.schema.vectorstore import VectorStoreRetriever
+from servicefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
@@ -56,8 +57,11 @@ class DefaultQueryController:
                     temperature=request.model_configuration.parameters.get("temperature", 0.1),
                     system="You are a question answering system. You answer question only based on the given context.",
                 )
-            
-
+            else:
+                # Get the LLM
+                llm = TrueFoundryChat(
+                    model=request.model_configuration.name,
+                )
 
             # Create the retriever using langchain VectorStoreRetriever
             retriever = VectorStoreRetriever(
