@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import Literal, Optional
 
 from backend.types import LLMConfig, RetrieverConfig
 
@@ -8,7 +8,7 @@ class DefaultLLMConfig(LLMConfig):
     Configuration for LLM Configuration
     """
     # You can add your custom providers too as per usecase
-    provider: Literal["openai", "ollama"] = Field(title="Model provider")
+    provider: Optional[Literal["openai", "ollama"]] = Field(title="Model provider")
 
 
 

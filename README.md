@@ -106,6 +106,8 @@ Following are the instructions for running the RAG application locally without a
 pip install -r requirements.txt
 ```
 
+> Uncomment sections of `requirements` as per the usecase.
+
 ## Setting up .env file:
 
 -   Create a `.env` file or copy from `.env.sample`
@@ -193,8 +195,8 @@ pip install -r requirements.txt
         ```
     -   This requires using Opensource LLM, Embeddings and Reranking modules.
         -   For LLM download ollama: https://ollama.com/download
-        -   For Embeddings: `pip install -r backend/embedder/embedding.requirements.txt`
-        -   For Reranking: `pip install -r backend/embedder/reranker.requirements.txt`
+        -   For Embeddings: uncomment the embedding section from requirements.txt
+        -   For Reranking: uncomment the reranker section from requirements.txt
     -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
     -   The Query function uses, `gemma:2b` from Ollama. Make sure you have the corresponding LLM, `ollama pull gemma:2b` else replace the corresponding LLM with the LLM of your choice.
     -   The script also uses a document reranker, `mixedbread-ai/mxbai-rerank-xsmall-v1` to effectively rerank and find top relavant documents.
@@ -597,7 +599,9 @@ This API is used for managing the collections. Each collection has embedder conf
         "description": "string",
         "embedder_config": {
             "provider": "string",
-            "config": {}
+            "config": {
+                "model": "string"
+            }
         },
         "associated_data_sources": [
             {
@@ -783,4 +787,59 @@ Any registered question answer API is showcased here. You can add your own retri
 
 # 🐳 Quickstart: Deployment with Truefoundry:
 
-Refer the [docs](docs/TF_DEPLOY.md) for more information.
+To be able to **Query** on your own documents, follow the steps below:
+
+1.  Register at TrueFoundry, follow [here](https://www.truefoundry.com/register)
+
+    -   Fill up the form and register as an organization (let's say <org_name>)
+    -   On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
+    -   Complete your email verification
+    -   Login to the platform at your dashboard endpoint ie. https://<org_name>.truefoundry.cloud
+
+    `Note: Keep your dashboard endpoint handy, we will refer it as "TFY_HOST" and it should have structure like "https://<org_name>.truefoundry.cloud"`
+
+2.  Setup a cluster, use TrueFoundry managed for quick setup
+
+    -   Give a unique name to your **[Cluster](https://docs.truefoundry.com/docs/workspace)** and click on **Launch Cluster**
+    -   It will take few minutes to provision a cluster for you
+    -   On **Configure Host Domain** section, click `Register` for the pre-filled IP
+    -   Next, `Add` a **Docker Registry** to push your docker images to.
+    -   Next, **Deploy a Model**, you can choose to `Skip` this step
+
+3.  Add a **Storage Integration**
+
+4.  Create a **ML Repo**
+
+    -   Navigate to **ML Repo** tab
+    -   Click on `+ New ML Repo` button on top-right
+    -   Give a unique name to your **ML Repo** (say 'docs-qa-llm')
+    -   Select **Storage Integration**
+    -   On `Submit`, your **ML Repo** will be created
+
+        For more details: [link](https://docs.truefoundry.com/docs/creating-ml-repo-via-ui)
+
+5.  Create a **Workspace**
+
+    -   Navigate to **Workspace** tab
+    -   Click on `+ New Workspace` button on top-right
+    -   Select your **Cluster**
+    -   Give a name to your **Workspace** (say 'docs-qa-llm')
+    -   Enable **ML Repo Access** and `Add ML Repo Access`
+    -   Select your **ML Repo** and role as **Project Admin**
+    -   On `Submit`, a new **Workspace** will be created. You can copy the **Workspace FQN** by clicking on **FQN**.
+
+    For more details: [link](https://docs.truefoundry.com/docs/installation-and-setup#5-creating-workspaces)
+
+6.  Deploy **RAG Application**
+
+    -   Navigate to **Deployments** tab
+    -   Click on `+ New Deployment` buttton on top-right
+    -   Select `Application Catalogue`
+    -   Select your workspace
+    -   Select RAG Application
+    -   Fill up the deployment template
+        -   Give your deployment a Name
+        -   Add ML Repo
+        -   You can either add an existing Qdrant DB or create a new one
+        -   By default, `release` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
+        -   Click on `Submit` your application will be deployed.
