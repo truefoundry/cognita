@@ -20,14 +20,13 @@ markdownify==0.11.6
 gunicorn==21.2.0
 
 #### Embeddings
-# Uncomment if you want to use Mxbread Embeddings
 # Install torch for as per your requirements: https://pytorch.org/get-started/locally/
-# torch==2.2.1
-# torchvision==0.17.1
-# torchaudio==2.2.1
-# transformers==4.39.0
+torch==2.2.1
+torchvision==0.17.1
+torchaudio==2.2.1
+transformers==4.39.0
 
 
 #### Reranker
-# Uncomment if you want to use Mxbread Reranker
-# sentence_transformers==2.5.1
+# For use Mxbread Reranker
+sentence_transformers==2.5.1
