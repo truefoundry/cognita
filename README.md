@@ -841,5 +841,6 @@ To be able to **Query** on your own documents, follow the steps below:
         -   Give your deployment a Name
         -   Add ML Repo
         -   You can either add an existing Qdrant DB or create a new one
-        -   By default, `release` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
+        -   By default, `main` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
+            > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
         -   Click on `Submit` your application will be deployed.
