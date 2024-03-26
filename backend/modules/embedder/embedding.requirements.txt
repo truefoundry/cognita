@@ -1,5 +1,0 @@
-# Install torch for as per your requirements: https://pytorch.org/get-started/locally/
-torch==2.2.1
-torchvision==0.17.1
-torchaudio==2.2.1
-transformers==4.39.0

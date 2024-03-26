@@ -68,14 +68,12 @@ cp .env.example .env
 Sample .env file:
 
 ```bash
-VITE_QA_FOUNDRY_URL=tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
+VITE_QA_FOUNDRY_URL=http://localhost:8000
 VITE_DOCS_QA_DELETE_COLLECTIONS=false
 VITE_DOCS_QA_STANDALONE_PATH=/
 VITE_DOCS_QA_ENABLE_REDIRECT=false
 VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=200
 ```
-
-#### Here, `tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL` is the Secret FQN for the QA Foundry URL. You can [add secret store](https://docs.truefoundry.com/docs/integrations-secret-store) and use it for adding secrets
 
 ## Running the Web App
 

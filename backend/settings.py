@@ -48,11 +48,6 @@ class Settings(BaseSettings):
     
     if not TFY_LLM_GATEWAY_URL:
         TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
-    
-    if not OPENAI_API_KEY:
-        if TFY_API_KEY:
-            os.environ["OPENAI_API_KEY"] = TFY_API_KEY
-            os.environ["OPENAI_API_BASE"] = f"{TFY_LLM_GATEWAY_URL}/openai"
 
     try:
         VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
