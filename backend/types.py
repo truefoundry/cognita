@@ -96,7 +96,9 @@ class EmbedderConfig(BaseModel):
     )
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder",
-        default_factory=dict,
+        default={
+            "model": "string"
+        }
     )
 
 
