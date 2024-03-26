@@ -15,7 +15,7 @@ PyMuPDF==1.23.6
 redis==5.0.1
 beautifulsoup4==4.12.2
 mlfoundry==0.10.6
-servicefoundry==0.10.2rc2
+servicefoundry==0.10.2rc4
 markdownify==0.11.6
 gunicorn==21.2.0
 

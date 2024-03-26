@@ -61,6 +61,10 @@ class DefaultQueryController:
                 # Get the LLM
                 llm = TrueFoundryChat(
                     model=request.model_configuration.name,
+                    model_parameters={
+                        'temperature': request.model_configuration.parameters.get("temperature", 0.1),
+                    },
+                    system_prompt="You are a question answering system. You answer question only based on the given context.",
                 )
 
             # Create the retriever using langchain VectorStoreRetriever
