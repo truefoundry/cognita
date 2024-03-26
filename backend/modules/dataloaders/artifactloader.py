@@ -47,6 +47,12 @@ class ArtifactLoader(BaseDataLoader):
         # download it to disk
         # `download_path` points to a directory that has all contents of the artifact
         download_path = artifact_version.download(path=dest_dir)
+        logger.debug(f"Artifact data directory download info: {download_path}")
+
+        if os.path.exists(os.path.join(download_path, "files")):
+            logger.debug("Files directory exists")
+            download_path = os.path.join(download_path, "files")
+            logger.debug(f"[Updated] Artifact data directory download info: {download_path}")
 
         # If the downloaded data directory is a ZIP file, unzip its contents.
         for file_name in os.listdir(download_path):

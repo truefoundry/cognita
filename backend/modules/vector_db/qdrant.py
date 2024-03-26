@@ -41,7 +41,7 @@ class QdrantVectorDB(BaseVectorDB):
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
 
-        logger.debug(f"[Vector Store] Creating new collection {collection_name}")
+        logger.debug(f"[Vector Store Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size
         partial_embeddings = embeddings.embed_documents(["Initial document"])

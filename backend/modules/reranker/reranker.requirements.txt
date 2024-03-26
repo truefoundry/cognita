@@ -1,0 +1,1 @@
+sentence_transformers==2.5.1

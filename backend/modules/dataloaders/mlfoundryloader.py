@@ -38,10 +38,20 @@ class MlFoundryLoader(BaseDataLoader):
         dataset = self.mlfoundry_client.get_data_directory_by_fqn(data_source.uri)
 
         download_info = dataset.download(path=dest_dir)
+        logger.debug(f"Mlfoundry data directory download info: {download_info}")
+
+        if os.path.exists(os.path.join(download_info, "files")):
+            logger.debug("Files directory exists")
+            download_info = os.path.join(download_info, "files")
+            logger.debug(f"[Updated] Mlfoundry data directory download info: {download_info}")
+
+        
         
         # If the downloaded data directory is a ZIP file, unzip its contents.
         for file_name in os.listdir(download_info):
+            logger.debug(f"file_name: {file_name}")
             if file_name.endswith(".zip"):
+                logger.debug(f"Unzipped file_path: {os.path.join(download_info, file_name)}")
                 unzip_file(
                     file_path=os.path.join(download_info, file_name),
                     dest_dir=download_info,
@@ -56,6 +66,7 @@ class MlFoundryLoader(BaseDataLoader):
                 if f.startswith("."):
                     continue
                 full_path = os.path.join(root, f)
+                logger.debug(f"Processing file: {full_path}")
                 rel_path = os.path.relpath(full_path, dest_dir)
                 file_ext = os.path.splitext(f)[1]
                 data_point = DataPoint(

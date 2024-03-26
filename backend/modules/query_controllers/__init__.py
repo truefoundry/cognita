@@ -1,4 +1,4 @@
-from backend.modules.query_controllers.default.controller import DefaultQueryController
 from backend.modules.query_controllers.query_controller import register_query_controller
+from backend.modules.query_controllers.default.controller import DefaultQueryController
 
-register_query_controller("default_controller", DefaultQueryController)
+register_query_controller("default", DefaultQueryController)

@@ -18,6 +18,6 @@ tempDir/
 .ipynb_checkpoints/
 deploy.*.py
 ragenv
-requests.json
+requests.txt
 qdrant_db
 test.py

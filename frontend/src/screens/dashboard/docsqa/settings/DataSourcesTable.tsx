@@ -115,20 +115,16 @@ const DataSourcesTable = ({ collectionName, rows, openRunsHistoryDrawer }: DataS
       width: 200,
       renderCell: (params: GridRenderCellParams) => (
         <div className="flex gap-1">
-          <DataSourceDeleteButton
-            collectionName={collectionName}
-            fqn={params?.row?.fqn}
-          />
           <DataSourceSyncButton
             collectionName={collectionName}
             fqn={params?.row?.fqn}
           />
-          <Button
+          {/* <Button
             outline
             text="View Runs"
             className="border-gray-200 shadow bg-base-100 btn-sm font-normal px-2.5"
             onClick={() => openRunsHistoryDrawer(params?.row?.fqn as string)}
-          />
+          /> */}
         </div>
       ),
     },
