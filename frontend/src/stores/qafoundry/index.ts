@@ -19,9 +19,11 @@ export interface ModelConfig {
 
 export interface CollectionQueryDto {
   collection_name: string
-  k: number
-  mmr?: boolean
-  fetch_k?: number
+  retriever_config: {
+    search_type: string
+    k: number
+    fetch_k?: number
+  }
   query: string
   model_configuration: ModelConfig
 }
@@ -161,6 +163,12 @@ export const qafoundryApi = createApi({
             ),
       }),
     }),
+    getOpenapiSpecs: builder.query<any, void>({
+      query: () => ({
+        url: '/openapi.json',
+        method: 'GET',
+      }),
+    }),
 
     // * Mutations
     uploadDataToDataDirectory: builder.mutation({
@@ -203,8 +211,8 @@ export const qafoundryApi = createApi({
       invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
     }),
     queryCollection: builder.mutation({
-      query: (payload: CollectionQueryDto) => ({
-        url: '/retrievers/answer',
+      query: (payload: CollectionQueryDto & { retrieverName: string }) => ({
+        url: `/retrievers/${payload.retrieverName}`,
         body: payload,
         method: 'POST',
       }),
@@ -242,6 +250,7 @@ export const {
   useGetDataLoadersQuery,
   useGetDataSourcesQuery,
   useGetDataIngestionRunsQuery,
+  useGetOpenapiSpecsQuery,
 
   // mutations
   useUploadDataToDataDirectoryMutation,

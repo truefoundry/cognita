@@ -2,6 +2,7 @@ import Button from '@/components/base/atoms/Button'
 import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import notify from '@/components/base/molecules/Notify'
+import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import {
   Collection,
   useAddDocsToCollectionMutation,
@@ -9,6 +10,12 @@ import {
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
+
+const defaultParserMaps = `{
+  ".md": "MarkdownParser",
+  ".pdf": "PdfParserFast",
+  ".txt": "TextParser"
+}`
 
 interface NewCollectionProps {
   collection: Collection
@@ -23,6 +30,7 @@ const AddDataSourceToCollection = ({
 }: NewCollectionProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedDataSource, setSelectedDataSource] = useState('none')
+  const [parserConfigs, setParserConfigs] = useState(defaultParserMaps)
   const { data: dataSources } = useGetDataSourcesQuery()
 
   const [addDocsToCollection] = useAddDocsToCollectionMutation()
@@ -41,11 +49,7 @@ const AddDataSourceToCollection = ({
         parser_config: {
           chunk_size: 500,
           chunk_overlap: 0,
-          parser_map: {
-            '.md': 'MarkdownParser',
-            '.pdf': 'PdfParserFast',
-            '.txt': 'TextParser',
-          },
+          parser_map: JSON.parse(parserConfigs),
         },
       }
 
@@ -109,7 +113,7 @@ const AddDataSourceToCollection = ({
               </div>
               <div className="mb-4 w-full"></div>
               <div>
-                <div className="mb-4">
+                <div className="mb-2">
                   <label>
                     <div className="label-text font-inter mb-1">
                       Data Source FQN
@@ -144,8 +148,8 @@ const AddDataSourceToCollection = ({
                   </label>
                 </div>
                 {selectedDataSource !== 'none' && (
-                  <>
-                    <div className="flex text-sm mb-1">
+                  <div className="mb-5">
+                    <div className="flex text-xs mb-1">
                       <div>Type :</div>
                       &nbsp;
                       <div>
@@ -156,7 +160,7 @@ const AddDataSourceToCollection = ({
                         }
                       </div>
                     </div>
-                    <div className="flex text-sm">
+                    <div className="flex text-xs">
                       <div>URI :</div>
                       &nbsp;
                       <div>
@@ -167,8 +171,19 @@ const AddDataSourceToCollection = ({
                         }
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
+                <div className="mb-4">
+                  <div className="label-text font-inter mb-1">
+                    Parser Configs
+                  </div>
+                  <SimpleCodeEditor
+                    language="json"
+                    height={200}
+                    value={parserConfigs}
+                    onChange={(value) => setParserConfigs(value ?? '')}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
