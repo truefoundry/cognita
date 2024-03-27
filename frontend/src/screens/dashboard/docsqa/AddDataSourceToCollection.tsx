@@ -1,3 +1,4 @@
+import Badge from '@/components/base/atoms/Badge'
 import Button from '@/components/base/atoms/Button'
 import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
@@ -12,9 +13,13 @@ import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
 const defaultParserMaps = `{
-  ".md": "MarkdownParser",
-  ".pdf": "PdfParserFast",
-  ".txt": "TextParser"
+  "chunk_size": 500,
+  "chunk_overlap": 0,
+  "parser_map": {
+    ".md": "MarkdownParser",
+    ".pdf": "PdfParserFast",
+    ".txt": "TextParser"
+  }
 }`
 
 interface NewCollectionProps {
@@ -46,11 +51,7 @@ const AddDataSourceToCollection = ({
       const addDocsParams = {
         data_source_fqn: selectedDataSource,
         collection_name: collection.name,
-        parser_config: {
-          chunk_size: 500,
-          chunk_overlap: 0,
-          parser_map: JSON.parse(parserConfigs),
-        },
+        parser_config: JSON.parse(parserConfigs),
       }
 
       await addDocsToCollection(addDocsParams).unwrap()
@@ -103,8 +104,14 @@ const AddDataSourceToCollection = ({
                 </p>
               </div>
             )}
-            <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
-              Add data source to collection
+            <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4 flex gap-1 items-center">
+              Add data source to collection{' '}
+              <Badge
+                text={collection.name}
+                className="text-xl bg-gray-150 border font-semibold border-gray-200 mx-1"
+                style={{ color: '#010202' }}
+                customPadding="py-[0.7rem]"
+              />
             </div>
             <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
               <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
