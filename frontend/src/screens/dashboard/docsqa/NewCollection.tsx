@@ -14,9 +14,10 @@ import React, { useEffect, useState } from 'react'
 interface NewCollectionProps {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-const NewCollection = ({ open, onClose }: NewCollectionProps) => {
+const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [collectionName, setCollectionName] = useState('')
   const [selectedEmbeddingModel, setSelectedEmbeddingModel] = React.useState('')
@@ -85,6 +86,7 @@ const NewCollection = ({ open, onClose }: NewCollectionProps) => {
 
       onClose()
       resetForm()
+      onSuccess?.()
       notify(
         'success',
         'Collection is successfully added!',

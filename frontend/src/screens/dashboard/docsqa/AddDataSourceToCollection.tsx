@@ -1,7 +1,9 @@
+import Badge from '@/components/base/atoms/Badge'
 import Button from '@/components/base/atoms/Button'
 import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import notify from '@/components/base/molecules/Notify'
+import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import {
   Collection,
   useAddDocsToCollectionMutation,
@@ -9,6 +11,16 @@ import {
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
+
+const defaultParserConfigs = `{
+  "chunk_size": 500,
+  "chunk_overlap": 0,
+  "parser_map": {
+    ".md": "MarkdownParser",
+    ".pdf": "PdfParserFast",
+    ".txt": "TextParser"
+  }
+}`
 
 interface NewCollectionProps {
   collection: Collection
@@ -23,6 +35,7 @@ const AddDataSourceToCollection = ({
 }: NewCollectionProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedDataSource, setSelectedDataSource] = useState('none')
+  const [parserConfigs, setParserConfigs] = useState(defaultParserConfigs)
   const { data: dataSources } = useGetDataSourcesQuery()
 
   const [addDocsToCollection] = useAddDocsToCollectionMutation()
@@ -38,15 +51,7 @@ const AddDataSourceToCollection = ({
       const addDocsParams = {
         data_source_fqn: selectedDataSource,
         collection_name: collection.name,
-        parser_config: {
-          chunk_size: 500,
-          chunk_overlap: 0,
-          parser_map: {
-            '.md': 'MarkdownParser',
-            '.pdf': 'PdfParserFast',
-            '.txt': 'TextParser',
-          },
-        },
+        parser_config: JSON.parse(parserConfigs),
       }
 
       await addDocsToCollection(addDocsParams).unwrap()
@@ -99,8 +104,14 @@ const AddDataSourceToCollection = ({
                 </p>
               </div>
             )}
-            <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
-              Add data source to collection
+            <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4 flex gap-1 items-center">
+              Add data source to collection{' '}
+              <Badge
+                text={collection.name}
+                className="text-xl bg-gray-150 border font-semibold border-gray-200 mx-1"
+                style={{ color: '#010202' }}
+                customPadding="py-[0.75rem]"
+              />
             </div>
             <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
               <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
@@ -109,7 +120,7 @@ const AddDataSourceToCollection = ({
               </div>
               <div className="mb-4 w-full"></div>
               <div>
-                <div className="mb-4">
+                <div className="mb-2">
                   <label>
                     <div className="label-text font-inter mb-1">
                       Data Source FQN
@@ -144,8 +155,8 @@ const AddDataSourceToCollection = ({
                   </label>
                 </div>
                 {selectedDataSource !== 'none' && (
-                  <>
-                    <div className="flex text-sm mb-1">
+                  <div className="mb-5">
+                    <div className="flex text-xs mb-1">
                       <div>Type :</div>
                       &nbsp;
                       <div>
@@ -156,7 +167,7 @@ const AddDataSourceToCollection = ({
                         }
                       </div>
                     </div>
-                    <div className="flex text-sm">
+                    <div className="flex text-xs">
                       <div>URI :</div>
                       &nbsp;
                       <div>
@@ -167,11 +178,22 @@ const AddDataSourceToCollection = ({
                         }
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
+                <div className="mb-4">
+                  <div className="label-text font-inter mb-1">
+                    Parser Configs
+                  </div>
+                  <SimpleCodeEditor
+                    language="json"
+                    height={200}
+                    value={parserConfigs}
+                    onChange={(value) => setParserConfigs(value ?? '')}
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
+            <div className="flex justify-end items-center gap-2 h-[3.625rem] border-t border-gray-200 px-4">
               <Button
                 outline
                 text="Cancel"

@@ -15,7 +15,8 @@ import {
   faSpinner,
   faSync,
   faTrashAlt,
-  faWarning
+  faWarning,
+  faClone,
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -54,7 +55,8 @@ const icons: any[] = [
   faGearRegular,
   faDatabase,
   faSync,
-  faLinkSlash
+  faLinkSlash,
+  faClone,
 ]
 
 library.add(...icons)
