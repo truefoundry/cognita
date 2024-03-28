@@ -98,7 +98,7 @@ const DocsQASettings = () => {
         </div>
       )}
       <div className="flex gap-5 h-full w-full">
-        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[280px] border border-gray-250">
+        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250">
           <LinkButton
             icon="plus"
             iconClasses="fa-xs text-slate-400"

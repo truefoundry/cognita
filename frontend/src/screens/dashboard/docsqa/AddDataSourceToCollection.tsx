@@ -12,7 +12,7 @@ import {
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
-const defaultParserMaps = `{
+const defaultParserConfigs = `{
   "chunk_size": 500,
   "chunk_overlap": 0,
   "parser_map": {
@@ -35,7 +35,7 @@ const AddDataSourceToCollection = ({
 }: NewCollectionProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedDataSource, setSelectedDataSource] = useState('none')
-  const [parserConfigs, setParserConfigs] = useState(defaultParserMaps)
+  const [parserConfigs, setParserConfigs] = useState(defaultParserConfigs)
   const { data: dataSources } = useGetDataSourcesQuery()
 
   const [addDocsToCollection] = useAddDocsToCollectionMutation()
@@ -110,7 +110,7 @@ const AddDataSourceToCollection = ({
                 text={collection.name}
                 className="text-xl bg-gray-150 border font-semibold border-gray-200 mx-1"
                 style={{ color: '#010202' }}
-                customPadding="py-[0.7rem]"
+                customPadding="py-[0.75rem]"
               />
             </div>
             <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
@@ -193,7 +193,7 @@ const AddDataSourceToCollection = ({
                 </div>
               </div>
             </div>
-            <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
+            <div className="flex justify-end items-center gap-2 h-[3.625rem] border-t border-gray-200 px-4">
               <Button
                 outline
                 text="Cancel"

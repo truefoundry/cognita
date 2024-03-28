@@ -152,8 +152,8 @@ const DocsQA = () => {
                   sx={{
                     background: 'white',
                     height: '32px',
-                    width: '13.2rem',
-                    minWidth: '13.2rem',
+                    width: '13.1875rem',
+                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -179,8 +179,8 @@ const DocsQA = () => {
                   sx={{
                     background: 'white',
                     height: '32px',
-                    width: '13.2rem',
-                    minWidth: '13.2rem',
+                    width: '13.1875rem',
+                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -206,8 +206,8 @@ const DocsQA = () => {
                   sx={{
                     background: 'white',
                     height: '32px',
-                    width: '13.2rem',
-                    minWidth: '13.2rem',
+                    width: '13.1875rem',
+                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -253,7 +253,7 @@ const DocsQA = () => {
               <div className="flex gap-4 items-center">
                 <div className="w-full relative">
                   <Input
-                    className="w-[100%] h-[44px] text-sm pr-14"
+                    className="w-full h-[44px] text-sm pr-14"
                     placeholder="Ask any question related to this document"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}

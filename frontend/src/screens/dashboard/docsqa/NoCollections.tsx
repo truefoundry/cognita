@@ -9,14 +9,14 @@ const NoCollections = ({ fullWidth }: { fullWidth?: boolean }) => {
   return (
     <div
       className={`h-full border rounded-lg border-[#CEE0F8] ${
-        fullWidth ? 'w-full' : 'w-[calc(100%-300px)]'
+        fullWidth ? 'w-full' : 'w-[calc(100%-18.75rem)]'
       } bg-white flex items-center justify-center`}
     >
       <DocsQaInformation
         header={'Welcome to DocsQA'}
         subHeader={
           <>
-            <p className="text-center max-w-[450px] mt-2">
+            <p className="text-center max-w-[28.125rem] mt-2">
               Start building a QnA system on your internal knowledge
               <br /> base. Click “New Collection” button to connect your data
               <br /> and start a chat
