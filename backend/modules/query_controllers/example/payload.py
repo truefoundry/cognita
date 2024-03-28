@@ -22,8 +22,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
 QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
     "summary": "vector store retriever with similarity search",
     "description": """
-        Payload for answering the question using the vector store retriever. 
-        LLM provider can be changed to ollama/truefoundry/openai.
+        Requires k in search_kwargs for similarity search.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY,
 }
@@ -54,10 +53,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
     "summary": "vector store retriever with mmr",
     "description": """
-        Payload for answering the question using the vector store retriever with search type mmr. 
-        Requires k and fetch_k in search_kwargs. mmr support depends on vector db. 
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        LLM provider can be changed to ollama/truefoundry/openai""",
+        Requires k and fetch_k in search_kwargs for mmr support depends on vector db. 
+        search_type can either be similarity or mmr or similarity_score_threshold""",
     "value": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR,
 }
 #######
@@ -86,10 +83,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
     "summary": "vector store retriever with threshold score",
     "description": """
-        Payload for answering the question using the vector store retriever with search type similarity_score_threshold. 
         Requires score_threshold float (0~1) in search kwargs. 
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        LLM provider can be changed to ollama/truefoundry/openai""",
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE,
 }
 #######
@@ -121,11 +116,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER =  {
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
     "summary": "contextual compression (re-ranker) retriever with similariy search",
     "description": """
-        Payload for answering the question using the contexual compression retriever. 
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        LLM provider can be changed to ollama/truefoundry/openai. 
-        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added. 
-        You can add more rerankers in the code and use here.""",
+        Requires k in search_kwargs for similarity search.
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER,
 }
 #####
@@ -159,12 +151,9 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR =  {
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
     "summary": "contextual compression (re-ranker) retriever with mmr",
     "description": """
-        Payload for answering the question using the contexual compression retriever with search type mmr. 
+        Requires k and fetch_k in search kwargs for mmr.
         search_type can either be similarity or mmr or similarity_score_threshold.
-        Requires k and fetch_k in search kwargs.  mmr support depends on vector db. 
-        LLM provider can be changed to ollama/truefoundry/openai. 
-        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added. 
-        You can add more rerankers in the code and use here.""",
+        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR,
 }
 
@@ -198,10 +187,9 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD = {
     "summary": "contextual compression (re-ranker) retriever with threshold score",
     "description": """
-        Payload for answering the question using the contexual compression retriever with search type similarity_score_threshold. 
+        Requires score_threshold float (0~1) in search kwargs for similarity search.
         search_type can either be similarity or mmr or similarity_score_threshold.
-        Requires score_threshold float (0~1) in search kwargs. LLM provider can be changed to ollama/truefoundry/openai. 
-        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added. You can add more rerankers in the code and use here.""",
+        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE,
 }
 
@@ -239,9 +227,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
     "summary": "multi-query retriever with similarity search",
     "description": """
         Typically used for complex user queries.
-        Payload for answering the question using the multi-query retriever. 
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        LLM provider for both model_configuration and retriever_llm_configuration can be changed to ollama/truefoundry/openai""",
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY,
 }
 #######
@@ -278,12 +264,9 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
     "summary": "multi-query retriever with mmr",
-    "description": """
-        Typically used for complex user queries.
-        Payload for answering the question using the vector store retriever with search type mmr. 
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        Requires k and fetch_k in search_kwargs. mmr support depends on vector db. 
-        LLM provider for both model_configuration and retriever_llm_configuration can be changed to ollama/truefoundry/openai""",
+    "description": """ 
+        Requires k and fetch_k in search_kwargs for mmr.
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR,
 }
 #######
@@ -320,10 +303,8 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
     "summary": "multi-query retriever with similarity score threshold",
     "description": """
         Typically used for complex user queries.
-        Payload for answering the question using the vector store retriever with search type similarity_score_threshold.
-        search_type can either be similarity or mmr or similarity_score_threshold.
         Requires score_threshold float (0~1) in search kwargs. 
-        LLM provider for both model_configuration and retriever_llm_configuration can be changed to ollama/truefoundry/openai""",
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE,
 }
 #######
@@ -365,10 +346,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
     "summary": "multi-query reranker retriever with mmr",
     "description": """
         Typically used for complex user queries.
-        Payload for answering the question using the multi-query reranker retriever with search type mmr.
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        Requires k and fetch_k in search_kwargs. mmr support depends on vector db. 
-        LLM provider for both model_configuration and retriever_llm_configuration can be changed to ollama/truefoundry/openai""",
+        Requires k and fetch_k in search_kwargs for mmr. 
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR,
 }
 #######
@@ -408,9 +387,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
     "summary": "multi-query reranker retriever with similarity ",
     "description": """
         Typically used for complex user queries.
-        Payload for answering the question using the vector store retriever with search type similarity.
-        search_type can either be similarity or mmr or similarity_score_threshold.
-        LLM provider for both model_configuration and retriever_llm_configuration can be changed to ollama/truefoundry/openai""",
+        Requires k in search_kwargs for similarity search.
+        search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY,
 }
 #######
