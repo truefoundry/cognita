@@ -10,11 +10,11 @@ parser_config:
         # Since data is markdown type, we use the MarkdownParser
         ".md": MarkdownParser
 embedder_config:
-    # provider: mixbread
+    # provider: mixedbread
     # config:
     #     # Model name from MixBread (HuggingFace model hub)
     #     model: mixedbread-ai/mxbai-embed-large-v1
 
     provider: default
     config:
-        model: openai-devtest/text-embedding-ada-002
+        model: openai-main/text-embedding-ada-002
