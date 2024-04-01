@@ -276,7 +276,7 @@ const DocsQA = () => {
                   setModelConfig(updatedConfig ?? '')
                 }
               />
-              {allRetrieverOptions && (
+              {allRetrieverOptions && selectedRetriever?.name && (
                 <div>
                   <div className="mb-1 mt-3 text-sm">Retriever:</div>
                   <Select
