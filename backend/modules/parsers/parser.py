@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 from abc import ABC, abstractmethod
 
 from langchain.docstore.document import Document
@@ -33,7 +34,8 @@ class BaseParser(ABC):
     @abstractmethod
     async def get_chunks(
         self,
-        loaded_data_point: LoadedDataPoint,
+        filepath: str,
+        metadata: Optional[dict],
         *args,
         **kwargs,
     ) -> typing.List[Document]:

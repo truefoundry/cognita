@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 
 from langchain.docstore.document import Document
 from langchain.text_splitter import MarkdownHeaderTextSplitter, MarkdownTextSplitter
@@ -23,14 +24,14 @@ class MarkdownParser(BaseParser):
 
     async def get_chunks(
         self,
-        loaded_data_point: LoadedDataPoint,
+        filepath: str,
+        metadata: Optional[dict],
         *args,
         **kwargs,
     ) -> typing.List[Document]:
         """
         Extracts chunks of content from a given Markdown file.
         """
-        filepath = loaded_data_point.local_filepath
         content = None
         with open(filepath, "r") as f:
             content = f.read()
