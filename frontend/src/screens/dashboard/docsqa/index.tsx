@@ -30,12 +30,22 @@ const defaultModelConfig = `{
 }`
 
 const defaultPrompt =
-  "Given the context, answer the question.\n\nContext: {context}\n'''Question: {question}\nAnswer:"
+  'Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}'
+
+interface SelectedRetrieverType {
+  key: string
+  name: string
+  summary: string
+  config: any
+}
 
 const DocsQA = () => {
   const [selectedQueryModel, setSelectedQueryModel] = React.useState('')
   const [selectedCollection, setSelectedCollection] = useState('')
-  const [selectedRetriever, setSelectedRetriever] = useState('')
+  const [selectedQueryController, setSelectedQueryController] = useState('')
+  const [selectedRetriever, setSelectedRetriever] = useState<
+    SelectedRetrieverType | undefined
+  >()
   const [prompt, setPrompt] = useState('')
   const [isRunningPrompt, setIsRunningPrompt] = useState(false)
   const [answer, setAnswer] = useState('')
@@ -44,17 +54,36 @@ const DocsQA = () => {
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
 
-  const { data: collections, isLoading } = useGetCollectionsQuery()
+  const { data: collections, isLoading: isCollectionsLoading } =
+    useGetCollectionsQuery()
   const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
   const [searchAnswer] = useQueryCollectionMutation()
 
-  const allRetrieverOptions = useMemo(() => {
+  const allQueryControllers = useMemo(() => {
     if (!openapiSpecs?.paths) return []
     return Object.keys(openapiSpecs?.paths)
       .filter((path) => path.includes('/retrievers/'))
-      .map((str) => str.substring('/retrievers/'.length))
+      .map((str) => {
+        var parts = str.split('/')
+        return parts[2]
+      })
   }, [openapiSpecs])
+
+  const allRetrieverOptions = useMemo(() => {
+    const queryControllerPath = `/retrievers/${selectedQueryController}/answer`
+    const examples =
+      openapiSpecs?.paths[queryControllerPath]?.post?.requestBody?.content?.[
+        'application/json'
+      ]?.examples
+    if (!examples) return []
+    return Object.entries(examples).map(([key, value]: [string, any]) => ({
+      key,
+      name: value.value.retriever_name,
+      summary: value.summary,
+      config: value.value.retriever_config,
+    }))
+  }, [selectedQueryController, openapiSpecs])
 
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
@@ -84,8 +113,10 @@ const DocsQA = () => {
           query: prompt,
           model_configuration: {
             name: name,
+            provider: 'truefoundry',
             ...JSON.parse(modelConfig),
           },
+          retriever_name: selectedRetriever?.name ?? '',
           retriever_config: JSON.parse(retrieverConfig),
           prompt_template: promptTemplate,
         },
@@ -93,7 +124,7 @@ const DocsQA = () => {
       )
       const res: any = await searchAnswer({
         ...params,
-        retrieverName: selectedRetriever,
+        queryController: selectedQueryController,
       })
       if (res?.error) {
         setErrorMessage(true)
@@ -113,6 +144,18 @@ const DocsQA = () => {
   }
 
   useEffect(() => {
+    if (collections && collections.length) {
+      setSelectedCollection(collections[0].name)
+    }
+  }, [collections])
+
+  useEffect(() => {
+    if (allQueryControllers && allQueryControllers.length) {
+      setSelectedQueryController(allQueryControllers[0])
+    }
+  }, [allQueryControllers])
+
+  useEffect(() => {
     if (allEnabledModels && allEnabledModels.length) {
       setSelectedQueryModel(allEnabledModels[0].id)
     }
@@ -125,15 +168,15 @@ const DocsQA = () => {
   }, [allRetrieverOptions])
 
   useEffect(() => {
-    if (collections && collections.length) {
-      setSelectedCollection(collections[0].name)
+    if (selectedRetriever) {
+      setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
     }
-  }, [collections])
+  }, [selectedRetriever])
 
   return (
     <>
       <div className="flex gap-5 h-[calc(100vh-104px)] w-full">
-        {isLoading ? (
+        {isCollectionsLoading ? (
           <div className="h-full w-full flex items-center">
             <Spinner center big />
           </div>
@@ -171,11 +214,11 @@ const DocsQA = () => {
               <div className="flex justify-between items-center mb-1 mt-3">
                 <div className="text-sm">Query Controller:</div>
                 <Select
-                  value={selectedRetriever}
+                  value={selectedQueryController}
                   onChange={(e) => {
-                    setSelectedRetriever(e.target.value)
+                    setSelectedQueryController(e.target.value)
                   }}
-                  placeholder="Select Retriever..."
+                  placeholder="Select Query Controller..."
                   sx={{
                     background: 'white',
                     height: '32px',
@@ -188,7 +231,7 @@ const DocsQA = () => {
                     },
                   }}
                 >
-                  {allRetrieverOptions?.map((retriever: any) => (
+                  {allQueryControllers?.map((retriever: any) => (
                     <MenuItem value={retriever} key={retriever}>
                       {retriever}
                     </MenuItem>
@@ -231,11 +274,43 @@ const DocsQA = () => {
                   setModelConfig(updatedConfig ?? '')
                 }
               />
+              {allRetrieverOptions && (
+                <div>
+                  <div className="mb-1 mt-3 text-sm">Retriever:</div>
+                  <Select
+                    value={selectedRetriever?.name}
+                    onChange={(e) => {
+                      const retriever = allRetrieverOptions.find(
+                        (retriever) => retriever.name === e.target.value
+                      )
+                      setSelectedRetriever(retriever)
+                    }}
+                    placeholder="Select Retriever..."
+                    sx={{
+                      background: 'white',
+                      height: '30px',
+                      width: '100%',
+                      border: '1px solid #CEE0F8 !important',
+                      outline: 'none !important',
+                      '& fieldset': {
+                        border: 'none !important',
+                      },
+                      fontSize: '14px',
+                    }}
+                  >
+                    {allRetrieverOptions?.map((retriever: any) => (
+                      <MenuItem value={retriever.name} key={retriever.name}>
+                        {retriever.summary}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </div>
+              )}
               <div className="mb-1 mt-3 text-sm">Retrievers Configuration:</div>
               <SimpleCodeEditor
                 language="json"
                 height={140}
-                defaultValue={defaultRetrieverConfig}
+                value={retrieverConfig}
                 onChange={(updatedConfig) =>
                   setRetrieverConfig(updatedConfig ?? '')
                 }
