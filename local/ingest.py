@@ -2,11 +2,12 @@
 # Load the env file for local setup
 from backend.settings import Settings
 import asyncio
+import time
 
 # Data ingestion
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
-from backend.types import IngestDataToCollectionDto
+from backend.types import IngestDataToCollectionDto, DataIngestionMode
 from backend.server.services.collection import CollectionService
 from backend.modules.embedder.embedder import get_embedder
 
@@ -33,6 +34,10 @@ async def ingest():
 
 if __name__ == "__main__":
     
+    start = time.time()
     # Run only when u have to ingest data
     print("Ingesting Data....")
     asyncio.run(ingest())
+
+    end = time.time()
+    print(f"Time taken to ingest data: {end-start} seconds")

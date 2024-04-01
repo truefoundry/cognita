@@ -21,3 +21,4 @@ ragenv
 requests.txt
 qdrant_db
 test.py
+tf-docs/
