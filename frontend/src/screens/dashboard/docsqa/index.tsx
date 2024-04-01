@@ -49,6 +49,7 @@ const DocsQA = () => {
   const [prompt, setPrompt] = useState('')
   const [isRunningPrompt, setIsRunningPrompt] = useState(false)
   const [answer, setAnswer] = useState('')
+  const [sourceDocs, setSourceDocs] = useState<string[]>([])
   const [errorMessage, setErrorMessage] = useState(false)
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
@@ -130,6 +131,7 @@ const DocsQA = () => {
         setErrorMessage(true)
       } else {
         setAnswer(res.data.answer)
+        setSourceDocs(res.data.docs?.map((doc: any) => doc.page_content) ?? [])
       }
     } catch (err: any) {
       setErrorMessage(true)
@@ -343,14 +345,31 @@ const DocsQA = () => {
                 </div>
               </div>
               {answer ? (
-                <div className="overflow-y-auto flex gap-4 mt-7 h-[calc(100%-70px)]">
-                  <div className="bg-indigo-400 w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
-                    <IconProvider icon="message" className="text-white" />
+                <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">
+                  <div className="max-h-[60%] h-full overflow-y-auto flex gap-4">
+                    <div className="bg-indigo-400 w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
+                      <IconProvider icon="message" className="text-white" />
+                    </div>
+                    <div className="w-full font-inter text-base">
+                      <div className="font-bold text-lg">Answer:</div>
+                      <Markdown>{answer}</Markdown>
+                    </div>
                   </div>
-                  <div className="w-full font-inter text-base">
-                    <div className="font-bold text-lg">Answer</div>
-                    <Markdown>{answer}</Markdown>
-                  </div>
+                  {sourceDocs && (
+                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto">
+                      <div className="font-semibold mb-2">
+                        Source Documents:
+                      </div>
+                      {sourceDocs?.map((doc, index) => (
+                        <div key={index} className="text-sm mb-2">
+                          <div className="inline font-medium">
+                            Doc #{index + 1} :{' '}
+                          </div>
+                          {doc}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : isRunningPrompt ? (
                 <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-70px)]">
