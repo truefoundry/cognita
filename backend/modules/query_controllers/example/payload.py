@@ -2,7 +2,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -32,7 +32,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -63,7 +63,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -93,7 +93,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER =  {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -127,7 +127,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR =  {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -164,7 +164,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -199,7 +199,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -213,7 +213,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "k": 20
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -237,7 +237,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -252,7 +252,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -275,7 +275,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -289,7 +289,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
             "score_threshold": 0.7
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -314,7 +314,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -332,7 +332,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -356,7 +356,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "collection_name": "testcollection",
     "query": "What are the features of Diners club black metal edition?",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -373,7 +373,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "k": 20
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.1
