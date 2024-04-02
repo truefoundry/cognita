@@ -14,7 +14,7 @@ class MixBreadEmbeddings(Embeddings):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModel.from_pretrained(model).to(self.device)
-        self.embedding_ctx_length = 512
+        self.embedding_ctx_length = 510
         self.chunk_size = 4
 
     

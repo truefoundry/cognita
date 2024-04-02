@@ -1,8 +1,8 @@
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -29,10 +29,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -60,10 +60,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -90,10 +90,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER =  {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -124,10 +124,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR =  {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -161,10 +161,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE =  {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -196,10 +196,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PA
 #####
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -213,7 +213,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "k": 20
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -234,10 +234,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
 
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -252,7 +252,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -272,10 +272,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -289,7 +289,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
             "score_threshold": 0.7
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -311,10 +311,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -332,7 +332,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.9
@@ -353,10 +353,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "testcollection",
-    "query": "What are the features of Diners club black metal edition?",
+    "collection_name": "tfopenai",
+    "query": "Explain in detail the architecture of Truefoundry",
     "model_configuration": {
-        "name": "openai-devtest/gpt-3-5-turbo",
+        "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {
             "temperature": 0.1
@@ -373,7 +373,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "k": 20
         },
         "retriever_llm_configuration": {
-            "name": "openai-devtest/gpt-3-5-turbo",
+            "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {
                 "temperature": 0.1

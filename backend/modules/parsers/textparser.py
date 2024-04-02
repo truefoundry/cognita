@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -21,12 +22,15 @@ class TextParser(BaseParser):
         self.max_chunk_size = max_chunk_size
 
     async def get_chunks(
-        self, loaded_data_point: LoadedDataPoint, *args, **kwargs
+        self, 
+        filepath: str,
+        metadata: Optional[dict],
+        *args, 
+        **kwargs
     ) -> typing.List[Document]:
         """
         Asynchronously loads the text from a text file and returns it in chunks.
         """
-        filepath = loaded_data_point.local_filepath
         content = None
         with open(filepath, "r") as f:
             content = f.read()

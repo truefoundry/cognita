@@ -45,13 +45,12 @@ class LocalMetadataStore(BaseMetadataStore):
         with open(self.path) as f:
             data = yaml.safe_load(f)
             self.local_metadata = LocalMetadata.parse_obj(data)
-        self.fqn = get_data_source_fqn(data_source=self.local_metadata.data_source)
         self.data_source = DataSource(
             type=self.local_metadata.data_source.type,
             uri=self.local_metadata.data_source.uri,
             metadata=self.local_metadata.data_source.metadata,
-            fqn=self.fqn,
         )
+        self.fqn = self.data_source.fqn
         self.parser_config = self.local_metadata.parser_config
         associated_data_sources = {}
         associated_data_sources[self.data_source.fqn] = AssociatedDataSources(

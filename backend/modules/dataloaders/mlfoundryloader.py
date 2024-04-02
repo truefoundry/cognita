@@ -14,19 +14,11 @@ class MlFoundryLoader(BaseDataLoader):
     This loader handles mlfoundry data directory fqn.
     """
 
-    def load_data_point(
+    def load_filtered_data(
         self,
         data_source: DataSource,
         dest_dir: str,
-        data_point: DataPoint,
-    ) -> LoadedDataPoint:
-        raise NotImplementedError("Method not implemented")
-
-    def load_filtered_data_points_from_data_source(
-        self,
-        data_source: DataSource,
-        dest_dir: str,
-        existing_data_point_fqn_to_hash: Dict[str, str],
+        previous_snapshot: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
@@ -78,8 +70,8 @@ class MlFoundryLoader(BaseDataLoader):
                 # If the data ingestion mode is incremental, check if the data point already exists.
                 if (
                     data_ingestion_mode == DataIngestionMode.INCREMENTAL
-                    and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
-                    and existing_data_point_fqn_to_hash.get(data_point.data_point_fqn)
+                    and previous_snapshot.get(data_point.data_point_fqn)
+                    and previous_snapshot.get(data_point.data_point_fqn)
                     == data_point.data_point_hash
                 ):
                     continue

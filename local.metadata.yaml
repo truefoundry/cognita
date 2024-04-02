@@ -1,16 +1,16 @@
 collection_name: testcollection
-# Sample data is provided under ./sample-data/
 data_source:
     type: local
-    # Local data source path
     uri: sample-data/creditcards
 parser_config:
     chunk_size: 400
     parser_map:
-        # Since data is markdown type, we use the MarkdownParser
         ".md": MarkdownParser
 embedder_config:
-    provider: mixbread
+    provider: mixedbread
     config:
         # Model name from MixBread (HuggingFace model hub)
         model: mixedbread-ai/mxbai-embed-large-v1
+    # provider: default
+    # config:
+    #     model: openai-main/text-embedding-ada-002

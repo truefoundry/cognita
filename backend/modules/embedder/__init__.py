@@ -11,4 +11,4 @@ if OPENAI_API_KEY:
     register_embedder("default", OpenAIEmbeddings)
 else:
     register_embedder("default", TrueFoundryEmbeddings)
-register_embedder("mixbread", MixBreadEmbeddings)
+register_embedder("mixedbread", MixBreadEmbeddings)

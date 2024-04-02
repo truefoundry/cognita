@@ -1,5 +1,5 @@
 import re
-
+from typing import Optional
 import fitz
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -21,11 +21,16 @@ class PdfParserUsingPyMuPDF(BaseParser):
         """
         self.max_chunk_size = max_chunk_size
 
-    async def get_chunks(self, loaded_data_point: LoadedDataPoint, *args, **kwargs):
+    async def get_chunks(
+        self, 
+        filepath: str,
+        metadata: Optional[dict],
+        *args, 
+        **kwargs
+    ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
-        filepath = loaded_data_point.local_filepath
         final_texts = []
         final_tables = []
         try:

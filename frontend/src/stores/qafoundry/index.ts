@@ -211,8 +211,8 @@ export const qafoundryApi = createApi({
       invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
     }),
     queryCollection: builder.mutation({
-      query: (payload: CollectionQueryDto & { retrieverName: string }) => ({
-        url: `/retrievers/${payload.retrieverName}`,
+      query: (payload: CollectionQueryDto & { queryController: string }) => ({
+        url: `/retrievers/${payload.queryController}/answer`,
         body: payload,
         method: 'POST',
       }),
