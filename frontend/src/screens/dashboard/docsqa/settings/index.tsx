@@ -23,7 +23,6 @@ const DocsQASettings = () => {
   const [openDataSourceLinkForm, setOpenDataSourceLinkForm] = useState(false)
   const [runsHistoryDrawerOpen, setRunsHistoryDrawerOpen] = useState(false)
   const [selectedDataSourceFqn, setSelectedDataSourceFqn] = useState('')
-  const [isNewCollectionCreated, setIsNewCollectionCreated] = useState(false)
 
   const { data: collections, isLoading } = useGetCollectionsQuery()
 
@@ -67,15 +66,9 @@ const DocsQASettings = () => {
       if (!selectedCollection) {
         setSelectedCollection(collections[0])
       } else {
-        if (isNewCollectionCreated) {
-          setSelectedCollection(collections[0])
-          setIsNewCollectionCreated(false)
-          setOpenDataSourceLinkForm(true)
-        } else {
-          setSelectedCollection(
-            collections.find((c) => c.name === selectedCollection.name)
-          )
-        }
+        setSelectedCollection(
+          collections.find((c) => c.name === selectedCollection.name)
+        )
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,11 +85,6 @@ const DocsQASettings = () => {
 
   return (
     <>
-      {isNewCollectionCreated && (
-        <div className="w-screen h-screen fixed top-0 left-0 flex items-center z-10 bg-[#00000044]">
-          <Spinner center medium />
-        </div>
-      )}
       <div className="flex gap-5 h-full w-full">
         <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250">
           <LinkButton
@@ -181,7 +169,6 @@ const DocsQASettings = () => {
             }
             setNewCollectionModalOpen(false)
           }}
-          onSuccess={() => setIsNewCollectionCreated(true)}
         />
       )}
       {selectedCollection && openDataSourceLinkForm && (

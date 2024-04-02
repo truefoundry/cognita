@@ -33,7 +33,7 @@ export const routes = (): BreadcrumbsRoute[] => [
         children: [{ index: true, element: <DocsQASettings /> }],
       },
       {
-        path: '/data-hub',
+        path: '/data-sources',
         children: [{ index: true, element: <DataHub /> }],
       },
       {

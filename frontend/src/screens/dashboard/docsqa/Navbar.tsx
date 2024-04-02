@@ -27,8 +27,8 @@ function getMenuOptions(): { label: string; route: string, icon: IconDefinition 
       icon: faGear,
     },
     {
-      label: 'Data Hub',
-      route: '/data-hub',
+      label: 'Data Sources',
+      route: '/data-sources',
       icon: faDatabase,
     },
   ]

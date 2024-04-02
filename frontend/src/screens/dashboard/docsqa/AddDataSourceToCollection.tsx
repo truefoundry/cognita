@@ -12,7 +12,7 @@ import {
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
-const defaultParserConfigs = `{
+export const defaultParserConfigs = `{
   "chunk_size": 500,
   "chunk_overlap": 0,
   "parser_map": {
@@ -123,7 +123,7 @@ const AddDataSourceToCollection = ({
                 <div className="mb-2">
                   <label>
                     <div className="label-text font-inter mb-1">
-                      Data Source FQN
+                      Select Data Source
                     </div>
                     <Select
                       id="data_sources"

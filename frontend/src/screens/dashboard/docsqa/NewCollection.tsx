@@ -4,12 +4,16 @@ import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import notify from '@/components/base/molecules/Notify'
 import {
+  useAddDocsToCollectionMutation,
   useCreateCollectionMutation,
   useGetAllEnabledEmbeddingModelsQuery,
+  useGetDataSourcesQuery,
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import classNames from 'classnames'
 import React, { useEffect, useState } from 'react'
+import { defaultParserConfigs } from './AddDataSourceToCollection'
+import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 
 interface NewCollectionProps {
   open: boolean
@@ -21,9 +25,14 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const [isSaving, setIsSaving] = useState(false)
   const [collectionName, setCollectionName] = useState('')
   const [selectedEmbeddingModel, setSelectedEmbeddingModel] = React.useState('')
-  const [chunkSize, setChunkSize] = React.useState(350)
+  const [chunkSize, setChunkSize] = React.useState(1000)
+  const [selectedDataSource, setSelectedDataSource] = useState('none')
+  const [parserConfigs, setParserConfigs] = useState(defaultParserConfigs)
+
+  const { data: dataSources } = useGetDataSourcesQuery()
   const { data: allEmbeddingModels } = useGetAllEnabledEmbeddingModelsQuery()
 
+  const [addDocsToCollection] = useAddDocsToCollectionMutation()
   const [createCollection] = useCreateCollectionMutation()
 
   const pattern = /^[a-z][a-z0-9]*$/
@@ -40,7 +49,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
     if (allEmbeddingModels && allEmbeddingModels.length) {
       setSelectedEmbeddingModel(allEmbeddingModels[0].id)
     }
-    setChunkSize(350)
+    setChunkSize(1000)
+    setSelectedDataSource('none')
     setIsSaving(false)
   }
 
@@ -69,6 +79,16 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           },
         },
         chunk_size: chunkSize,
+        ...(selectedDataSource !== 'none'
+          ? {
+              associated_data_sources: [
+                {
+                  data_source_fqn: selectedDataSource,
+                  parser_config: JSON.parse(parserConfigs),
+                },
+              ],
+            }
+          : {}),
       }
 
       const res = await createCollection(params).unwrap()
@@ -163,7 +183,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
               </div>
             )}
           </div>
-          <div className="flex gap-7 w-full">
+          <div className="flex gap-7 w-full mb-4">
             <div className="w-full">
               <span className="label-text font-inter mb-1">
                 Embedding Model
@@ -193,6 +213,75 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                 ))}
               </Select>
             </div>
+          </div>
+          <div className="mb-3">
+            <label>
+              <div className="label-text font-inter mb-1">
+                Select Data Source
+              </div>
+              <Select
+                id="data_sources"
+                value={selectedDataSource}
+                onChange={(e) => {
+                  setSelectedDataSource(e.target.value)
+                }}
+                placeholder="Select Data Source FQN"
+                sx={{
+                  background: 'white',
+                  height: '42px',
+                  width: '100%',
+                  border: '1px solid #CEE0F8 !important',
+                  outline: 'none !important',
+                  '& fieldset': {
+                    border: 'none !important',
+                  },
+                }}
+              >
+                <MenuItem value={'none'} disabled>
+                  Select a Data Source FQN
+                </MenuItem>
+                {dataSources?.map((source: any) => (
+                  <MenuItem value={source.fqn} key={source.fqn}>
+                    <span>{source.fqn}</span>
+                  </MenuItem>
+                ))}
+              </Select>
+            </label>
+          </div>
+          {selectedDataSource !== 'none' && (
+            <div className="mb-5">
+              <div className="flex text-xs mb-1">
+                <div>Type :</div>
+                &nbsp;
+                <div>
+                  {
+                    dataSources?.filter(
+                      (source) => source.fqn === selectedDataSource
+                    )[0].type
+                  }
+                </div>
+              </div>
+              <div className="flex text-xs">
+                <div>Source :</div>
+                &nbsp;
+                <div>
+                  {
+                    dataSources?.filter(
+                      (source) => source.fqn === selectedDataSource
+                    )[0].uri
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="mb-4">
+            <div className="label-text font-inter mb-1">Parser Configs</div>
+            <SimpleCodeEditor
+              language="json"
+              height={200}
+              value={parserConfigs}
+              onChange={(value) => setParserConfigs(value ?? '')}
+            />
           </div>
         </div>
         <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">

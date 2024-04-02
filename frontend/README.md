@@ -111,7 +111,7 @@ yarn build:prod
 
 ### Data Hub Page :
 
-- URL : http://localhost:5001/data-hub
-- Description : This page lists all the data hubs available in the website. Also users would be able to add new data source in data hub.
+- URL : http://localhost:5001/data-sources
+- Description : This page lists all the data sources available in the website. Also users would be able to add new data source in this page.
 
 ![](../docs/images/DataHubPage.png)
