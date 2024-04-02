@@ -177,14 +177,14 @@ const DocsQA = () => {
 
   return (
     <>
-      <div className="flex gap-5 h-[calc(100vh-104px)] w-full">
+      <div className="flex gap-5 h-[calc(100vh-6.5rem)] w-full">
         {isCollectionsLoading ? (
           <div className="h-full w-full flex items-center">
             <Spinner center big />
           </div>
         ) : selectedCollection ? (
           <>
-            <div className="h-full border rounded-lg border-[#CEE0F8] w-[380px] bg-white p-4 overflow-auto">
+            <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex justify-between items-center mb-1">
                 <div className="text-sm">Collection:</div>
                 <Select
@@ -196,9 +196,8 @@ const DocsQA = () => {
                   placeholder="Select Collection..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -223,9 +222,8 @@ const DocsQA = () => {
                   placeholder="Select Query Controller..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -250,9 +248,8 @@ const DocsQA = () => {
                   placeholder="Select Model..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -290,14 +287,14 @@ const DocsQA = () => {
                     placeholder="Select Retriever..."
                     sx={{
                       background: 'white',
-                      height: '30px',
+                      height: '1.875rem',
                       width: '100%',
                       border: '1px solid #CEE0F8 !important',
                       outline: 'none !important',
                       '& fieldset': {
                         border: 'none !important',
                       },
-                      fontSize: '14px',
+                      fontSize: '0.875rem',
                     }}
                   >
                     {allRetrieverOptions?.map((retriever: any) => (
@@ -326,18 +323,18 @@ const DocsQA = () => {
                 onChange={(e) => setPromptTemplate(e.target.value)}
               />
             </div>
-            <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-400px)] bg-white p-4">
+            <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
               <div className="flex gap-4 items-center">
                 <div className="w-full relative">
                   <Input
-                    className="w-full h-[44px] text-sm pr-14"
+                    className="w-full h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any question related to this document"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm absolute right-2 top-[6px]"
+                    className="btn-sm absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
@@ -372,7 +369,7 @@ const DocsQA = () => {
                   )}
                 </div>
               ) : isRunningPrompt ? (
-                <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-70px)]">
+                <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-4.375rem)]">
                   <div>
                     <Spinner center medium />
                   </div>
@@ -390,13 +387,13 @@ const DocsQA = () => {
                   </div>
                 </div>
               ) : (
-                <div className="h-[calc(100%-50px)] flex justify-center items-center overflow-y-auto">
+                <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
                   <div className="min-h-[23rem]">
                     <DocsQaInformation
                       header={'Welcome to DocsQA'}
                       subHeader={
                         <>
-                          <p className="text-center max-w-[450px] mt-2">
+                          <p className="text-center max-w-[28.125rem] mt-2">
                             Select a collection from sidebar,
                             <br /> review all the settings and start asking
                             Questions
