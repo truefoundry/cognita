@@ -63,7 +63,7 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             collection_name=inputs.collection_name,
             data_source_fqn=inputs.data_source.fqn,
         )
-        existing_data_point_fqn_to_hash = get_data_point_fqn_to_hash_map(
+        previous_snapshot = get_data_point_fqn_to_hash_map(
             data_point_vectors=existing_data_point_vectors
         )
 
@@ -84,7 +84,7 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     try:
         await _sync_data_source_to_collection(
             inputs=inputs,
-            existing_data_point_fqn_to_hash=existing_data_point_fqn_to_hash,
+            previous_snapshot=previous_snapshot,
         )
     except Exception as e:
         logger.exception(e)
@@ -122,14 +122,14 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
 
 
 async def _sync_data_source_to_collection(
-    inputs: DataIngestionConfig, existing_data_point_fqn_to_hash: Dict[str, str] = None
+    inputs: DataIngestionConfig, previous_snapshot: Dict[str, str] = None
 ):
     """
     Synchronizes data from a data source to a collection.
 
     Args:
         inputs (DataIngestionConfig): The configuration for data ingestion.
-        existing_data_point_fqn_to_hash (Dict[str, str], optional): A dictionary mapping data point FQNs to their hashes. Defaults to None.
+        previous_snapshot (Dict[str, str], optional): A dictionary mapping data point FQNs to their hashes. Defaults to None.
 
     Raises:
         Exception: If failed to ingest any data points.
@@ -146,10 +146,10 @@ async def _sync_data_source_to_collection(
         logger.info("Loading data from data source")
         data_source_loader = get_loader_for_data_source(inputs.data_source.type)
         loaded_data_points_batch_iterator = (
-            data_source_loader.load_filtered_data_points_from_data_source(
+            data_source_loader.load_filtered_data(
                 data_source=inputs.data_source,
                 dest_dir=tmpdirname,
-                existing_data_point_fqn_to_hash=existing_data_point_fqn_to_hash,
+                previous_snapshot=previous_snapshot,
                 batch_size=inputs.batch_size,
                 data_ingestion_mode=inputs.data_ingestion_mode,
             )
@@ -232,7 +232,8 @@ async def ingest_data_points(
             continue
         # chunk the given document
         chunks = await parser.get_chunks(
-            loaded_data_point=loaded_data_point,
+            filepath=loaded_data_point.local_filepath,
+            metadata=loaded_data_point.metadata
         )
         # Update data source metadata
         for chunk in chunks:

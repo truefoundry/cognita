@@ -288,7 +288,8 @@ class MLFoundry(BaseMetadataStore):
         logger.debug(
             f"[Metadata Store] Creating new data_source of type {data_source.type}"
         )
-        fqn = get_data_source_fqn(data_source)
+        # fqn = get_data_source_fqn(data_source)
+        fqn = data_source.fqn
 
         existing_data_source = self.get_data_source_from_fqn(fqn=fqn)
         if existing_data_source:

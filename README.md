@@ -351,21 +351,18 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
     from backend.types import DataSource
 
     data_source = DataSource(
-        type="local",
-        uri="sample-data/creditcards",
-        fqn="xyz://dummy"
+    type="local",
+    uri="sample-data/creditcards",
     )
 
     loader = LocalDirLoader()
 
-    # This yeilds a generator
-    loaded_data_pts = loader.load_filtered_data_points_from_data_source(
+
+    loaded_data_pts = loader.load_full_data(
         data_source=data_source,
         dest_dir="test/creditcards",
-        existing_data_point_fqn_to_hash={},
-        batch_size=1,
-        data_ingestion_mode="append"
     )
+
 
     for data_pt in loaded_data_pts:
         print(data_pt)
@@ -386,24 +383,15 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 -   Testing a Parser on a local file, in root dir, copy the following code as `test.py` and execute it. Here we show how we can test existing `MarkdownParser`:
 
     ```python
-    import os
     import asyncio
-    from backend.types import LoadedDataPoint
     from backend.modules.parsers import MarkdownParser
 
-    async def get_chunks(filepath, **kwargs):
-        loader_data_point = LoadedDataPoint(
-            local_filepath=filepath,
-            file_extension=os.path.splitext(filepath)[1],
-            data_point_uri="xyz://dummy",
-            data_source_fqn="xyz://dummy",
-            data_point_hash="dummy",
+    parser = MarkdownParser()
+    chunks =  asyncio.run(
+        parser.get_chunks(
+            filepath="sample-data/creditcards/diners-club-black.md",
         )
-        parser = MarkdownParser(**kwargs)
-        return await parser.get_chunks(loaded_data_point=loader_data_point)
-
-
-    chunks =  asyncio.run(get_chunks(filepath="sample-data/creditcards/diners-club-black-metal-edition.md", chunk_size=None, chunk_overlap=0))
+    )
     print(chunks)
     ```
 

@@ -36,12 +36,62 @@ class BaseDataLoader(ABC):
     Base data loader class. Data loader is responsible for detecting, filtering and then loading data points to be ingested.
     """
 
-    @abstractmethod
-    def load_filtered_data_points_from_data_source(
+
+    def load_full_data(
         self,
         data_source: DataSource,
         dest_dir: str,
-        existing_data_point_fqn_to_hash: Dict[str, str],
+        batch_size: int = 100,
+    ):
+        """
+        Sync the data source and load all data points from the source to the destination directory.
+        Args:
+            data_source (DataSource): The data source from which the data points are to be loaded.
+            dest_dir (str): The destination directory to store the loaded data.
+            batch_size (int): The batch size to be used for loading data points.
+        Returns:
+            None
+        """
+        return self.load_filtered_data(
+            data_source,
+            dest_dir,
+            previous_snapshot={},
+            batch_size=batch_size,
+            data_ingestion_mode=DataIngestionMode.FULL
+        )
+
+    def load_incremental_data(
+        self,
+        data_source: DataSource,
+        dest_dir: str,
+        previous_snapshot: Dict[str, str],
+        batch_size: int = 100,
+    ):
+        """
+        Sync the data source, filter data points and load them from the source to the destination directory.
+        Args:
+            data_source (DataSource): The data source from which the data points are to be loaded.
+            dest_dir (str): The destination directory to store the loaded data.
+            previous_snapshot (Dict[str, str]): A dictionary of existing data points.
+            batch_size (int): The batch size to be used for loading data points.
+        Returns:
+            None
+        """
+        return self.load_filtered_data(
+            data_source,
+            dest_dir,
+            previous_snapshot,
+            batch_size,
+            DataIngestionMode.INCREMENTAL,
+        )
+        
+
+    @abstractmethod
+    def load_filtered_data(
+        self,
+        data_source: DataSource,
+        dest_dir: str,
+        previous_snapshot: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
@@ -51,29 +101,11 @@ class BaseDataLoader(ABC):
         Args:
             data_source (DataSource): The data source from which the data points are to be loaded.
             dest_dir (str): The destination directory to store the loaded data.
-            existing_data_point_fqn_to_hash (Dict[str, str]): A dictionary of existing data points.
+            previous_snapshot (Dict[str, str]): A dictionary of existing data points.
             batch_size (int): The batch size to be used for loading data points.
             data_ingestion_mode (DataIngestionMode): The data ingestion mode to be used.
         Returns:
             Iterator[List[LoadedDataPoint]]: An iterator of list of loaded data points.
-        """
-        pass
-
-    @abstractmethod
-    def load_data_point(
-        self,
-        data_source: DataSource,
-        dest_dir: str,
-        data_point: DataPoint,
-    ) -> LoadedDataPoint:
-        """
-        Load a single data point from the source to the destination directory.
-        Args:
-            data_source (DataSource): The data source from which the data points are to be loaded.
-            dest_dir (str): The destination directory to store the loaded data.
-            data_point (DataPoint): The data point to be loaded.
-        Returns:
-            LoadedDataPoint: The loaded data point.
         """
         pass
 
