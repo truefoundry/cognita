@@ -65,12 +65,12 @@ const CollectionCard = ({
                     ? embedderConfig.map((e) => {
                         if (e[1]) {
                           return (
-                            <span key={e[0]}>
+                            <div key={e[0]}>
                               {e[0]}:{' '}
                               {typeof e[1] === 'object'
                                 ? JSON.stringify(e[1])
                                 : e[1]}
-                            </span>
+                            </div>
                           )
                         }
                         return
