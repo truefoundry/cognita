@@ -14,7 +14,11 @@ import { NavLink } from 'react-router-dom'
 import IconProvider from '@/components/assets/IconProvider'
 import { Link } from 'react-router-dom'
 
-function getMenuOptions(): { label: string; route: string, icon: IconDefinition }[] {
+function getMenuOptions(): {
+  label: string
+  route: string
+  icon: IconDefinition
+}[] {
   return [
     {
       label: 'DocsQA',
@@ -80,6 +84,17 @@ export default function NavBar({ children }: any) {
         </div>
 
         <div className="flex-1" />
+        <div
+          className="mt-1 mr-2 cursor-pointer flex justify-end items-center self-flex-end"
+          onClick={() => {
+            window.open(
+              'https://github.com/truefoundry/docs-qa-playground',
+              '_blank'
+            )
+          }}
+        >
+          <IconProvider icon={'fa-brands fa-github' as IconProp} size={1.25} />
+        </div>
         <div
           className="mt-1 cursor-pointer flex justify-end items-center self-flex-end"
           onClick={() => {
