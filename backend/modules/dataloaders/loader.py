@@ -53,8 +53,9 @@ class BaseDataLoader(ABC):
             None
         """
         return self.load_filtered_data(
-            data_source=data_source,
-            dest_dir=dest_dir,
+            data_source,
+            dest_dir,
+            previous_snapshot={},
             batch_size=batch_size,
             data_ingestion_mode=DataIngestionMode.FULL
         )

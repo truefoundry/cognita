@@ -25,7 +25,7 @@ class MarkdownParser(BaseParser):
     async def get_chunks(
         self,
         filepath: str,
-        metadata: Optional[dict],
+        metadata: Optional[dict] = None,
         *args,
         **kwargs,
     ) -> typing.List[Document]:
