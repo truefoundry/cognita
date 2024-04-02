@@ -64,8 +64,11 @@ const DataSourceSyncButton = ({
     })
     notify(
       'success',
-      'Data Source has started to synchronize!',
-      'Updated collection will be available to use after 3-5 minutes.'
+      'Data indexing has started!',
+      <div>
+        Please visit <b>Job Runs</b> tab of your application to check the
+        status.
+      </div>
     )
   }
 

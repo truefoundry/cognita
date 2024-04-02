@@ -2,7 +2,7 @@ import React from 'react'
 
 type toastProps = {
   title?: string
-  msg?: string
+  msg?: string | JSX.Element
   icon?: React.ReactNode | JSX.Element | string
 }
 export const Toast: React.FC<toastProps> = ({ title, msg, icon }) => {
