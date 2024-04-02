@@ -6,10 +6,7 @@ import {
   useIngestDataSourceMutation,
   useUnassociateDataSourceMutation,
 } from '@/stores/qafoundry'
-import {
-  GridColDef,
-  GridRenderCellParams
-} from '@mui/x-data-grid'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import React from 'react'
 
 const DataSourceDeleteButton = ({
@@ -67,8 +64,11 @@ const DataSourceSyncButton = ({
     })
     notify(
       'success',
-      'Data Source has started to synchronize!',
-      'Updated collection will be available to use after 3-5 minutes.'
+      'Data indexing has started!',
+      <div>
+        Please visit <b>Job Runs</b> tab of your application to check the
+        status.
+      </div>
     )
   }
 
@@ -97,7 +97,11 @@ interface DataSourcesTableProps {
   openRunsHistoryDrawer: (fqn: string) => void
 }
 
-const DataSourcesTable = ({ collectionName, rows, openRunsHistoryDrawer }: DataSourcesTableProps) => {
+const DataSourcesTable = ({
+  collectionName,
+  rows,
+  openRunsHistoryDrawer,
+}: DataSourcesTableProps) => {
   const columns: GridColDef[] = [
     {
       field: 'type',
@@ -112,7 +116,7 @@ const DataSourcesTable = ({ collectionName, rows, openRunsHistoryDrawer }: DataS
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 200,
+      width: 100,
       renderCell: (params: GridRenderCellParams) => (
         <div className="flex gap-1">
           <DataSourceSyncButton
@@ -131,11 +135,8 @@ const DataSourcesTable = ({ collectionName, rows, openRunsHistoryDrawer }: DataS
   ]
 
   return (
-    <div className='bg-white h-full'>
-      <Table
-        rows={rows}
-        columns={columns}
-      />
+    <div className="bg-white h-full">
+      <Table rows={rows} columns={columns} />
     </div>
   )
 }

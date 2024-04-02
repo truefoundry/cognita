@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 export default function notify(
   type: 'info' | 'success' | 'error',
   title: string,
-  message?: string,
+  message?: string | JSX.Element,
   toastId?: string | number
 ) {
   let icon

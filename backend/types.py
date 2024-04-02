@@ -2,7 +2,7 @@ import enum
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Field, constr, root_validator
 
 from backend.constants import FQN_SEPARATOR
 
@@ -270,15 +270,25 @@ class BaseDataSource(BaseModel):
         title="Additional config for your data source"
     )
 
+    @property
+    def fqn(self):        
+        return f"{FQN_SEPARATOR}".join([self.type, self.uri])
+    
+    @root_validator
+    def validate_fqn(cls, values: Dict) -> Dict:
+        values['fqn'] = f"{FQN_SEPARATOR}".join([values['type'], values['uri']])
+        return values
+
 
 class CreateDataSource(BaseDataSource):
     pass
 
 
 class DataSource(BaseDataSource):
-    fqn: str = Field(
-        title="Fully qualified name of the data source",
-    )
+    # fqn: str = Field(
+    #     title="Fully qualified name of the data source",
+    # )
+    pass
 
 
 class AssociatedDataSources(BaseModel):
@@ -323,6 +333,11 @@ class IngestDataToCollectionDto(BaseModel):
     run_as_job: bool = Field(
         title="Flag to configure weather to run the ingestion as a job or not. Default is False",
         default=False,
+    )
+
+    batch_size: int = Field(
+        title="Batch size for data ingestion",
+        default=100,
     )
 
 

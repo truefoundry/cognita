@@ -51,4 +51,8 @@ async def main():
 
 
 if __name__ == "__main__":
+    import time 
+    start = time.time()
     asyncio.run(main())
+    end = time.time()
+    print(f"Time taken for ingestion: {end-start} seconds")
