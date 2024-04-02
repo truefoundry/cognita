@@ -1,5 +1,7 @@
 # RAGFoundry
 
+![RAG_TF](./docs/images/RAG-TF.gif)
+
 ## QA on Docs using RAG Playground
 
 Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG system on your own documents using Langchain or LlamaIndex. However, deploying the rag system in a scalable way requires us to solve a lot of problems listed below:

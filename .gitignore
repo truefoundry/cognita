@@ -23,3 +23,4 @@ qdrant_db
 test.py
 tf-docs-crawled/
 truefoundry-docs/
+*.zip
