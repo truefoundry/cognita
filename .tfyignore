@@ -16,4 +16,5 @@ venv/
 *.iml
 test/.pytest_cache
 dist/
-tf-docs/
+tf-docs-crawled/
+truefoundry-docs/
