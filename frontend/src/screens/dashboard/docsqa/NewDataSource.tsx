@@ -219,7 +219,14 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                 >
                   {dataLoaders?.map((source: any) => (
                     <MenuItem value={source.type} key={source.type}>
-                      <span className="capitalize">{source.type}</span>
+                      <div className="capitalize flex items-center gap-1.5">
+                        {source.type}
+                        {source.description && (
+                          <div className="text-sm text-gray-500">
+                            ({source.description})
+                          </div>
+                        )}
+                      </div>
                     </MenuItem>
                   ))}
                 </Select>
