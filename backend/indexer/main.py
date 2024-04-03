@@ -25,17 +25,23 @@ async def main():
         raise ValueError(
             f"Data source {data_source.fqn} is not associated with collection {collection.name}"
         )
-    data_ingestion_run = CreateDataIngestionRun(
-        collection_name=collection.name,
-        data_source_fqn=associated_data_source.data_source_fqn,
-        embedder_config=collection.embedder_config,
-        parser_config=associated_data_source.parser_config,
-        data_ingestion_mode=arguments.data_ingestion_mode,
-        raise_error_on_failure=arguments.raise_error_on_failure,
-    )
-    created_data_ingestion_run = METADATA_STORE_CLIENT.create_data_ingestion_run(
-        data_ingestion_run=data_ingestion_run
-    )
+
+    if arguments.data_ingestion_run_name:
+        created_data_ingestion_run = METADATA_STORE_CLIENT.get_data_ingestion_run(
+            data_ingestion_run_name=arguments.data_ingestion_run_name
+        )
+    else:
+        data_ingestion_run = CreateDataIngestionRun(
+            collection_name=collection.name,
+            data_source_fqn=associated_data_source.data_source_fqn,
+            embedder_config=collection.embedder_config,
+            parser_config=associated_data_source.parser_config,
+            data_ingestion_mode=arguments.data_ingestion_mode,
+            raise_error_on_failure=arguments.raise_error_on_failure,
+        )
+        created_data_ingestion_run = METADATA_STORE_CLIENT.create_data_ingestion_run(
+            data_ingestion_run=data_ingestion_run
+        )
 
     inputs = DataIngestionConfig(
         collection_name=collection.name,
