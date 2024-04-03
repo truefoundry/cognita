@@ -158,6 +158,10 @@ class LLMConfig(BaseModel):
     """
     name: str = Field(title="Name of the model")
     parameters: dict = None
+    provider: Literal["openai", "ollama", "truefoundry"] = Field(
+        title="Model provider any one between openai, ollama, truefoundry",
+        default="truefoundry"
+    )
 
 
 class RetrieverConfig(BaseModel):
