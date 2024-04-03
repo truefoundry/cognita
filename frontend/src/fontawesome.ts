@@ -17,6 +17,7 @@ import {
   faTrashAlt,
   faWarning,
   faClone,
+  faChevronDown
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -58,6 +59,7 @@ const icons: any[] = [
   faLinkSlash,
   faClone,
   faGithub,
+  faChevronDown,
 ]
 
 library.add(...icons)

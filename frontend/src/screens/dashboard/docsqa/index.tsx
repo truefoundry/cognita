@@ -5,6 +5,7 @@ import Markdown from '@/components/base/atoms/Markdown'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import {
   CollectionQueryDto,
+  SourceDocs,
   useGetAllEnabledChatModelsQuery,
   useGetCollectionsQuery,
   useGetOpenapiSpecsQuery,
@@ -15,6 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
+import Accordion from '@/components/base/atoms/Accordion'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -49,7 +51,7 @@ const DocsQA = () => {
   const [prompt, setPrompt] = useState('')
   const [isRunningPrompt, setIsRunningPrompt] = useState(false)
   const [answer, setAnswer] = useState('')
-  const [sourceDocs, setSourceDocs] = useState<string[]>([])
+  const [sourceDocs, setSourceDocs] = useState<SourceDocs[]>([])
   const [errorMessage, setErrorMessage] = useState(false)
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
@@ -131,7 +133,7 @@ const DocsQA = () => {
         setErrorMessage(true)
       } else {
         setAnswer(res.data.answer)
-        setSourceDocs(res.data.docs?.map((doc: any) => doc.page_content) ?? [])
+        setSourceDocs(res.data.docs ?? [])
       }
     } catch (err: any) {
       setErrorMessage(true)
@@ -353,18 +355,22 @@ const DocsQA = () => {
                     </div>
                   </div>
                   {sourceDocs && (
-                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto">
+                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
                       <div className="font-semibold mb-2">
                         Source Documents:
                       </div>
-                      {sourceDocs?.map((doc, index) => (
-                        <div key={index} className="text-sm mb-2">
-                          <div className="inline font-medium">
-                            Doc #{index + 1} :{' '}
-                          </div>
-                          {doc}
-                        </div>
-                      ))}
+                      {sourceDocs?.map((doc, index) => {
+                        const splittedFqn =
+                          doc?.metadata?._data_point_fqn.split('::')
+                        return (
+                          <Accordion
+                            key={index}
+                            summary={splittedFqn[splittedFqn.length - 1]}
+                            details={doc.page_content}
+                            containerClassNames="mb-1"
+                          />
+                        )
+                      })}
                     </div>
                   )}
                 </div>
