@@ -14,7 +14,6 @@ Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG syst
 
 -   [✨ Getting Started](#✨-getting-started)
 -   [🐍 Installing Python and Setting Up a Virtual Environment](#🐍-installing-python-and-setting-up-a-virtual-environment)
-    -   [Installing Python](#installing-python)
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
 -   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
     -   [Install necessary packages](#install-necessary-packages)
