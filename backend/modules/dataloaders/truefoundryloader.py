@@ -43,8 +43,8 @@ class TrueFoundryLoader(BaseDataLoader):
             download_info = dataset.download(path=dest_dir)
             logger.debug(f"Artifact download info: {download_info}")
 
-        elif data_source.uri.startswith("data_directory"):
-            datasource_type = "data_directory"
+        elif data_source.uri.startswith("data_dir"):
+            datasource_type = "data_dir"
             # Data source URI is the FQN of the data directory.
             dataset = mlfoundry_client.get_data_directory_by_fqn(data_source.uri)
             download_info = dataset.download(path=dest_dir)
