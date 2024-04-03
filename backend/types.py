@@ -285,9 +285,6 @@ class CreateDataSource(BaseDataSource):
 
 
 class DataSource(BaseDataSource):
-    # fqn: str = Field(
-    #     title="Fully qualified name of the data source",
-    # )
     pass
 
 

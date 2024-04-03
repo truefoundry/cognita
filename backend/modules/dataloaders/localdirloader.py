@@ -9,7 +9,7 @@ from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPo
 
 class LocalDirLoader(BaseDataLoader):
     """
-    This loader handles local directories.
+    Load data from a local directory
     """
 
     def load_filtered_data(

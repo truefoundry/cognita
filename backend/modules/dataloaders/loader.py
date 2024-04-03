@@ -134,5 +134,5 @@ def list_dataloaders():
     """
     global LOADER_REGISTRY
     return [
-        {"type": type, "class": cls.__name__} for type, cls in LOADER_REGISTRY.items()
+        {"type": type, "class": cls.__name__, "description": cls.__doc__.strip()} for type, cls in LOADER_REGISTRY.items()
     ]
