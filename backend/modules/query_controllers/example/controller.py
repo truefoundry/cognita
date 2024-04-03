@@ -38,7 +38,7 @@ from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 
 
-from servicefoundry.langchain import TrueFoundryChat
+from truefoundry.langchain import TrueFoundryChat
 from backend.modules.reranker import MxBaiReranker
 
 

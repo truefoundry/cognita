@@ -39,6 +39,8 @@ class Settings(BaseSettings):
         else None
     )
 
+    LOCAL: bool = os.getenv("LOCAL", False)
+
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")

@@ -6,11 +6,8 @@ import time
 
 # Data ingestion
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
-from backend.types import IngestDataToCollectionDto, DataIngestionMode
-from backend.server.services.collection import CollectionService
-from backend.modules.embedder.embedder import get_embedder
-
+from backend.types import IngestDataToCollectionDto
+from backend.server.routers.collection import ingest_data
 
 settings = Settings()
 
@@ -28,7 +25,7 @@ async def ingest():
         data_source_fqn = data_source.fqn,
     )
 
-    await CollectionService.ingest_data(request=request)
+    await ingest_data(request=request)
 
 
 
