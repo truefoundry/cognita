@@ -11,7 +11,7 @@ from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPo
 
 class GithubLoader(BaseDataLoader):
     """
-    This loader handles Git repositories.
+    Load data from a github repository
     """
 
     def load_filtered_data(

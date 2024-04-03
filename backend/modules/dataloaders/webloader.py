@@ -26,7 +26,7 @@ DEFAULT_BASE_PATH_MATCH = True
 
 class WebLoader(BaseDataLoader):
     """
-    This loader handles web URLs
+    Load data from a web URL
     """
 
     def load_filtered_data(
