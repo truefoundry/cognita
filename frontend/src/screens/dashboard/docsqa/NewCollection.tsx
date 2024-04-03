@@ -32,7 +32,6 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const { data: dataSources } = useGetDataSourcesQuery()
   const { data: allEmbeddingModels } = useGetAllEnabledEmbeddingModelsQuery()
 
-  const [addDocsToCollection] = useAddDocsToCollectionMutation()
   const [createCollection] = useCreateCollectionMutation()
 
   const pattern = /^[a-z][a-z0-9]*$/
@@ -40,14 +39,14 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
 
   useEffect(() => {
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].id)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
     }
   }, [allEmbeddingModels])
 
   const resetForm = () => {
     setCollectionName('')
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].id)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
     }
     setChunkSize(1000)
     setSelectedDataSource('none')
@@ -66,16 +65,15 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         )
       }
       const embeddingModel = allEmbeddingModels.find(
-        (model: any) => model.id == selectedEmbeddingModel
+        (model: any) => model.config.model == selectedEmbeddingModel
       )
-      const modelName = `${embeddingModel?.provider_account_name}/${embeddingModel?.name}`
 
       const params = {
         name: collectionName,
         embedder_config: {
-          provider: 'default',
+          provider: embeddingModel.provider,
           config: {
-            model: modelName,
+            model: embeddingModel.config.model,
           },
         },
         chunk_size: chunkSize,
@@ -207,8 +205,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                 }}
               >
                 {allEmbeddingModels?.map((model: any) => (
-                  <MenuItem value={model.id} key={model.id}>
-                    {model.provider_account_name}/{model.name}
+                  <MenuItem value={model.config.model} key={model.config.model}>
+                    {model.config.model}
                   </MenuItem>
                 ))}
               </Select>

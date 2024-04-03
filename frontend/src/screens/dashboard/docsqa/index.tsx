@@ -94,7 +94,7 @@ const DocsQA = () => {
     setErrorMessage(false)
     try {
       const selectedModel = allEnabledModels.find(
-        (model: any) => model.id == selectedQueryModel
+        (model: any) => model.name == selectedQueryModel
       )
       if (!selectedModel) {
         throw new Error('Model not found')
@@ -114,8 +114,8 @@ const DocsQA = () => {
           collection_name: selectedCollection,
           query: prompt,
           model_configuration: {
-            name: selectedModel.model_fqn,
-            provider: selectedModel.backend_provider,
+            name: selectedModel.name,
+            provider: selectedModel.provider,
             ...JSON.parse(modelConfig),
           },
           retriever_name: selectedRetriever?.name ?? '',
@@ -160,7 +160,7 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (allEnabledModels && allEnabledModels.length) {
-      setSelectedQueryModel(allEnabledModels[0].id)
+      setSelectedQueryModel(allEnabledModels[0].name)
     }
   }, [allEnabledModels])
 
@@ -259,8 +259,8 @@ const DocsQA = () => {
                   }}
                 >
                   {allEnabledModels?.map((model: any) => (
-                    <MenuItem value={model.id} key={model.id}>
-                      {model.provider_account_name}/{model.name}
+                    <MenuItem value={model.name} key={model.name}>
+                      {model.name}
                     </MenuItem>
                   ))}
                 </Select>
