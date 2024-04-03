@@ -13,6 +13,7 @@ import { NavLink } from 'react-router-dom'
 
 import IconProvider from '@/components/assets/IconProvider'
 import { Link } from 'react-router-dom'
+import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 
 function getMenuOptions(): {
   label: string
@@ -84,6 +85,16 @@ export default function NavBar({ children }: any) {
         </div>
 
         <div className="flex-1" />
+        <DarkTooltip title="View All APIs">
+          <div
+            className="mt-1 mr-2 cursor-pointer flex justify-end items-center self-flex-end"
+            onClick={() => {
+              window.open(`${window.location.origin}/api/`, '_blank')
+            }}
+          >
+            <IconProvider icon={'fastApi' as IconProp} size={1.25} />
+          </div>
+        </DarkTooltip>
         <div
           className="mt-1 mr-2 cursor-pointer flex justify-end items-center self-flex-end"
           onClick={() => {
