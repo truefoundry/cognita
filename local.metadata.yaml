@@ -1,4 +1,4 @@
-collection_name: testcollection
+collection_name: creditcard
 data_source:
     type: localdir
     uri: sample-data/creditcards
