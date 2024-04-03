@@ -7,7 +7,7 @@ import time
 # Data ingestion
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.types import IngestDataToCollectionDto
-from backend.server.routers.collection import ingest_data
+from backend.indexer.indexer import ingest_data as ingest_data_to_collection
 
 settings = Settings()
 
@@ -25,7 +25,7 @@ async def ingest():
         data_source_fqn = data_source.fqn,
     )
 
-    await ingest_data(request=request)
+    await ingest_data_to_collection(request=request)
 
 
 
