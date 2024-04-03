@@ -109,14 +109,13 @@ const DocsQA = () => {
       } catch (err: any) {
         throw new Error('Invalid Retriever Configuration')
       }
-      const name = `${selectedModel?.provider_account_name}/${selectedModel?.name}`
       const params: CollectionQueryDto = Object.assign(
         {
           collection_name: selectedCollection,
           query: prompt,
           model_configuration: {
-            name: name,
-            provider: 'truefoundry',
+            name: selectedModel.model_fqn,
+            provider: selectedModel.backend_provider,
             ...JSON.parse(modelConfig),
           },
           retriever_name: selectedRetriever?.name ?? '',

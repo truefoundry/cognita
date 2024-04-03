@@ -114,7 +114,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
   const handleSubmit = async () => {
     setIsSaving(true)
     try {
-      if (selectedDataSourceType === 'local' && !files.length) {
+      if (selectedDataSourceType === 'localdir' && !files.length) {
         setIsSaving(false)
         return notify(
           'error',
@@ -124,7 +124,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
       }
 
       let fqn
-      if (selectedDataSourceType === 'local') {
+      if (selectedDataSourceType === 'localdir') {
         fqn = await uploadDocs()
       } else {
         const res = await addDataSource({
@@ -210,7 +210,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
                 </Select>
               </label>
             </div>
-            {selectedDataSourceType === 'local' ? (
+            {selectedDataSourceType === 'localdir' ? (
               <label
                 onDragOver={
                   isSaving
@@ -284,7 +284,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
                 />
               </>
             )}
-            {!!files.length && selectedDataSourceType === 'local' && (
+            {!!files.length && selectedDataSourceType === 'localdir' && (
               <div
                 className={classNames(
                   'flex flex-col gap-2 p-2 bg-white border rounded-md mt-2',
@@ -384,7 +384,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
             className="gap-1 btn-sm font-normal"
             type="button"
             disabled={
-              (selectedDataSourceType === 'local' &&
+              (selectedDataSourceType === 'localdir' &&
                 (!files.length || uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB)) ||
               (selectedDataSourceType !== 'local' && !dataSourceUri)
             }
