@@ -96,23 +96,26 @@ def get_enabled_models(
                 logger.error(f"Error fetching openai models: {ex}")
 
     # Models from the llm gateway
-    url = f"{settings.TFY_HOST}/api/svc/v1/llm-gateway/model/enabled"
-    headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
-    try:
-        response = requests.get(url=url, headers=headers)
-        response.raise_for_status()
-    except Exception as ex:
-        raise Exception(f"Error fetching the models: {ex}") from ex
-    data: dict[str, dict[str, list[dict]]] = response.json()
+    if settings.TFY_API_KEY:
+        try:
+            url = f"{settings.TFY_HOST}/api/svc/v1/llm-gateway/model/enabled"
+            headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
+            response = requests.get(url=url, headers=headers)
+            response.raise_for_status()
+        
+            data: dict[str, dict[str, list[dict]]] = response.json()
 
-    for provider_accounts in data.values():
-        for models in provider_accounts.values():
-            for model in models:
-                if model_type is None or model_type in model["types"]:
-                    # for models from llm gateway backend_provider is truefoundry
-                    model["backend_provider"] = "truefoundry"
-                    enabled_models.append(model)
+            for provider_accounts in data.values():
+                for models in provider_accounts.values():
+                    for model in models:
+                        if model_type is None or model_type in model["types"]:
+                            # for models from llm gateway backend_provider is truefoundry
+                            model["backend_provider"] = "truefoundry"
+                            enabled_models.append(model)
 
+        except Exception as ex:
+                raise Exception(f"Error fetching the models: {ex}") from ex
+        
     return JSONResponse(
-        content={"models": enabled_models},
-    )
+            content={"models": enabled_models},
+        )
