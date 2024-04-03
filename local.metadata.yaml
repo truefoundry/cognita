@@ -1,6 +1,6 @@
 collection_name: testcollection
 data_source:
-    type: local
+    type: localdir
     uri: sample-data/creditcards
 parser_config:
     chunk_size: 1000

@@ -5,6 +5,7 @@ from backend.indexer.indexer import sync_data_source_to_collection
 from backend.indexer.types import DataIngestionConfig
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.types import CreateDataIngestionRun
+from backend.logger import logger
 
 
 async def main():
@@ -27,6 +28,7 @@ async def main():
         )
 
     if arguments.data_ingestion_run_name:
+        logger.debug(f"Using data ingestion run name: {arguments.data_ingestion_run_name}")
         created_data_ingestion_run = METADATA_STORE_CLIENT.get_data_ingestion_run(
             data_ingestion_run_name=arguments.data_ingestion_run_name
         )
