@@ -10,7 +10,7 @@ from mlfoundry.artifact.truefoundry_artifact_repo import (
     MlFoundryArtifactsRepository,
 )
 from backend.settings import settings
-from backend.types import ModelType, UploadToDataDirectoryDto
+from backend.types import ModelType, UploadToDataDirectoryDto, LLMConfig, EmbedderConfig
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 
@@ -52,13 +52,12 @@ def get_enabled_models(
     if model_type == ModelType.embedding:
         if settings.LOCAL:
             enabled_models.append(
-                {
-                    "name": "mxbai-embed-large-v1",
-                    "provider": "mixedbread-ai",
-                    "types": ["embedding"],
-                    "backend_provider": "mixedbread",
-                    "model_fqn": "mixedbread-ai/mxbai-embed-large-v1",
-                }
+                EmbedderConfig(
+                    provider="mixedbread",
+                    config={
+                        "model": "mixedbread-ai/mxbai-embed-large-v1"
+                    }
+                ).dict()
             )
 
     # Local LLM models
@@ -71,13 +70,13 @@ def get_enabled_models(
                 data = response.json()
                 for model in data["models"]:
                     enabled_models.append(
-                        {
-                            "name": model["name"],
-                            "provider": "ollama",
-                            "types": ["chat"],
-                            "backend_provider": "ollama",
-                            "model_fqn": f"ollama/{model['model']}",
-                        }
+                        LLMConfig(
+                            name=f"ollama/{model['model']}",
+                            parameters={
+                                'temparature': 0.1
+                            },
+                            provider="ollama",
+                        ).dict()
                     )
             except Exception as ex:
                 logger.error(f"Error fetching ollama models: {ex}")
@@ -109,13 +108,38 @@ def get_enabled_models(
                 for models in provider_accounts.values():
                     for model in models:
                         if model_type is None or model_type in model["types"]:
-                            # for models from llm gateway backend_provider is truefoundry
-                            model["backend_provider"] = "truefoundry"
-                            enabled_models.append(model)
-
+                            if model_type == ModelType.embedding:
+                                enabled_models.append(
+                                    EmbedderConfig(
+                                        provider="truefoundry",
+                                        config={
+                                            "model": model["model_fqn"]
+                                        }
+                                    ).dict()
+                                )
+ 
+                            elif model_type == ModelType.chat:
+                                enabled_models.append(
+                                    LLMConfig(
+                                        name=model["model_fqn"],
+                                        parameters={
+                                            'temparature': 0.1
+                                        },
+                                        provider="truefoundry",
+                                    ).dict()
+                                )
+                            elif model_type == ModelType.completion:
+                                enabled_models.append(
+                                    LLMConfig(
+                                        name=model["model_fqn"],
+                                        parameters={
+                                            'temparature': 0.9
+                                        },
+                                        provider="truefoundry",
+                                    ).dict()
+                                ) 
         except Exception as ex:
                 raise Exception(f"Error fetching the models: {ex}") from ex
-        
     return JSONResponse(
             content={"models": enabled_models},
         )

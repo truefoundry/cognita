@@ -38,33 +38,6 @@ RAGFoundry is an opensource framework to organize your RAG codebase along with a
 
 Before you can use RAGFoundry, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
 
-## Installing Python
-
-Python is required to run RAGFoundry. If you don't have Python installed, follow these steps:
-
-### For Windows:
-
-Download the latest Python installer from the official Python website.
-Run the installer and make sure to check the box that says `Add Python to PATH` during installation.
-
-### For macOS:
-
-You can install Python using Homebrew, a package manager for macOS, with the following command in the terminal:
-
-```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Then install Python:
-
-```
-brew install python
-```
-
-### For Linux:
-
-Python usually comes pre-installed on most Linux distributions. If it's not, you can install it using your distribution's package manager. You can read more about it [here](https://opensource.com/article/20/4/install-python-linux)
-
 ## Setting Up a Virtual Environment
 
 It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
@@ -102,107 +75,28 @@ Following are the instructions for running the RAG application locally without a
 
 ## Install necessary packages:
 
--   Install the requirements using the following command:
-
 ```
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
-
-> Uncomment sections of `requirements` as per the usecase.
 
 ## Setting up .env file:
 
--   Create a `.env` file or copy from `.env.sample`
--   Enter the following values:
-
-    ```env
-    # For local setup
-    METADATA_STORE_CONFIG='{"provider":"local","config":{"path":"local.metadata.yaml"}}'
-    VECTOR_DB_CONFIG='{"provider":"qdrant","local":true}'
-
-    TFY_SERVICE_ROOT_PATH = '/'
-    DEBUG_MODE = true
-    LOG_LEVEL = "DEBUG"
-
-    # Add OPENAI_API_KEY for LLMs and Embedding
-    # OPENAI_API_KEY=
-
-    # Else if using TF LLM GATEWAY, add TFY_API_KEY
-    # TFY_API_KEY=
-    ```
-
-    > Setting up `TFY_API_KEY` or `OPENAI_API_KEY` is optional, you can use opensource LLMs and Embeddings if required (Discussed later).
-
--   Now the setup is done, you can run your RAG locally.
+-   Create a `.env` file by copying copy from `env.local.example` set up relavant fields.
 
 ## Executing the Code:
 
--   Repository offers two categories of examples that demostrate running your own RAG.
+-   Now we index the data (`sample-data/creditcards`) by executing the following command from project root:
+    ```
+    python -m local.ingest
+    ```
+-   To run the RAG query execute the following command from project root:
+    ```
+    python -m local.run
+    ```
 
-    -   One using OpenAI functions, OpenAI compatible LLMs and Embeddings. Can be used either by setting `TFY_API_KEY` or `OPENAI_API_KEY`
-    -   Another using entirely OpenSource LLMs (th' [Ollama](https://ollama.com/library)) and OpenSource Embeddings (e.g: [mixbread](https://www.mixedbread.ai/blog/mxbai-embed-large-v1)).
-        > Both of these scripts can be used as a reference for your own use case.
-    -   Sample scripts for data ingestion and execution are given in the `local` folder.
+> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations.
 
--   To run RAG locally using OpenAI compatible functions,
-
-    -   Setup Yaml in `local.metadata.yaml`
-
-        -   Example:
-
-        ```yaml
-        collection_name: testcollection
-        # Sample data is provided under ./sample-data/
-        data_source:
-            type: local
-            # Local data source path
-            uri: sample-data/creditcards
-        parser_config:
-            chunk_size: 400
-            parser_map:
-                # Since data is markdown type, we use the MarkdownParser
-                ".md": MarkdownParser
-        embedder_config:
-            provider: default
-            config:
-                # Embedding Model from TFY
-                # Can also use OpenAI model directly
-                # Or an opensrc embedding registered in embedder module
-                model: openai-devtest/text-embedding-ada-002
-        ```
-
-    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest` or using [API](#🔑-api-reference) `Data Indexing` Section.
-
--   To run RAG locally using OpenSource LLMs and Embeddings,
-    -   Setup Yaml in `local.metadata.yaml`
-        -   Example:
-        ```yaml
-        collection_name: testcollection
-        # Sample data is provided under ./sample-data/
-        data_source:
-            type: local
-            # Local data source path
-            uri: sample-data/creditcards
-        parser_config:
-            chunk_size: 400
-            parser_map:
-                # Since data is markdown type, we use the MarkdownParser
-                ".md": MarkdownParser
-        embedder_config:
-            provider: mixbread
-            config:
-                # Model name from HuggingFace model hub
-                # Registered in embedder module of backend
-                model: mixedbread-ai/mxbai-embed-large-v1
-        ```
-    -   This requires using Opensource LLM, Embeddings and Reranking modules.
-        -   For LLM download ollama: https://ollama.com/download
-        -   For Embeddings: uncomment the embedding section from requirements.txt
-        -   For Reranking: uncomment the reranker section from requirements.txt
-    -   Ingest the data, by executing the following command from root folder: `python -m local.ingest`
-    -   The Query function uses, `gemma:2b` from Ollama. Make sure you have the corresponding LLM, `ollama pull gemma:2b` else replace the corresponding LLM with the LLM of your choice.
-    -   The script also uses a document reranker, `mixedbread-ai/mxbai-rerank-xsmall-v1` to effectively rerank and find top relavant documents.
--   Execute: `python -m local.run` or by Using Swagger [API](#🔑-api-reference) `Retrievers` Section.
+> You can try out different RAG retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
 
 # 🛠️ Project Architecture
 

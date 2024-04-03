@@ -8,14 +8,6 @@ from qdrant_client.models import Filter as QdrantFilter
 
 GENERATION_TIMEOUT_SEC = 60.0 * 5
 
-class CustomLLMConfig(LLMConfig):
-    """
-    Configuration for LLM Configuration
-    """
-    # You can add your custom providers too as per usecase
-    provider: Literal["openai", "ollama", "truefoundry"] = Field(
-        title="Model provider any one between openai, ollama, truefoundry",
-    )
 
 class VectorStoreRetrieverConfig(BaseModel):
     """
@@ -69,7 +61,7 @@ class VectorStoreRetrieverConfig(BaseModel):
         return values
     
 class MultiQueryRetrieverConfig(VectorStoreRetrieverConfig):
-    retriever_llm_configuration : CustomLLMConfig = Field(
+    retriever_llm_configuration : LLMConfig = Field(
         title="LLM configuration for the retriever",
     )
 
@@ -116,7 +108,7 @@ class DefaultQueryInput(BaseModel):
 
     query: str = Field(title="Question to search for", max_length=1000)
 
-    model_configuration: CustomLLMConfig
+    model_configuration: LLMConfig
 
     prompt_template: str = Field(
         title="Prompt Template to use for generating answer to the question using the context",
