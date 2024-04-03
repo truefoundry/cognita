@@ -16,6 +16,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 
 from backend.logger import logger
+from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.example.types import DefaultQueryInput, GENERATION_TIMEOUT_SEC
@@ -74,7 +75,8 @@ class ExampleQueryController:
         elif model_configuration.provider == "ollama":
             logger.debug(f"Using Ollama model {model_configuration.name}")
             llm = ChatOllama(
-                model=model_configuration.name,
+                base_url=settings.OLLAMA_URL,
+                model=model_configuration.name.split('/')[1] if '/' in model_configuration.name else model_configuration.name,
                 temperature=model_configuration.parameters.get("temperature", 0.1),
                 system=system,
             )
