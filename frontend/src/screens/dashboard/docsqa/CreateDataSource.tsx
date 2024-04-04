@@ -386,7 +386,7 @@ const CreateDataSource = ({ open, onClose }: CreateDataSourceProps) => {
             disabled={
               (selectedDataSourceType === 'localdir' &&
                 (!files.length || uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB)) ||
-              (selectedDataSourceType !== 'local' && !dataSourceUri)
+              (selectedDataSourceType !== 'localdir' && !dataSourceUri)
             }
           />
         </div>

@@ -418,7 +418,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
               (selectedDataSourceType === 'localdir' &&
                 (files.length === 0 ||
                   uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB)) ||
-              (selectedDataSourceType !== 'local' && !dataSourceUri)
+              (selectedDataSourceType !== 'localdir' && !dataSourceUri)
             }
           />
         </div>

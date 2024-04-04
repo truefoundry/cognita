@@ -3,11 +3,12 @@ import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
 import Table from '@/components/base/molecules/Table'
 import {
+  useGetDataIngestionRunsQuery,
   useIngestDataSourceMutation,
   useUnassociateDataSourceMutation,
 } from '@/stores/qafoundry'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 const DataSourceDeleteButton = ({
   collectionName,
@@ -48,9 +49,11 @@ const DataSourceDeleteButton = ({
 const DataSourceSyncButton = ({
   collectionName,
   fqn,
+  setSkipPolling,
 }: {
   collectionName: string
   fqn: string
+  setSkipPolling: (value: boolean) => void
 }) => {
   const [ingestDataSource, { isLoading }] = useIngestDataSourceMutation()
 
@@ -62,6 +65,7 @@ const DataSourceSyncButton = ({
       raise_error_on_failure: true,
       run_as_job: true,
     })
+    setSkipPolling(false)
     notify(
       'success',
       'Data indexing has started!',
@@ -86,6 +90,62 @@ const DataSourceSyncButton = ({
   )
 }
 
+const TERMINAL_STATUSES = [
+  'COMPLETED',
+  'ERROR',
+  'DATA_CLEANUP_FAILED',
+  'DATA_INGESTION_FAILED',
+  'FETCHING_EXISTING_VECTORS_FAILED',
+]
+
+const DataSourceIngestionStatus = ({
+  collectionName,
+  dataSourceFqn,
+  skipPolling,
+  lastIngestionStatus,
+  setSkipPolling,
+  setLastIngestionStatus,
+}: {
+  collectionName: string
+  dataSourceFqn: string
+  skipPolling: boolean
+  lastIngestionStatus: string
+  setSkipPolling: (value: boolean) => void
+  setLastIngestionStatus: (value: string) => void
+}) => {
+  const {
+    data: ingestionStatuses,
+    isLoading,
+    refetch,
+  } = useGetDataIngestionRunsQuery(
+    {
+      collection_name: collectionName,
+      data_source_fqn: dataSourceFqn,
+    },
+    { pollingInterval: 5000, skip: skipPolling, refetchOnReconnect: true }
+  )
+
+
+  useEffect(() => {
+    if (ingestionStatuses?.length) {
+      const lastRun = ingestionStatuses[0]
+      if (TERMINAL_STATUSES.includes(lastRun.status) && !isLoading) {
+        setSkipPolling(true)
+      }
+      const processedStatus = lastRun.status.replaceAll('_', ' ')
+      if (processedStatus !== lastIngestionStatus) {
+        setLastIngestionStatus(processedStatus)
+      }
+    }
+  }, [ingestionStatuses])
+
+  return (
+    <div className={'text-sm'}>
+      {isLoading ? 'Loading...' : lastIngestionStatus || 'NOT INGESTED'}
+    </div>
+  )
+}
+
 interface DataSourcesTableProps {
   collectionName: string
   rows: {
@@ -102,6 +162,13 @@ const DataSourcesTable = ({
   rows,
   openRunsHistoryDrawer,
 }: DataSourcesTableProps) => {
+  const [lastIngestionStatus, setLastIngestionStatus] = React.useState<{
+    [key: string]: string
+  }>({})
+  const [skipPolling, setSkipPolling] = React.useState<{
+    [key: string]: boolean
+  }>({})
+
   const columns: GridColDef[] = [
     {
       field: 'type',
@@ -111,26 +178,50 @@ const DataSourcesTable = ({
         <div className="capitalize">{params?.value}</div>
       ),
     },
-    { field: 'source', headerName: 'Source', flex: 1 },
     { field: 'fqn', headerName: 'FQN', flex: 1 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 1,
+      renderCell: (params: GridRenderCellParams) => {
+        const key = collectionName + ':' + params?.row?.fqn
+        return (
+          <DataSourceIngestionStatus
+            collectionName={collectionName}
+            dataSourceFqn={params?.row?.fqn}
+            skipPolling={skipPolling[key]}
+            lastIngestionStatus={lastIngestionStatus[key]}
+            setSkipPolling={(value) =>
+              setSkipPolling({ ...skipPolling, [key]: value })
+            }
+            setLastIngestionStatus={(value) =>
+              setLastIngestionStatus({
+                ...lastIngestionStatus,
+                [key]: value,
+              })
+            }
+          />
+        )
+      },
+    },
     {
       field: 'actions',
       headerName: 'Actions',
       width: 100,
-      renderCell: (params: GridRenderCellParams) => (
-        <div className="flex gap-1">
-          <DataSourceSyncButton
-            collectionName={collectionName}
-            fqn={params?.row?.fqn}
-          />
-          {/* <Button
-            outline
-            text="View Runs"
-            className="border-gray-200 shadow bg-base-100 btn-sm font-normal px-2.5"
-            onClick={() => openRunsHistoryDrawer(params?.row?.fqn as string)}
-          /> */}
-        </div>
-      ),
+      renderCell: (params: GridRenderCellParams) => {
+        const key = collectionName + ':' + params?.row?.fqn
+        return (
+          <div className="flex gap-1">
+            <DataSourceSyncButton
+              collectionName={collectionName}
+              fqn={params?.row?.fqn}
+              setSkipPolling={(value) =>
+                setSkipPolling({ ...skipPolling, [key]: value })
+              }
+            />
+          </div>
+        )
+      },
     },
   ]
 
