@@ -1,6 +1,6 @@
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -29,8 +29,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -60,8 +60,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -90,8 +90,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER =  {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -124,8 +124,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR =  {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -161,8 +161,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE =  {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -196,8 +196,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PA
 #####
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -234,8 +234,8 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
 
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -272,8 +272,8 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -311,8 +311,8 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
@@ -353,8 +353,8 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "tfopenai",
-    "query": "Explain in detail the architecture of Truefoundry",
+    "collection_name": "creditcard",
+    "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",

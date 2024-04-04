@@ -1,13 +1,13 @@
 from backend.modules.query_controllers.example.types import DefaultQueryInput
 from backend.modules.query_controllers import ExampleQueryController
-from backend.modules.query_controllers.example.payload import QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY
+from backend.modules.query_controllers.example.payload import QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR
 import asyncio
 
 # You can change the query here
-print(f"Default Query: {QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY}")
+print(f"Default Query: {QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR}")
 
 # Create a request object
-request = DefaultQueryInput(**QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY)
+request = DefaultQueryInput(**QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR)
 
 # Create a controller object
 controller = ExampleQueryController()

@@ -1,9 +1,9 @@
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 import tempfile
 from typing import Dict, List
+
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from truefoundry.deploy import trigger_job
-from backend.settings import settings
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.indexer.types import DataIngestionConfig
@@ -13,13 +13,14 @@ from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
+from backend.settings import settings
 from backend.types import (
+    CreateDataIngestionRun,
     DataIngestionMode,
     DataIngestionRunStatus,
     DataPointVector,
-    LoadedDataPoint,
     IngestDataToCollectionDto,
-    CreateDataIngestionRun,
+    LoadedDataPoint,
 )
 
 
@@ -345,12 +346,26 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         status_code=500,
                         detail="Job FQN and Job Component Name are required to trigger the job",
                     )
+                data_ingestion_run = CreateDataIngestionRun(
+                    collection_name=collection.name,
+                    data_source_fqn=associated_data_source.data_source_fqn,
+                    embedder_config=collection.embedder_config,
+                    parser_config=associated_data_source.parser_config,
+                    data_ingestion_mode=request.data_ingestion_mode,
+                    raise_error_on_failure=request.raise_error_on_failure,
+                )
+                created_data_ingestion_run = (
+                    METADATA_STORE_CLIENT.create_data_ingestion_run(
+                        data_ingestion_run=data_ingestion_run
+                    )
+                )
                 trigger_job(
                     application_fqn=settings.JOB_FQN,
                     component_name=settings.JOB_COMPONENT_NAME,
                     params={
                         "collection_name": collection.name,
                         "data_source_fqn": associated_data_source.data_source_fqn,
+                        "data_ingestion_run_name": created_data_ingestion_run.name,
                         "data_ingestion_mode": request.data_ingestion_mode.value,
                         "raise_error_on_failure": (
                             "True" if request.raise_error_on_failure else "False"

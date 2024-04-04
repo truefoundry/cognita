@@ -1,4 +1,5 @@
 import argparse
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -14,6 +15,7 @@ class ParsedIndexingArguments(BaseModel):
 
     collection_name: str
     data_source_fqn: str
+    data_ingestion_run_name: Optional[str] = None
     data_ingestion_mode: DataIngestionMode
     raise_error_on_failure: bool
     batch_size: int = DEFAULT_BATCH_SIZE
@@ -37,6 +39,13 @@ def parse_args() -> ParsedIndexingArguments:
         type=str,
         required=True,
         help="fully qualified name for your data source run",
+    )
+    parser.add_argument(
+        "--data_ingestion_run_name",
+        type=str,
+        required=False,
+        default=None,
+        help="a unique name for your data ingestion run",
     )
     parser.add_argument(
         "--data_ingestion_mode",
@@ -64,6 +73,7 @@ def parse_args() -> ParsedIndexingArguments:
     return ParsedIndexingArguments(
         collection_name=args.collection_name,
         data_source_fqn=args.data_source_fqn,
+        data_ingestion_run_name=args.data_ingestion_run_name,
         data_ingestion_mode=DataIngestionMode(args.data_ingestion_mode),
         raise_error_on_failure=args.raise_error_on_failure == "True",
         batch_size=int(args.batch_size),
