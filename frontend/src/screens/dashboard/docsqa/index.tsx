@@ -16,7 +16,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
-import Accordion from '@/components/base/atoms/Accordion'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -39,6 +38,32 @@ interface SelectedRetrieverType {
   name: string
   summary: string
   config: any
+}
+
+const ExpandableText = ({
+  text,
+  maxLength,
+}: {
+  text: string
+  maxLength: number
+}) => {
+  const [showAll, setShowAll] = useState(false)
+  const displayText = showAll ? text : text.slice(0, maxLength)
+
+  return (
+    <p className="whitespace-pre-line inline">
+      "{displayText}
+      {displayText.length < text.length && !showAll && '...'}"
+      {text.length > maxLength && (
+        <span
+          onClick={() => setShowAll((prev) => !prev)}
+          className="text-blue-600 focus:outline-none ml-3 cursor-pointer"
+        >
+          {showAll ? 'Show less' : 'Show more'}
+        </span>
+      )}
+    </p>
+  )
 }
 
 const DocsQA = () => {
@@ -355,19 +380,25 @@ const DocsQA = () => {
                   </div>
                   {sourceDocs && (
                     <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
-                      <div className="font-semibold mb-2">
+                      <div className="font-semibold mb-3.5">
                         Source Documents:
                       </div>
                       {sourceDocs?.map((doc, index) => {
                         const splittedFqn =
                           doc?.metadata?._data_point_fqn.split('::')
                         return (
-                          <Accordion
-                            key={index}
-                            summary={splittedFqn[splittedFqn.length - 1]}
-                            details={doc.page_content}
-                            containerClassNames="mb-1"
-                          />
+                          <div key={index} className="mb-3">
+                            <div className="text-sm">
+                              {index + 1}.{' '}
+                              <ExpandableText
+                                text={doc.page_content}
+                                maxLength={260}
+                              />
+                            </div>
+                            <div className="text-sm text-indigo-600 mt-1">
+                              Source: {splittedFqn?.[splittedFqn.length - 1]}
+                            </div>
+                          </div>
                         )
                       })}
                     </div>
