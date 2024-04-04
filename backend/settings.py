@@ -50,7 +50,7 @@ class Settings(BaseSettings):
         raise ValueError("METADATA_STORE_CONFIG is not set")
     
     if not TFY_LLM_GATEWAY_URL:
-        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
+        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llmapi/inference"
 
     try:
         VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
