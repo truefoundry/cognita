@@ -2,11 +2,8 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef } from 'react'
 import classNames from 'classnames'
-import fastApiLogoIcon from '@/assets/img/logos/fastapi.svg'
 
-export const EXT_ICONS_MAP: { readonly [key: string]: any } = {
-  fastApi: fastApiLogoIcon,
-}
+export const EXT_ICONS_MAP: { readonly [key: string]: any } = {}
 
 interface IconProps {
   icon: string | IconProp
