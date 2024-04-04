@@ -43,7 +43,23 @@ from truefoundry.langchain import TrueFoundryChat
 from backend.modules.reranker import MxBaiReranker
 
 
+EXAMPLES_PAYLOADS = {
+    "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    
+    # Keeping these for future use:
+    # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
+    # "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+    # "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+    # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+    # "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+}
 
+if settings.LOCAL:
+    EXAMPLES_PAYLOADS["contexual-compression-mmr"] =  QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD
+    EXAMPLES_PAYLOADS["contexual-compression-multi-query-mmr"] = QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD
 
 @query_controller("/example-app")
 class ExampleQueryController:
@@ -202,21 +218,7 @@ class ExampleQueryController:
 
     @post("/answer")
     async def answer(self, request: DefaultQueryInput = Body(
-        openapi_examples={
-            "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-            "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-            # "contexual-compression-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-            # "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-            
-            # Keeping these for future use:
-            # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-            # "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-            # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-            # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-            # "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-            # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-            # "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
+        openapi_examples=EXAMPLES_PAYLOADS
     )):
         """
         Sample answer method to answer the question using the context from the collection

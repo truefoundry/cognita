@@ -1,4 +1,4 @@
-collection_name: creditcard
+collection_name: hrpdf
 data_source:
     type: localdir
     uri: sample-data/pdf
@@ -6,7 +6,7 @@ parser_config:
     chunk_size: 1000
     chunk_overlap: 20
     parser_map:
-        ".pdf": CustomPdf
+        ".pdf": CustomPdfParser
 embedder_config:
     provider: mixedbread
     config:

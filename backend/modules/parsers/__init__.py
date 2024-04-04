@@ -7,4 +7,4 @@ from backend.modules.parsers.textparser import TextParser
 register_parser("MarkdownParser", MarkdownParser)
 register_parser("PdfParserFast", PdfParserUsingPyMuPDF)
 register_parser("TextParser", TextParser)
-register_parser("CustomPdf", CustomPdfParserUsingPyMuPDF)
+register_parser("CustomPdfParser", CustomPdfParserUsingPyMuPDF)
