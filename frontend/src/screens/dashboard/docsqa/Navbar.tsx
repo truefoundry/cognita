@@ -13,7 +13,6 @@ import { NavLink } from 'react-router-dom'
 
 import IconProvider from '@/components/assets/IconProvider'
 import { Link } from 'react-router-dom'
-import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import Button from '@/components/base/atoms/Button'
 
 function getMenuOptions(): {

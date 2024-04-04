@@ -113,18 +113,17 @@ const DataSourceIngestionStatus = ({
   setSkipPolling: (value: boolean) => void
   setLastIngestionStatus: (value: string) => void
 }) => {
-  const {
-    data: ingestionStatuses,
-    isLoading,
-    refetch,
-  } = useGetDataIngestionRunsQuery(
+  const { data: ingestionStatuses, isLoading } = useGetDataIngestionRunsQuery(
     {
       collection_name: collectionName,
       data_source_fqn: dataSourceFqn,
     },
-    { pollingInterval: 5000, skip: skipPolling, refetchOnReconnect: true }
+    {
+      pollingInterval: 5000,
+      skip: skipPolling,
+      refetchOnMountOrArgChange: true,
+    }
   )
-
 
   useEffect(() => {
     if (ingestionStatuses?.length) {
