@@ -14,6 +14,7 @@ import { NavLink } from 'react-router-dom'
 import IconProvider from '@/components/assets/IconProvider'
 import { Link } from 'react-router-dom'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
+import Button from '@/components/base/atoms/Button'
 
 function getMenuOptions(): {
   label: string
@@ -76,7 +77,7 @@ export default function NavBar({ children }: any) {
 
   return (
     <div className="flex flex-col border bg-white font-inter">
-      <div className="flex inline-block mx-5 my-4 gap-x-4 flex-wrap">
+      <div className="flex items-center inline-block mx-5 my-4 gap-x-4 flex-wrap">
         <div className="flex gap-10 items-center">
           <Link to={'/'}>
             <img src={logo} className="h-8 w-[10.875rem]" />
@@ -85,16 +86,13 @@ export default function NavBar({ children }: any) {
         </div>
 
         <div className="flex-1" />
-        <DarkTooltip title="View All APIs">
-          <div
-            className="mt-1 mr-2 cursor-pointer flex justify-end items-center self-flex-end"
-            onClick={() => {
-              window.open(`${window.location.origin}/api/`, '_blank')
-            }}
-          >
-            <IconProvider icon={'fastApi' as IconProp} size={1.25} />
-          </div>
-        </DarkTooltip>
+        <Button
+          className="btn-xs text-xs h-7"
+          text="View All APIs"
+          onClick={() => {
+            window.open(`${window.location.origin}/api/`, '_blank')
+          }}
+        />
         <div
           className="mt-1 mr-2 cursor-pointer flex justify-end items-center self-flex-end"
           onClick={() => {
@@ -105,21 +103,6 @@ export default function NavBar({ children }: any) {
           }}
         >
           <IconProvider icon={'fa-brands fa-github' as IconProp} size={1.25} />
-        </div>
-        <div
-          className="mt-1 cursor-pointer flex justify-end items-center self-flex-end"
-          onClick={() => {
-            window.open(
-              'https://join.slack.com/t/truefoundry/shared_invite/zt-1siovkugy-yJLZF2FPz7HQjNxmKMuZSg',
-              '_blank'
-            )
-          }}
-        >
-          <IconProvider
-            icon={'fa-brands fa-slack' as IconProp}
-            size={1.25}
-            // className="text-[#2300F7]"
-          />
         </div>
         {children}
       </div>
