@@ -25,9 +25,9 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/health-check")
 def status():
-    return JSONResponse(content={"status": "ok"})
+    return JSONResponse(content={"status": "OK"})
 
 
 app.include_router(components_router)
