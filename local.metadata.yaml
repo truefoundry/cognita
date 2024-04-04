@@ -1,12 +1,12 @@
 collection_name: creditcard
 data_source:
     type: localdir
-    uri: sample-data/creditcards
+    uri: sample-data/pdf
 parser_config:
     chunk_size: 1000
     chunk_overlap: 20
     parser_map:
-        ".md": MarkdownParser
+        ".pdf": CustomPdf
 embedder_config:
     provider: mixedbread
     config:
