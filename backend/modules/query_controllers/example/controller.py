@@ -60,7 +60,7 @@ class ExampleQueryController:
     def _format_docs_for_stream(self, docs):
         return [ {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs ]
         
-    def _get_llm(self, model_configuration):
+    def _get_llm(self, model_configuration, stream=False):
         """
         Get the LLM
         """
@@ -86,6 +86,7 @@ class ExampleQueryController:
                 model=model_configuration.name,
                 model_parameters=model_configuration.parameters,
                 system_prompt=system,
+                stream=stream,
             )
         else:
             logger.debug(f"Using TrueFoundry model {model_configuration.name}")
@@ -236,7 +237,7 @@ class ExampleQueryController:
             )
 
             # Get the LLM
-            llm = self._get_llm(request.model_configuration)
+            llm = self._get_llm(request.model_configuration, request.stream)
 
 
             # get retriever
