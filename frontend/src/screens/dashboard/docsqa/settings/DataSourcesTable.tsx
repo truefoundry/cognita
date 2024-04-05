@@ -191,13 +191,13 @@ const DataSourcesTable = ({
             skipPolling={skipPolling[key]}
             lastIngestionStatus={lastIngestionStatus[key]}
             setSkipPolling={(value) =>
-              setSkipPolling({ ...skipPolling, [key]: value })
+              setSkipPolling((prev) => ({ ...prev, [key]: value }))
             }
             setLastIngestionStatus={(value) =>
-              setLastIngestionStatus({
-                ...lastIngestionStatus,
+              setLastIngestionStatus((prev) => ({
+                ...prev,
                 [key]: value,
-              })
+              }))
             }
           />
         )
@@ -215,7 +215,7 @@ const DataSourcesTable = ({
               collectionName={collectionName}
               fqn={params?.row?.fqn}
               setSkipPolling={(value) =>
-                setSkipPolling({ ...skipPolling, [key]: value })
+                setSkipPolling((prev) => ({ ...prev, [key]: value }))
               }
             />
           </div>
