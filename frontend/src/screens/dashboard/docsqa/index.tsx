@@ -6,12 +6,13 @@ import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import {
   CollectionQueryDto,
   SourceDocs,
+  baseQAFoundryPath,
   useGetAllEnabledChatModelsQuery,
   useGetCollectionsQuery,
   useGetOpenapiSpecsQuery,
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
-import { MenuItem, Select, TextareaAutosize } from '@mui/material'
+import { MenuItem, Select, Switch, TextareaAutosize } from '@mui/material'
 import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
@@ -81,6 +82,7 @@ const DocsQA = () => {
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
+  const [isStreamEnabled, setIsStreamEnabled] = useState(false)
 
   const { data: collections, isLoading: isCollectionsLoading } =
     useGetCollectionsQuery()
@@ -116,6 +118,7 @@ const DocsQA = () => {
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
     setAnswer('')
+    setSourceDocs([])
     setErrorMessage(false)
     try {
       const selectedModel = allEnabledModels.find(
@@ -149,20 +152,53 @@ const DocsQA = () => {
         },
         {}
       )
-      const res: any = await searchAnswer({
-        ...params,
-        queryController: selectedQueryController,
-      })
-      if (res?.error) {
-        setErrorMessage(true)
+      if (!isStreamEnabled) {
+        const res: any = await searchAnswer({
+          ...params,
+          stream: false,
+          queryController: selectedQueryController,
+        })
+        if (res?.error) {
+          setErrorMessage(true)
+        } else {
+          setAnswer(res.data.answer)
+          setSourceDocs(res.data.docs ?? [])
+        }
+        setIsRunningPrompt(false)
       } else {
-        setAnswer(res.data.answer)
-        setSourceDocs(res.data.docs ?? [])
+        const response = await fetch(
+          `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...params,
+              stream: true,
+            }),
+          }
+        )
+        const reader = response?.body?.getReader()
+        const readChunk = (value: any): any => {
+          const chunkString = new TextDecoder().decode(value.value)
+          try {
+            const parsedResponse = JSON.parse(chunkString)
+            if (parsedResponse?.end) return
+            if (parsedResponse?.answer) {
+              setAnswer((prevAnswer) => prevAnswer + parsedResponse.answer)
+              setIsRunningPrompt(false)
+            } else if (parsedResponse?.docs) {
+              setSourceDocs((prevDocs) => [...prevDocs, ...parsedResponse.docs])
+            }
+          } catch (err) {}
+          return reader?.read().then(readChunk)
+        }
+        reader?.read().then(readChunk)
       }
     } catch (err: any) {
       setErrorMessage(true)
     }
-    setIsRunningPrompt(false)
   }
 
   const resetQA = () => {
@@ -340,7 +376,14 @@ const DocsQA = () => {
                   setRetrieverConfig(updatedConfig ?? '')
                 }
               />
-              <div className="mb-1 mt-3 text-sm">Prompt Template:</div>
+              <div className="flex justify-between items-center mt-1.5">
+                <div className="text-sm">Stream</div>
+                <Switch
+                  checked={isStreamEnabled}
+                  onChange={(e) => setIsStreamEnabled(e.target.checked)}
+                />
+              </div>
+              <div className="mb-1 mt-2 text-sm">Prompt Template:</div>
               <TextareaAutosize
                 className="w-full h-20 bg-[#f0f7ff] border border-[#CEE0F8] rounded-lg p-2 text-sm"
                 placeholder="Enter Prompt Template..."
@@ -392,7 +435,7 @@ const DocsQA = () => {
                               {index + 1}.{' '}
                               <ExpandableText
                                 text={doc.page_content}
-                                maxLength={260}
+                                maxLength={250}
                               />
                             </div>
                             <div className="text-sm text-indigo-600 mt-1">

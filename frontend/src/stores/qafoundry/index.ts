@@ -26,6 +26,7 @@ export interface CollectionQueryDto {
   }
   query: string
   model_configuration: ModelConfig
+  stream?: boolean
 }
 
 interface DataSource {
@@ -105,7 +106,7 @@ interface QueryAnswer {
   docs: SourceDocs[]
 }
 
-const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
+export const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
 
 export const qafoundryApi = createApi({
   reducerPath: 'qafoundry',
