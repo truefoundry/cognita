@@ -2,7 +2,7 @@ from fastapi import HTTPException, Body
 from fastapi.responses import StreamingResponse
 import async_timeout
 import asyncio
-
+import json
 
 
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -74,7 +74,7 @@ class ExampleQueryController:
         return "\n\n".join(doc.page_content for doc in docs)
     
     def _format_docs_for_stream(self, docs):
-        return "\n\n".join("Content:\n" + doc.page_content + "\nMetadata:\n" + str(doc.metadata) for doc in docs)
+        return [ {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs ]
         
     def _get_llm(self, model_configuration):
         """
@@ -200,19 +200,23 @@ class ExampleQueryController:
         return retriever
     
     async def _stream_answer(self, rag_chain, query):
-        async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
+        with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
                     if 'question ' in chunk:
                         # print("Question: ", chunk['question'])
-                        yield chunk['question']
-
+                        yield json.dumps({'question': chunk['question']})
+                        await asyncio.sleep(0.1)
                     elif 'context' in chunk:
                         # print("Context: ", self._format_docs_for_stream(chunk['context']))
-                        yield self._format_docs_for_stream(chunk['context'])   
+                        yield json.dumps({'docs' : self._format_docs_for_stream(chunk['context'])})
+                        await asyncio.sleep(0.1)
                     elif 'answer' in chunk:
                         # print("Answer: ", chunk['answer'])
-                        yield chunk['answer']  
+                        yield json.dumps({'answer' : chunk['answer'] })
+                        await asyncio.sleep(0.1)
+
+                yield json.dumps({'end' : '<END>' })
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
