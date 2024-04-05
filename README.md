@@ -2,32 +2,59 @@
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
-## QA on Docs using RAG Playground
 
-Starting with RAGFoundry is easy! Its quite easy to build an end to end RAG system on your own documents using Langchain or LlamaIndex. However, deploying the rag system in a scalable way requires us to solve a lot of problems listed below:
+- [RAGFoundry](#ragfoundry)
+  - [Introduction](#introduction)
+    - [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
+- [✨ Getting Started](#-getting-started)
+- [🐍 Installing Python and Setting Up a Virtual Environment](#-installing-python-and-setting-up-a-virtual-environment)
+  - [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
+    - [Create a Virtual Environment:](#create-a-virtual-environment)
+    - [Activate the Virtual Environment:](#activate-the-virtual-environment)
+- [🚀 Quickstart: Running RAG Locally](#-quickstart-running-rag-locally)
+  - [Install necessary packages:](#install-necessary-packages)
+  - [Setting up .env file:](#setting-up-env-file)
+  - [Executing the Code:](#executing-the-code)
+- [🛠️ Project Architecture](#️-project-architecture)
+  - [RAG Components:](#rag-components)
+  - [Data Indexing:](#data-indexing)
+  - [❓Question-Answering using API Server:](#question-answering-using-api-server)
+  - [💻 Code Structure:](#-code-structure)
+  - [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
+    - [Customizing Dataloaders:](#customizing-dataloaders)
+    - [Customizing Embedder:](#customizing-embedder)
+    - [Customizing Parsers:](#customizing-parsers)
+    - [Adding Custom VectorDB:](#adding-custom-vectordb)
+    - [Rerankers:](#rerankers)
+- [💡 Writing your Query Controller (QnA):](#-writing-your-query-controller-qna)
+  - [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
+- [🔑 API Reference](#-api-reference)
+    - [Components](#components)
+    - [Data Sources](#data-sources)
+    - [Collection](#collection)
+    - [Data Indexing](#data-indexing-1)
+    - [Retrievers](#retrievers)
+- [🐳 Quickstart: Deployment with Truefoundry:](#-quickstart-deployment-with-truefoundry)
 
-1. **Updating documents**: While we can index the documents one time, most production systems will need to keep the index updated with the latest documents. This requires a system to keep track of the documents and update the index when new documents are added or old documents are updated.
-2. **Authorization**: We need to ensure that only authorized users can access the documents - this requires storing custom metadata per document and filtering the documents based on the user's access level.
-3. **Scalability**: The system should be able to handle a large number of documents and users.
-4. **Semantic Caching**: Caching the results can help reduce and latency in a lot of cases.
-5. **Reusability**: RAG modules comprises of multiple components like dataloaders, parsers, vectorDB and retriever. We need to ensure that these components are reusable across different usecases, while also enabling each usecase to customize to the fullest extent.
+## Introduction
 
--   [✨ Getting Started](#✨-getting-started)
--   [🐍 Installing Python and Setting Up a Virtual Environment](#🐍-installing-python-and-setting-up-a-virtual-environment)
-    -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
--   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
-    -   [Install necessary packages](#install-necessary-packages)
-    -   [Setting up .env file](#setting-up-env-file)
-    -   [Executing the Code](#executing-the-code)
--   [🛠️ Project Architecture](#🛠️-project-architecture)
-    -   [⚙️ RAG Components](#rag-components)
-    -   [💾 Data indexing](#data-indexing)
-    -   [❓Question-Answering using API Server](#❓question-answering-using-api-server)
-    -   [💻 Code Structure](#💻-code-structure)
-    -   [Customizing the code for your usecase](#customizing-the-code-for-your-usecase)
--   [💡 Writing your Query Controller (QnA)](#💡-writing-your-query-controller-qna)
--   [🔑 API Reference](#🔑-api-reference)
--   [🐳 Quickstart: Deployment with Truefoundry](#🐳-quickstart-deployment-with-truefoundry)
+RAGFoundry is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. Its built using Langchain and LlamaIndex modules and is fully customizable. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
+
+1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the  job will need to run on a schedule or be trigerred via an event to keep the data updated.
+2. **Query Service**: The code that generates the answer from the query needs to be wrapped up in a api server like FastAPI and should be deployed as a service. This service should be able to handle multiple queries at the same time and also autoscale with higher traffic.
+3. **LLM / Embedding Model Deployment**: Often times, if we are using open-source models, we load the model in the Jupyter notebook. This will need to be hosted as a separate service in production and model will need to be called as an API.
+4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way. 
+
+RAGFoundry makes it really easy to customize and experiment everything about a RAG system and still be able to deploy it in a good way. It also ships with a UI that makes it easier to try out different RAG configurations and see the results in real time. You can use it locally or without using any Truefoundry components. However, using Truefoundry components makes it easier to test different models and deploy the system in a scalable way. RAGFoundry also works over collections - so you can host multiple RAG systems using one app. 
+
+### Advantages of using RAGFoundry are:
+
+1. A central reusable repository of parsers, loaders, embedders and retrievers.
+2. Ability for non-technical users to play with UI - Upload documents and perform QnA using modules built by the development team.
+3. Fully API driven - which allows integration with other systems.
+
+If you use RAGFoundry with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries. 
+
 
 # ✨ Getting Started
 
