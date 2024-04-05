@@ -4,11 +4,10 @@ import requests
 from backend.logger import logger
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
-import mlfoundry
-from mlfoundry.artifact.truefoundry_artifact_repo import (
-    ArtifactIdentifier,
-    MlFoundryArtifactsRepository,
-)
+
+from truefoundry import ml
+from truefoundry.ml import DataDirectory
+from types import SimpleNamespace
 from backend.settings import settings
 from backend.types import ModelType, UploadToDataDirectoryDto, LLMConfig, EmbedderConfig
 
@@ -17,25 +16,23 @@ router = APIRouter(prefix="/v1/internal", tags=["internal"])
 
 @router.post("/upload-to-data-directory")
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
-    if settings.METADATA_STORE_CONFIG.provider != "mlfoundry":
-        raise Exception("API only supported for metadata store provider: mlfoundry")
-    mlfoundry_client = mlfoundry.get_client()
+    if settings.METADATA_STORE_CONFIG.provider != "truefoundry":
+        raise Exception("API only supported for metadata store provider: truefoundry")
+    truefoundry_client = ml.get_client()
 
     # Create a new data directory.
-    dataset = mlfoundry_client.create_data_directory(
+    dataset = truefoundry_client.create_data_directory(
         settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
         str(uuid.uuid4()),
     )
 
-    artifact_repo = MlFoundryArtifactsRepository(
-        artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
-        mlflow_client=mlfoundry_client.mlflow_client,
-    )
+    _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()
 
-    urls = artifact_repo.get_signed_urls_for_write(
-        artifact_identifier=ArtifactIdentifier(dataset_fqn=dataset.fqn),
+    urls = _artifacts_repo.get_signed_urls_for_write(
+        artifact_identifier=SimpleNamespace(artifact_version_id=None, dataset_fqn=dataset.fqn),
         paths=req.filepaths,
     )
+
     data = [url.dict() for url in urls]
     return JSONResponse(
         content={"data": data, "data_directory_fqn": dataset.fqn},

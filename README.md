@@ -2,50 +2,49 @@
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
-
-- [RAGFoundry](#ragfoundry)
-  - [Introduction](#introduction)
-    - [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
-- [✨ Getting Started](#-getting-started)
-- [🐍 Installing Python and Setting Up a Virtual Environment](#-installing-python-and-setting-up-a-virtual-environment)
-  - [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
-    - [Create a Virtual Environment:](#create-a-virtual-environment)
-    - [Activate the Virtual Environment:](#activate-the-virtual-environment)
-- [🚀 Quickstart: Running RAG Locally](#-quickstart-running-rag-locally)
-  - [Install necessary packages:](#install-necessary-packages)
-  - [Setting up .env file:](#setting-up-env-file)
-  - [Executing the Code:](#executing-the-code)
-- [🛠️ Project Architecture](#️-project-architecture)
-  - [RAG Components:](#rag-components)
-  - [Data Indexing:](#data-indexing)
-  - [❓Question-Answering using API Server:](#question-answering-using-api-server)
-  - [💻 Code Structure:](#-code-structure)
-  - [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
-    - [Customizing Dataloaders:](#customizing-dataloaders)
-    - [Customizing Embedder:](#customizing-embedder)
-    - [Customizing Parsers:](#customizing-parsers)
-    - [Adding Custom VectorDB:](#adding-custom-vectordb)
-    - [Rerankers:](#rerankers)
-- [💡 Writing your Query Controller (QnA):](#-writing-your-query-controller-qna)
-  - [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
-- [🔑 API Reference](#-api-reference)
-    - [Components](#components)
-    - [Data Sources](#data-sources)
-    - [Collection](#collection)
-    - [Data Indexing](#data-indexing-1)
-    - [Retrievers](#retrievers)
-- [🐳 Quickstart: Deployment with Truefoundry:](#-quickstart-deployment-with-truefoundry)
+-   [RAGFoundry](#ragfoundry)
+    -   [Introduction](#introduction)
+        -   [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
+-   [✨ Getting Started](#-getting-started)
+-   [🐍 Installing Python and Setting Up a Virtual Environment](#-installing-python-and-setting-up-a-virtual-environment)
+    -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
+        -   [Create a Virtual Environment:](#create-a-virtual-environment)
+        -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
+-   [🚀 Quickstart: Running RAG Locally](#-quickstart-running-rag-locally)
+    -   [Install necessary packages:](#install-necessary-packages)
+    -   [Setting up .env file:](#setting-up-env-file)
+    -   [Executing the Code:](#executing-the-code)
+-   [🛠️ Project Architecture](#️-project-architecture)
+    -   [RAG Components:](#rag-components)
+    -   [Data Indexing:](#data-indexing)
+    -   [❓Question-Answering using API Server:](#question-answering-using-api-server)
+    -   [💻 Code Structure:](#-code-structure)
+    -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
+        -   [Customizing Dataloaders:](#customizing-dataloaders)
+        -   [Customizing Embedder:](#customizing-embedder)
+        -   [Customizing Parsers:](#customizing-parsers)
+        -   [Adding Custom VectorDB:](#adding-custom-vectordb)
+        -   [Rerankers:](#rerankers)
+-   [💡 Writing your Query Controller (QnA):](#-writing-your-query-controller-qna)
+    -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
+-   [🔑 API Reference](#-api-reference)
+    -   [Components](#components)
+    -   [Data Sources](#data-sources)
+    -   [Collection](#collection)
+    -   [Data Indexing](#data-indexing-1)
+    -   [Retrievers](#retrievers)
+-   [🐳 Quickstart: Deployment with Truefoundry:](#-quickstart-deployment-with-truefoundry)
 
 ## Introduction
 
 RAGFoundry is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. Its built using Langchain and LlamaIndex modules and is fully customizable. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
 
-1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the  job will need to run on a schedule or be trigerred via an event to keep the data updated.
+1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be trigerred via an event to keep the data updated.
 2. **Query Service**: The code that generates the answer from the query needs to be wrapped up in a api server like FastAPI and should be deployed as a service. This service should be able to handle multiple queries at the same time and also autoscale with higher traffic.
 3. **LLM / Embedding Model Deployment**: Often times, if we are using open-source models, we load the model in the Jupyter notebook. This will need to be hosted as a separate service in production and model will need to be called as an API.
-4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way. 
+4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way.
 
-RAGFoundry makes it really easy to customize and experiment everything about a RAG system and still be able to deploy it in a good way. It also ships with a UI that makes it easier to try out different RAG configurations and see the results in real time. You can use it locally or without using any Truefoundry components. However, using Truefoundry components makes it easier to test different models and deploy the system in a scalable way. RAGFoundry also works over collections - so you can host multiple RAG systems using one app. 
+RAGFoundry makes it really easy to customize and experiment everything about a RAG system and still be able to deploy it in a good way. It also ships with a UI that makes it easier to try out different RAG configurations and see the results in real time. You can use it locally or without using any Truefoundry components. However, using Truefoundry components makes it easier to test different models and deploy the system in a scalable way. RAGFoundry also works over collections - so you can host multiple RAG systems using one app.
 
 ### Advantages of using RAGFoundry are:
 
@@ -53,8 +52,7 @@ RAGFoundry makes it really easy to customize and experiment everything about a R
 2. Ability for non-technical users to play with UI - Upload documents and perform QnA using modules built by the development team.
 3. Fully API driven - which allows integration with other systems.
 
-If you use RAGFoundry with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries. 
-
+If you use RAGFoundry with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries.
 
 # ✨ Getting Started
 
@@ -220,7 +218,7 @@ Entire codebase lives in `backend/` Think of this as RAG components abstractions
 |   |   |-- metadata_store/
 |   |   |   |-- base.py
 |   |   |   |-- client.py
-|   |   |   `-- mlfoundry.py
+|   |   |   `-- truefoundry.py
 |   |   |-- parsers/
 |   |   |   |-- __init__.py
 |   |   |   |-- parser.py
@@ -413,7 +411,7 @@ This group of API list down different components of RAG that are registered.
     'http://localhost:8080/v1/components/dataloaders' \
     -H 'accept: application/json'
     ```
-    Current available dataloaders are: `github`, `local`, `web`, `mlfoundry`, `artifact`.
+    Current available dataloaders are: `github`, `local`, `web`, `truefoundry`, `artifact`.
     To add your own sources refer `backend/modules/dataloaders/README.md`
 
 ### Data Sources
@@ -442,7 +440,7 @@ This API is used for creating/listing a new data source. Data source is one thro
         ```
     -   Attributes:
 
-            -   `type` (str): The type of the data source. This field is required. One of `mlfoundry` or `local`.
+            -   `type` (str): The type of the data source. This field is required. One of `truefoundry` or `local`.
             -   `uri` (str): A unique identifier for the data source. This field is required. This can be FQN of MLRepo or FQN of Artifact with version number from Truefoundry or local folder path.
             -   `metadata` (Optional[Dict[str, Any]]): Any additional configuration for the data source. This field is optional.
 

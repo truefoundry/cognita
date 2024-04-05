@@ -7,7 +7,7 @@ import warnings
 from typing import Any, Dict, List
 
 import mlflow
-import mlfoundry
+from truefoundry import ml
 from fastapi import HTTPException
 
 from backend.logger import logger
@@ -35,8 +35,8 @@ class MLRunTypes(str, enum.Enum):
     DATA_SOURCE = "DATA_SOURCE"
 
 
-class MLFoundry(BaseMetadataStore):
-    ml_runs: dict[str, mlfoundry.MlFoundryRun] = {}
+class TrueFoundry(BaseMetadataStore):
+    ml_runs: dict[str, ml.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
 
     def __init__(self, config: dict):
@@ -44,19 +44,19 @@ class MLFoundry(BaseMetadataStore):
         if not self.ml_repo_name:
             raise Exception("config.ml_repo_name is not set.")
         logger.info(
-            f"[Metadata Store] Initializing MLFoundry Metadata Store: {self.ml_repo_name}"
+            f"[Metadata Store] Initializing TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
-        logging.getLogger("mlfoundry").setLevel(logging.ERROR)
+        logging.getLogger("truefoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        self.client = mlfoundry.get_client()
+        self.client = ml.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
         logger.info(
-            f"[Metadata Store] Initialized MLFoundry Metadata Store: {self.ml_repo_name}"
+            f"[Metadata Store] Initialized TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
-    ) -> mlfoundry.MlFoundryRun | None:
+    ) -> ml.MlFoundryRun | None:
         """
         Cache the runs to avoid too many requests to the backend.
         """
@@ -118,7 +118,7 @@ class MLFoundry(BaseMetadataStore):
 
     def _get_entity_from_run(
         self,
-        run: mlfoundry.MlFoundryRun,
+        run: ml.MlFoundryRun,
     ) -> Dict[str, Any]:
         artifact = self._get_artifact_metadata_ml_run(run)
         metadata = artifact.metadata
@@ -130,8 +130,8 @@ class MLFoundry(BaseMetadataStore):
         return metadata
 
     def _get_artifact_metadata_ml_run(
-        self, run: mlfoundry.MlFoundryRun
-    ) -> mlfoundry.ArtifactVersion | None:
+        self, run: ml.MlFoundryRun
+    ) -> ml.ArtifactVersion | None:
         params = run.get_params()
         metadata_artifact_fqn = params.get("metadata_artifact_fqn")
         if not metadata_artifact_fqn:
@@ -147,7 +147,7 @@ class MLFoundry(BaseMetadataStore):
 
     def _save_entity_to_run(
         self,
-        run: mlfoundry.MlFoundryRun,
+        run: ml.MlFoundryRun,
         metadata: Dict[str, Any],
         params: Dict[str, str],
     ):
@@ -157,7 +157,7 @@ class MLFoundry(BaseMetadataStore):
                 f.write(json.dumps(metadata))
             artifact = run.log_artifact(
                 name=run.run_name,
-                artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
+                artifact_paths=[ml.ArtifactPath(src=file_path)],
                 description="This artifact contains the entity",
                 metadata=metadata,
             )
@@ -165,7 +165,7 @@ class MLFoundry(BaseMetadataStore):
 
     def _update_entity_in_run(
         self,
-        run: mlfoundry.MlFoundryRun,
+        run: ml.MlFoundryRun,
         metadata: Dict[str, Any],
     ):
         artifact = self._get_artifact_metadata_ml_run(run)
@@ -521,7 +521,7 @@ class MLFoundry(BaseMetadataStore):
                     f.write(json.dumps(errors))
                 data_ingestion_run.log_artifact(
                     name=data_ingestion_run.run_name,
-                    artifact_paths=[mlfoundry.ArtifactPath(src=file_path)],
+                    artifact_paths=[ml.ArtifactPath(src=file_path)],
                     description="This artifact contains the errors during run",
                 )
             logger.debug(

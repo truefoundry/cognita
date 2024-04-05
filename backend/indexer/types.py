@@ -15,7 +15,8 @@ class DataIngestionConfig(BaseModel):
         title="a unique name to your ingestion run",
     )
     data_source: DataSource = Field(
-        title="Data source to ingest data from. Can be local, github or mlfoundry artifact",
+        title="Data source to ingest data from. Can be local, github or truefoundry data-dir/artifact",
+
     )
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration",
