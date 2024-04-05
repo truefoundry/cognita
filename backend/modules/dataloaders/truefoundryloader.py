@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Iterator, List
 
-import mlfoundry
+from truefoundry import ml 
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
@@ -23,9 +23,9 @@ class TrueFoundryLoader(BaseDataLoader):
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
         """
-        Loads data from a mlfoundry data directory with FQN specified by the given source URI.
+        Loads data from a truefoundry data directory / artifact with FQN specified by the given source URI.
         """
-        mlfoundry_client = mlfoundry.get_client()
+        truefoundry_client = ml.get_client()
         download_info = None
         datasource_type = None
 
@@ -37,7 +37,7 @@ class TrueFoundryLoader(BaseDataLoader):
             logger.info("Downloading Artifact: {}".format(artifact_fqn))
 
             # Get the artifact version directly
-            dataset = mlfoundry_client.get_artifact_version_by_fqn(artifact_fqn)
+            dataset = truefoundry_client.get_artifact_version_by_fqn(artifact_fqn)
             # download it to disk
             # `download_info` points to a directory that has all contents of the artifact
             download_info = dataset.download(path=dest_dir)
@@ -46,7 +46,7 @@ class TrueFoundryLoader(BaseDataLoader):
         elif data_source.uri.startswith("data-dir"):
             datasource_type = "data-dir"
             # Data source URI is the FQN of the data directory.
-            dataset = mlfoundry_client.get_data_directory_by_fqn(data_source.uri)
+            dataset = truefoundry_client.get_data_directory_by_fqn(data_source.uri)
             download_info = dataset.download(path=dest_dir)
             logger.debug(f"Data directory download info: {download_info}")
 
