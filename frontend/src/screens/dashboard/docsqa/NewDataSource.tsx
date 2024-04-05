@@ -128,7 +128,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
       if (selectedDataSourceType === 'localdir') {
         const ddFqn = await uploadDocs()
         const res = await addDataSource({
-          type: 'mlfoundry',
+          type: 'truefoundry',
           uri: ddFqn,
           metadata: {},
         }).unwrap()
