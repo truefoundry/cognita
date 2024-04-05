@@ -1,4 +1,4 @@
-import { uploadArtifactFileWithSignedURI } from '@/api/mlfoundry'
+import { uploadArtifactFileWithSignedURI } from '@/api/truefoundry'
 import IconProvider from '@/components/assets/IconProvider'
 import Badge from '@/components/base/atoms/Badge'
 import Button from '@/components/base/atoms/Button'
@@ -286,8 +286,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                   <span className="label-text font-inter mb-1">
                     {selectedDataSourceType === 'github'
                       ? 'GitHub Repo URL'
-                      : selectedDataSourceType === 'mlfoundry'
-                      ? 'Data Directory FQN'
                       : selectedDataSourceType === 'truefoundry'
                       ? 'Data Source FQN'
                       : selectedDataSourceType === 'artifact'
@@ -301,8 +299,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                   placeholder={`${
                     selectedDataSourceType === 'github'
                       ? 'Enter GitHub Repo URL'
-                      : selectedDataSourceType === 'mlfoundry'
-                      ? 'Enter Data Directory FQN'
                       : selectedDataSourceType === 'truefoundry'
                       ? 'Enter Data Source FQN'
                       : selectedDataSourceType === 'artifact'
