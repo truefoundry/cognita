@@ -5,12 +5,14 @@ import Markdown from '@/components/base/atoms/Markdown'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import {
   CollectionQueryDto,
+  SourceDocs,
+  baseQAFoundryPath,
   useGetAllEnabledChatModelsQuery,
   useGetCollectionsQuery,
   useGetOpenapiSpecsQuery,
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
-import { MenuItem, Select, TextareaAutosize } from '@mui/material'
+import { MenuItem, Select, Switch, TextareaAutosize } from '@mui/material'
 import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
@@ -39,6 +41,32 @@ interface SelectedRetrieverType {
   config: any
 }
 
+const ExpandableText = ({
+  text,
+  maxLength,
+}: {
+  text: string
+  maxLength: number
+}) => {
+  const [showAll, setShowAll] = useState(false)
+  const displayText = showAll ? text : text.slice(0, maxLength)
+
+  return (
+    <p className="whitespace-pre-line inline">
+      "{displayText}
+      {displayText.length < text.length && !showAll && '...'}"
+      {text.length > maxLength && (
+        <span
+          onClick={() => setShowAll((prev) => !prev)}
+          className="text-blue-600 focus:outline-none ml-3 cursor-pointer"
+        >
+          {showAll ? 'Show less' : 'Show more'}
+        </span>
+      )}
+    </p>
+  )
+}
+
 const DocsQA = () => {
   const [selectedQueryModel, setSelectedQueryModel] = React.useState('')
   const [selectedCollection, setSelectedCollection] = useState('')
@@ -49,11 +77,12 @@ const DocsQA = () => {
   const [prompt, setPrompt] = useState('')
   const [isRunningPrompt, setIsRunningPrompt] = useState(false)
   const [answer, setAnswer] = useState('')
-  const [sourceDocs, setSourceDocs] = useState<string[]>([])
+  const [sourceDocs, setSourceDocs] = useState<SourceDocs[]>([])
   const [errorMessage, setErrorMessage] = useState(false)
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
+  const [isStreamEnabled, setIsStreamEnabled] = useState(false)
 
   const { data: collections, isLoading: isCollectionsLoading } =
     useGetCollectionsQuery()
@@ -89,10 +118,11 @@ const DocsQA = () => {
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
     setAnswer('')
+    setSourceDocs([])
     setErrorMessage(false)
     try {
       const selectedModel = allEnabledModels.find(
-        (model: any) => model.id == selectedQueryModel
+        (model: any) => model.name == selectedQueryModel
       )
       if (!selectedModel) {
         throw new Error('Model not found')
@@ -107,14 +137,13 @@ const DocsQA = () => {
       } catch (err: any) {
         throw new Error('Invalid Retriever Configuration')
       }
-      const name = `${selectedModel?.provider_account_name}/${selectedModel?.name}`
       const params: CollectionQueryDto = Object.assign(
         {
           collection_name: selectedCollection,
           query: prompt,
           model_configuration: {
-            name: name,
-            provider: 'truefoundry',
+            name: selectedModel.name,
+            provider: selectedModel.provider,
             ...JSON.parse(modelConfig),
           },
           retriever_name: selectedRetriever?.name ?? '',
@@ -123,20 +152,53 @@ const DocsQA = () => {
         },
         {}
       )
-      const res: any = await searchAnswer({
-        ...params,
-        queryController: selectedQueryController,
-      })
-      if (res?.error) {
-        setErrorMessage(true)
+      if (!isStreamEnabled) {
+        const res: any = await searchAnswer({
+          ...params,
+          stream: false,
+          queryController: selectedQueryController,
+        })
+        if (res?.error) {
+          setErrorMessage(true)
+        } else {
+          setAnswer(res.data.answer)
+          setSourceDocs(res.data.docs ?? [])
+        }
+        setIsRunningPrompt(false)
       } else {
-        setAnswer(res.data.answer)
-        setSourceDocs(res.data.docs?.map((doc: any) => doc.page_content) ?? [])
+        const response = await fetch(
+          `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...params,
+              stream: true,
+            }),
+          }
+        )
+        const reader = response?.body?.getReader()
+        const readChunk = (value: any): any => {
+          const chunkString = new TextDecoder().decode(value.value)
+          try {
+            const parsedResponse = JSON.parse(chunkString)
+            if (parsedResponse?.end) return
+            if (parsedResponse?.answer) {
+              setAnswer((prevAnswer) => prevAnswer + parsedResponse.answer)
+              setIsRunningPrompt(false)
+            } else if (parsedResponse?.docs) {
+              setSourceDocs((prevDocs) => [...prevDocs, ...parsedResponse.docs])
+            }
+          } catch (err) {}
+          return reader?.read().then(readChunk)
+        }
+        reader?.read().then(readChunk)
       }
     } catch (err: any) {
       setErrorMessage(true)
     }
-    setIsRunningPrompt(false)
   }
 
   const resetQA = () => {
@@ -159,7 +221,7 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (allEnabledModels && allEnabledModels.length) {
-      setSelectedQueryModel(allEnabledModels[0].id)
+      setSelectedQueryModel(allEnabledModels[0].name)
     }
   }, [allEnabledModels])
 
@@ -177,14 +239,14 @@ const DocsQA = () => {
 
   return (
     <>
-      <div className="flex gap-5 h-[calc(100vh-104px)] w-full">
+      <div className="flex gap-5 h-[calc(100vh-6.5rem)] w-full">
         {isCollectionsLoading ? (
           <div className="h-full w-full flex items-center">
             <Spinner center big />
           </div>
         ) : selectedCollection ? (
           <>
-            <div className="h-full border rounded-lg border-[#CEE0F8] w-[380px] bg-white p-4 overflow-auto">
+            <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex justify-between items-center mb-1">
                 <div className="text-sm">Collection:</div>
                 <Select
@@ -196,9 +258,8 @@ const DocsQA = () => {
                   placeholder="Select Collection..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -223,9 +284,8 @@ const DocsQA = () => {
                   placeholder="Select Query Controller..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -250,9 +310,8 @@ const DocsQA = () => {
                   placeholder="Select Model..."
                   sx={{
                     background: 'white',
-                    height: '32px',
+                    height: '2rem',
                     width: '13.1875rem',
-                    minWidth: '13.1875rem',
                     border: '1px solid #CEE0F8 !important',
                     outline: 'none !important',
                     '& fieldset': {
@@ -261,8 +320,8 @@ const DocsQA = () => {
                   }}
                 >
                   {allEnabledModels?.map((model: any) => (
-                    <MenuItem value={model.id} key={model.id}>
-                      {model.provider_account_name}/{model.name}
+                    <MenuItem value={model.name} key={model.name}>
+                      {model.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -290,14 +349,14 @@ const DocsQA = () => {
                     placeholder="Select Retriever..."
                     sx={{
                       background: 'white',
-                      height: '30px',
+                      height: '1.875rem',
                       width: '100%',
                       border: '1px solid #CEE0F8 !important',
                       outline: 'none !important',
                       '& fieldset': {
                         border: 'none !important',
                       },
-                      fontSize: '14px',
+                      fontSize: '0.875rem',
                     }}
                   >
                     {allRetrieverOptions?.map((retriever: any) => (
@@ -317,7 +376,14 @@ const DocsQA = () => {
                   setRetrieverConfig(updatedConfig ?? '')
                 }
               />
-              <div className="mb-1 mt-3 text-sm">Prompt Template:</div>
+              <div className="flex justify-between items-center mt-1.5">
+                <div className="text-sm">Stream</div>
+                <Switch
+                  checked={isStreamEnabled}
+                  onChange={(e) => setIsStreamEnabled(e.target.checked)}
+                />
+              </div>
+              <div className="mb-1 mt-2 text-sm">Prompt Template:</div>
               <TextareaAutosize
                 className="w-full h-20 bg-[#f0f7ff] border border-[#CEE0F8] rounded-lg p-2 text-sm"
                 placeholder="Enter Prompt Template..."
@@ -326,18 +392,18 @@ const DocsQA = () => {
                 onChange={(e) => setPromptTemplate(e.target.value)}
               />
             </div>
-            <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-400px)] bg-white p-4">
+            <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
               <div className="flex gap-4 items-center">
                 <div className="w-full relative">
                   <Input
-                    className="w-full h-[44px] text-sm pr-14"
+                    className="w-full h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any question related to this document"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm absolute right-2 top-[6px]"
+                    className="btn-sm absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
@@ -356,23 +422,33 @@ const DocsQA = () => {
                     </div>
                   </div>
                   {sourceDocs && (
-                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto">
-                      <div className="font-semibold mb-2">
+                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
+                      <div className="font-semibold mb-3.5">
                         Source Documents:
                       </div>
-                      {sourceDocs?.map((doc, index) => (
-                        <div key={index} className="text-sm mb-2">
-                          <div className="inline font-medium">
-                            Doc #{index + 1} :{' '}
+                      {sourceDocs?.map((doc, index) => {
+                        const splittedFqn =
+                          doc?.metadata?._data_point_fqn.split('::')
+                        return (
+                          <div key={index} className="mb-3">
+                            <div className="text-sm">
+                              {index + 1}.{' '}
+                              <ExpandableText
+                                text={doc.page_content}
+                                maxLength={250}
+                              />
+                            </div>
+                            <div className="text-sm text-indigo-600 mt-1">
+                              Source: {splittedFqn?.[splittedFqn.length - 1]}
+                            </div>
                           </div>
-                          {doc}
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>
               ) : isRunningPrompt ? (
-                <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-70px)]">
+                <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-4.375rem)]">
                   <div>
                     <Spinner center medium />
                   </div>
@@ -390,13 +466,13 @@ const DocsQA = () => {
                   </div>
                 </div>
               ) : (
-                <div className="h-[calc(100%-50px)] flex justify-center items-center overflow-y-auto">
+                <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
                   <div className="min-h-[23rem]">
                     <DocsQaInformation
                       header={'Welcome to DocsQA'}
                       subHeader={
                         <>
-                          <p className="text-center max-w-[450px] mt-2">
+                          <p className="text-center max-w-[28.125rem] mt-2">
                             Select a collection from sidebar,
                             <br /> review all the settings and start asking
                             Questions

@@ -26,6 +26,7 @@ export interface CollectionQueryDto {
   }
   query: string
   model_configuration: ModelConfig
+  stream?: boolean
 }
 
 interface DataSource {
@@ -87,7 +88,25 @@ interface DataIngestionRun {
   status: string
 }
 
-const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
+export interface SourceDocs {
+  page_content: string
+  metadata: {
+    _data_point_fqn: string
+    _data_point_hash: string
+    page_num: number
+    type: string
+    _id: string
+    _collection_name: string
+  }
+  type: string
+}
+
+interface QueryAnswer {
+  answer: string
+  docs: SourceDocs[]
+}
+
+export const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
 
 export const qafoundryApi = createApi({
   reducerPath: 'qafoundry',
@@ -210,8 +229,11 @@ export const qafoundryApi = createApi({
       }),
       invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
     }),
-    queryCollection: builder.mutation({
-      query: (payload: CollectionQueryDto & { queryController: string }) => ({
+    queryCollection: builder.mutation<
+      QueryAnswer,
+      CollectionQueryDto & { queryController: string }
+    >({
+      query: (payload) => ({
         url: `/retrievers/${payload.queryController}/answer`,
         body: payload,
         method: 'POST',

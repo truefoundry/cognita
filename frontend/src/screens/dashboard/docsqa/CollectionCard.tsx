@@ -60,7 +60,7 @@ const CollectionCard = ({
             title={
               <div className="p-2 bg-white text-black cursor-default w-[16rem]">
                 <p className="font-[500] text-xs mb-1">Embedder Config:</p>
-                <p className="text-gray-600 text-xs mb-2">
+                <div className="text-gray-600 text-xs mb-2">
                   {!!embedderConfig.length
                     ? embedderConfig.map((e) => {
                         if (e[1]) {
@@ -76,7 +76,7 @@ const CollectionCard = ({
                         return
                       })
                     : ''}
-                </p>
+                </div>
                 {isDeleteOptionEnabled === 'true' && (
                   <div className="flex justify-center">
                     <Button

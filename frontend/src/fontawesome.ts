@@ -1,6 +1,6 @@
 import { library } from '@fortawesome/fontawesome-svg-core'
 
-import { faSlack } from '@fortawesome/free-brands-svg-icons'
+import { faSlack, faGithub } from '@fortawesome/free-brands-svg-icons'
 
 import {
   faCheck,
@@ -17,6 +17,7 @@ import {
   faTrashAlt,
   faWarning,
   faClone,
+  faChevronDown
 } from '@fortawesome/free-solid-svg-icons'
 
 import {
@@ -57,6 +58,8 @@ const icons: any[] = [
   faSync,
   faLinkSlash,
   faClone,
+  faGithub,
+  faChevronDown,
 ]
 
 library.add(...icons)

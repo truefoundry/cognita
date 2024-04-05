@@ -115,7 +115,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const handleSubmit = async () => {
     setIsSaving(true)
     try {
-      if (selectedDataSourceType === 'local' && !files.length) {
+      if (selectedDataSourceType === 'localdir' && !files.length) {
         setIsSaving(false)
         return notify(
           'error',
@@ -125,7 +125,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
       }
 
       let fqn
-      if (selectedDataSourceType === 'local') {
+      if (selectedDataSourceType === 'localdir') {
         const ddFqn = await uploadDocs()
         const res = await addDataSource({
           type: 'mlfoundry',
@@ -219,13 +219,20 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                 >
                   {dataLoaders?.map((source: any) => (
                     <MenuItem value={source.type} key={source.type}>
-                      <span className="capitalize">{source.type}</span>
+                      <div className="capitalize flex items-center gap-1.5">
+                        {source.type}
+                        {source.description && (
+                          <div className="text-sm text-gray-500">
+                            ({source.description})
+                          </div>
+                        )}
+                      </div>
                     </MenuItem>
                   ))}
                 </Select>
               </label>
             </div>
-            {selectedDataSourceType === 'local' ? (
+            {selectedDataSourceType === 'localdir' ? (
               <label
                 onDragOver={
                   isSaving
@@ -281,6 +288,8 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                       ? 'GitHub Repo URL'
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Data Directory FQN'
+                      : selectedDataSourceType === 'truefoundry'
+                      ? 'Data Source FQN'
                       : selectedDataSourceType === 'artifact'
                       ? 'Artifact Version FQN'
                       : 'URL'}
@@ -294,6 +303,8 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                       ? 'Enter GitHub Repo URL'
                       : selectedDataSourceType === 'mlfoundry'
                       ? 'Enter Data Directory FQN'
+                      : selectedDataSourceType === 'truefoundry'
+                      ? 'Enter Data Source FQN'
                       : selectedDataSourceType === 'artifact'
                       ? 'Enter Artifact Version FQN'
                       : 'Enter Web URL'
@@ -303,7 +314,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                 />
               </>
             )}
-            {!!files.length && selectedDataSourceType === 'local' && (
+            {!!files.length && selectedDataSourceType === 'localdir' && (
               <div
                 className={classNames(
                   'flex flex-col gap-2 p-2 bg-white border rounded-md mt-2',
@@ -404,10 +415,10 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
             type="button"
             disabled={
               isSaving ||
-              (selectedDataSourceType === 'local' &&
+              (selectedDataSourceType === 'localdir' &&
                 (files.length === 0 ||
                   uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB)) ||
-              (selectedDataSourceType !== 'local' && !dataSourceUri)
+              (selectedDataSourceType !== 'localdir' && !dataSourceUri)
             }
           />
         </div>
