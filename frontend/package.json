@@ -6,12 +6,10 @@
   "scripts": {
     "dev": "vite --port 5001",
     "build": "vite build",
-    "preview": "vite preview --port 5000",
+    "preview": "vite preview --port 5000 --host",
     "watch:css": "postcss src/styles/tailwind.css -o src/styles/output.css",
     "format": "prettier --write src/**/*.ts{,x}",
-    "lint": "tsc --noEmit && eslint src/**/*.ts{,x}",
-    "build:prod": "cross-env NODE_ENV=production yarn build --mode default",
-    "start:prod": "yarn secretsfoundry run -s \"yarn import-meta-env --example .env.example && node server/server.js\""
+    "lint": "tsc --noEmit && eslint src/**/*.ts{,x}"
   },
   "author": "",
   "license": "ISC",
