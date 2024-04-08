@@ -5,7 +5,10 @@ import weaviate
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.weaviate import Weaviate
 
-from backend.constants import DATA_POINT_FQN_METADATA_KEY, DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+from backend.constants import (
+    DATA_POINT_FQN_METADATA_KEY,
+    DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+)
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
 
@@ -128,7 +131,7 @@ class WeaviateVectorDB(BaseVectorDB):
 
     def get_vector_client(self):
         return self.weaviate_client
-    
+
     def list_data_point_vectors(
         self,
         collection_name: str,
@@ -136,10 +139,11 @@ class WeaviateVectorDB(BaseVectorDB):
         batch_size: int = 1000,
     ) -> List[DataPointVector]:
         pass
-    
+
     def delete_data_point_vectors(
-            self, 
-            collection_name: str, 
-            data_point_vectors: List[DataPointVector], 
-            batch_size: int = 100):
+        self,
+        collection_name: str,
+        data_point_vectors: List[DataPointVector],
+        batch_size: int = 100,
+    ):
         pass

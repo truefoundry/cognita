@@ -1,4 +1,3 @@
-
 from backend.modules.dataloaders.loader import register_dataloader
 from backend.modules.dataloaders.githubloader import GithubLoader
 from backend.modules.dataloaders.localdirloader import LocalDirLoader

@@ -21,16 +21,15 @@ async def ingest():
     # Create a data ingestion request
     # It requires collection name & data source FQN
     request = IngestDataToCollectionDto(
-        collection_name = collection.name,
-        data_source_fqn = data_source.fqn,
+        collection_name=collection.name,
+        data_source_fqn=data_source.fqn,
     )
 
     await ingest_data_to_collection(request=request)
 
 
-
 if __name__ == "__main__":
-    
+
     start = time.time()
     # Run only when u have to ingest data
     print("Ingesting Data....")

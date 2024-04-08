@@ -48,9 +48,9 @@ class QdrantVectorDB(BaseVectorDB):
         vector_size = len(partial_embeddings[0])
 
         self.qdrant_client.create_collection(
-            collection_name=collection_name, 
+            collection_name=collection_name,
             vectors_config=VectorParams(
-                size=vector_size, # embedding dimension 
+                size=vector_size,  # embedding dimension
                 distance=Distance.COSINE,
             ),
         )
@@ -65,7 +65,6 @@ class QdrantVectorDB(BaseVectorDB):
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         logger.debug(f"[Vector Store] Created new collection {collection_name}")
-
 
     def _get_records_to_be_upserted(
         self, collection_name: str, data_point_fqns: List[str], incremental: bool

@@ -95,10 +95,7 @@ class EmbedderConfig(BaseModel):
         title="Provider of the embedder",
     )
     config: Optional[Dict[str, Any]] = Field(
-        title="Configuration for the embedder",
-        default={
-            "model": "string"
-        }
+        title="Configuration for the embedder", default={"model": "string"}
     )
 
 
@@ -156,11 +153,12 @@ class LLMConfig(BaseModel):
     """
     LLM configuration
     """
+
     name: str = Field(title="Name of the model")
     parameters: dict = None
     provider: Literal["openai", "ollama", "truefoundry"] = Field(
         title="Model provider any one between openai, ollama, truefoundry",
-        default="truefoundry"
+        default="truefoundry",
     )
 
 
@@ -275,12 +273,12 @@ class BaseDataSource(BaseModel):
     )
 
     @property
-    def fqn(self):        
+    def fqn(self):
         return f"{FQN_SEPARATOR}".join([self.type, self.uri])
-    
+
     @root_validator
     def validate_fqn(cls, values: Dict) -> Dict:
-        values['fqn'] = f"{FQN_SEPARATOR}".join([values['type'], values['uri']])
+        values["fqn"] = f"{FQN_SEPARATOR}".join([values["type"], values["uri"]])
         return values
 
 

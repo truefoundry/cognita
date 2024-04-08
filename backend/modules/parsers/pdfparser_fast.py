@@ -22,11 +22,7 @@ class PdfParserUsingPyMuPDF(BaseParser):
         self.max_chunk_size = max_chunk_size
 
     async def get_chunks(
-        self, 
-        filepath: str,
-        metadata: Optional[dict],
-        *args, 
-        **kwargs
+        self, filepath: str, metadata: Optional[dict], *args, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.

@@ -81,5 +81,6 @@ def list_embedders():
     """
     global EMBEDDER_REGISTRY
     return [
-        {"provider": type, "class": cls.__name__} for type, cls in EMBEDDER_REGISTRY.items()
+        {"provider": type, "class": cls.__name__}
+        for type, cls in EMBEDDER_REGISTRY.items()
     ]

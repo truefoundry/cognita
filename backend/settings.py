@@ -6,6 +6,7 @@ from pydantic import BaseSettings
 
 from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
 
+
 class Settings(BaseSettings):
     """
     Settings class to hold all the environment variables
@@ -42,13 +43,12 @@ class Settings(BaseSettings):
     LOCAL: bool = os.getenv("LOCAL", False)
     OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
-
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")
 
     if not METADATA_STORE_CONFIG:
         raise ValueError("METADATA_STORE_CONFIG is not set")
-    
+
     if not TFY_LLM_GATEWAY_URL:
         TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
 
@@ -62,5 +62,6 @@ class Settings(BaseSettings):
         )
     except Exception as e:
         raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
-    
+
+
 settings = Settings()

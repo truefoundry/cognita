@@ -4,22 +4,20 @@ from markdown_crawler import md_crawl
 
 import os
 import tempfile
-from typing import (
-    List,
-    Dict, 
-    Iterator
-)
+from typing import List, Dict, Iterator
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
 
 
-DEFAULT_BASE_DIR = os.path.join(tempfile.gettempdir(), 'webloader')  # temporary directory
+DEFAULT_BASE_DIR = os.path.join(
+    tempfile.gettempdir(), "webloader"
+)  # temporary directory
 DEFAULT_MAX_DEPTH = 2
 DEFAULT_NUM_THREADS = 5
-DEFAULT_TARGET_LINKS = ['body']
-DEFAULT_TARGET_CONTENT = ['article', 'div', 'main', 'p']
+DEFAULT_TARGET_LINKS = ["body"]
+DEFAULT_TARGET_CONTENT = ["article", "div", "main", "p"]
 DEFAULT_DOMAIN_MATCH = True
 DEFAULT_BASE_PATH_MATCH = True
 
@@ -51,7 +49,9 @@ class WebLoader(BaseDataLoader):
             is_domain_match=DEFAULT_DOMAIN_MATCH,
             is_base_path_match=DEFAULT_BASE_PATH_MATCH,
         )
-        logger.debug(f"WebLoader: Crawled {data_source.uri} and saved to {DEFAULT_BASE_DIR}")
+        logger.debug(
+            f"WebLoader: Crawled {data_source.uri} and saved to {DEFAULT_BASE_DIR}"
+        )
 
         loaded_data_points: List[LoadedDataPoint] = []
         dest_dir = DEFAULT_BASE_DIR
@@ -92,4 +92,3 @@ class WebLoader(BaseDataLoader):
                     yield loaded_data_points
                     loaded_data_points.clear()
         yield loaded_data_points
-
