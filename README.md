@@ -95,7 +95,7 @@ Once your virtual environment is activated, you'll see its name in the terminal 
 
 > Remember to deactivate the virtual environment when you're done working with RAGFoundry by simply running deactivate in the terminal.
 
-# 🚀 Quickstart: Running RAG Locally
+# 🚀 Quickstart: Running RAG Locall
 
 Following are the instructions for running the RAG application locally without any additional Truefoundry dependencies
 
