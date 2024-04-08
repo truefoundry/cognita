@@ -126,6 +126,8 @@ pip install -r backend/requirements.txt
 
 > You can try out different RAG retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
 
+> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
+
 # 🛠️ Project Architecture
 
 ![](./docs/images/rag_arch.png)
