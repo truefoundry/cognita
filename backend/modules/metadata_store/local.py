@@ -73,8 +73,10 @@ class LocalMetadataStore(BaseMetadataStore):
             self.data_ingestion_runs = []
             logger.debug(f"Local metadata store initialized with {self.local_metadata}")
         else:
-            logger.debug(f"Collection {self.local_metadata.collection_name} already present in local")
-        
+            logger.debug(
+                f"Collection {self.local_metadata.collection_name} already present in local"
+            )
+
         self.data_ingestion_runs = []
 
     def create_collection(self, collection) -> Collection:
@@ -92,7 +94,7 @@ class LocalMetadataStore(BaseMetadataStore):
 
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         return self.data_source
-    
+
     def get_data_source_from_fqn(self, fqn: str = None) -> DataSource | None:
         return self.data_source
 

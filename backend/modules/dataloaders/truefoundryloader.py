@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Iterator, List
 
-from truefoundry import ml 
+from truefoundry import ml
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
@@ -55,15 +55,17 @@ class TrueFoundryLoader(BaseDataLoader):
             if os.path.exists(os.path.join(download_info, "files")):
                 logger.debug("Files directory exists")
                 download_info = os.path.join(download_info, "files")
-                logger.debug(f"[Updated] download info: {download_info} for {datasource_type}")
+                logger.debug(
+                    f"[Updated] download info: {download_info} for {datasource_type}"
+                )
 
-        
-        
             # If the downloaded data directory is a ZIP file, unzip its contents.
             for file_name in os.listdir(download_info):
                 logger.debug(f"file_name: {file_name}")
                 if file_name.endswith(".zip"):
-                    logger.debug(f"Unzipped file_path: {os.path.join(download_info, file_name)}")
+                    logger.debug(
+                        f"Unzipped file_path: {os.path.join(download_info, file_name)}"
+                    )
                     unzip_file(
                         file_path=os.path.join(download_info, file_name),
                         dest_dir=download_info,
@@ -112,4 +114,3 @@ class TrueFoundryLoader(BaseDataLoader):
         else:
             logger.error("Download info not found")
             return iter([])
-            

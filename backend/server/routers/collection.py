@@ -114,7 +114,6 @@ async def unassociate_data_source_from_collection(
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-
 @router.post("/ingest")
 async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
@@ -172,5 +171,3 @@ def get_collection_status(
             "message": f"Data ingestion job run {data_ingestion_run.name} in {data_ingestion_run.status.value}. Check logs for more details.",
         }
     )
-
-    

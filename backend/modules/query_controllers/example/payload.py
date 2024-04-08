@@ -4,19 +4,12 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "vectorstore",
-    "retriever_config": {
-        "search_type": "similarity",
-        "search_kwargs": {
-            "k": 20
-        }
-    },
-    "stream": False
+    "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 20}},
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
@@ -34,9 +27,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "vectorstore",
@@ -45,9 +36,9 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
         "search_kwargs": {
             "k": 20,
             "fetch_k": 30,
-        }
+        },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
@@ -65,19 +56,15 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "vectorstore",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
-        "search_kwargs": {
-            "score_threshold": 0.7
-        }
+        "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -89,28 +76,24 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 }
 #######
 
-QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER =  {
+QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "contexual-compression",
     "retriever_config": {
-        "compressor_model_provider" : "mixbread-ai",
-        "compressor_model_name" : "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_provider": "mixbread-ai",
+        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
-        "search_kwargs": {
-            "k": 20
-        }
+        "search_kwargs": {"k": 20},
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
@@ -123,29 +106,27 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
 #####
 
 
-QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR =  {
+QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "contexual-compression",
     "retriever_config": {
-        "compressor_model_provider" : "mixbread-ai",
-        "compressor_model_name" : "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_provider": "mixbread-ai",
+        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 7,
         "search_type": "mmr",
         "search_kwargs": {
             "k": 20,
             "fetch_k": 30,
-        }
+        },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
@@ -160,28 +141,24 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
 #####
 
 
-QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE =  {
+QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "contexual-compression",
     "retriever_config": {
-        "compressor_model_provider" : "mixbread-ai",
-        "compressor_model_name" : "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_provider": "mixbread-ai",
+        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
-        "search_kwargs": {
-            "score_threshold": 0.7
-        }
+        "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD = {
@@ -201,26 +178,20 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity",
-        "search_kwargs": {
-            "k": 20
-        },
+        "search_kwargs": {"k": 20},
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
-            "parameters": {
-                "temperature": 0.9
-            }
+            "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -239,9 +210,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "multi-query",
@@ -254,12 +223,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
-            "parameters": {
-                "temperature": 0.9
-            }
+            "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -277,26 +244,20 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
-        "search_kwargs": {
-            "score_threshold": 0.7
-        },
+        "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
-            "parameters": {
-                "temperature": 0.9
-            }
+            "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -316,15 +277,13 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider" : "mixbread-ai",
-        "compressor_model_name" : "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_provider": "mixbread-ai",
+        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 7,
         "search_type": "mmr",
         "search_kwargs": {
@@ -334,12 +293,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
-            "parameters": {
-                "temperature": 0.9
-            }
+            "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -358,29 +315,23 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
-        "parameters": {
-            "temperature": 0.1
-        }
+        "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider" : "mixbread-ai",
-        "compressor_model_name" : "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_provider": "mixbread-ai",
+        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
-        "search_kwargs": {
-            "k": 20
-        },
+        "search_kwargs": {"k": 20},
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
-            "parameters": {
-                "temperature": 0.1
-            }
+            "parameters": {"temperature": 0.1},
         },
     },
-    "stream": False
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {

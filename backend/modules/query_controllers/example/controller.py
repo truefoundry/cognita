@@ -19,7 +19,10 @@ from backend.logger import logger
 from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.example.types import DefaultQueryInput, GENERATION_TIMEOUT_SEC
+from backend.modules.query_controllers.example.types import (
+    DefaultQueryInput,
+    GENERATION_TIMEOUT_SEC,
+)
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
@@ -43,23 +46,45 @@ from truefoundry.langchain import TrueFoundryChat
 from backend.modules.reranker import MxBaiReranker
 
 
+EXAMPLES = {
+    "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    # Keeping these for future use:
+    # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
+    # "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+    # "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+    # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+    # "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+}
+
+if settings.LOCAL:
+    EXAMPLES.update(
+        {
+            "contexual-compression-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
+            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+        }
+    )
 
 
 @query_controller("/example-app")
 class ExampleQueryController:
-    
+
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
         """
         return PromptTemplate(input_variables=input_variables, template=template)
-    
+
     def _format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
-    
+
     def _format_docs_for_stream(self, docs):
-        return [ {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs ]
-        
+        return [
+            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
+        ]
+
     def _get_llm(self, model_configuration, stream=False):
         """
         Get the LLM
@@ -70,13 +95,17 @@ class ExampleQueryController:
             llm = ChatOpenAI(
                 model=model_configuration.name,
                 temperature=model_configuration.parameters.get("temperature", 0.1),
-                system=system,
+                streaming=stream,
             )
         elif model_configuration.provider == "ollama":
             logger.debug(f"Using Ollama model {model_configuration.name}")
             llm = ChatOllama(
                 base_url=settings.OLLAMA_URL,
-                model=model_configuration.name.split('/')[1] if '/' in model_configuration.name else model_configuration.name,
+                model=(
+                    model_configuration.name.split("/")[1]
+                    if "/" in model_configuration.name
+                    else model_configuration.name
+                ),
                 temperature=model_configuration.parameters.get("temperature", 0.1),
                 system=system,
             )
@@ -86,7 +115,6 @@ class ExampleQueryController:
                 model=model_configuration.name,
                 model_parameters=model_configuration.parameters,
                 system_prompt=system,
-                stream=stream,
             )
         else:
             logger.debug(f"Using TrueFoundry model {model_configuration.name}")
@@ -96,9 +124,7 @@ class ExampleQueryController:
                 system_prompt=system,
             )
         return llm
-    
-    
-    
+
     async def _get_vector_store(self, collection_name: str):
         """
         Get the vector store for the collection
@@ -112,7 +138,7 @@ class ExampleQueryController:
             collection_name=collection.name,
             embeddings=get_embedder(collection.embedder_config),
         )
-    
+
     def _get_vector_store_retriever(self, vector_store, retriever_config):
         """
         Get the vector store retriever
@@ -122,7 +148,7 @@ class ExampleQueryController:
             search_type=retriever_config.search_type,
             search_kwargs=retriever_config.search_kwargs,
         )
-    
+
     def _get_contextual_compression_retriever(self, vector_store, retriever_config):
         """
         Get the contextual compression retriever
@@ -130,12 +156,12 @@ class ExampleQueryController:
         # Using mixbread-ai Reranker
         if retriever_config.compressor_model_provider == "mixbread-ai":
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
-            
+
             compressor = MxBaiReranker(
                 model=retriever_config.compressor_model_name,
-                top_k=retriever_config.top_k
+                top_k=retriever_config.top_k,
             )
-            
+
             compression_retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, base_retriever=retriever
             )
@@ -143,16 +169,24 @@ class ExampleQueryController:
             return compression_retriever
         # Can add other rerankers too!
         else:
-            raise HTTPException(status_code=404, detail="Compressor model provider not found")
+            raise HTTPException(
+                status_code=404, detail="Compressor model provider not found"
+            )
 
-    def _get_multi_query_retriever(self, vector_store, retriever_config, retriever_type="vectorstore"):
+    def _get_multi_query_retriever(
+        self, vector_store, retriever_config, retriever_type="vectorstore"
+    ):
         """
         Get the multi query retriever
         """
         if retriever_type == "vectorstore":
-            base_retriever = self._get_vector_store_retriever(vector_store, retriever_config)
+            base_retriever = self._get_vector_store_retriever(
+                vector_store, retriever_config
+            )
         elif retriever_type == "contexual-compression":
-            base_retriever = self._get_contextual_compression_retriever(vector_store, retriever_config)
+            base_retriever = self._get_contextual_compression_retriever(
+                vector_store, retriever_config
+            )
 
         return MultiQueryRetriever.from_llm(
             retriever=base_retriever,
@@ -164,72 +198,75 @@ class ExampleQueryController:
         Get the retriever
         """
         if retriever_name == "vectorstore":
-            logger.debug(f"Using VectorStoreRetriever with {retriever_config.search_type} search")
+            logger.debug(
+                f"Using VectorStoreRetriever with {retriever_config.search_type} search"
+            )
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
         elif retriever_name == "contexual-compression":
-            logger.debug(f"Using ContextualCompressionRetriever with {retriever_config.search_type} search")
-            retriever = self._get_contextual_compression_retriever(vector_store, retriever_config)
-        
+            logger.debug(
+                f"Using ContextualCompressionRetriever with {retriever_config.search_type} search"
+            )
+            retriever = self._get_contextual_compression_retriever(
+                vector_store, retriever_config
+            )
+
         elif retriever_name == "multi-query":
-            logger.debug(f"Using MultiQueryRetriever with {retriever_config.search_type} search")
+            logger.debug(
+                f"Using MultiQueryRetriever with {retriever_config.search_type} search"
+            )
             retriever = self._get_multi_query_retriever(vector_store, retriever_config)
 
         elif retriever_name == "contexual-compression-multi-query":
-            logger.debug(f"Using MultiQueryRetriever with {retriever_config.search_type} search and retriever type as contexual-compression")
-            retriever = self._get_multi_query_retriever(vector_store, retriever_config, retriever_type="contexual-compression")
-        
+            logger.debug(
+                f"Using MultiQueryRetriever with {retriever_config.search_type} search and retriever type as contexual-compression"
+            )
+            retriever = self._get_multi_query_retriever(
+                vector_store, retriever_config, retriever_type="contexual-compression"
+            )
+
         else:
             raise HTTPException(status_code=404, detail="Retriever not found")
-        
+
         return retriever
-    
+
     async def _stream_answer(self, rag_chain, query):
-        with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
+        async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
-                    if 'question ' in chunk:
+                    if "question " in chunk:
                         # print("Question: ", chunk['question'])
-                        yield json.dumps({'question': chunk['question']})
+                        yield json.dumps({"question": chunk["question"]})
                         await asyncio.sleep(0.1)
-                    elif 'context' in chunk:
+                    elif "context" in chunk:
                         # print("Context: ", self._format_docs_for_stream(chunk['context']))
-                        yield json.dumps({'docs' : self._format_docs_for_stream(chunk['context'])})
+                        yield json.dumps(
+                            {"docs": self._format_docs_for_stream(chunk["context"])}
+                        )
                         await asyncio.sleep(0.1)
-                    elif 'answer' in chunk:
+                    elif "answer" in chunk:
                         # print("Answer: ", chunk['answer'])
-                        yield json.dumps({'answer' : chunk['answer'] })
+                        yield json.dumps({"answer": chunk["answer"]})
                         await asyncio.sleep(0.1)
 
-                yield json.dumps({'end' : '<END>' })
+                yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
     @post("/answer")
-    async def answer(self, request: DefaultQueryInput = Body(
-        openapi_examples={
-            "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-            "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-            # "contexual-compression-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-            # "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-            
-            # Keeping these for future use:
-            # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-            # "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-            # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-            # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-            # "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-            # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-            # "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )):
+    async def answer(
+        self,
+        request: DefaultQueryInput = Body(
+            openapi_examples=EXAMPLES,
+        ),
+    ):
         """
         Sample answer method to answer the question using the context from the collection
         """
         try:
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
-            
+
             # Create the QA prompt templates
             QA_PROMPT = self._get_prompt_template(
                 input_variables=["context", "question"],
@@ -239,18 +276,18 @@ class ExampleQueryController:
             # Get the LLM
             llm = self._get_llm(request.model_configuration, request.stream)
 
-
             # get retriever
             retriever = await self._get_retriever(
-                vector_store = vector_store, 
-                retriever_name = request.retriever_name, 
-                retriever_config = request.retriever_config
+                vector_store=vector_store,
+                retriever_name=request.retriever_name,
+                retriever_config=request.retriever_config,
             )
-
 
             # Using LCEL
             rag_chain_from_docs = (
-                RunnablePassthrough.assign(context=(lambda x: self._format_docs(x["context"])))
+                RunnablePassthrough.assign(
+                    context=(lambda x: self._format_docs(x["context"]))
+                )
                 | QA_PROMPT
                 | llm
                 | StrOutputParser()
@@ -269,7 +306,7 @@ class ExampleQueryController:
             else:
 
                 outputs = await rag_chain_with_source.ainvoke(request.query)
-                
+
                 # Intermediate testing
                 # Just the retriever
                 # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
@@ -284,12 +321,11 @@ class ExampleQueryController:
                 # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
                 # print(outputs)
 
-
                 return {
                     "answer": outputs["answer"],
                     "docs": outputs["context"] if outputs["context"] else [],
                 }
-        
+
         except HTTPException as exp:
             raise exp
         except Exception as exp:
@@ -297,7 +333,6 @@ class ExampleQueryController:
             raise HTTPException(status_code=500, detail=str(exp))
 
 
-   
 #######
 # Streaming Client
 
@@ -333,6 +368,6 @@ class ExampleQueryController:
 
 
 # with httpx.stream('POST', ENDPOINT_URL, json=data, timeout=Timeout(5.0*60)) as r:
-#     for chunk in r.iter_text():        
-#         print(chunk)        
+#     for chunk in r.iter_text():
+#         print(chunk)
 #######

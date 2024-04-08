@@ -22,11 +22,7 @@ class TextParser(BaseParser):
         self.max_chunk_size = max_chunk_size
 
     async def get_chunks(
-        self, 
-        filepath: str,
-        metadata: Optional[dict],
-        *args, 
-        **kwargs
+        self, filepath: str, metadata: Optional[dict], *args, **kwargs
     ) -> typing.List[Document]:
         """
         Asynchronously loads the text from a text file and returns it in chunks.

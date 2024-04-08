@@ -29,7 +29,9 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()
 
     urls = _artifacts_repo.get_signed_urls_for_write(
-        artifact_identifier=SimpleNamespace(artifact_version_id=None, dataset_fqn=dataset.fqn),
+        artifact_identifier=SimpleNamespace(
+            artifact_version_id=None, dataset_fqn=dataset.fqn
+        ),
         paths=req.filepaths,
     )
 
@@ -45,15 +47,13 @@ def get_enabled_models(
 ):
     enabled_models = []
 
-    # Local Embedding models 
+    # Local Embedding models
     if model_type == ModelType.embedding:
         if settings.LOCAL:
             enabled_models.append(
                 EmbedderConfig(
                     provider="mixedbread",
-                    config={
-                        "model": "mixedbread-ai/mxbai-embed-large-v1"
-                    }
+                    config={"model": "mixedbread-ai/mxbai-embed-large-v1"},
                 ).dict()
             )
 
@@ -69,9 +69,7 @@ def get_enabled_models(
                     enabled_models.append(
                         LLMConfig(
                             name=f"ollama/{model['model']}",
-                            parameters={
-                                'temparature': 0.1
-                            },
+                            parameters={"temparature": 0.1},
                             provider="ollama",
                         ).dict()
                     )
@@ -98,7 +96,7 @@ def get_enabled_models(
             headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
             response = requests.get(url=url, headers=headers)
             response.raise_for_status()
-        
+
             data: dict[str, dict[str, list[dict]]] = response.json()
 
             for provider_accounts in data.values():
@@ -109,19 +107,15 @@ def get_enabled_models(
                                 enabled_models.append(
                                     EmbedderConfig(
                                         provider="truefoundry",
-                                        config={
-                                            "model": model["model_fqn"]
-                                        }
+                                        config={"model": model["model_fqn"]},
                                     ).dict()
                                 )
- 
+
                             elif model_type == ModelType.chat:
                                 enabled_models.append(
                                     LLMConfig(
                                         name=model["model_fqn"],
-                                        parameters={
-                                            'temparature': 0.1
-                                        },
+                                        parameters={"temparature": 0.1},
                                         provider="truefoundry",
                                     ).dict()
                                 )
@@ -129,14 +123,12 @@ def get_enabled_models(
                                 enabled_models.append(
                                     LLMConfig(
                                         name=model["model_fqn"],
-                                        parameters={
-                                            'temparature': 0.9
-                                        },
+                                        parameters={"temparature": 0.9},
                                         provider="truefoundry",
                                     ).dict()
-                                ) 
+                                )
         except Exception as ex:
-                raise Exception(f"Error fetching the models: {ex}") from ex
+            raise Exception(f"Error fetching the models: {ex}") from ex
     return JSONResponse(
-            content={"models": enabled_models},
-        )
+        content={"models": enabled_models},
+    )

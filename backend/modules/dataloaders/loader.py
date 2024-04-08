@@ -36,7 +36,6 @@ class BaseDataLoader(ABC):
     Base data loader class. Data loader is responsible for detecting, filtering and then loading data points to be ingested.
     """
 
-
     def load_full_data(
         self,
         data_source: DataSource,
@@ -57,7 +56,7 @@ class BaseDataLoader(ABC):
             dest_dir,
             previous_snapshot={},
             batch_size=batch_size,
-            data_ingestion_mode=DataIngestionMode.FULL
+            data_ingestion_mode=DataIngestionMode.FULL,
         )
 
     def load_incremental_data(
@@ -84,7 +83,6 @@ class BaseDataLoader(ABC):
             batch_size,
             DataIngestionMode.INCREMENTAL,
         )
-        
 
     @abstractmethod
     def load_filtered_data(
@@ -134,5 +132,6 @@ def list_dataloaders():
     """
     global LOADER_REGISTRY
     return [
-        {"type": type, "class": cls.__name__, "description": cls.__doc__.strip()} for type, cls in LOADER_REGISTRY.items()
+        {"type": type, "class": cls.__name__, "description": cls.__doc__.strip()}
+        for type, cls in LOADER_REGISTRY.items()
     ]

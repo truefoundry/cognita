@@ -4,11 +4,13 @@ from typing import List, Optional, Sequence
 from langchain.callbacks.manager import Callbacks
 from sentence_transformers import CrossEncoder
 
+
 # More about why re-ranking is essential: https://www.mixedbread.ai/blog/mxbai-rerank-v1
 class MxBaiReranker(BaseDocumentCompressor):
     """
     Document compressor that uses a pipeline of Transformers.
     """
+
     model: str
     top_k: int = 3
 
@@ -25,8 +27,8 @@ class MxBaiReranker(BaseDocumentCompressor):
 
         documents = [
             Document(
-                page_content=doc['text'], 
-                metadata=documents[doc['corpus_id']].metadata
-            ) for doc in reranked_docs
+                page_content=doc["text"], metadata=documents[doc["corpus_id"]].metadata
+            )
+            for doc in reranked_docs
         ]
         return documents

@@ -28,7 +28,9 @@ async def main():
         )
 
     if arguments.data_ingestion_run_name:
-        logger.debug(f"Using data ingestion run name: {arguments.data_ingestion_run_name}")
+        logger.debug(
+            f"Using data ingestion run name: {arguments.data_ingestion_run_name}"
+        )
         created_data_ingestion_run = METADATA_STORE_CLIENT.get_data_ingestion_run(
             data_ingestion_run_name=arguments.data_ingestion_run_name
         )
@@ -59,7 +61,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    import time 
+    import time
+
     start = time.time()
     asyncio.run(main())
     end = time.time()

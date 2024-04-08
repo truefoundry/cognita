@@ -33,9 +33,9 @@ def get_data_point_fqn_to_hash_map(
     data_point_fqn_to_hash: Dict[str, str] = {}
     for data_point_vector in data_point_vectors:
         if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[
-                data_point_vector.data_point_fqn
-            ] = data_point_vector.data_point_hash
+            data_point_fqn_to_hash[data_point_vector.data_point_fqn] = (
+                data_point_vector.data_point_hash
+            )
 
     return data_point_fqn_to_hash
 
@@ -144,7 +144,7 @@ async def _sync_data_source_to_collection(
     Returns:
         None
     """
-    
+
     failed_data_point_fqns = []
     documents_ingested_count = 0
     # Create a temp dir to store the data
@@ -152,14 +152,12 @@ async def _sync_data_source_to_collection(
         # Load the data from the source to the dest dir
         logger.info("Loading data from data source")
         data_source_loader = get_loader_for_data_source(inputs.data_source.type)
-        loaded_data_points_batch_iterator = (
-            data_source_loader.load_filtered_data(
-                data_source=inputs.data_source,
-                dest_dir=tmpdirname,
-                previous_snapshot=previous_snapshot,
-                batch_size=inputs.batch_size,
-                data_ingestion_mode=inputs.data_ingestion_mode,
-            )
+        loaded_data_points_batch_iterator = data_source_loader.load_filtered_data(
+            data_source=inputs.data_source,
+            dest_dir=tmpdirname,
+            previous_snapshot=previous_snapshot,
+            batch_size=inputs.batch_size,
+            data_ingestion_mode=inputs.data_ingestion_mode,
         )
 
         for loaded_data_points_batch in loaded_data_points_batch_iterator:
@@ -214,7 +212,7 @@ async def ingest_data_points(
         None
 
     """
-    
+
     embeddings = get_embedder(
         embedder_config=inputs.embedder_config,
     )
@@ -240,7 +238,7 @@ async def ingest_data_points(
         # chunk the given document
         chunks = await parser.get_chunks(
             filepath=loaded_data_point.local_filepath,
-            metadata=loaded_data_point.metadata
+            metadata=loaded_data_point.metadata,
         )
         # Update data source metadata
         for chunk in chunks:

@@ -5,7 +5,7 @@
 -   [RAGFoundry](#ragfoundry)
     -   [Introduction](#introduction)
         -   [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
--   [✨ Getting Started](#-getting-started)
+-   [✨ Getting Started](#✨-getting-started)
 -   [🐍 Installing Python and Setting Up a Virtual Environment](#-installing-python-and-setting-up-a-virtual-environment)
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
         -   [Create a Virtual Environment:](#create-a-virtual-environment)
@@ -27,36 +27,38 @@
         -   [Rerankers:](#rerankers)
 -   [💡 Writing your Query Controller (QnA):](#-writing-your-query-controller-qna)
     -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
--   [🔑 API Reference](#-api-reference)
-    -   [Components](#components)
-    -   [Data Sources](#data-sources)
-    -   [Collection](#collection)
-    -   [Data Indexing](#data-indexing-1)
-    -   [Retrievers](#retrievers)
 -   [🐳 Quickstart: Deployment with Truefoundry:](#-quickstart-deployment-with-truefoundry)
+-   [💖 Open Source Contribution](#💖-open-source-contribution)
+-   [🔮 Future developments](#🔮-future-developments)
 
 ## Introduction
 
-RAGFoundry is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. Its built using Langchain and LlamaIndex modules and is fully customizable. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
+RAGFoundry is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
 
 1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be trigerred via an event to keep the data updated.
 2. **Query Service**: The code that generates the answer from the query needs to be wrapped up in a api server like FastAPI and should be deployed as a service. This service should be able to handle multiple queries at the same time and also autoscale with higher traffic.
 3. **LLM / Embedding Model Deployment**: Often times, if we are using open-source models, we load the model in the Jupyter notebook. This will need to be hosted as a separate service in production and model will need to be called as an API.
 4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way.
 
-RAGFoundry makes it really easy to customize and experiment everything about a RAG system and still be able to deploy it in a good way. It also ships with a UI that makes it easier to try out different RAG configurations and see the results in real time. You can use it locally or without using any Truefoundry components. However, using Truefoundry components makes it easier to test different models and deploy the system in a scalable way. RAGFoundry also works over collections - so you can host multiple RAG systems using one app.
+RAGFoundry makes it really easy to customize and experiment everything about a RAG system and still be able to deploy it in a good way. It also ships with a UI that makes it easier to try out different RAG configurations and see the results in real time. You can use it locally or with/without using any Truefoundry components. However, using Truefoundry components makes it easier to test different models and deploy the system in a scalable way. RAGFoundry allows you to host multiple RAG systems using one app.
 
 ### Advantages of using RAGFoundry are:
 
 1. A central reusable repository of parsers, loaders, embedders and retrievers.
 2. Ability for non-technical users to play with UI - Upload documents and perform QnA using modules built by the development team.
 3. Fully API driven - which allows integration with other systems.
+    > If you use RAGFoundry with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries.
 
-If you use RAGFoundry with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries.
+### Features:
+
+1. Support for multiple document retrievers that use `Similarity Search`, `Query Decompostion`, `Document Reranking`, etc
+1. Support for SOTA OpenSource embeddings and reranking from `mixedbread-ai`
+1. Support for using LLMs using `Ollama`
+1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
 
 # ✨ Getting Started
 
-RAGFoundry is an opensource framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. You can play around with the code locally using the python [script](#🚀-quickstart-running-rag-locally) or using the [UI component](frontend/README.md) that ships with the code.
+You can play around with the code locally using the python [script](#🚀-quickstart-running-rag-locally) or using the UI component that ships with the code.
 
 # 🐍 Installing Python and Setting Up a Virtual Environment
 
@@ -99,6 +101,8 @@ Following are the instructions for running the RAG application locally without a
 
 ## Install necessary packages:
 
+In the project root execute the following command:
+
 ```
 pip install -r backend/requirements.txt
 ```
@@ -122,6 +126,8 @@ pip install -r backend/requirements.txt
 
 > You can try out different RAG retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
 
+> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
+
 # 🛠️ Project Architecture
 
 ![](./docs/images/rag_arch.png)
@@ -140,7 +146,7 @@ Overall the RAG architecture is composed of several entities
     - Parsing Configuration for each data source
     - Embedding Model and Configuration to be used
 
-3. **TrueFoundry LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format.
+3. **LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format. This can be OpenAIChat, OllamaChat, or even TruefoundryChat that uses TF LLM Gateway.
 
 4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are using Qdrant as our choice of vector database.
 
@@ -167,7 +173,7 @@ Overall the RAG architecture is composed of several entities
 1. The data source associated with the collection are **scanned** for all data points (files)
 1. The job compares the VectorDB state with data source state to figure out **newly added files, updated files and deleted files**. The new and updated files are **downloaded**
 1. The newly added files and updated files are **parsed and chunked** into smaller pieces each with their own metadata
-1. The chunks are **embedded** using models like `text-ada-002` on TrueFoundry's LLM Gateway
+1. The chunks are **embedded** using embedding models like `text-ada-002` from `openai` or `mxbai-embed-large-v1` from `mixedbread-ai`
 1. The embedded chunks are put into VectorDB with auto generated and provided metadata
 
 ## ❓Question-Answering using API Server:
@@ -367,331 +373,7 @@ class MyCustomController():
 from backend.modules.query_controllers.sample_controller.controller import MyCustomController
 ```
 
-> As an example, we have implemented sample controller in `backend/modules/query_controllers/default`. Please refer for better understanding
-
-# 🔑 API Reference
-
-Following section documents important APIs that are used in RAG application.
-
----
-
-If you run the server locally using the command: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload`
-Then, Swagger doc will be available at: `http://localhost:8080/`
-
-### Components
-
-This group of API list down different components of RAG that are registered.
-
----
-
--   GET `/v1/components/parsers`: Returns a list of available parsers.
-
-    ```curl
-    curl -X 'GET' \
-    'http://localhost:8080/v1/components/parsers' \
-    -H 'accept: application/json'
-    ```
-
-    Current available parsers include: `MarkdownParser`, `PdfParserFast`, `TextParser`.
-    To add your own sources refer `backend/modules/parsers/README.md`
-
--   GET `/v1/components/embedders`: Returns a list of available embedders.
-
-    ```curl
-    curl -X 'GET' \
-    'http://localhost:8080/v1/components/embedders' \
-    -H 'accept: application/json'
-    ```
-
-    Current available `default` embeddings include: `OpenAIEmbeddings`, `MixBreadEmbeddings`
-
--   `/v1/components/dataloaders`: Returns a list of available data loaders.
-    ```curl
-    curl -X 'GET' \
-    'http://localhost:8080/v1/components/dataloaders' \
-    -H 'accept: application/json'
-    ```
-    Current available dataloaders are: `github`, `local`, `web`, `truefoundry`, `artifact`.
-    To add your own sources refer `backend/modules/dataloaders/README.md`
-
-### Data Sources
-
-This API is used for creating/listing a new data source. Data source is one through which data is scanned and loaded for indexing.
-
----
-
--   GET `/v1/data_source/`: Returns a list of available data sources.
-
-    ```curl
-    curl -X 'GET' \
-    'http://localhost:8080/v1/data_source/' \
-    -H 'accept: application/json'
-    ```
-
--   POST `/v1/data_source/`: Creates a new data source.
-
-    -   Creation API requires following fields:
-        ```json
-        {
-            "type": "string",
-            "uri": "string",
-            "metadata": {}
-        }
-        ```
-    -   Attributes:
-
-            -   `type` (str): The type of the data source. This field is required. One of `truefoundry` or `local`.
-            -   `uri` (str): A unique identifier for the data source. This field is required. This can be FQN of MLRepo or FQN of Artifact with version number from Truefoundry or local folder path.
-            -   `metadata` (Optional[Dict[str, Any]]): Any additional configuration for the data source. This field is optional.
-
-            This API returns a `unique data source fqn` that is then used to associate it with the collection.
-
-    > When using locally, data source is automatically initialized from `local.metadata.yaml`
-
-### Collection
-
-This API is used for managing the collections. Each collection has embedder configuration and associated data sources that forms a key characterisitc of the collection.
-
----
-
--   GET `/v1/collections/`: Returns a list of available collections.
-
-    ```curl
-      curl -X 'GET' \
-      'http://localhost:8080/v1/collections/' \
-      -H 'accept: application/json'
-    ```
-
-    -   Sample Response:
-
-        ```json
-        {
-            "collections": [
-                {
-                    "name": "testcollection",
-                    "description": null,
-                    "embedder_config": {
-                        "provider": "mixbread",
-                        "config": {
-                            "model": "mixedbread-ai/mxbai-embed-large-v1"
-                        }
-                    },
-                    "associated_data_sources": {
-                        "local::sample-data/creditcards": {
-                            "data_source_fqn": "local::sample-data/creditcards",
-                            "parser_config": {
-                                "chunk_size": 400,
-                                "chunk_overlap": 0,
-                                "parser_map": {
-                                    ".md": "MarkdownParser"
-                                }
-                            },
-                            "data_source": {
-                                "type": "local",
-                                "uri": "sample-data/creditcards",
-                                "metadata": null,
-                                "fqn": "local::sample-data/creditcards"
-                            }
-                        }
-                    }
-                }
-            ]
-        }
-        ```
-
--   POST `/v1/collections/`: Creates a new collection. - This API creates a collection, it requires payload of the form: -
-
-    ```json
-    {
-        "name": "collectionName",
-        "description": "string",
-        "embedder_config": {
-            "provider": "string",
-            "config": {
-                "model": "string"
-            }
-        },
-        "associated_data_sources": [
-            {
-                "data_source_fqn": "string",
-                "parser_config": {
-                    "chunk_size": 500,
-                    "chunk_overlap": 0,
-                    "parser_map": {
-                        ".md": "MarkdownParser",
-                        ".pdf": "PdfParserFast",
-                        ".txt": "TextParser"
-                    }
-                }
-            }
-        ]
-    }
-    ```
-
-    > When using locally, collection is automatically initialized from `local.metadata.yaml`
-
--   DELETE `/v1/collections/{collection_name}`: Deletes an already exisiting collection.
-    ```curl
-    curl -X 'DELETE' \
-      'http://localhost:8080/v1/collections/xyz' \
-      -H 'accept: application/json'
-    ```
-
-### Data Indexing
-
--   POST `v1/collections/ingest`: Ingest data into the colleciton.
-    ```curl
-        {
-            "collection_name": "",
-            "data_source_fqn": "",
-            "data_ingestion_mode": "INCREMENTAL",
-            "raise_error_on_failure": true,
-            "run_as_job": false
-        }
-    ```
-    -   To run locally either use `python -m local.ingest` or following API request:
-        > collection name and data source fqn are taken from `GET` `/v1/collections/`
-    ```json
-    {
-        "collection_name": "testcollection",
-        "data_source_fqn": "local::sample-data/creditcards",
-        "data_ingestion_mode": "INCREMENTAL",
-        "raise_error_on_failure": true,
-        "run_as_job": false
-    }
-    ```
-
-### Retrievers
-
-Any registered question answer API is showcased here. You can add your own retriever at : `backend/modules/query_controllers/`. Refer to `examples` folder for more info.
-
----
-
--   POST `/retrievers/openai/answer`: Sample answer method to answer the question using the context from the collection.
-
-    -   It requires the following fields as payload:
-
-        -   `collection_name (str)`: The name of the collection to search in. This is a required field.
-
-        -   `retriever_config (RetrieverConfig)`: The configuration for the retriever that will be used to search the collection. This is a required field and must be an instance of the RetrieverConfig class. `retriever_config` in turn requires following arguments:
-
-            -   `search_type (Literal["mmr", "similarity"])`: "Defines the type of search that the Retriever should perform. Can be "similarity" (default), "mmr", or "similarity_score_threshold".
-
-            -   `k (int)`: The number of results/documents to retrieve. This is a required field and must be a positive integer.
-
-            -   `fetch_k (int)`: Amount of documents to pass to MMR algorithm (Default: 20).
-
-            -   `filter (Optional[dict])`: Optional field to add any filters to query.
-
-        -   `query (str)`: The question that will be searched for in the collection. This is a required field and must be a string with a maximum length of 1000 characters.
-
-        -   `model_configuration (LLMConfig)`: The configuration for the Language Model that will be used to generate the answer to the question using the context. This in turn requires following fields:
-
-            -   `provider(Literal["openai", "ollama"])`: Provider of LLM
-            -   `name (str)`: Name of the model from the Truefoundry LLM Gateway
-            -   `parameters (dict)`: Any optional parameters of the model like max_tokens, etc
-
-        -   `prompt_template (str)`: The template that will be used to format the context, question, and answer. This is an optional field with a default value. The template must include placeholders for the context and the question.
-
-    -   Example:
-
-        ```curl
-        curl -X 'POST' \
-            'http://localhost:8000/retrievers/answer' \
-            -H 'accept: application/json' \
-            -H 'Content-Type: application/json' \
-            -d '{
-            "collection_name": "testcollection",
-            "retriever_config": {
-                "search_type": "similarity",
-                "k": 20,
-                "fetch_k": 20
-            },
-            "query": "What are the features of Diners club black metal edition?",
-            "model_configuration": {
-                "name": "gemma:2b",
-                "parameters": {
-                "temperature": 0.1
-                },
-                "provider": "ollama"
-            },
-            "prompt_template": "Given the context, answer the question.\n\nContext: {context}\n'\'''\'''\''Question: {question}\nAnswer:"
-        }
-        ```
-
-    -   Response:
-        ```json
-        {
-            "answer": "The features of Diners club black metal edition are:\n\n* Smart EMI\n* Key Features\n    * Metal Card\n    * Unlimited Airport Lounge Access\n    * 6 Complimentary Golf games every quarter across the finest courses in the world\n    * Complimentary Annual memberships of Club Marriott, Amazon Prime, Swiggy One as Welcome Benefit\n    * 10,000 Bonus Reward Points on spends of ₹ 4 lakh every calendar quarter\n    * 2X Reward Points on Weekend Dining\n    * 5 Reward Points for every ₹ 150 spent",
-            "docs": [
-                {
-                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Smart EMI\nSmart EMI\nHDFC Bank Diners Club Black Metal Credit Card comes with an option to convert your big spends into EMI after purchase. To know more click here",
-                    "metadata": {
-                        "Header4": "Smart EMI",
-                        "Header2": "Features",
-                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
-                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
-                        "_data_point_hash": "9635",
-                        "_id": "ba8852d56ea146ccb549388d10aeb946",
-                        "_collection_name": "testcollection"
-                    },
-                    "type": "Document"
-                },
-                {
-                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Key Features\nKey Features\n* Metal Card\n* Unlimited Airport Lounge Access\n* 6 Complimentary Golf games every quarter across the finest courses in the world\n* Complimentary Annual memberships of Club Marriott, Amazon Prime, Swiggy One as Welcome Benefit\n* 10,000 Bonus Reward Points on spends of ₹ 4 lakh every calendar quarter\n* 2X Reward Points on Weekend Dining\n* 5 Reward Points for every ₹ 150 spent",
-                    "metadata": {
-                        "Header4": "Key Features",
-                        "Header2": "Features",
-                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
-                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
-                        "_data_point_hash": "9635",
-                        "_id": "5830cf944447420a9d904ae8b0d57559",
-                        "_collection_name": "testcollection"
-                    },
-                    "type": "Document"
-                },
-                {
-                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Contactless Payment\nContactless Payment\nThe HDFC Bank Diners Club Black Metal Credit Card is enabled for contactless payments on HDFC Bank POS machines, facilitating fast, convenient and secure payments at retail outlets. Tap the reverse side of the Black Metal card on the HDFC Bank POS machine to enjoy contactless payments.",
-                    "metadata": {
-                        "Header4": "Contactless Payment",
-                        "Header2": "Features",
-                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
-                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
-                        "_data_point_hash": "9635",
-                        "_id": "503864c47c104d7dadd8213de4d34481",
-                        "_collection_name": "testcollection"
-                    },
-                    "type": "Document"
-                },
-                {
-                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Dining Benefits\nEarn 2X on weekend dining at standalone resturants capped at 1000 reward points per day. [Click here](/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal Edition/Diners-club-black-metal-T-and-C.pdf \"/Personal/Pay/Cards/Credit Card/Credit Card Landing Page/Credit Cards/Super Premium/Diners Club Black Metal",
-                    "metadata": {
-                        "Header4": "Dining Benefits",
-                        "Header2": "Features",
-                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
-                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
-                        "_data_point_hash": "9635",
-                        "_id": "71477795920c4f898b50289e6ec89499",
-                        "_collection_name": "testcollection"
-                    },
-                    "type": "Document"
-                },
-                {
-                    "page_content": "# [Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)\n## Features\n#### Additional Features\nAdditional Features\n**Interest Free Credit Period:** Up to 50 days of interest free credit period on your HDFC Bank Diners Club Black Credit Card from the date of purchase. (subject to the submission of the charge by the Merchant)\n**Credit liability cover:** ₹ 9 lakh\n**Foreign Currency Markup:** 2% on all your foreign currency spends.",
-                    "metadata": {
-                        "Header4": "Additional Features",
-                        "Header2": "Features",
-                        "Header1": "[Diners club black metal edition](https://www.hdfcbank.com/personal/pay/cards/credit-cards/diners-club-black-metal-edition)",
-                        "_data_point_fqn": "local::sample-data/creditcards::diners-club-black-metal-edition.md",
-                        "_data_point_hash": "9635",
-                        "_id": "c837ae1717124b69aa3b8861f82d48d0",
-                        "_collection_name": "testcollection"
-                    },
-                    "type": "Document"
-                }
-            ]
-        }
-        ```
+> As an example, we have implemented sample controller in `backend/modules/query_controllers/example`. Please refer for better understanding
 
 # 🐳 Quickstart: Deployment with Truefoundry:
 
@@ -752,3 +434,17 @@ To be able to **Query** on your own documents, follow the steps below:
         -   By default, `main` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
             > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
         -   Click on `Submit` your application will be deployed.
+
+## 💖 Open Source Contribution
+
+Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTING.md).
+
+## 🔮 Future developments
+
+Contributions are welcomed for the following upcoming developments:
+
+-   Support for `Scalar + Binary Quantization` embeddings.
+-   Support for `RAG Evalutaion` of different retrievers.
+-   Support for `RAG Visualization`.
+-   Support for conversational chatbot with context
+-   Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
