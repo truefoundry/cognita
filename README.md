@@ -6,28 +6,28 @@
     -   [Introduction](#introduction)
         -   [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
 -   [✨ Getting Started](#✨-getting-started)
--   [🐍 Installing Python and Setting Up a Virtual Environment](#-installing-python-and-setting-up-a-virtual-environment)
+-   [🐍 Installing Python and Setting Up a Virtual Environment](#🐍-installing-python-and-setting-up-a-virtual-environment)
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
         -   [Create a Virtual Environment:](#create-a-virtual-environment)
         -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
--   [🚀 Quickstart: Running RAG Locally](#-quickstart-running-rag-locally)
+-   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
     -   [Install necessary packages:](#install-necessary-packages)
     -   [Setting up .env file:](#setting-up-env-file)
     -   [Executing the Code:](#executing-the-code)
--   [🛠️ Project Architecture](#️-project-architecture)
+-   [🛠️ Project Architecture](#🛠️-project-architecture)
     -   [RAG Components:](#rag-components)
     -   [Data Indexing:](#data-indexing)
-    -   [❓Question-Answering using API Server:](#question-answering-using-api-server)
-    -   [💻 Code Structure:](#-code-structure)
+    -   [❓Question-Answering using API Server:](#❓question-answering-using-api-server)
+    -   [💻 Code Structure:](#💻-code-structure)
     -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
         -   [Customizing Dataloaders:](#customizing-dataloaders)
         -   [Customizing Embedder:](#customizing-embedder)
         -   [Customizing Parsers:](#customizing-parsers)
         -   [Adding Custom VectorDB:](#adding-custom-vectordb)
         -   [Rerankers:](#rerankers)
--   [💡 Writing your Query Controller (QnA):](#-writing-your-query-controller-qna)
+-   [💡 Writing your Query Controller (QnA):](#💡-writing-your-query-controller-qna)
     -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
--   [🐳 Quickstart: Deployment with Truefoundry:](#-quickstart-deployment-with-truefoundry)
+-   [🐳 Quickstart: Deployment with Truefoundry:](#🐳-quickstart-deployment-with-truefoundry)
 -   [💖 Open Source Contribution](#💖-open-source-contribution)
 -   [🔮 Future developments](#🔮-future-developments)
 
@@ -95,7 +95,7 @@ Once your virtual environment is activated, you'll see its name in the terminal 
 
 > Remember to deactivate the virtual environment when you're done working with RAGFoundry by simply running deactivate in the terminal.
 
-# 🚀 Quickstart: Running RAG Locall
+# 🚀 Quickstart: Running RAG Locally
 
 Following are the instructions for running the RAG application locally without any additional Truefoundry dependencies
 
