@@ -10,7 +10,7 @@
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
         -   [Create a Virtual Environment:](#create-a-virtual-environment)
         -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
--   [🚀 Quickstart: Running RAG Locally](#🚀-quickstart-running-rag-locally)
+-   [🚀 Quickstart: Running RAG Locally](#:rocket:-quickstart-running-rag-locally)
     -   [Install necessary packages:](#install-necessary-packages)
     -   [Setting up .env file:](#setting-up-env-file)
     -   [Executing the Code:](#executing-the-code)
@@ -56,7 +56,7 @@ RAGFoundry makes it really easy to customize and experiment everything about a R
 1. Support for using LLMs using `Ollama`
 1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
 
-# ✨ Getting Started
+# :sparkles: Getting Started
 
 You can play around with the code locally using the python [script](#🚀-quickstart-running-rag-locally) or using the UI component that ships with the code.
 
