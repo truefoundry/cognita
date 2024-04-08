@@ -5,7 +5,7 @@ from backend.types import VectorDBConfig
 
 SUPPORTED_VECTOR_DBS = {
     "qdrant": QdrantVectorDB,
-    "weaviate": WeaviateVectorDB,
+    # "weaviate": WeaviateVectorDB,
 }
 
 

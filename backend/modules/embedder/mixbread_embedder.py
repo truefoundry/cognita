@@ -15,8 +15,9 @@ class MixBreadEmbeddings(Embeddings):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModel.from_pretrained(model).to(self.device)
-        self.embedding_ctx_length = 510
-        self.chunk_size = 4
+        # 8 tokens for query and 2 for start and stop tokens
+        self.embedding_ctx_length = 500
+        self.chunk_size = 16
 
     # The model works really well with cls pooling (default) but also with mean poolin.
     def pooling(
@@ -52,11 +53,9 @@ class MixBreadEmbeddings(Embeddings):
         for i, text in enumerate(texts):
             # Tokenize the text using HuggingFace transformers
             tokenized = self.tokenizer.encode(text, add_special_tokens=False)
-
             # Split tokens into chunks respecting the embedding_ctx_length
             for j in range(0, len(tokenized), self.embedding_ctx_length):
                 token_chunk = tokenized[j : j + self.embedding_ctx_length]
-
                 # Convert token IDs back to a string
                 chunk_text = self.tokenizer.decode(token_chunk)
                 tokens.append(chunk_text)
