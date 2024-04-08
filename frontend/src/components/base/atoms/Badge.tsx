@@ -1,6 +1,6 @@
+import IconProvider from '@/components/assets/IconProvider'
 import classnames from 'classnames'
 import React from 'react'
-
 
 export interface BadgeProps extends React.AllHTMLAttributes<HTMLDivElement> {
   text?: React.ReactNode | JSX.Element | string
@@ -8,6 +8,7 @@ export interface BadgeProps extends React.AllHTMLAttributes<HTMLDivElement> {
   textClasses?: string
   type?: BadgeType
   customPadding?: string
+  isLoading?: boolean
   onClick?: () => void
 }
 
@@ -18,6 +19,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>((props, ref) => {
     className: additionalClasses = '',
     textClasses,
     customPadding = 'py-0.5 px-1',
+    isLoading,
     onClick,
     ...nativeProps
   } = props
@@ -51,11 +53,8 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>((props, ref) => {
 
   return (
     <div {...nativeProps} className={classes} onClick={onClick} ref={ref}>
-      {text && (
-        <span className={textClasses}>
-          {text}
-        </span>
-      )}
+      {isLoading && <IconProvider icon="spinner" className="fa-spin p-1" />}
+      {text && <span className={textClasses}>{text}</span>}
     </div>
   )
 })

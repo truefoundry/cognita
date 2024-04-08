@@ -1,3 +1,4 @@
+import Badge from '@/components/base/atoms/Badge'
 import Button from '@/components/base/atoms/Button'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
@@ -140,7 +141,21 @@ const DataSourceIngestionStatus = ({
 
   return (
     <div className={'text-sm'}>
-      {isLoading ? 'Loading...' : lastIngestionStatus || 'NOT INGESTED'}
+      <Badge
+        className="flex gap-2 items-center"
+        isLoading={isLoading}
+        text={isLoading ? 'Loading...' : lastIngestionStatus || 'NOT INGESTED'}
+        type={
+          isLoading
+            ? 'default'
+            : lastIngestionStatus === 'COMPLETED'
+            ? 'success'
+            : lastIngestionStatus?.includes('FAILED') ||
+              lastIngestionStatus === 'ERROR'
+            ? 'danger'
+            : 'warning'
+        }
+      />
     </div>
   )
 }
