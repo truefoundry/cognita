@@ -58,7 +58,7 @@ RAGFoundry makes it really easy to customize and experiment everything about a R
 
 # :sparkles: Getting Started
 
-You can play around with the code locally using the python [script](#:rocket:-quickstart-running-rag-locally) or using the UI component that ships with the code.
+You can play around with the code locally using the python [script](#rocket-quickstart-running-rag-locally) or using the UI component that ships with the code.
 
 # :snake: Installing Python and Setting Up a Virtual Environment
 
