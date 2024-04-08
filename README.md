@@ -5,31 +5,31 @@
 -   [RAGFoundry](#ragfoundry)
     -   [Introduction](#introduction)
         -   [Advantages of using RAGFoundry are:](#advantages-of-using-ragfoundry-are)
--   [✨ Getting Started](#✨-getting-started)
--   [🐍 Installing Python and Setting Up a Virtual Environment](#🐍-installing-python-and-setting-up-a-virtual-environment)
+-   [✨ Getting Started](#sparkles-getting-started)
+-   [🐍 Installing Python and Setting Up a Virtual Environment](#snake-installing-python-and-setting-up-a-virtual-environment)
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
         -   [Create a Virtual Environment:](#create-a-virtual-environment)
         -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
--   [🚀 Quickstart: Running RAG Locally](#:rocket:-quickstart-running-rag-locally)
+-   [🚀 Quickstart: Running RAG Locally](#rocket-quickstart-running-rag-locally)
     -   [Install necessary packages:](#install-necessary-packages)
     -   [Setting up .env file:](#setting-up-env-file)
     -   [Executing the Code:](#executing-the-code)
--   [🛠️ Project Architecture](#🛠️-project-architecture)
+-   [🛠️ Project Architecture](#hammer_and_pick-project-architecture)
     -   [RAG Components:](#rag-components)
     -   [Data Indexing:](#data-indexing)
-    -   [❓Question-Answering using API Server:](#❓question-answering-using-api-server)
-    -   [💻 Code Structure:](#💻-code-structure)
+    -   [❓Question-Answering using API Server:](#question-question-answering-using-api-server)
+    -   [💻 Code Structure:](#computer-code-structure)
     -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
         -   [Customizing Dataloaders:](#customizing-dataloaders)
         -   [Customizing Embedder:](#customizing-embedder)
         -   [Customizing Parsers:](#customizing-parsers)
         -   [Adding Custom VectorDB:](#adding-custom-vectordb)
         -   [Rerankers:](#rerankers)
--   [💡 Writing your Query Controller (QnA):](#💡-writing-your-query-controller-qna)
+-   [💡 Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
     -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
--   [🐳 Quickstart: Deployment with Truefoundry:](#🐳-quickstart-deployment-with-truefoundry)
--   [💖 Open Source Contribution](#💖-open-source-contribution)
--   [🔮 Future developments](#🔮-future-developments)
+-   [🐳 Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
+-   [💖 Open Source Contribution](#sparkling_heart-open-source-contribution)
+-   [🔮 Future developments](#crystal_ball-future-developments)
 
 ## Introduction
 
@@ -58,9 +58,9 @@ RAGFoundry makes it really easy to customize and experiment everything about a R
 
 # :sparkles: Getting Started
 
-You can play around with the code locally using the python [script](#🚀-quickstart-running-rag-locally) or using the UI component that ships with the code.
+You can play around with the code locally using the python [script](#:rocket:-quickstart-running-rag-locally) or using the UI component that ships with the code.
 
-# 🐍 Installing Python and Setting Up a Virtual Environment
+# :snake: Installing Python and Setting Up a Virtual Environment
 
 Before you can use RAGFoundry, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
 
@@ -95,7 +95,7 @@ Once your virtual environment is activated, you'll see its name in the terminal 
 
 > Remember to deactivate the virtual environment when you're done working with RAGFoundry by simply running deactivate in the terminal.
 
-# 🚀 Quickstart: Running RAG Locally
+# :rocket: Quickstart: Running RAG Locally
 
 Following are the instructions for running the RAG application locally without any additional Truefoundry dependencies
 
@@ -128,7 +128,7 @@ pip install -r backend/requirements.txt
 
 > You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
 
-# 🛠️ Project Architecture
+# :hammer_and_pick: Project Architecture
 
 ![](./docs/images/rag_arch.png)
 
@@ -176,7 +176,7 @@ Overall the RAG architecture is composed of several entities
 1. The chunks are **embedded** using embedding models like `text-ada-002` from `openai` or `mxbai-embed-large-v1` from `mixedbread-ai`
 1. The embedded chunks are put into VectorDB with auto generated and provided metadata
 
-## ❓Question-Answering using API Server:
+## :question: Question-Answering using API Server:
 
 1. Users sends a request with their query
 
@@ -194,7 +194,7 @@ Overall the RAG architecture is composed of several entities
 
     **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
 
-## 💻 Code Structure:
+## :computer: Code Structure:
 
 Entire codebase lives in `backend/` Think of this as RAG components abstractions
 
@@ -332,7 +332,7 @@ RAGFoundry makes it really easy to switch between parsers, loaders, models and r
 -   Rerankers are used to sort relavant documents such that top k docs can be used as context effectively reducing the context and prompt in general.
 -   Sample reranker is written under `backend/modules/reranker/mxbai_reranker.py`
 
-# 💡 Writing your Query Controller (QnA):
+# :bulb: Writing your Query Controller (QnA):
 
 Code responsible for implementing the Query interface of RAG application. The methods defined in these query controllers are added routes to your FastAPI server.
 
@@ -375,7 +375,7 @@ from backend.modules.query_controllers.sample_controller.controller import MyCus
 
 > As an example, we have implemented sample controller in `backend/modules/query_controllers/example`. Please refer for better understanding
 
-# 🐳 Quickstart: Deployment with Truefoundry:
+# :whale: Quickstart: Deployment with Truefoundry:
 
 To be able to **Query** on your own documents, follow the steps below:
 
@@ -435,11 +435,11 @@ To be able to **Query** on your own documents, follow the steps below:
             > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
         -   Click on `Submit` your application will be deployed.
 
-## 💖 Open Source Contribution
+## :sparkling_heart: Open Source Contribution
 
 Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTING.md).
 
-## 🔮 Future developments
+## :crystal_ball: Future developments
 
 Contributions are welcomed for the following upcoming developments:
 
