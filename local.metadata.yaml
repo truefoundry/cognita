@@ -1,0 +1,17 @@
+collection_name: creditcard
+data_source:
+    type: localdir
+    uri: sample-data/creditcards
+parser_config:
+    chunk_size: 1000
+    chunk_overlap: 20
+    parser_map:
+        ".md": MarkdownParser
+embedder_config:
+    provider: mixedbread
+    config:
+        model: mixedbread-ai/mxbai-embed-large-v1
+    # For Truefoundry Embeddings
+    # provider: truefounrdy
+    # config:
+    #     model: "openai-main/text-embedding-ada-002"
