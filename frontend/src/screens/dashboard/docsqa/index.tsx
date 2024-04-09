@@ -402,7 +402,7 @@ const DocsQA = () => {
                     onChange={(e) => setPrompt(e.target.value)}
                   />
                   <Button
-                    icon="paper-plane-top"
+                    icon="paper-plane"
                     className="btn-sm absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}

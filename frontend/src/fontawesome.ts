@@ -17,27 +17,18 @@ import {
   faTrashAlt,
   faWarning,
   faClone,
-  faChevronDown
-} from '@fortawesome/free-solid-svg-icons'
-
-import {
-  faFiles,
+  faChevronDown,
+  faFile,
   faMessage,
-  faPaperPlaneTop,
-  faCircleInfo as fasCircleInfo,
-} from '@fortawesome/pro-solid-svg-icons'
-
-import {
+  faPaperPlane,
+  faCaretRight,
   faCircleInfo,
-  faFiles as faFilesRegular,
-  faGear as faGearRegular,
   faTriangleExclamation,
-} from '@fortawesome/pro-regular-svg-icons'
+} from '@fortawesome/free-solid-svg-icons'
 
 const icons: any[] = [
   faCheck,
   faCircleInfo,
-  fasCircleInfo,
   faClose,
   faGear,
   faInfo,
@@ -48,18 +39,17 @@ const icons: any[] = [
   faCloudArrowUp,
   faSlack,
   faSpinner,
-  faFiles,
-  faPaperPlaneTop,
+  faFile,
   faMessage,
-  faFilesRegular,
   faTriangleExclamation,
-  faGearRegular,
   faDatabase,
   faSync,
   faLinkSlash,
   faClone,
   faGithub,
   faChevronDown,
+  faPaperPlane,
+  faCaretRight,
 ]
 
 library.add(...icons)
