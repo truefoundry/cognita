@@ -1,0 +1,33 @@
+GitPython==3.1.41
+langchain==0.1.9
+langchain-community==0.0.24
+langchain-openai==0.0.8
+openai==1.14.0
+tiktoken==0.6.0
+uvicorn==0.23.2
+fastapi==0.104.1
+qdrant-client==1.7.3
+python-dotenv==1.0.0
+weaviate-client==3.25.3
+pydantic==1.10.12
+orjson==3.9.15
+PyMuPDF==1.23.6
+redis==5.0.1
+beautifulsoup4==4.12.2
+truefoundry[ml]==0.1.2
+markdownify==0.11.6
+gunicorn==21.2.0
+markdown-crawler==0.0.8
+black==24.3.0
+
+#### Embeddings
+# Install torch for as per your requirements: https://pytorch.org/get-started/locally/
+torch==2.2.1
+torchvision==0.17.1
+torchaudio==2.2.1
+transformers==4.39.0
+
+
+#### Reranker
+# For use Mxbread Reranker
+sentence_transformers==2.5.1

@@ -1,0 +1,26 @@
+minimum_pre_commit_version: 2.16.0
+repos:
+  - repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v2.3.0
+    hooks:
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-ast
+  - repo: 'https://github.com/psf/black'
+    rev: 23.3.0
+    hooks:
+      - id: black
+        args:
+          - --line-length=88
+          - --safe
+          - --target-version=py310
+        stages: [commit]
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args:
+          - --profile=black

@@ -1,0 +1,33 @@
+type: service
+env:
+  VITE_QA_FOUNDRY_URL: tfy-secret://truefoundry:docs-qa-secrets:QA_FOUNDRY_URL
+name: docs-qa
+image:
+  type: build
+  build_source:
+    type: git
+    repo_url: https://github.com/truefoundry/docs-qa-playground
+    branch_name: main
+    ref: 5666e97fd665827faee0d741821aad13fa86baff
+  build_spec:
+    type: dockerfile
+    dockerfile_path: ./frontend/Dockerfile
+    build_context_path: ./frontend
+ports:
+  - host: docs-qa.tfy-gcp-standard-usce1.devtest.truefoundry.tech
+    port: 5000
+    expose: true
+    protocol: TCP
+    app_protocol: http
+mounts: []
+replicas: 1
+resources:
+  node:
+    type: node_selector
+    capacity_type: spot_fallback_on_demand
+  cpu_request: 0.2
+  cpu_limit: 0.5
+  memory_request: 200
+  memory_limit: 500
+  ephemeral_storage_request: 1000
+  ephemeral_storage_limit: 2000
