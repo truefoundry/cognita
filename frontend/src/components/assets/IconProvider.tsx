@@ -2,8 +2,11 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef } from 'react'
 import classNames from 'classnames'
+import paperPlaneIcon from '@/assets/img/paper-plane-top.svg'
 
-export const EXT_ICONS_MAP: { readonly [key: string]: any } = {}
+export const EXT_ICONS_MAP: { readonly [key: string]: any } = {
+  'paper-plane-top': paperPlaneIcon,
+}
 
 interface IconProps {
   icon: string | IconProp
