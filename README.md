@@ -126,7 +126,9 @@ pip install -r backend/requirements.txt
 
 > You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
 
-> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
+> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
+
+> To use frontend UI for quering you can go to : `cd fronend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md)
 
 # :hammer_and_pick: Project Architecture
 
