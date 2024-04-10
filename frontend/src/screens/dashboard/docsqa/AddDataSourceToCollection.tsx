@@ -8,6 +8,7 @@ import {
   Collection,
   useAddDocsToCollectionMutation,
   useGetDataSourcesQuery,
+  useIngestDataSourceMutation,
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
@@ -39,6 +40,7 @@ const AddDataSourceToCollection = ({
   const { data: dataSources } = useGetDataSourcesQuery()
 
   const [addDocsToCollection] = useAddDocsToCollectionMutation()
+  const [ingestDataSource] = useIngestDataSourceMutation()
 
   const resetForm = () => {
     setSelectedDataSource('none')
@@ -55,6 +57,13 @@ const AddDataSourceToCollection = ({
       }
 
       await addDocsToCollection(addDocsParams).unwrap()
+      await ingestDataSource({
+        collection_name: collection.name,
+        data_source_fqn: selectedDataSource,
+        data_ingestion_mode: 'INCREMENTAL',
+        raise_error_on_failure: true,
+        run_as_job: true,
+      })
 
       onClose()
       resetForm()
