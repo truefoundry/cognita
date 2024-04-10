@@ -100,18 +100,12 @@ yarn build:prod
 - URL : http://localhost:5001/
 - Description : In this page, users can ask questions and search for the answers by selecting any collection from left panel.
 
-![](../docs/images/HomePage.png)
-
 ### Collections Page :
 
 - URL : http://localhost:5001/collections
 - Description : This page lists all the collections available in the website. The collections can be configured from this route.
 
-![](../docs/images/CollectionsPage.png)
-
-### Data Hub Page :
+### Data Sources Page :
 
 - URL : http://localhost:5001/data-sources
 - Description : This page lists all the data sources available in the website. Also users would be able to add new data source in this page.
-
-![](../docs/images/DataHubPage.png)
