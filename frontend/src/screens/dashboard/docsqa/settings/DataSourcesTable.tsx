@@ -144,7 +144,7 @@ const DataSourceIngestionStatus = ({
       <Badge
         className="flex gap-2 items-center"
         isLoading={isLoading}
-        text={isLoading ? 'Loading...' : lastIngestionStatus || 'NOT INGESTED'}
+        text={isLoading ? 'Loading...' : lastIngestionStatus || 'QUEUED'}
         type={
           isLoading
             ? 'default'

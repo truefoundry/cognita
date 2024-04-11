@@ -4,10 +4,10 @@ import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import notify from '@/components/base/molecules/Notify'
 import {
-  useAddDocsToCollectionMutation,
   useCreateCollectionMutation,
   useGetAllEnabledEmbeddingModelsQuery,
   useGetDataSourcesQuery,
+  useIngestDataSourceMutation,
 } from '@/stores/qafoundry'
 import { MenuItem, Select } from '@mui/material'
 import classNames from 'classnames'
@@ -33,6 +33,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const { data: allEmbeddingModels } = useGetAllEnabledEmbeddingModelsQuery()
 
   const [createCollection] = useCreateCollectionMutation()
+  const [ingestDataSource] = useIngestDataSourceMutation()
 
   const pattern = /^[a-z][a-z0-9]*$/
   const isValidCollectionName = pattern.test(collectionName)
@@ -77,19 +78,23 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           },
         },
         chunk_size: chunkSize,
-        ...(selectedDataSource !== 'none'
-          ? {
-              associated_data_sources: [
-                {
-                  data_source_fqn: selectedDataSource,
-                  parser_config: JSON.parse(parserConfigs),
-                },
-              ],
-            }
-          : {}),
+        associated_data_sources: [
+          {
+            data_source_fqn: selectedDataSource,
+            parser_config: JSON.parse(parserConfigs),
+          },
+        ],
       }
 
       const res = await createCollection(params).unwrap()
+
+      await ingestDataSource({
+        collection_name: collectionName,
+        data_source_fqn: selectedDataSource,
+        data_ingestion_mode: 'INCREMENTAL',
+        raise_error_on_failure: true,
+        run_as_job: true,
+      })
 
       const allCollectionToJobNames = JSON.parse(
         localStorage.getItem('collectionToJob') || '{}'
@@ -184,7 +189,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           <div className="flex gap-7 w-full mb-4">
             <div className="w-full">
               <span className="label-text font-inter mb-1">
-                Embedding Model
+                Embedding Model <small>*</small>
               </span>
               <Select
                 id="datasets"
@@ -215,7 +220,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           <div className="mb-3">
             <label>
               <div className="label-text font-inter mb-1">
-                Select Data Source
+                Select Data Source <small>*</small>
               </div>
               <Select
                 id="data_sources"
@@ -298,7 +303,11 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
             onClick={handleSubmit}
             className="gap-1 btn-sm font-normal"
             type="button"
-            disabled={!collectionName || !isValidCollectionName}
+            disabled={
+              !collectionName ||
+              !isValidCollectionName ||
+              selectedDataSource === 'none'
+            }
           />
         </div>
       </div>
