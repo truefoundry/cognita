@@ -53,6 +53,7 @@ class QdrantVectorDB(BaseVectorDB):
                 size=vector_size,  # embedding dimension
                 distance=Distance.COSINE,
             ),
+            replication_factor=3,
         )
         self.qdrant_client.create_payload_index(
             collection_name=collection_name,
