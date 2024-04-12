@@ -28,6 +28,7 @@
 -   [💡 Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
     -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
 -   [🐳 Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
+    -   [Using RAG UI](#using-the-rag-ui)
 -   [💖 Open Source Contribution](#sparkling_heart-open-source-contribution)
 -   [🔮 Future developments](#crystal_ball-future-developments)
 
@@ -437,48 +438,48 @@ To be able to **Query** on your own documents, follow the steps below:
             > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
         -   Click on `Submit` your application will be deployed.
 
-7.  Using the **RAG UI**:
+## Using the **RAG UI**:
 
-    The following steps will showcase how to use the cognita UI to query documents:
+The following steps will showcase how to use the cognita UI to query documents:
 
-    1.  Create Data Source
+1.  Create Data Source
 
-        -   Click on `Data Sources` tab
-            ![Datasource](./docs/images/datasource.png)
-        -   Click `+ New Datasource`
-        -   Data source type can be either files from local directory, web url, github url or providing Truefoundry artifact FQN.
-            -   E.g: If `Localdir` is selected upload files from your machine and click `Submit`.
-        -   Created Data sources list will be available in the Data Sources tab.
-            ![DataSourceList](./docs/images/list-datasources-in-collection.png)
+    -   Click on `Data Sources` tab
+        ![Datasource](./docs/images/datasource.png)
+    -   Click `+ New Datasource`
+    -   Data source type can be either files from local directory, web url, github url or providing Truefoundry artifact FQN.
+        -   E.g: If `Localdir` is selected upload files from your machine and click `Submit`.
+    -   Created Data sources list will be available in the Data Sources tab.
+        ![DataSourceList](./docs/images/list-datasources-in-collection.png)
 
-    2.  Create Collection
+2.  Create Collection
 
-        -   Click on `Collections` tab
-        -   Click `+ New Collection`
-            ![collection](./docs/images/adding-collection.png)
-        -   Enter Collection Name
-        -   Select Embedding Model
-        -   Add earlier created data source and the necessary configuration
-        -   Click `Process` to create the collection and index the data.
-            ![ingestionstarted](./docs/images/dataingestion-started.png)
+    -   Click on `Collections` tab
+    -   Click `+ New Collection`
+        ![collection](./docs/images/adding-collection.png)
+    -   Enter Collection Name
+    -   Select Embedding Model
+    -   Add earlier created data source and the necessary configuration
+    -   Click `Process` to create the collection and index the data.
+        ![ingestionstarted](./docs/images/dataingestion-started.png)
 
-    3.  As soon as you create the collection, data ingestion begins, you can view it's status by selecting your collection in collections tab. You can also add additional data sources later on and index them in the collection.
-        ![ingestioncomplete](./docs/images/dataingestion-complete.png)
+3.  As soon as you create the collection, data ingestion begins, you can view it's status by selecting your collection in collections tab. You can also add additional data sources later on and index them in the collection.
+    ![ingestioncomplete](./docs/images/dataingestion-complete.png)
 
-    4.  Response generation
-        ![responsegen](./docs/images/response-generation.png)
+4.  Response generation
+    ![responsegen](./docs/images/response-generation.png)
 
-        -   Select the collection
-        -   Select the LLM and it's configuration
-        -   Select the document retriever
-        -   Write the prompt or use the default prompt
-        -   Ask the query
+    -   Select the collection
+    -   Select the LLM and it's configuration
+    -   Select the document retriever
+    -   Write the prompt or use the default prompt
+    -   Ask the query
 
-## :sparkling_heart: Open Source Contribution
+# :sparkling_heart: Open Source Contribution
 
 Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTIONGUIDE.md).
 
-## :crystal_ball: Future developments
+# :crystal_ball: Future developments
 
 Contributions are welcomed for the following upcoming developments:
 
@@ -491,6 +492,6 @@ Contributions are welcomed for the following upcoming developments:
 
 ---
 
-## Star History
+# Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=truefoundry/cognita&type=Date)](https://star-history.com/#truefoundry/cognita&Date)
