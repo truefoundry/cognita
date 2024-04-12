@@ -50,7 +50,7 @@ def migrate_collection(
             fetched_collection = collection
             break
 
-    if fetched_collection == None:
+    if fetched_collection is None:
         raise Exception(f"Collection {source_collection_name} not found")
 
     logger.debug(f"Source collection found '{fetched_collection.get('name')}' ")
