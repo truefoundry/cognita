@@ -77,7 +77,8 @@ def migrate_collection(
                 url = f"{destination_backend_url.rstrip('/')}/v1/collections/",
                 json = dest_collection
             ) as r:
-            logger.debug("Collection enrty created: ", r.json())
+            r.raise_for_status()
+            logger.debug("Collection entry created: ", r.json())
 
         logger.debug("Collection migration started...")
 
