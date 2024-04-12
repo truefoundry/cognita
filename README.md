@@ -495,9 +495,9 @@ Contributions are welcomed for the following upcoming developments:
 
 ---
 
-## Webinar
+# Webinar
 
-![RAG_TF](./docs/images/webinar-banner.png)
+![RAG_TF](./docs/images/webinar-banner.png)[(https://nodesource.com/products/nsolid)](https://lu.ma/cognita-rag)
 
 # Star History
 
