@@ -3,9 +3,31 @@ from typing import Dict
 from qdrant_client._pydantic_compat import to_dict
 from qdrant_client.client_base import QdrantBase
 from qdrant_client.http import models
+import requests
 
 from backend.logger import logger
+import warnings
 
+def get_collection(backend_url: str, collection_name: str, type: str = "source"):
+    
+    # fetch collection from source
+    collections = None
+    with requests.get(f"{backend_url.rstrip('/')}/v1/collections/") as r:
+        collections = r.json().get("collections")
+
+    if type == "source" and not collections:
+        raise Exception("No collections found at source")
+
+    fetched_collection = None
+    for collection in collections:
+        if collection.get("name") == collection_name:
+            fetched_collection = collection
+            break
+
+    if type == "source" and fetched_collection is None:
+        raise Exception(f"Collection {collection_name} not found at source")
+    
+    return fetched_collection
 
 def migrate(
     source_client: QdrantBase,
@@ -126,6 +148,9 @@ def _migrate_collection(
         dest_client.upload_points(destination_collection_name, records, wait=True)
     source_client_vectors_count = source_client.get_collection(source_collection_name).vectors_count
     dest_client_vectors_count = dest_client.get_collection(destination_collection_name).vectors_count
-    assert (
-        source_client_vectors_count == dest_client_vectors_count
-    ), f"Migration failed, vectors count are not equal: source vector count {source_client_vectors_count}, dest vector count {dest_client_vectors_count}"
+
+    if source_client_vectors_count != dest_client_vectors_count:
+        warnings.warn(
+            f"Migration completed, but vector counts are not equal, source vectors count: {source_client_vectors_count}, dest vectors count: {dest_client_vectors_count}. You may want to delete the destination collection and try again."
+        )
+

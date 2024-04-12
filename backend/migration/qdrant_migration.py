@@ -12,6 +12,8 @@ python -m backend.migration.qdrant_migration \
 --destination_collection_name creditcopy
 
 Add --source_prefix & --destination_prefix if qdrant instance has prefix enabled
+Add --batch_size to set batch size for migration
+Add --overwrite to overwrite destination collection if exists in separate qdrant
 """
 
 
@@ -21,8 +23,7 @@ from backend.types import CreateCollectionDto, AssociateDataSourceWithCollection
 from backend.logger import logger
 
 from qdrant_client import QdrantClient
-from backend.migration.utils import migrate
-
+from backend.migration.utils import get_collection, migrate
 
 
 
@@ -35,38 +36,41 @@ def migrate_collection(
     destination_collection_name: str,  
     destination_qdrant_url: str,
     destination_prefix: str, 
+    batch_size: int,
+    overwrite: bool,
 ):
-    # fetch collection from source
-    collections = None
-    with requests.get(f"{source_backend_url.rstrip('/')}/v1/collections/") as r:
-        collections = r.json().get("collections")
+    
+    try:
+        fetched_source_collection = get_collection(source_backend_url, source_collection_name, type="source")
+    except Exception as e:
+        raise e
 
-    if not collections:
-        raise Exception("No collections found")
+    logger.debug(f"Source collection found '{fetched_source_collection.get('name')}' ")
 
-    fetched_collection = None
-    for collection in collections:
-        if collection.get("name") == source_collection_name:
-            fetched_collection = collection
-            break
 
-    if fetched_collection is None:
-        raise Exception(f"Collection {source_collection_name} not found")
+    same_qdrant_loc = (source_qdrant_url == destination_qdrant_url) and  (source_prefix == destination_prefix)
 
-    logger.debug(f"Source collection found '{fetched_collection.get('name')}' ")
+    try:
+        fetched_destination_collection = get_collection(destination_backend_url, destination_collection_name, type="destination")
+        if fetched_destination_collection and not overwrite and not same_qdrant_loc:
+            raise Exception(f"Destination collection '{destination_collection_name}' already exists. Either delete it or set overwrite flag to True")
+        logger.debug(f"Destination collection '{destination_collection_name}' not found at destination. Proceeding...")
+    except Exception as e:
+        raise e
+
 
 
     try:
         # prepare collection to be created at destination
         dest_collection = CreateCollectionDto(
             name=destination_collection_name,
-            description=fetched_collection.get("description", f"Collection cloned from {source_collection_name}"),
-            embedder_config=fetched_collection.get("embedder_config"),
+            description=fetched_source_collection.get("description", f"Collection cloned from {source_collection_name}"),
+            embedder_config=fetched_source_collection.get("embedder_config"),
             associated_data_sources=[
                 AssociateDataSourceWithCollection(
                     data_source_fqn=value.get("data_source_fqn"),
                     parser_config=value.get("parser_config"),
-                ) for _, value in fetched_collection.get("associated_data_sources").items()
+                ) for _, value in fetched_source_collection.get("associated_data_sources").items()
             ]
         ).dict()
 
@@ -96,13 +100,14 @@ def migrate_collection(
             prefix=destination_prefix,
         )
 
+        
         migrate(
             source_client = source_qdrant_client,
             dest_client = destination_qdrant_client,
             source_collection_name = source_collection_name,
             destination_collection_name = destination_collection_name,
-            batch_size = 100,
-            same_qdrant= (source_qdrant_url == destination_qdrant_url) and  (source_prefix == destination_prefix)
+            batch_size = batch_size,
+            same_qdrant= same_qdrant_loc
         )
 
     except Exception as e:
@@ -131,6 +136,8 @@ def main():
     parser.add_argument('--destination_collection_name', type=str, help='Destination collection name', required=True)
     parser.add_argument('--destination_qdrant_url', type=str, help='Destination qdrant url', required=True)
     parser.add_argument('--destination_prefix', type=str, help='Destination qdrant prefix', required=False, default=None)
+    parser.add_argument('--batch_size', type=int, help='Batch size for migration', required=False, default=100)
+    parser.add_argument('--overwrite', type=bool, help='Overwrite destination collection if exists in separate qdrant', required=False, default=False)
 
     args = parser.parse_args()
 
@@ -145,20 +152,10 @@ def main():
         destination_backend_url = args.destination_backend_url,
         destination_collection_name = args.destination_collection_name,
         destination_qdrant_url = args.destination_qdrant_url,
-        destination_prefix = args.destination_prefix
+        destination_prefix = args.destination_prefix,
+        batch_size = args.batch_size,
+        overwrite = args.overwrite
     )
 
 if __name__ == "__main__":
-    # SOURCE
-    source_backend_url = "http://localhost:8000"
-    source_collection_name = "creditcard"
-    source_qdrant_url = "https://ps-qdrant-prathamesh-ws.devtest.truefoundry.tech"
-    source_prefix = None
-
-    # DESTINATION
-    destination_backend_url = "http://localhost:8000"
-    destination_collection_name = "cloned"
-    destination_qdrant_url = "https://ps-qdrant-prathamesh-ws.devtest.truefoundry.tech"
-    destination_prefix = None
-
     main()
