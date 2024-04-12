@@ -1,5 +1,5 @@
 # Cognita
-
+![RAG_TF](./docs/images/Github Readme Banner.png)
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
 -   [Cognita](#cognita)
