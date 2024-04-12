@@ -3,6 +3,8 @@
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
+## Contents
+
 -   [Cognita](#cognita)
     -   [Introduction](#introduction)
         -   [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
@@ -492,6 +494,10 @@ Contributions are welcomed for the following upcoming developments:
 -   Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
 
 ---
+
+## Webinar
+
+![RAG_TF](./docs/images/webinar-banner.png)
 
 # Star History
 
