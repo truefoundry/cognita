@@ -495,7 +495,7 @@ Contributions are welcomed for the following upcoming developments:
 
 ---
 
-# Webinar
+# Register for the Webinar
 
 [![RAG_TF](./docs/images/webinar-banner.png)](https://lu.ma/cognita-rag)
 
