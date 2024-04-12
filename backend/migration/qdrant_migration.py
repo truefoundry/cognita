@@ -41,7 +41,7 @@ def migrate_collection(
     with requests.get(f"{source_backend_url.rstrip('/')}/v1/collections/") as r:
         collections = r.json().get("collections")
 
-    if collections == None:
+    if not collections:
         raise Exception("No collections found")
 
     fetched_collection = None
