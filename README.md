@@ -1,5 +1,6 @@
 # Cognita
 ![RAG_TF](./docs/images/readme-banner.png)
+
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
 -   [Cognita](#cognita)
