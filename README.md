@@ -489,7 +489,7 @@ Contributions are welcomed for the following upcoming developments:
 -   Support for `RAG Visualization`.
 -   Support for conversational chatbot with context
 -   Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
--   Supoort for `GraphDB`
+-   Support for `GraphDB`
 
 ---
 
