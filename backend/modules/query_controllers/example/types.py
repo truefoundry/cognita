@@ -107,7 +107,7 @@ class LordOfRetrievers(ContextualCompressionRetrieverConfig, MultiQueryRetriever
     pass
 
 
-class DefaultQueryInput(BaseModel):
+class ExampleQueryInput(BaseModel):
     """
     Model for Query input.
     Requires a collection name, retriever configuration, query, LLM configuration and prompt template.

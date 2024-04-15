@@ -20,6 +20,9 @@ gunicorn==21.2.0
 markdown-crawler==0.0.8
 black==24.3.0
 
+# singlestore db
+singlestoredb==1.0.4
+
 #### Embeddings
 # Install torch for as per your requirements: https://pytorch.org/get-started/locally/
 torch==2.2.1

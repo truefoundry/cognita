@@ -20,7 +20,7 @@ from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.example.types import (
-    DefaultQueryInput,
+    ExampleQueryInput,
     GENERATION_TIMEOUT_SEC,
 )
 from backend.modules.query_controllers.example.payload import (
@@ -256,7 +256,7 @@ class ExampleQueryController:
     @post("/answer")
     async def answer(
         self,
-        request: DefaultQueryInput = Body(
+        request: ExampleQueryInput = Body(
             openapi_examples=EXAMPLES,
         ),
     ):
@@ -339,7 +339,7 @@ class ExampleQueryController:
 # import httpx
 # from httpx import Timeout
 
-# from backend.modules.query_controllers.example.types import DefaultQueryInput
+# from backend.modules.query_controllers.example.types import ExampleQueryInput
 
 # payload = {
 #   "collection_name": "pstest",
@@ -363,7 +363,7 @@ class ExampleQueryController:
 #   "stream": True
 # }
 
-# data = DefaultQueryInput(**payload).dict()
+# data = ExampleQueryInput(**payload).dict()
 # ENDPOINT_URL = 'http://localhost:8000/retrievers/example-app/answer'
 
 
