@@ -266,10 +266,10 @@ class SingleStoreVectorDB(BaseVectorDB):
                             data_point_hash=metadata.get(DATA_POINT_HASH_METADATA_KEY),
                         )
                     )
-        # except Exception as e:
-        #     logger.error(
-        #         f"[SingleStore] Failed to list data point vectors: {e}"
-        #     )
+        except Exception as e:
+            logger.error(
+                f"[SingleStore] Failed to list data point vectors: {e}"
+            )
         finally:
             conn.close()
         
