@@ -228,7 +228,7 @@ class SingleStoreVectorDB(BaseVectorDB):
         )
 
     def get_vector_client(self):
-        return None 
+        return s2.connect(self.host) 
 
 
     def list_data_point_vectors(
