@@ -3,9 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { forwardRef } from 'react'
 import classNames from 'classnames'
 import paperPlaneIcon from '@/assets/img/paper-plane-top.svg'
+import xTwitterIcon from '@/assets/img/logos/x_twitter.png'
 
 export const EXT_ICONS_MAP: { readonly [key: string]: any } = {
   'paper-plane-top': paperPlaneIcon,
+  'x-twitter': xTwitterIcon,
 }
 
 interface IconProps {
