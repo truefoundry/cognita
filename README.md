@@ -1,9 +1,16 @@
-# Cognita
+# [Cognita](<(https://cognita.truefoundry.com)>)
+
 ![RAG_TF](./docs/images/readme-banner.png)
+
+# Try out Cognita: [https://cognita.truefoundry.com](https://cognita.truefoundry.com)
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
-## Contents
+# Register for the Webinar
+
+[![RAG_TF](./docs/images/webinar-banner.png)](https://lu.ma/cognita-rag)
+
+# Contents
 
 -   [Cognita](#cognita)
     -   [Introduction](#introduction)
@@ -495,10 +502,6 @@ Contributions are welcomed for the following upcoming developments:
 -   Support for `GraphDB`
 
 ---
-
-# Register for the Webinar
-
-[![RAG_TF](./docs/images/webinar-banner.png)](https://lu.ma/cognita-rag)
 
 # Star History
 
