@@ -5,7 +5,7 @@
 ## Why use Cognita?
 
 Langchain/LlamaIndex provide easy to use abstractions that can be used for quick experimentation and prototyping on jupyter notebooks. But, when things move to production, there are constraints like the components should be modular, easily scalable and extendable. This is where Cognita comes in action.
-Cognita uses Langchain/Llamaindex under the hood and provide a organisation to your codebase, where each of the RAG components are modular, API driven and easily extendible. It is designed to prototype easily in a local setup, at the same time, offers you a production ready environment along with no-code UI support. Cognita also supports incremental indexing by default.
+Cognita uses Langchain/Llamaindex under the hood and provides an organisation to your codebase, where each of the RAG component is modular, API driven and easily extendible. Cognita can be used easily in a [local](#rocket-quickstart-running-cognita-locally) setup, at the same time, offers you a production ready environment along with no-code [UI](./frontend/README.md) support. Cognita also supports incremental indexing by default.
 
 You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.truefoundry.com)
 
@@ -166,7 +166,7 @@ Overall the architecture of Cognita is composed of several entities
 
 3. **LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format. This can be OpenAIChat, OllamaChat, or even TruefoundryChat that uses TF LLM Gateway.
 
-4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are currently supporting Qdrant as our choice of vector database.
+4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are currently supporting `Qdrant` and `SingleStore` as our choice of vector database.
 
 5. **Indexing Job** - This is an asynchronous Job responsible for orchestrating the indexing flow. Indexing can be started manually or run regularly on a cron schedule. It will
 
