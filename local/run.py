@@ -1,4 +1,5 @@
 from backend.modules.query_controllers import ExampleQueryController
+from backend.modules.query_controllers.example.types import ExampleQueryInput
 import asyncio
 
 # Payload for the query
@@ -7,8 +8,8 @@ request = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        "name": "ollama/gemma:2b",
+        "provider": "ollama",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
@@ -17,14 +18,13 @@ request = {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 7,
-        "search_type": "mmr",
+        "search_type": "similarity",
         "search_kwargs": {
             "k": 20,
-            "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
+            "name": "ollama/gemma:2b",
+            "provider": "ollama",
             "parameters": {"temperature": 0.9},
         },
     },
@@ -37,5 +37,6 @@ print(f"Payload: {request}")
 controller = ExampleQueryController()
 
 # Get the answer
-answer = asyncio.run(controller.answer(request))
-print(f"Answer: {answer}")
+answer = asyncio.run(controller.answer(ExampleQueryInput(**request)))
+print(f"Answer: {answer.get('answer')}")
+# print(f"Docs: {answer.get('docs')}")
