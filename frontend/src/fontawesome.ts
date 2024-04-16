@@ -24,6 +24,7 @@ import {
   faCaretRight,
   faCircleInfo,
   faTriangleExclamation,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 
 const icons: any[] = [
@@ -50,6 +51,7 @@ const icons: any[] = [
   faChevronDown,
   faPaperPlane,
   faCaretRight,
+  faXmark,
 ]
 
 library.add(...icons)
