@@ -2,7 +2,12 @@
 
 ![RAG_TF](./docs/images/readme-banner.png)
 
-# Try out Cognita: [https://cognita.truefoundry.com](https://cognita.truefoundry.com)
+## Why use Cognita?
+
+Langchain/LlamaIndex provide easy to use abstractions that can be used for quick experimentation and prototyping on jupyter notebooks. But, when things move to production, there are constraints like the components should be modular, easily scalable and extendable. This is where Cognita comes in action.
+Cognita uses Langchain/Llamaindex under the hood and provide a organisation to your codebase, where each of the RAG components are modular, API driven and easily extendible. It is designed to prototype easily in a local setup, at the same time, offers you a production ready environment along with no-code UI support. Cognita also supports incremental indexing by default.
+
+You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.truefoundry.com)
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
