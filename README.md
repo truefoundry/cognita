@@ -11,10 +11,6 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
-# Register for the Webinar
-
-[![RAG_TF](./docs/images/webinar-banner.png)](https://lu.ma/cognita-rag)
-
 # Contents
 
 -   [Cognita](#cognita)
