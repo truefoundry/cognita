@@ -19,3 +19,4 @@ dist/
 tf-docs-crawled/
 truefoundry-docs/
 *.zip
+ragenv/
