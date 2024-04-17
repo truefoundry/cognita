@@ -146,7 +146,7 @@ export default function NavBar({ children }: any) {
               <img src={Bars} className="h-7 w-7" />
             </div>
             <Link to={'/'} className="mr-6">
-              <img src={Logo} className="h-8 w-[18rem]" />
+              <img src={Logo} className="h-8" />
             </Link>
             <div className="flex gap-5 items-center">{menu}</div>
           </div>
