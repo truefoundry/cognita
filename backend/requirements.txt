@@ -20,6 +20,11 @@ gunicorn==21.2.0
 markdown-crawler==0.0.8
 black==24.3.0
 
+# for doctr
+deepdoctection==0.30
+timm==0.9.16
+python-doctr==0.8.1
+
 # singlestore db
 singlestoredb==1.0.4
 

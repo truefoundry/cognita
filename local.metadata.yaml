@@ -8,10 +8,10 @@ parser_config:
     parser_map:
         ".md": MarkdownParser
 embedder_config:
-    provider: mixedbread
-    config:
-        model: mixedbread-ai/mxbai-embed-large-v1
-    # For Truefoundry Embeddings
-    # provider: truefounrdy
+    # provider: mixedbread
     # config:
-    #     model: "openai-main/text-embedding-ada-002"
+    #     model: mixedbread-ai/mxbai-embed-large-v1
+    # For Truefoundry Embeddings
+    provider: truefoundry
+    config:
+        model: "openai-main/text-embedding-ada-002"

@@ -8,7 +8,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     },
     "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
     "retriever_name": "vectorstore",
-    "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 20}},
+    "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
     "stream": False,
 }
 
@@ -34,8 +34,8 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
     "retriever_config": {
         "search_type": "mmr",
         "search_kwargs": {
-            "k": 20,
-            "fetch_k": 30,
+            "k": 5,
+            "fetch_k": 7,
         },
     },
     "stream": False,
@@ -119,7 +119,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
             "k": 20,
@@ -184,7 +184,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity",
-        "search_kwargs": {"k": 20},
+        "search_kwargs": {"k": 5},
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
@@ -217,8 +217,8 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
     "retriever_config": {
         "search_type": "mmr",
         "search_kwargs": {
-            "k": 20,
-            "fetch_k": 30,
+            "k": 5,
+            "fetch_k": 10,
         },
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
@@ -284,7 +284,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
             "k": 20,
