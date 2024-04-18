@@ -174,9 +174,7 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(f"[Qdrant] Deleted {collection_name} collection")
 
     def get_vector_store(self, collection_name: str, embeddings: Embeddings):
-        logger.debug(
-            f"[Qdrant] Getting vector store for collection {collection_name}"
-        )
+        logger.debug(f"[Qdrant] Getting vector store for collection {collection_name}")
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
@@ -252,9 +250,7 @@ class QdrantVectorDB(BaseVectorDB):
         """
         Delete data point vectors from the collection
         """
-        logger.debug(
-            f"[Qdrant] Deleting {len(data_point_vectors)} data point vectors"
-        )
+        logger.debug(f"[Qdrant] Deleting {len(data_point_vectors)} data point vectors")
         vectors_to_be_deleted_count = len(data_point_vectors)
         deleted_vectors_count = 0
         for i in range(0, vectors_to_be_deleted_count, batch_size):

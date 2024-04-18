@@ -17,7 +17,6 @@ BATCH_SIZE = 1000
 
 class SSDB(SingleStoreDB):
 
-    
     def _create_table(self: SingleStoreDB) -> None:
         """Create table if it doesn't exist."""
         conn = self.connection_pool.connect()
@@ -62,7 +61,6 @@ class SSDB(SingleStoreDB):
         finally:
             conn.close()
 
-    
     def add_texts(
         self,
         texts: Iterable[str],
@@ -160,7 +158,7 @@ class SingleStoreVectorDB(BaseVectorDB):
                 data_point_fqns.append(
                     document.metadata.get(DATA_POINT_FQN_METADATA_KEY)
                 )
-        
+
         try:
             SSDB.from_documents(
                 embedding=embeddings,
@@ -176,8 +174,6 @@ class SingleStoreVectorDB(BaseVectorDB):
                 f"[SingleStore] Failed to add documents to collection {collection_name}: {e}"
             )
 
-
-
     def get_collections(self) -> List[str]:
         conn = s2.connect(self.host)
         try:
@@ -186,15 +182,11 @@ class SingleStoreVectorDB(BaseVectorDB):
                 cur.execute("SHOW TABLES")
                 return [row[0] for row in cur.fetchall()]
             except Exception as e:
-                logger.error(
-                    f"[SingleStore] Failed to get collections: {e}"
-                )
+                logger.error(f"[SingleStore] Failed to get collections: {e}")
             finally:
                 cur.close()
         except Exception as e:
-            logger.error(
-                f"[SingleStore] Failed to get collections: {e}"
-            )
+            logger.error(f"[SingleStore] Failed to get collections: {e}")
         finally:
             conn.close()
 
@@ -218,9 +210,7 @@ class SingleStoreVectorDB(BaseVectorDB):
         finally:
             conn.close()
 
-    def get_vector_store(
-        self, collection_name: str, embeddings: Embeddings
-    ):
+    def get_vector_store(self, collection_name: str, embeddings: Embeddings):
         return SSDB(
             embedding=embeddings,
             host=self.host,
@@ -228,14 +218,13 @@ class SingleStoreVectorDB(BaseVectorDB):
         )
 
     def get_vector_client(self):
-        return s2.connect(self.host) 
-
+        return s2.connect(self.host)
 
     def list_data_point_vectors(
         self,
         collection_name: str,
         data_source_fqn: str,
-        batch_size: int =BATCH_SIZE,
+        batch_size: int = BATCH_SIZE,
     ) -> List[DataPointVector]:
         logger.debug(
             f"[SingleStore] Listing all data point vectors for collection {collection_name}"
@@ -249,8 +238,10 @@ class SingleStoreVectorDB(BaseVectorDB):
             curr = conn.cursor()
 
             # Remove all data point vectors with the same data_source_fqn
-            curr.execute(f"SELECT * FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, '{DATA_POINT_FQN_METADATA_KEY}') LIKE '%{data_source_fqn}%' LIMIT {MAX_SCROLL_LIMIT}")
-            
+            curr.execute(
+                f"SELECT * FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, '{DATA_POINT_FQN_METADATA_KEY}') LIKE '%{data_source_fqn}%' LIMIT {MAX_SCROLL_LIMIT}"
+            )
+
             for record in curr:
                 # id, content, vector, metadata
                 id, _, _, metadata = record
@@ -267,23 +258,20 @@ class SingleStoreVectorDB(BaseVectorDB):
                         )
                     )
         except Exception as e:
-            logger.error(
-                f"[SingleStore] Failed to list data point vectors: {e}"
-            )
+            logger.error(f"[SingleStore] Failed to list data point vectors: {e}")
         finally:
             conn.close()
-        
+
         logger.debug(
             f"[SingleStore] Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
         )
         return data_point_vectors
 
-
     def delete_data_point_vectors(
         self,
         collection_name: str,
         data_point_vectors: List[DataPointVector],
-        batch_size: int =BATCH_SIZE,
+        batch_size: int = BATCH_SIZE,
     ):
         """
         Delete data point vectors from the collection
@@ -299,7 +287,7 @@ class SingleStoreVectorDB(BaseVectorDB):
             try:
                 vectors_to_be_deleted_count = len(data_point_vectors)
                 curr = conn.cursor()
-            
+
                 curr.execute(
                     f"DELETE FROM {collection_name} WHERE id in ({', '.join(data_point_vector.data_point_vector_id for data_point_vector in data_point_vectors)})"
                 )
@@ -307,10 +295,6 @@ class SingleStoreVectorDB(BaseVectorDB):
                     f"[SingleStore] Deleted {vectors_to_be_deleted_count} data point vectors"
                 )
             except Exception as e:
-                logger.error(
-                    f"[SingleStore] Failed to delete data point vectors: {e}"
-                )
+                logger.error(f"[SingleStore] Failed to delete data point vectors: {e}")
             finally:
                 conn.close()
-
-        
