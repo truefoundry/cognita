@@ -1,11 +1,14 @@
 from langchain.embeddings.base import Embeddings
 from typing import Dict, List
+import os
 
 import torch
 import numpy as np
 from transformers import AutoModel, AutoTokenizer
 from backend.logger import logger
 from tqdm.auto import tqdm
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 # https://huggingface.co/mixedbread-ai/mxbai-embed-large-v1

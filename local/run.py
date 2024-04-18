@@ -31,7 +31,7 @@ request = {
     "stream": False,
 }
 # You can change the query here
-print(f"Payload: {request}")
+# print(f"Payload: {request}")
 
 # Create a controller object
 controller = ExampleQueryController()
