@@ -156,7 +156,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
-        "search_kwargs": {"score_threshold": 0.7},
+        "search_kwargs": {"score_threshold": 0.7}
     },
     "stream": False,
 }

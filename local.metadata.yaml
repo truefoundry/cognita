@@ -1,12 +1,12 @@
-collection_name: creditcard
+collection_name: stg2finance
 data_source:
     type: localdir
-    uri: sample-data/creditcards
+    uri: /Users/prathamesh/Desktop/brady
 parser_config:
     chunk_size: 1000
     chunk_overlap: 20
     parser_map:
-        ".md": MarkdownParser
+        ".pdf": PdfTableParser
 embedder_config:
     provider: mixedbread
     config:
