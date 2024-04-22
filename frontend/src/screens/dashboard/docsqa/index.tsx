@@ -112,6 +112,7 @@ const DocsQA = () => {
       name: value.value.retriever_name,
       summary: value.summary,
       config: value.value.retriever_config,
+      promptTemplate: value.value.prompt_template ?? defaultPrompt,
     }))
   }, [selectedQueryController, openapiSpecs])
 
@@ -228,6 +229,7 @@ const DocsQA = () => {
   useEffect(() => {
     if (allRetrieverOptions && allRetrieverOptions.length) {
       setSelectedRetriever(allRetrieverOptions[0])
+      setPromptTemplate(allRetrieverOptions[0].promptTemplate)
     }
   }, [allRetrieverOptions])
 
@@ -345,6 +347,7 @@ const DocsQA = () => {
                         (retriever) => retriever.key === e.target.value
                       )
                       setSelectedRetriever(retriever)
+                      setPromptTemplate(retriever?.promptTemplate)
                     }}
                     placeholder="Select Retriever..."
                     sx={{
