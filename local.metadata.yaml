@@ -1,4 +1,4 @@
-collection_name: crawford
+collection_name: crawfordopenai
 data_source:
     type: localdir
     uri: /Users/prathamesh/Desktop/crawford
@@ -8,10 +8,10 @@ parser_config:
     parser_map:
         ".pdf": PdfTableParser
 embedder_config:
-    provider: mixedbread
-    config:
-        model: mixedbread-ai/mxbai-embed-large-v1
-    # For Truefoundry Embeddings
-    # provider: truefoundry
+    # provider: mixedbread
     # config:
-    #     model: "openai-main/text-embedding-ada-002"
+    #     model: mixedbread-ai/mxbai-embed-large-v1
+    # For Truefoundry Embeddings
+    provider: truefoundry
+    config:
+        model: "openai-main/text-embedding-ada-002"

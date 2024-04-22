@@ -19,11 +19,11 @@ from backend.logger import logger
 from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.example.types import (
+from backend.modules.query_controllers.summary.types import (
     ExampleQueryInput,
     GENERATION_TIMEOUT_SEC,
 )
-from backend.modules.query_controllers.example.payload import (
+from backend.modules.query_controllers.summary.payload import (
     QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
@@ -70,8 +70,8 @@ EXAMPLES = {
 #     )
 
 
-@query_controller("/example-app")
-class ExampleQueryController:
+@query_controller("/summary-report")
+class SummaryQueryController:
 
     def _get_prompt_template(self, input_variables, template):
         """
@@ -323,8 +323,26 @@ class ExampleQueryController:
                 # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
                 # print(outputs)
 
+                SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed summary report in 200-300 words. Summary: {context}"
+
+                # Get the summary
+                summary_rag_chain = (
+                    RunnablePassthrough.assign(
+                        context=lambda x : x["answer"],
+                    )
+                    | PromptTemplate(
+                        input_variables=["context"],
+                        template=SUMMARY_PROMPT,
+                    )
+                    | llm
+                    | StrOutputParser()
+                )
+
+                summary = await summary_rag_chain.ainvoke(outputs)
+
+
                 return {
-                    "answer": outputs["answer"],
+                    "answer": outputs["answer"] + "\n\n**Summary:**\n" + summary,
                     "docs": outputs["context"] if outputs["context"] else [],
                 }
 
@@ -341,7 +359,7 @@ class ExampleQueryController:
 # import httpx
 # from httpx import Timeout
 
-# from backend.modules.query_controllers.example.types import ExampleQueryInput
+# from backend.modules.query_controllers.summary.types import ExampleQueryInput
 
 # payload = {
 #   "collection_name": "pstest",
