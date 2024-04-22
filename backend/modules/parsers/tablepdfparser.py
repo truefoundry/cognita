@@ -68,17 +68,18 @@ class PdfTableParser(BaseParser):
                     table_data = pd.DataFrame(table_data)
                     # Table data is a pandas DataFrame, convert it to console string
                     table_data = table_data.to_string()
-                    tab_doc = [
-                        Document(
-                            page_content=table_data,
-                            metadata={
-                                "page_num": page.page_number,
-                                "type": "table",
-                                "table_num": ix,
-                            },
-                        )
-                    ]
-                    table_docs.extend(tab_doc)
+                    if table_data:
+                        tab_doc = [
+                            Document(
+                                page_content=table_data,
+                                metadata={
+                                    "page_num": page.page_number,
+                                    "type": "table",
+                                    "table_num": ix,
+                                },
+                            )
+                        ]
+                        table_docs.extend(tab_doc)
 
             text = page.text
 
@@ -103,19 +104,21 @@ class PdfTableParser(BaseParser):
                             "type": "text",
                         },
                     )
-                    for text_split in text_splits
+                    for text_split in text_splits if text_split != "" and text_split != " "
                 ]
-                final_texts.extend(texts)
+                if texts:
+                    final_texts.extend(texts)
             else:
-                final_texts.append(
-                    Document(
-                        page_content=text,
-                        metadata={
-                            "page_num": page.page_number,
-                            "type": "text",
-                        },
+                if text:
+                    final_texts.append(
+                        Document(
+                            page_content=text,
+                            metadata={
+                                "page_num": page.page_number,
+                                "type": "text",
+                            },
+                        )
                     )
-                )
         # except Exception as ex:
         #     print(f"Error while parsing PDF file at {filepath}: {str(ex)}")
         #     # Return an empty list if there was an error during processing

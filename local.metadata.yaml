@@ -1,7 +1,7 @@
-collection_name: stg2finance
+collection_name: crawford
 data_source:
     type: localdir
-    uri: /Users/prathamesh/Desktop/brady
+    uri: /Users/prathamesh/Desktop/crawford
 parser_config:
     chunk_size: 1000
     chunk_overlap: 20

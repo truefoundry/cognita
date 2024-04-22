@@ -40,7 +40,7 @@ class Settings(BaseSettings):
         else None
     )
 
-    LOCAL: bool = os.getenv("LOCAL", False)
+    LOCAL: bool = os.getenv("LOCAL", True)
     OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
     if not VECTOR_DB_CONFIG:
