@@ -335,14 +335,14 @@ const DocsQA = () => {
                   setModelConfig(updatedConfig ?? '')
                 }
               />
-              {allRetrieverOptions && selectedRetriever?.name && (
+              {allRetrieverOptions && selectedRetriever?.key && (
                 <div>
                   <div className="mb-1 mt-3 text-sm">Retriever:</div>
                   <Select
-                    value={selectedRetriever?.name}
+                    value={selectedRetriever?.key}
                     onChange={(e) => {
                       const retriever = allRetrieverOptions.find(
-                        (retriever) => retriever.name === e.target.value
+                        (retriever) => retriever.key === e.target.value
                       )
                       setSelectedRetriever(retriever)
                     }}
@@ -360,7 +360,7 @@ const DocsQA = () => {
                     }}
                   >
                     {allRetrieverOptions?.map((retriever: any) => (
-                      <MenuItem value={retriever.name} key={retriever.name}>
+                      <MenuItem value={retriever.key} key={retriever.key}>
                         {retriever.summary}
                       </MenuItem>
                     ))}
