@@ -323,7 +323,7 @@ class SummaryQueryController:
                 # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
                 # print(outputs)
 
-                SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed summary report in 200-300 words. Summary: {context}"
+                SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed one pager summary report. Summary: {context}"
 
                 # Get the summary
                 summary_rag_chain = (
@@ -340,9 +340,9 @@ class SummaryQueryController:
 
                 summary = await summary_rag_chain.ainvoke(outputs)
 
-
+                answer = outputs["answer"] + "\n\n**Summary:**\n" + summary if ("Summary" or "summary") not in summary else outputs["answer"] + "\n\n\n" + summary
                 return {
-                    "answer": outputs["answer"] + "\n\n**Summary:**\n" + summary,
+                    "answer": answer,
                     "docs": outputs["context"] if outputs["context"] else [],
                 }
 
