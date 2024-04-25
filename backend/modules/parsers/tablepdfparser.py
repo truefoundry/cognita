@@ -104,7 +104,8 @@ class PdfTableParser(BaseParser):
                             "type": "text",
                         },
                     )
-                    for text_split in text_splits if text_split != "" and text_split != " "
+                    for text_split in text_splits
+                    if text_split != "" and text_split != " "
                 ]
                 if texts:
                     final_texts.extend(texts)

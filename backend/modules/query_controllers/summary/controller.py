@@ -328,7 +328,7 @@ class SummaryQueryController:
                 # Get the summary
                 summary_rag_chain = (
                     RunnablePassthrough.assign(
-                        context=lambda x : x["answer"],
+                        context=lambda x: x["answer"],
                     )
                     | PromptTemplate(
                         input_variables=["context"],
@@ -340,7 +340,11 @@ class SummaryQueryController:
 
                 summary = await summary_rag_chain.ainvoke(outputs)
 
-                answer = outputs["answer"] + "\n\n**Summary:**\n" + summary if ("Summary" or "summary") not in summary else outputs["answer"] + "\n\n\n" + summary
+                answer = (
+                    outputs["answer"] + "\n\n**Summary:**\n" + summary
+                    if ("Summary" or "summary") not in summary
+                    else outputs["answer"] + "\n\n\n" + summary
+                )
                 return {
                     "answer": answer,
                     "docs": outputs["context"] if outputs["context"] else [],
