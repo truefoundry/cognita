@@ -9,7 +9,7 @@ fastapi==0.104.1
 qdrant-client==1.7.3
 python-dotenv==1.0.1
 weaviate-client==3.25.3
-pydantic==1.10.12
+pydantic==1.10.13
 orjson==3.9.15
 PyMuPDF==1.23.6
 redis==5.0.1
