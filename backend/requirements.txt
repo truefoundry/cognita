@@ -38,4 +38,4 @@ python-doctr==0.8.1
 
 #### Reranker
 # For use Mxbread Reranker
-# sentence_transformers==2.5.1
+sentence_transformers==2.5.1
