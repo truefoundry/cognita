@@ -62,6 +62,8 @@ class Settings(BaseSettings):
         )
     except Exception as e:
         raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
+    
+    TF_PARSER = os.getenv("TF_PARSER", "")
 
 
 settings = Settings()
