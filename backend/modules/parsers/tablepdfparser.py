@@ -80,6 +80,18 @@ class PdfTableParser(BaseParser):
                             )
                         ]
                         table_docs.extend(tab_doc)
+                    if table_data:
+                        tab_doc = [
+                            Document(
+                                page_content=table_data,
+                                metadata={
+                                    "page_num": page.page_number,
+                                    "type": "table",
+                                    "table_num": ix,
+                                },
+                            )
+                        ]
+                        table_docs.extend(tab_doc)
 
             text = page.text
 
