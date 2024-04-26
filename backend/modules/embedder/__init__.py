@@ -7,7 +7,6 @@ from backend.settings import settings
 
 if settings.OPENAI_API_KEY:
     register_embedder("openai", OpenAIEmbeddings)
-if settings.TFY_API_KEY:
-    register_embedder("truefoundry", TrueFoundryEmbeddings)
+register_embedder("truefoundry", TrueFoundryEmbeddings)
 if settings.LOCAL:
     register_embedder("mixedbread", MixBreadEmbeddings)
