@@ -26,16 +26,16 @@ timm==0.9.16
 python-doctr==0.8.1
 
 # singlestore db
-singlestoredb==1.0.4
+# singlestoredb==1.0.4
 
 #### Embeddings
 # Install torch for as per your requirements: https://pytorch.org/get-started/locally/
-torch==2.2.1
-torchvision==0.17.1
-torchaudio==2.2.1
-transformers==4.39.0
+# torch==2.2.1
+# torchvision==0.17.1
+# torchaudio==2.2.1
+# transformers==4.39.0
 
 
 #### Reranker
 # For use Mxbread Reranker
-sentence_transformers==2.5.1
+# sentence_transformers==2.5.1
