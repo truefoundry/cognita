@@ -1,4 +1,4 @@
-import tempfile
+import tempfile, os
 from typing import Dict, List
 
 from fastapi import HTTPException
@@ -253,6 +253,24 @@ async def ingest_data_points(
             )
             documents_to_be_upserted.append(chunk)
         logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
+
+        # delete the file from temp dir after processing
+        try:
+            if loaded_data_point.local_filepath:
+                os.remove(loaded_data_point.local_filepath)
+                print(
+                    f"Processing done! Deleting file {loaded_data_point.local_filepath}"
+                )
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_filepath}"
+                )
+        except Exception as e:
+            print(
+                f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
+            )
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
+            )
 
     docs_to_index_count = len(documents_to_be_upserted)
     if docs_to_index_count == 0:
