@@ -12,5 +12,5 @@ register_embedder("truefoundry", TrueFoundryEmbeddings)
 
 if settings.LOCAL:
     from backend.modules.embedder.mixbread_embedder import MixBreadEmbeddings
-    
+
     register_embedder("mixedbread", MixBreadEmbeddings)
