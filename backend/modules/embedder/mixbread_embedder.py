@@ -1,19 +1,19 @@
-from langchain.embeddings.base import Embeddings
-from typing import Dict, List
 import os
+from typing import Dict, List
 
-import torch
 import numpy as np
-from transformers import AutoModel, AutoTokenizer
-from backend.logger import logger
+import torch
+from langchain.embeddings.base import Embeddings
 from tqdm.auto import tqdm
+from transformers import AutoModel, AutoTokenizer
+
+from backend.logger import logger
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 # https://huggingface.co/mixedbread-ai/mxbai-embed-large-v1
 class MixBreadEmbeddings(Embeddings):
-
     def __init__(self, model) -> None:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model)

@@ -1,10 +1,9 @@
+from typing import Any, ClassVar, Collection, Dict, Literal, Optional
+
 from pydantic import BaseModel, Field, root_validator, validator
-from typing import Literal, Optional, Dict, Collection, ClassVar, Any
-
-from backend.types import LLMConfig
-
 from qdrant_client.models import Filter as QdrantFilter
 
+from backend.types import LLMConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 5
 
@@ -74,7 +73,6 @@ class MultiQueryRetrieverConfig(VectorStoreRetrieverConfig):
 
 
 class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
-
     compressor_model_provider: str = Field(
         title="provider of the compressor model",
     )
@@ -146,7 +144,6 @@ class ExampleQueryInput(BaseModel):
 
     @root_validator()
     def validate_retriever_type(cls, values: Dict) -> Dict:
-
         retriever_name = values.get("retriever_name")
 
         assert (

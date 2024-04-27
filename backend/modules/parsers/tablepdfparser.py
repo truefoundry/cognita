@@ -1,8 +1,10 @@
 import re
+
 import deepdoctection as dd
 import pandas as pd
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 from backend.modules.parsers.parser import BaseParser
 
 config_overwrite = [

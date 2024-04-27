@@ -1,15 +1,16 @@
-from typing import Optional
 import uuid
+from types import SimpleNamespace
+from typing import Optional
+
 import requests
-from backend.logger import logger
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
-
 from truefoundry import ml
 from truefoundry.ml import DataDirectory
-from types import SimpleNamespace
+
+from backend.logger import logger
 from backend.settings import settings
-from backend.types import ModelType, UploadToDataDirectoryDto, LLMConfig, EmbedderConfig
+from backend.types import EmbedderConfig, LLMConfig, ModelType, UploadToDataDirectoryDto
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 

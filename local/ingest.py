@@ -1,19 +1,19 @@
 # Fill up local.metadata.json
 # Load the env file for local setup
-from backend.settings import Settings
 import asyncio
 import time
 
+from backend.indexer.indexer import ingest_data as ingest_data_to_collection
+
 # Data ingestion
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.settings import Settings
 from backend.types import IngestDataToCollectionDto
-from backend.indexer.indexer import ingest_data as ingest_data_to_collection
 
 settings = Settings()
 
 
 async def ingest():
-
     collection = METADATA_STORE_CLIENT.get_collection_by_name(no_cache=True)
 
     data_source = METADATA_STORE_CLIENT.get_data_source_from_fqn()
@@ -29,7 +29,6 @@ async def ingest():
 
 
 if __name__ == "__main__":
-
     start = time.time()
     # Run only when u have to ingest data
     print("Ingesting Data....")

@@ -1,8 +1,8 @@
-import yaml
 import random
 import string
 from typing import List
 
+import yaml
 from pydantic import BaseModel
 
 from backend.logger import logger

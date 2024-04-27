@@ -3,9 +3,9 @@ import asyncio
 from backend.indexer.argument_parser import parse_args
 from backend.indexer.indexer import sync_data_source_to_collection
 from backend.indexer.types import DataIngestionConfig
+from backend.logger import logger
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.types import CreateDataIngestionRun
-from backend.logger import logger
 
 
 async def main():

@@ -1,16 +1,15 @@
+import warnings
 from typing import Dict
 
+import requests
 from qdrant_client._pydantic_compat import to_dict
 from qdrant_client.client_base import QdrantBase
 from qdrant_client.http import models
-import requests
 
 from backend.logger import logger
-import warnings
 
 
 def get_collection(backend_url: str, collection_name: str, type: str = "source"):
-
     # fetch collection from source
     collections = None
     with requests.get(f"{backend_url.rstrip('/')}/v1/collections/") as r:
