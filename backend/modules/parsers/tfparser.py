@@ -30,7 +30,8 @@ class TfParser(BaseParser):
         Sends a POST request to the TfParser service.
         """
         response = requests.post(
-            self.tf_service_url.rstrip("/") + endpoint, files=payload
+            self.tf_service_url.rstrip("/") + endpoint,
+            files=payload,
         )
         if "error" in response:
             print(f"Error: {response.json()['error']}")
@@ -65,70 +66,88 @@ class TfParser(BaseParser):
             # Open the PDF file using pdfplumber
             doc = fitz.open(filepath)
 
-            # get file name
-            _, tail = os.path.split(filepath)
+            # get file path & name
+            head, tail = os.path.split(filepath)
 
-            # iterate over each page in the PDF file
             for page in doc:
-                page_number = page.number + 1
-                print(f"\n\nProcessing page {page_number}...")
-                response = await self._send_file_request(
-                    payload={"file": page.tobytes(), "file_name": tail},
-                    endpoint="/tf-parse-pdf-page",
+                try:
+                    page_number = page.number + 1
+                    print(f"\n\nProcessing page {page_number}...")
+
+                    content = fitz.open()
+                    # copy over current page
+                    content.insert_pdf(doc, from_page=page.number, to_page=page.number)
+                    # save the page to a temporary file
+                    temp_file = os.path.join(head, f"{tail}.pdf")
+                    content.save(temp_file)
+                    content.close()
+
+                    # send the page to the TfParser service
+                    response = await self._send_file_request(
+                        payload={
+                            "file": open(temp_file, "rb"),
+                        },
+                        endpoint="/tf-parse-pdf",
+                    )
+
+                    # Parse the response
+                    response = response.json()
+                    if "error" not in response:
+                        for res in response:
+                            page_content = res.get("page_content")
+                            page_texts.append(page_content)
+                            if (
+                                page_content != ""
+                                or page_content is not None
+                                or page_content != " "
+                            ):
+                                metadata = res.get("metadata", {})
+                                metadata["page_number"] = (page_number,)
+                                metadata["source"] = tail
+                                final_texts.append(
+                                    Document(
+                                        page_content=page_content,
+                                        metadata=metadata,
+                                    )
+                                )
+                    else:
+                        print(f"Error in Page: {response['error']}")
+
+                    # remove the temporary file
+                    print("Removing temp file...")
+                    os.remove(temp_file)
+                except Exception as e:
+                    print(f"Exception in Page: {e}")
+                    # remove the temporary file
+                    print("Removing temp file...")
+                    os.remove(temp_file)
+                    continue
+
+            document_text = " ".join(page_texts)
+            if document_text:
+                response = await self._send_text_request(
+                    payload={"text": document_text, "file_name": tail},
+                    endpoint="/tf-get-response",
                 )
 
                 response = response.json()
-                print(response)
-            #     if 'error' not in response:
-            #         if response['page'] != "" or response['page'] is not None or response['page'] != " ":
-            #             page_texts.append(response['page'])
-
-            #         if response['parsed_page'].get("page_content") != "" or response['parsed_page'].get("page_content") is not None or response['parsed_page'].get("page_content") != " ":
-            #             final_texts.append(
-            #                 Document(
-            #                     page_content=response['parsed_page'].get("page_content"),
-            #                     metadata=response['parsed_page'].get("metadata"),
-            #                 )
-            #             )
-            #     else:
-            #         print(f"Error: {response['error']}")
-
-            # document_text = " ".join(page_texts)
-            # if document_text:
-            #     response = await self._send_text_request(
-            #         payload={"text": document_text},
-            #         endpoint="/tf-get-response",
-            #     )
-            #     response = response.json()
-            #     if 'error' not in response:
-            #         if response['response'].get("page_content") != "" or response['response'].get("page_content") is not None or response['response'].get("page_content") != " ":
-            #             final_texts.append(
-            #                 Document(
-            #                     page_content=response['response'].get("page_content"),
-            #                     metadata=response['response'].get("metadata"),
-            #                 )
-            #             )
-            #     else:
-            #         print(f"Error: {response['error']}")
-
-            # file_obj = {"file": open(filepath, "rb")}
-            # print("Sending file to TfParser service...")
-            # response = await self._send_file_request(
-            #     payload=file_obj, endpoint="/tf-parse-pdf"
-            # )
-            # print("Received response from TfParser service.")
-
-            # response = response.json()
-            # if response:
-            #     print("Parsing response...")
-            #     for res in response:
-            #         if res["page_content"] != "" or res["page_content"] is not None or res["page_content"] != " ":
-            #             final_texts.append(
-            #                 Document(
-            #                     page_content=res["page_content"], metadata=res["metadata"]
-            #                 )
-            #             )
+                if "error" not in response:
+                    page_content = response["response"].get("page_content")
+                    metadata = response["response"].get("metadata", {})
+                    if (
+                        page_content != ""
+                        or page_content is not None
+                        or page_content != " "
+                    ):
+                        final_texts.append(
+                            Document(
+                                page_content=page_content,
+                                metadata=metadata,
+                            )
+                        )
+                else:
+                    print(f"Error: {response['error']}")
             return final_texts
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Ultimate Exception: {e}")
             return final_texts
