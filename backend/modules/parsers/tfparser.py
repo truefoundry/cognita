@@ -1,8 +1,6 @@
 from typing import Optional
-import fitz, cv2, base64
-import numpy as np
+import fitz, os
 import requests
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from backend.modules.parsers.parser import BaseParser
 from backend.settings import settings
 from backend.logger import logger
@@ -32,7 +30,19 @@ class TfParser(BaseParser):
             self.tf_service_url.rstrip("/") + endpoint, files=payload
         )
         if "error" in response:
-            logger.error(f"Error: {response.json()['error']}")
+            print(f"Error: {response.json()['error']}")
+            return None
+        return response
+    
+    async def _send_text_request(self, payload: dict, endpoint: str):
+        """
+        Sends a POST request to the TfParser service.
+        """
+        response = requests.post(
+            self.tf_service_url.rstrip("/") + endpoint, json=payload
+        )
+        if "error" in response:
+            print(f"Error: {response.json()['error']}")
             return None
         return response
 
@@ -43,24 +53,82 @@ class TfParser(BaseParser):
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
         if not filepath.endswith(".pdf"):
-            logger.error("Invalid file extension. TfParser only supports PDF files.")
+            print("Invalid file extension. TfParser only supports PDF files.")
             return []
+        page_texts = list()
         final_texts = list()
+        
         try:
-            file_obj = {"file": open(filepath, "rb")}
-            response = await self._send_file_request(
-                payload=file_obj, endpoint="/tf-parse-pdf"
-            )
+            # Open the PDF file using pdfplumber
+            doc = fitz.open(filepath)
 
-            response = response.json()
-            if response:
-                for res in response:
-                    final_texts.append(
-                        Document(
-                            page_content=res["page_content"], metadata=res["metadata"]
-                        )
-                    )
+            # get file name
+            _, tail = os.path.split(filepath)
+
+            # iterate over each page in the PDF file
+            for page in doc:
+                page_number = page.number + 1
+                print(f"\n\nProcessing page {page_number}...")
+                response = await self._send_file_request(
+                    payload={"file": page.tobytes(), "file_name": tail},
+                    endpoint="/tf-parse-pdf-page",
+                )
+
+                response = response.json()
+                print(response)
+            #     if 'error' not in response:
+            #         if response['page'] != "" or response['page'] is not None or response['page'] != " ":
+            #             page_texts.append(response['page'])
+
+            #         if response['parsed_page'].get("page_content") != "" or response['parsed_page'].get("page_content") is not None or response['parsed_page'].get("page_content") != " ":
+            #             final_texts.append(
+            #                 Document(
+            #                     page_content=response['parsed_page'].get("page_content"),
+            #                     metadata=response['parsed_page'].get("metadata"),
+            #                 )
+            #             )
+            #     else:
+            #         print(f"Error: {response['error']}")
+
+            # document_text = " ".join(page_texts)
+            # if document_text:
+            #     response = await self._send_text_request(
+            #         payload={"text": document_text},
+            #         endpoint="/tf-get-response",
+            #     )
+            #     response = response.json()
+            #     if 'error' not in response:
+            #         if response['response'].get("page_content") != "" or response['response'].get("page_content") is not None or response['response'].get("page_content") != " ":
+            #             final_texts.append(
+            #                 Document(
+            #                     page_content=response['response'].get("page_content"),
+            #                     metadata=response['response'].get("metadata"),
+            #                 )
+            #             )
+            #     else:
+            #         print(f"Error: {response['error']}")
+
+
+
+
+            # file_obj = {"file": open(filepath, "rb")}
+            # print("Sending file to TfParser service...")
+            # response = await self._send_file_request(
+            #     payload=file_obj, endpoint="/tf-parse-pdf"
+            # )
+            # print("Received response from TfParser service.")
+
+            # response = response.json()
+            # if response:
+            #     print("Parsing response...")
+            #     for res in response:
+            #         if res["page_content"] != "" or res["page_content"] is not None or res["page_content"] != " ":
+            #             final_texts.append(
+            #                 Document(
+            #                     page_content=res["page_content"], metadata=res["metadata"]
+            #                 )
+            #             )
             return final_texts
         except Exception as e:
-            logger.error(f"Error: {e}")
+            print(f"Error: {e}")
             return final_texts
