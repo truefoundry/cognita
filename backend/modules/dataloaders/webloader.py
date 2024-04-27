@@ -1,15 +1,14 @@
 # Author: https://github.com/paulpierre/markdown-crawler/
 # Description: A multithreaded web crawler that recursively crawls a website and creates a markdown file for each page.
-from markdown_crawler import md_crawl
-
 import os
 import tempfile
-from typing import List, Dict, Iterator
+from typing import Dict, Iterator, List
+
+from markdown_crawler import md_crawl
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
-
 
 DEFAULT_BASE_DIR = os.path.join(
     tempfile.gettempdir(), "webloader"

@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+
 import fitz
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter

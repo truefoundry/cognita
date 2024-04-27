@@ -1,6 +1,6 @@
 import typing
-from typing import Optional
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from langchain.docstore.document import Document
 

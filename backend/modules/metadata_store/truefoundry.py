@@ -7,8 +7,8 @@ import warnings
 from typing import Any, Dict, List
 
 import mlflow
-from truefoundry import ml
 from fastapi import HTTPException
+from truefoundry import ml
 
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
@@ -248,9 +248,9 @@ class TrueFoundry(BaseMetadataStore):
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[data_source_association.data_source_fqn] = (
-            associated_data_source
-        )
+        collection.associated_data_sources[
+            data_source_association.data_source_fqn
+        ] = associated_data_source
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
         logger.debug(

@@ -1,10 +1,13 @@
+import os
 from typing import Optional
-import fitz, os
+
+import fitz
 import requests
+from langchain.docstore.document import Document
+
+from backend.logger import logger
 from backend.modules.parsers.parser import BaseParser
 from backend.settings import settings
-from backend.logger import logger
-from langchain.docstore.document import Document
 
 
 class TfParser(BaseParser):
@@ -33,7 +36,7 @@ class TfParser(BaseParser):
             print(f"Error: {response.json()['error']}")
             return None
         return response
-    
+
     async def _send_text_request(self, payload: dict, endpoint: str):
         """
         Sends a POST request to the TfParser service.
@@ -57,7 +60,7 @@ class TfParser(BaseParser):
             return []
         page_texts = list()
         final_texts = list()
-        
+
         try:
             # Open the PDF file using pdfplumber
             doc = fitz.open(filepath)
@@ -107,9 +110,6 @@ class TfParser(BaseParser):
             #             )
             #     else:
             #         print(f"Error: {response['error']}")
-
-
-
 
             # file_obj = {"file": open(filepath, "rb")}
             # print("Sending file to TfParser service...")

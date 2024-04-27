@@ -1,51 +1,43 @@
-from fastapi import HTTPException, Body
-from fastapi.responses import StreamingResponse
-import async_timeout
 import asyncio
 import json
 
-
-from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
-
+import async_timeout
+from fastapi import Body, HTTPException
+from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
+from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_community.chat_models.ollama import ChatOllama
-from langchain_openai.chat_models import ChatOpenAI
-
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_openai.chat_models import ChatOpenAI
+from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
-from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.summary.types import (
-    ExampleQueryInput,
-    GENERATION_TIMEOUT_SEC,
-)
 from backend.modules.query_controllers.summary.payload import (
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 )
-
-
+from backend.modules.query_controllers.summary.types import (
+    GENERATION_TIMEOUT_SEC,
+    ExampleQueryInput,
+)
+from backend.modules.reranker import MxBaiReranker
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
-
-
-from truefoundry.langchain import TrueFoundryChat
-from backend.modules.reranker import MxBaiReranker
-
+from backend.settings import settings
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -72,7 +64,6 @@ EXAMPLES = {
 
 @query_controller("/summary-report")
 class SummaryQueryController:
-
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -306,7 +297,6 @@ class SummaryQueryController:
                 )
 
             else:
-
                 outputs = await rag_chain_with_source.ainvoke(request.query)
 
                 # Intermediate testing

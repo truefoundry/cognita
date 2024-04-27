@@ -1,9 +1,9 @@
-SUMMARY_PROMPT_TEMPLATE = """You are an AI assistant specialising in finance, insurance and private equity. Your role is to provide detailed answers of 60-80 words, drawing directly from the context. 
+SUMMARY_PROMPT_TEMPLATE = """You are an AI assistant specialising in finance, insurance and private equity. Your role is to provide detailed answers of 60-80 words, drawing directly from the context.
 In your responses:
 - Only use information found in the listed sources
-- Do not generate speculative answers or information not supported by the sources 
+- Do not generate speculative answers or information not supported by the sources
 - Each question should be answered separately in question and answer pair format.
-Context: {context} 
+Context: {context}
 Question: {question}
 """
 
@@ -53,7 +53,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
     "summary": "search with mmr",
     "description": """
-        Requires k and fetch_k in search_kwargs for mmr support depends on vector db. 
+        Requires k and fetch_k in search_kwargs for mmr support depends on vector db.
         search_type can either be similarity or mmr or similarity_score_threshold""",
     "value": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR,
 }
@@ -79,7 +79,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
     "summary": "search with threshold score",
     "description": """
-        Requires score_threshold float (0~1) in search kwargs. 
+        Requires score_threshold float (0~1) in search kwargs.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE,
 }
@@ -240,7 +240,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
     "summary": "multi-query + mmr",
-    "description": """ 
+    "description": """
         Requires k and fetch_k in search_kwargs for mmr.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR,
@@ -273,7 +273,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
     "summary": "multi-query + threshold score",
     "description": """
         Typically used for complex user queries.
-        Requires score_threshold float (0~1) in search kwargs. 
+        Requires score_threshold float (0~1) in search kwargs.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE,
 }
@@ -312,7 +312,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
     "summary": "multi-query + re-ranking +  mmr",
     "description": """
         Typically used for complex user queries.
-        Requires k and fetch_k in search_kwargs for mmr. 
+        Requires k and fetch_k in search_kwargs for mmr.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR,
 }

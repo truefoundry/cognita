@@ -4,8 +4,7 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
-from qdrant_client.http.models import VectorParams, Distance
-
+from qdrant_client.http.models import Distance, VectorParams
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
@@ -40,7 +39,6 @@ class QdrantVectorDB(BaseVectorDB):
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size

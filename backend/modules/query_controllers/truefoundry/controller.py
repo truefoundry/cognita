@@ -1,51 +1,43 @@
-from fastapi import HTTPException, Body
-from fastapi.responses import StreamingResponse
-import async_timeout
 import asyncio
 import json
 
-
-from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
-
+import async_timeout
+from fastapi import Body, HTTPException
+from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
+from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_community.chat_models.ollama import ChatOllama
-from langchain_openai.chat_models import ChatOpenAI
-
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_openai.chat_models import ChatOpenAI
+from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
-from backend.settings import settings
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.truefoundry.types import (
-    ExampleQueryInput,
-    GENERATION_TIMEOUT_SEC,
-)
 from backend.modules.query_controllers.truefoundry.payload import (
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
+    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 )
-
-
+from backend.modules.query_controllers.truefoundry.types import (
+    GENERATION_TIMEOUT_SEC,
+    ExampleQueryInput,
+)
+from backend.modules.reranker import MxBaiReranker
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
-
-
-from truefoundry.langchain import TrueFoundryChat
-from backend.modules.reranker import MxBaiReranker
-
+from backend.settings import settings
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -72,7 +64,6 @@ EXAMPLES = {
 
 @query_controller("/truefoundry")
 class SummaryQueryController:
-
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -286,19 +277,17 @@ class SummaryQueryController:
             )
 
             # Just the retriever
-            setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+            setup_and_retrieval = RunnableParallel(
+                {"context": retriever, "question": RunnablePassthrough()}
+            )
             docs = await setup_and_retrieval.ainvoke(request.query)
             print(f"Docs: {docs}")
-            
+
             # Retriver and QA
             outputs = await (docs | QA_PROMPT).ainvoke(request.query)
             print(f"OP: {outputs}")
 
-            return {
-                "output": "Done!"
-            }
-
-            
+            return {"output": "Done!"}
 
             # Using LCEL
             # rag_chain_from_docs = (
@@ -324,46 +313,46 @@ class SummaryQueryController:
 
             #     outputs = await rag_chain_with_source.ainvoke(request.query)
 
-                # Intermediate testing
-                # Just the retriever
-                # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
-                # outputs = await setup_and_retrieval.ainvoke(request.query)
-                # print(outputs)
+            # Intermediate testing
+            # Just the retriever
+            # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+            # outputs = await setup_and_retrieval.ainvoke(request.query)
+            # print(outputs)
 
-                # Retriver and QA
-                # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
-                # print(outputs)
+            # Retriver and QA
+            # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
+            # print(outputs)
 
-                # Retriver, QA and LLM
-                # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
-                # print(outputs)
+            # Retriver, QA and LLM
+            # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
+            # print(outputs)
 
-                # SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed one pager summary report. Summary: {context}"
+            # SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed one pager summary report. Summary: {context}"
 
-                # Get the summary
-                # summary_rag_chain = (
-                #     RunnablePassthrough.assign(
-                #         context=lambda x: x["answer"],
-                #     )
-                #     | PromptTemplate(
-                #         input_variables=["context"],
-                #         template=SUMMARY_PROMPT,
-                #     )
-                #     | llm
-                #     | StrOutputParser()
-                # )
+            # Get the summary
+            # summary_rag_chain = (
+            #     RunnablePassthrough.assign(
+            #         context=lambda x: x["answer"],
+            #     )
+            #     | PromptTemplate(
+            #         input_variables=["context"],
+            #         template=SUMMARY_PROMPT,
+            #     )
+            #     | llm
+            #     | StrOutputParser()
+            # )
 
-                # summary = await summary_rag_chain.ainvoke(outputs)
+            # summary = await summary_rag_chain.ainvoke(outputs)
 
-                # answer = (
-                #     outputs["answer"] + "\n\n**Summary:**\n" + summary
-                #     if ("Summary" or "summary") not in summary
-                #     else outputs["answer"] + "\n\n\n" + summary
-                # )
-                # return {
-                #     "answer": answer,
-                #     "docs": outputs["context"] if outputs["context"] else [],
-                # }
+            # answer = (
+            #     outputs["answer"] + "\n\n**Summary:**\n" + summary
+            #     if ("Summary" or "summary") not in summary
+            #     else outputs["answer"] + "\n\n\n" + summary
+            # )
+            # return {
+            #     "answer": answer,
+            #     "docs": outputs["context"] if outputs["context"] else [],
+            # }
 
         except HTTPException as exp:
             raise exp

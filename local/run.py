@@ -1,6 +1,7 @@
+import asyncio
+
 from backend.modules.query_controllers import ExampleQueryController
 from backend.modules.query_controllers.example.types import ExampleQueryInput
-import asyncio
 
 # Payload for the query
 # You can try different payload examples from `backend.modules.query_controllers.example.payload`

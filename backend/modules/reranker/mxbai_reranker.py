@@ -1,7 +1,8 @@
-from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
-from langchain.docstore.document import Document
 from typing import List, Optional, Sequence
+
 from langchain.callbacks.manager import Callbacks
+from langchain.docstore.document import Document
+from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 from sentence_transformers import CrossEncoder
 
 
