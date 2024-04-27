@@ -24,3 +24,4 @@ test.py
 tf-docs-crawled/
 truefoundry-docs/
 *.zip
+qdrant_storage/
