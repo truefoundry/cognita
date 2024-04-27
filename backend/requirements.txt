@@ -26,7 +26,7 @@ timm==0.9.16
 python-doctr==0.8.1
 
 # singlestore db
-# singlestoredb==1.0.4
+singlestoredb==1.0.4
 
 #### Embeddings
 # Install torch for as per your requirements: https://pytorch.org/get-started/locally/
