@@ -20,6 +20,7 @@ gunicorn==21.2.0
 markdown-crawler==0.0.8
 black==24.3.0
 async-timeout==4.0.3
+pre-commit==3.7.0
 
 # for doctr
 deepdoctection==0.30
