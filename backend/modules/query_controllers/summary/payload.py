@@ -1,3 +1,12 @@
+SUMMARY_PROMPT_TEMPLATE = """You are an AI assistant specialising in finance, insurance and private equity. Your role is to provide detailed answers of 60-80 words, drawing directly from the context.
+In your responses:
+- Only use information found in the listed sources
+- Do not generate speculative answers or information not supported by the sources
+- Each question should be answered separately in question and answer pair format.
+Context: {context}
+Question: {question}
+"""
+
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
@@ -6,7 +15,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "vectorstore",
     "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
     "stream": False,
@@ -29,7 +38,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "vectorstore",
     "retriever_config": {
         "search_type": "mmr",
@@ -58,7 +67,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "vectorstore",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
@@ -84,7 +93,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -114,7 +123,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -149,7 +158,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -180,7 +189,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity",
@@ -212,7 +221,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "mmr",
@@ -246,7 +255,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
@@ -279,7 +288,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -317,7 +326,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -352,7 +361,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
+    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
