@@ -78,37 +78,41 @@ class TfParser(BaseParser):
                     # copy over current page
                     content.insert_pdf(doc, from_page=page.number, to_page=page.number)
                     # save the page to a temporary file
-                    temp_file = os.path.join(head, f"{tail}.pdf")
+                    temp_file = os.path.join(head, f"{tail}-{page_number}.pdf")
                     content.save(temp_file)
                     content.close()
 
                     # send the page to the TfParser service
-                    response = await self._send_file_request(
-                        payload={
-                            "file": open(temp_file, "rb"),
-                        },
-                        endpoint="/tf-parse-pdf",
-                    )
-
+                    with open(temp_file, "rb") as f:
+                        response = await self._send_file_request(
+                            payload={
+                                "file": f,
+                            },
+                            endpoint="/tf-parse-pdf",
+                        )
                     # Parse the response
                     response = response.json()
+
                     if "error" not in response:
                         for res in response:
-                            page_content = res.get("page_content")
-                            page_texts.append(page_content)
+                            page_content = res.get("page_content").strip()
                             if (
                                 page_content != ""
-                                or page_content is not None
-                                or page_content != " "
+                                and page_content is not None
+                                and page_content != " "
                             ):
                                 metadata = res.get("metadata", {})
-                                metadata["page_number"] = (page_number,)
+                                metadata["page_number"] = page_number
                                 metadata["source"] = tail
                                 final_texts.append(
                                     Document(
                                         page_content=page_content,
                                         metadata=metadata,
                                     )
+                                )
+                                page_texts.append(page_content)
+                                print(
+                                    f"Page Content: {page_content}, \nmetadata-pg-no: {metadata['page_number']}, metadata-type: {metadata['type']}"
                                 )
                     else:
                         print(f"Error in Page: {response['error']}")
@@ -125,19 +129,19 @@ class TfParser(BaseParser):
 
             document_text = " ".join(page_texts)
             if document_text:
+                print("\n\nProcessing combined doc...")
                 response = await self._send_text_request(
                     payload={"text": document_text, "file_name": tail},
                     endpoint="/tf-get-response",
                 )
-
                 response = response.json()
                 if "error" not in response:
-                    page_content = response["response"].get("page_content")
-                    metadata = response["response"].get("metadata", {})
+                    page_content = response.get("page_content").strip()
+                    metadata = response.get("metadata", {})
                     if (
                         page_content != ""
-                        or page_content is not None
-                        or page_content != " "
+                        and page_content is not None
+                        and page_content != " "
                     ):
                         final_texts.append(
                             Document(
@@ -145,6 +149,7 @@ class TfParser(BaseParser):
                                 metadata=metadata,
                             )
                         )
+                        print(f"Page Content: {page_content}")
                 else:
                     print(f"Error: {response['error']}")
             return final_texts

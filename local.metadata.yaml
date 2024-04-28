@@ -1,4 +1,4 @@
-collection_name: brady
+collection_name: bradysmall
 data_source:
     type: localdir
     uri: /Users/prathamesh/Desktop/brady
