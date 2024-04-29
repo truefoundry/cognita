@@ -1,6 +1,6 @@
 FROM --platform=linux/amd64 python:3.10
 
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 poppler-utils qpdf -y
+RUN apt-get update -y && apt-get install ffmpeg libsm6 libxext6 poppler-utils qpdf -y
 
 # Set environment variables
 ENV PATH=/virtualenvs/venv/bin:$PATH
