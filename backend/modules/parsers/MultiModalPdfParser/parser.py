@@ -8,6 +8,7 @@ import cv2
 import fitz
 import layoutparser as lp
 import numpy as np
+from huggingface_hub import hf_hub_download
 from langchain.docstore.document import Document
 from PIL import Image
 
@@ -15,6 +16,15 @@ from backend.logger import logger
 from backend.modules.parsers.MultiModalPdfParser.src.llms.gpt4 import GPT4Vision
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
+
+
+def download(path):
+    downloaded_path = hf_hub_download(
+        repo_id="truefoundry/layout-parser",
+        filename="mask_rcnn_X_101_32x8d_FPN_3x.pth",
+        local_dir=path,
+    )
+    return downloaded_path
 
 
 def stringToRGB(base64_string: str):
@@ -54,9 +64,11 @@ class PdfMultiModalParser(BaseParser):
         self.config_path = os.path.abspath(
             "./backend/modules/parsers/MultiModalPdfParser/src/layout-model/mask_rcnn_X_101_32x8d_FPN_3x.yml"
         )
-        self.model_path = os.path.abspath(
-            "./backend/modules/parsers/MultiModalPdfParser/src/layout-model/files/mask_rcnn_X_101_32x8d_FPN_3x.pth"
+
+        self.model_path = download(
+            path="./backend/modules/parsers/MultiModalPdfParser/src/layout-model/"
         )
+        print(self.model_path)
 
         self.model = lp.Detectron2LayoutModel(
             config_path=self.config_path,

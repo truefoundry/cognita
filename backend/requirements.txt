@@ -37,6 +37,8 @@ singlestoredb==1.0.4
 # torchaudio==2.2.1
 # transformers==4.39.0
 
+huggingface-hub==0.20.3
+
 
 #### Reranker
 # For use Mxbread Reranker
