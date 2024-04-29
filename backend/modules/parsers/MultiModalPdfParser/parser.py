@@ -125,7 +125,7 @@ class PdfMultiModalParser(BaseParser):
         parsed_images: list,
         file_name: str,
     ):
-        logger.info("Extracting images from figure blocks...")
+        print("Extracting images from figure blocks...")
         for figure in figure_blocks:
             # Crop the figure block from the main image
             # Some padding is added to the crop to ensure the entire figure is included
@@ -147,23 +147,20 @@ class PdfMultiModalParser(BaseParser):
                         Document(
                             page_content=response,
                             metadata={
-                                # "image_b64": image_b64,
+                                "image_b64": image_b64,
                                 "type": figure.type,
                                 "page_number": page_number,
                                 "source": file_name,
                             },
                         )
                     )
-                    logger.debug(f"Figure response: {response}")
-
-        return parsed_images
+                    print(f"Figure response: {response} ----- Page: {page_number}")
 
     async def _parse_image(self, image_b64: str, page_number: int, file_name: str):
         parsed_images = list()
-        page_description = ""
 
         # get response from VLM for main image
-        logger.info("Sending main image to VLM...")
+        print("Sending main image to VLM...")
         response = await self.vlm_agent(
             base64_image=image_b64,
             prompt="Summarize the contents of the image in a structured format",
@@ -173,7 +170,7 @@ class PdfMultiModalParser(BaseParser):
             logger.error(f"Error in VLM: {response['error']}")
             return {"error": response["error"]}
         else:
-            logger.info("Received response from VLM...")
+            print("Received response from VLM...")
             response = response["response"].strip()
             if contains_text(response):
                 parsed_images.append(
@@ -188,13 +185,12 @@ class PdfMultiModalParser(BaseParser):
                         },
                     )
                 )
-                logger.debug(f"Main image response: {response}")
-                page_description = response
+                print(f"Main image response: {response}")
 
             ########################################################
             # LAYOUT PARSING
             ########################################################
-            logger.info("Parsing layout...")
+            print("Parsing layout...")
             # Convert the base64 string to an image
             org_image = stringToRGB(image_b64)
             # Detect the layout
@@ -202,7 +198,7 @@ class PdfMultiModalParser(BaseParser):
             # Get text and figure blocks
             parsed_blocks = self._get_text_and_figure_blocks(layout, org_image)
 
-            logger.info("Extracting text and images from blocks...")
+            print("Extracting text and images from blocks...")
             # Get text from text blocks and images from figure blocks
             await self._get_text_from_blocks(
                 figure_blocks=parsed_blocks,
@@ -211,9 +207,24 @@ class PdfMultiModalParser(BaseParser):
                 page_number=page_number,
                 image_b64=image_b64,
                 file_name=file_name,
-            ),
+            )
 
-            return parsed_images, page_description
+            all_page_content = " ".join([page.page_content for page in parsed_images])
+            page_summary = await self.vlm_agent.summarize(all_page_content)
+
+            parsed_images.append(
+                Document(
+                    page_content=page_summary["page_content"],
+                    metadata={
+                        "image_b64": image_b64,
+                        "type": "Summary",
+                        "source": file_name,
+                        "category": "summary",
+                    },
+                )
+            )
+
+            return parsed_images
 
     async def get_chunks(
         self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
@@ -250,14 +261,12 @@ class PdfMultiModalParser(BaseParser):
                     image_base64 = base64.b64encode(buffer).decode("utf-8")
 
                     # Send the image to the parse
-                    parsed_page_layouts, page_description = await self._parse_image(
+                    parsed_page_layouts = await self._parse_image(
                         image_base64, page_number, file_name
                     )
 
                     if parsed_page_layouts != []:
                         final_texts.extend(parsed_page_layouts)
-                    if page_description != "" and page_description is not None:
-                        page_texts.append(page_description)
                 except Exception as e:
                     print(f"Error in page: {page_number} - {e}")
                     continue
