@@ -1,4 +1,5 @@
 import base64
+import io
 import os
 import re
 from typing import Optional
@@ -8,19 +9,33 @@ import fitz
 import layoutparser as lp
 import numpy as np
 from langchain.docstore.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from PIL import Image
 
 from backend.logger import logger
+from backend.modules.parsers.MultiModalPdfParser.src.llms.gpt4 import GPT4Vision
 from backend.modules.parsers.parser import BaseParser
-from backend.modules.parsers.TruefoundryParser.src.llms.gpt4 import GPT4Vision
-from backend.modules.parsers.TruefoundryParser.src.utils import (
-    arrayToBase64,
-    stringToRGB,
-)
 from backend.modules.parsers.utils import contains_text
 
 
-class TfParser(BaseParser):
+def stringToRGB(base64_string: str):
+    imgdata = base64.b64decode(str(base64_string))
+    img = Image.open(io.BytesIO(imgdata))
+    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+    return opencv_img
+
+
+def arrayToBase64(image_arr: np.ndarray):
+    image = Image.fromarray(image_arr)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    img_bytes = buffer.getvalue()
+
+    encoded = base64.b64encode(img_bytes)
+    base64_str = encoded.decode("utf-8")
+    return base64_str
+
+
+class PdfMultiModalParser(BaseParser):
     """
     TfParser is a multi-modal parser class for deep extraction of pdf documents.
     Requires a running instance of the TfParser service that has access to TFLLM Gateway
@@ -37,10 +52,10 @@ class TfParser(BaseParser):
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
         self.config_path = os.path.abspath(
-            "./backend/modules/parsers/TruefoundryParser/src/layout-model/mask_rcnn_X_101_32x8d_FPN_3x.yml"
+            "./backend/modules/parsers/MultiModalPdfParser/src/layout-model/mask_rcnn_X_101_32x8d_FPN_3x.yml"
         )
         self.model_path = os.path.abspath(
-            "./backend/modules/parsers/TruefoundryParser/src/layout-model/files/mask_rcnn_X_101_32x8d_FPN_3x.pth"
+            "./backend/modules/parsers/MultiModalPdfParser/src/layout-model/files/mask_rcnn_X_101_32x8d_FPN_3x.pth"
         )
 
         self.model = lp.Detectron2LayoutModel(
@@ -234,48 +249,6 @@ class TfParser(BaseParser):
                 except Exception as e:
                     print(f"Error in page: {page_number} - {e}")
                     continue
-
-            ########################################################
-            # Document Summary
-            ########################################################
-
-            # TO THINK LATER IF WE WANT TO HAVE THIS BASED ON ANALYSIS
-            # if doc.page_count > 1:
-            #     document_text = " ".join(page_texts)
-            #     # clean up text for any problematic characters
-            #     document_text = re.sub("\n", " ", document_text).strip()
-            #     document_text = document_text.encode("ascii", errors="ignore").decode("ascii")
-
-            #     if len(document_text) > self.max_chunk_size:
-            #         # Split the text into chunks of size less than or equal to max_chunk_size
-            #         text_splitter = RecursiveCharacterTextSplitter(
-            #             chunk_size=self.max_chunk_size, chunk_overlap=self.chunk_overlap
-            #         )
-            #         text_splits = text_splitter.split_text(document_text)
-
-            #         for document_text in text_splits:
-            #             if document_text != "" and document_text is not None:
-            #                 print("\n\nProcessing combined doc...")
-            #                 print(f"Document Text: {document_text}")
-
-            #                 response = await self.vlm_agent.summarize(document_text)
-            #                 if "error" not in response:
-            #                     page_content = response.get("page_content").strip()
-            #                     if (
-            #                         page_content != ""
-            #                         and page_content is not None
-            #                     ):
-            #                         final_texts.append(
-            #                             Document(
-            #                                 page_content=page_content,
-            #                                 metadata={
-            #                                     "type": "Document Summary",
-            #                                     "source": file_name,
-            #                                 },
-            #                             )
-            #                         )
-            #                 else:
-            #                     print(f"Error in Document: {response['error']}")
             return final_texts
         except Exception as e:
             print(f"Final Exception: {e}")

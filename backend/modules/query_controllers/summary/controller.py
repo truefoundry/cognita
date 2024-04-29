@@ -40,30 +40,15 @@ from backend.server.decorators import post, query_controller
 from backend.settings import settings
 
 EXAMPLES = {
-    "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
     "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     "contextual-compression-multi-query-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    # Keeping these for future use:
-    # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-    # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
 }
 
-# if settings.LOCAL:
-#     EXAMPLES.update(
-#         {
-#             "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-#             "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-#             "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-#             "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-#         }
-#     )
 
-
-@query_controller("/summary-report")
-class SummaryQueryController:
+@query_controller("/intelligent-summary")
+class IntelligentSummaryQueryController:
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -74,9 +59,15 @@ class SummaryQueryController:
         return "\n\n".join(doc.page_content for doc in docs)
 
     def _format_docs_for_stream(self, docs):
-        return [
-            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
-        ]
+        formatted_docs = list()
+        # docs is a list of list of document objects
+        for doc in docs:
+            for pages in doc:
+                pages.metadata.pop("image_b64")
+                formatted_docs.append(
+                    {"page_content": pages.page_content, "metadata": pages.metadata}
+                )
+        return formatted_docs
 
     def _get_llm(self, model_configuration, stream=False):
         """
@@ -246,6 +237,43 @@ class SummaryQueryController:
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
+    async def _stream_answer_queries(self, rag_chain, queries, summary_rag_chain):
+        async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
+            try:
+                final_docs = list()
+                all_answers = {"answer": ""}
+                for query in queries:
+                    yield json.dumps(
+                        {"answer": "\n\n**Q:** " + query + "\n\n**Ans:** "}
+                    )
+                    await asyncio.sleep(0.1)
+                    async for chunk in rag_chain.astream(query):
+                        if "context" in chunk:
+                            final_docs.append(chunk["context"])
+                            await asyncio.sleep(0.1)
+                        elif "answer" in chunk:
+                            yield json.dumps({"answer": chunk["answer"]})
+                            all_answers["answer"] += chunk["answer"] + " "
+                            await asyncio.sleep(0.1)
+                    yield json.dumps({"answer": "\n\n"})
+                    await asyncio.sleep(0.1)
+
+                # summarize all answers
+                if len(queries) > 1:
+                    yield json.dumps({"answer": "**Summary:** "})
+                    await asyncio.sleep(0.1)
+                    async for chunk in summary_rag_chain.astream(all_answers):
+                        yield json.dumps({"answer": chunk})
+                        await asyncio.sleep(0.2)
+
+                # return final docs
+                await asyncio.sleep(0.1)
+                yield json.dumps({"docs": self._format_docs_for_stream(final_docs)})
+                await asyncio.sleep(0.1)
+                yield json.dumps({"end": "<END>"})
+            except asyncio.TimeoutError:
+                raise HTTPException(status_code=504, detail="Stream timed out")
+
     @post("/answer")
     async def answer(
         self,
@@ -256,132 +284,71 @@ class SummaryQueryController:
         """
         Sample answer method to answer the question using the context from the collection
         """
-        try:
-            # Get the vector store
-            vector_store = await self._get_vector_store(request.collection_name)
 
-            # Create the QA prompt templates
-            QA_PROMPT = self._get_prompt_template(
-                input_variables=["context", "question"],
-                template=request.prompt_template,
+        if not request.stream:
+            return {
+                "answer": "This controller requires streaming to be enables please enable streaming!"
+            }
+
+        # Get the vector store
+        vector_store = await self._get_vector_store(request.collection_name)
+
+        # Create the QA prompt templates
+        QA_PROMPT = self._get_prompt_template(
+            input_variables=["context", "question"],
+            template=request.prompt_template,
+        )
+
+        # Get the LLM
+        llm = self._get_llm(request.model_configuration, request.stream)
+
+        # get retriever
+        retriever = await self._get_retriever(
+            vector_store=vector_store,
+            retriever_name=request.retriever_name,
+            retriever_config=request.retriever_config,
+        )
+
+        rag_chain_from_docs = (
+            RunnablePassthrough.assign(
+                context=(lambda x: self._format_docs(x["context"]))
             )
+            | QA_PROMPT
+            | llm
+            | StrOutputParser()
+        )
 
-            # Get the LLM
-            llm = self._get_llm(request.model_configuration, request.stream)
+        rag_chain_with_source = RunnableParallel(
+            {"context": retriever, "question": RunnablePassthrough()}
+        ).assign(answer=rag_chain_from_docs)
 
-            # get retriever
-            retriever = await self._get_retriever(
-                vector_store=vector_store,
-                retriever_name=request.retriever_name,
-                retriever_config=request.retriever_config,
+        # split query into individual sentences based on '.', '?', or '\n'
+        query = request.query.strip()
+        query = query.replace("\n", ".")
+        query = query.replace("?", ".")
+        query = query.split(".")
+        queries = [q.strip() for q in query if q.strip() != "" and len(q.strip()) > 5]
+
+        logger.debug(f"Total queries: {len(queries)}")
+        SUMMARY_PROMPT = "Give a one pager summary of the given text: {context}"
+        # Get the summary
+        summary_rag_chain = (
+            RunnablePassthrough.assign(
+                context=lambda x: x["answer"],
             )
-
-            # Using LCEL
-            rag_chain_from_docs = (
-                RunnablePassthrough.assign(
-                    context=(lambda x: self._format_docs(x["context"]))
-                )
-                | QA_PROMPT
-                | llm
-                | StrOutputParser()
+            | PromptTemplate(
+                input_variables=["context"],
+                template=SUMMARY_PROMPT,
             )
+            | llm
+            | StrOutputParser()
+        )
 
-            rag_chain_with_source = RunnableParallel(
-                {"context": retriever, "question": RunnablePassthrough()}
-            ).assign(answer=rag_chain_from_docs)
-
-            if request.stream:
-                return StreamingResponse(
-                    self._stream_answer(rag_chain_with_source, request.query),
-                    media_type="text/event-stream",
-                )
-
-            else:
-                outputs = await rag_chain_with_source.ainvoke(request.query)
-
-                # Intermediate testing
-                # Just the retriever
-                # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
-                # outputs = await setup_and_retrieval.ainvoke(request.query)
-                # print(outputs)
-
-                # Retriver and QA
-                # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
-                # print(outputs)
-
-                # Retriver, QA and LLM
-                # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
-                # print(outputs)
-
-                SUMMARY_PROMPT = "You are an AI assistant specialising in summarizing documents finance, insurance and private equity. Given a list of question and answers, your task is to provide a detailed one pager summary report. Summary: {context}"
-
-                # Get the summary
-                summary_rag_chain = (
-                    RunnablePassthrough.assign(
-                        context=lambda x: x["answer"],
-                    )
-                    | PromptTemplate(
-                        input_variables=["context"],
-                        template=SUMMARY_PROMPT,
-                    )
-                    | llm
-                    | StrOutputParser()
-                )
-
-                summary = await summary_rag_chain.ainvoke(outputs)
-
-                answer = (
-                    outputs["answer"] + "\n\n**Summary:**\n" + summary
-                    if ("Summary" or "summary") not in summary
-                    else outputs["answer"] + "\n\n\n" + summary
-                )
-                return {
-                    "answer": answer,
-                    "docs": outputs["context"] if outputs["context"] else [],
-                }
-
-        except HTTPException as exp:
-            raise exp
-        except Exception as exp:
-            logger.exception(exp)
-            raise HTTPException(status_code=500, detail=str(exp))
-
-
-#######
-# Streaming Client
-
-# import httpx
-# from httpx import Timeout
-
-# from backend.modules.query_controllers.summary.types import ExampleQueryInput
-
-# payload = {
-#   "collection_name": "pstest",
-#   "query": "What are the features of Diners club black metal edition?",
-#   "model_configuration": {
-#     "name": "openai-devtest/gpt-3-5-turbo",
-#     "parameters": {
-#       "temperature": 0.1
-#     },
-#     "provider": "truefoundry"
-#   },
-#   "prompt_template": "Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}",
-#   "retriever_name": "vectorstore",
-#   "retriever_config": {
-#     "search_type": "similarity",
-#     "search_kwargs": {
-#       "k": 20
-#     },
-#     "filter": {}
-#   },
-#   "stream": True
-# }
-
-# data = ExampleQueryInput(**payload).dict()
-# ENDPOINT_URL = 'http://localhost:8000/retrievers/example-app/answer'
-
-
-# with httpx.stream('POST', ENDPOINT_URL, json=data, timeout=Timeout(5.0*60)) as r:
-#     for chunk in r.iter_text():
-#         print(chunk)
-#######
+        if request.stream:
+            # return streaming response over queries
+            return StreamingResponse(
+                self._stream_answer_queries(
+                    rag_chain_with_source, queries, summary_rag_chain
+                ),
+                media_type="text/event-stream",
+            )
