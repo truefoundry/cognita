@@ -1,4 +1,3 @@
-# collection_name: bradysmall
 collection_name: brady
 data_source:
     type: localdir
