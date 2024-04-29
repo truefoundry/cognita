@@ -5,6 +5,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import MarkdownHeaderTextSplitter, MarkdownTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
+from backend.modules.parsers.utils import contains_text
 from backend.types import LoadedDataPoint
 
 
@@ -66,12 +67,13 @@ class MarkdownParser(BaseParser):
                 lastAddedChunkSize = chunk_length + lastAddedChunkSize
                 continue
             lastAddedChunkSize = chunk_length
-            final_chunks.append(
-                Document(
-                    page_content=page_content,
-                    metadata=chunk.metadata,
+            if contains_text(page_content):
+                final_chunks.append(
+                    Document(
+                        page_content=page_content,
+                        metadata=chunk.metadata,
+                    )
                 )
-            )
         return final_chunks
 
     def _include_headers_in_content(self, content: str, metadata: dict):
@@ -100,6 +102,7 @@ class MarkdownParser(BaseParser):
                     metadata=metadata,
                 )
                 for text in texts
+                if contains_text(text)
             ]
             return chunks_arr
 
@@ -111,7 +114,7 @@ class MarkdownParser(BaseParser):
         for document in md_header_splits:
             document.metadata.update(metadata)
             chunk_length = len(document.page_content)
-            if chunk_length <= max_chunk_size:
+            if chunk_length <= max_chunk_size and contains_text(document.page_content):
                 chunks_arr.append(
                     Document(
                         page_content=document.page_content,

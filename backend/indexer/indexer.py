@@ -230,6 +230,7 @@ async def ingest_data_points(
             file_extension=loaded_data_point.file_extension,
             parsers_map=inputs.parser_config.parser_map,
             max_chunk_size=inputs.parser_config.chunk_size,
+            chunk_overlap=inputs.parser_config.chunk_overlap,
         )
         if parser is None:
             logger.warning(

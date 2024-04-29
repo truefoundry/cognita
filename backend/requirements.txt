@@ -41,3 +41,9 @@ singlestoredb==1.0.4
 #### Reranker
 # For use Mxbread Reranker
 sentence_transformers==2.5.1
+
+### LayoutParser
+requests==2.31.0
+python-multipart==0.0.9
+pytesseract==0.3.10
+layoutparser==0.3.4
