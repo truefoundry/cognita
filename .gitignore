@@ -25,3 +25,5 @@ tf-docs-crawled/
 truefoundry-docs/
 *.zip
 qdrant_storage/
+*.pth
+.truefoundry

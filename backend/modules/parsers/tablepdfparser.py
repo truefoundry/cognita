@@ -6,6 +6,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
+from backend.modules.parsers.utils import contains_text
 
 config_overwrite = [
     "TEXT_ORDERING.INCLUDE_RESIDUAL_TEXT_CONTAINER=True",
@@ -70,7 +71,7 @@ class PdfTableParser(BaseParser):
                     table_data = pd.DataFrame(table_data)
                     # Table data is a pandas DataFrame, convert it to console string
                     table_data = table_data.to_string()
-                    if table_data:
+                    if table_data and contains_text(table_data):
                         tab_doc = [
                             Document(
                                 page_content=table_data,
@@ -82,7 +83,7 @@ class PdfTableParser(BaseParser):
                             )
                         ]
                         table_docs.extend(tab_doc)
-                    if table_data:
+                    if table_data and contains_text(table_data):
                         tab_doc = [
                             Document(
                                 page_content=table_data,
@@ -119,12 +120,12 @@ class PdfTableParser(BaseParser):
                         },
                     )
                     for text_split in text_splits
-                    if text_split != "" and text_split != " "
+                    if contains_text(text_split)
                 ]
                 if texts:
                     final_texts.extend(texts)
             else:
-                if text:
+                if contains_text(text):
                     final_texts.append(
                         Document(
                             page_content=text,

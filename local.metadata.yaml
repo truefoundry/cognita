@@ -1,4 +1,5 @@
 collection_name: bradysmall
+# collection_name: brady
 data_source:
     type: localdir
     uri: /Users/prathamesh/Desktop/brady
@@ -6,7 +7,7 @@ parser_config:
     chunk_size: 1000
     chunk_overlap: 20
     parser_map:
-        ".pdf": TfParser
+        ".pdf": MultiModalParser
 embedder_config:
     # provider: mixedbread
     # config:
