@@ -116,6 +116,11 @@ class ParserConfig(BaseModel):
         },
     )
 
+    additional_config: Optional[Dict[str, Any]] = Field(
+        title="Additional optional configuration for the parser",
+        default={"key": "value"},
+    )
+
 
 class VectorDBConfig(BaseModel):
     """

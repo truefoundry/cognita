@@ -1,21 +1,23 @@
 import base64
 import io
+import json
 import os
-import re
-from typing import Optional
+import pathlib
+from typing import Any, Optional
 
 import cv2
 import fitz
 import layoutparser as lp
 import numpy as np
+import requests
 from huggingface_hub import hf_hub_download
 from langchain.docstore.document import Document
 from PIL import Image
 
 from backend.logger import logger
-from backend.modules.parsers.MultiModalPdfParser.src.llms.gpt4 import GPT4Vision
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
+from backend.settings import settings
 
 
 def download(path):
@@ -45,30 +47,42 @@ def arrayToBase64(image_arr: np.ndarray):
     return base64_str
 
 
-class PdfMultiModalParser(BaseParser):
+class MultiModalParser(BaseParser):
     """
-    TfParser is a multi-modal parser class for deep extraction of pdf documents.
-    Requires a running instance of the TfParser service that has access to TFLLM Gateway
+    MultiModalParser is a multi-modal parser class for deep extraction of pdf documents
     """
 
     supported_file_extensions = [".pdf"]
 
     def __init__(
-        self, max_chunk_size: int = 1000, chunk_overlap: int = 20, *args, **kwargs
+        self,
+        max_chunk_size: int = 1000,
+        chunk_overlap: int = 20,
+        additional_config: dict = {},
+        *args,
+        **kwargs,
     ):
         """
-        Initializes the TfParser object.
+        Initializes the MultiModalParser object.
         """
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
-        self.config_path = os.path.abspath(
-            "./backend/modules/parsers/MultiModalPdfParser/src/layout-model/mask_rcnn_X_101_32x8d_FPN_3x.yml"
+
+        base_path = pathlib.Path(__file__).parent.resolve()
+        self.config_path = os.path.join(
+            base_path, "layout-model/mask_rcnn_X_101_32x8d_FPN_3x.yml"
         )
 
-        self.model_path = download(
-            path="./backend/modules/parsers/MultiModalPdfParser/src/layout-model/"
-        )
-        print(self.model_path)
+        if not os.path.exists(
+            os.path.join(base_path, "layout-model/mask_rcnn_X_101_32x8d_FPN_3x.pth")
+        ):
+            print("Downloading model...")
+            self.model_path = download(path=os.path.join(base_path, "layout-model"))
+        else:
+            print("Model already exists...")
+            self.model_path = os.path.join(
+                base_path, "layout-model/mask_rcnn_X_101_32x8d_FPN_3x.pth"
+            )
 
         self.model = lp.Detectron2LayoutModel(
             config_path=self.config_path,
@@ -76,7 +90,100 @@ class PdfMultiModalParser(BaseParser):
             extra_config=["MODEL.ROI_HEADS.SCORE_THRESH_TEST", 0.4],
             label_map={0: "Text", 1: "Title", 2: "List", 3: "Table", 4: "Figure"},
         )
-        self.vlm_agent = GPT4Vision()
+        # Multi-modal parser needs to be configured with the base url, vision model and summary model
+        if "base_url" in additional_config:
+            self.client = additional_config["base_url"]
+            print(f"Using custom base url..., {self.client}")
+        else:
+            self.client = (
+                settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai/chat/completions"
+            )
+
+        if "vision_model" in additional_config:
+            self.vision_model = additional_config["vision_model"]
+            print(f"Using custom vision model..., {self.vision_model}")
+        else:
+            self.vision_model = "openai-main/gpt-4-turbo"
+
+        if "summary_model" in additional_config:
+            self.summary_model = additional_config["summary_model"]
+            print(f"Using custom summary model..., {self.summary_model}")
+        else:
+            self.summary_model = "openai-main/gpt-3-5-turbo"
+
+    async def _send_request(self, payload):
+        response = requests.post(
+            self.client,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.TFY_API_KEY}",
+                # Set the tfy_log_request to "true" in X-TFY-METADATA header to log prompt and response for the request
+                "X-TFY-METADATA": json.dumps(
+                    {"tfy_log_request": "true", "Custom-Metadata": "Custom-Value"}
+                ),
+            },
+            json=payload,
+        )
+        return response.json()
+
+    async def vlm_agent(
+        self,
+        base64_image: str,
+        prompt: str = "Describe the information present in the image in a structured format.",
+    ) -> Any:
+        logger.debug(f"Processing Image...")
+        payload = {
+            "model": self.vision_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            },
+                        },
+                    ],
+                }
+            ],
+            "max_tokens": 2048,
+        }
+
+        response = await self._send_request(payload)
+        if "choices" in response:
+            return {"response": response["choices"][0]["message"]["content"]}
+        if "error" in response:
+            return {"error": response["error"]}
+
+    async def summarize(self, text: str):
+        logger.debug(f"Summarizing text...")
+        payload = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Generate a detailed summary of the given document.",
+                },
+                {"role": "user", "content": text},
+            ],
+            "model": self.summary_model,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+            "top_p": 0.9,
+            "top_k": 50,
+            "repetition_penalty": 1,
+            "frequency_penalty": 0,
+            "presence_penalty": 0,
+            "stop": ["</s>"],
+        }
+
+        response = await self._send_request(payload)
+        if "choices" in response:
+            output = response["choices"][0]["message"]["content"]
+            return {"page_content": output}
+        if "error" in response:
+            return {"error": response["error"]}
 
     def _get_text_and_figure_blocks(self, layout, image):
         # Get the text and figure blocks
@@ -210,7 +317,7 @@ class PdfMultiModalParser(BaseParser):
             )
 
             all_page_content = " ".join([page.page_content for page in parsed_images])
-            page_summary = await self.vlm_agent.summarize(all_page_content)
+            page_summary = await self.summarize(all_page_content)
 
             parsed_images.append(
                 Document(
@@ -233,7 +340,7 @@ class PdfMultiModalParser(BaseParser):
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
         if not filepath.endswith(".pdf"):
-            print("Invalid file extension. TfParser only supports PDF files.")
+            print("Invalid file extension. MultiModalParser only supports PDF files.")
             return []
         page_texts = list()
         final_texts = list()
