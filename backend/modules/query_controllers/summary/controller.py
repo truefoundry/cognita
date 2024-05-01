@@ -63,7 +63,7 @@ class IntelligentSummaryQueryController:
         # docs is a list of list of document objects
         for doc in docs:
             for pages in doc:
-                pages.metadata.pop("image_b64")
+                pages.metadata.pop("image_b64", None)
                 formatted_docs.append(
                     {"page_content": pages.page_content, "metadata": pages.metadata}
                 )
@@ -263,6 +263,7 @@ class IntelligentSummaryQueryController:
                     yield json.dumps({"answer": "**Summary:** "})
                     await asyncio.sleep(0.1)
                     async for chunk in summary_rag_chain.astream(all_answers):
+                        print(f"Summary chunk: {chunk}")
                         yield json.dumps({"answer": chunk})
                         await asyncio.sleep(0.2)
 
@@ -273,6 +274,8 @@ class IntelligentSummaryQueryController:
                 yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
+            except Exception as e:
+                print(f"Stream Error: {e}")
 
     @post("/answer")
     async def answer(
