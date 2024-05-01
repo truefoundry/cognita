@@ -89,15 +89,15 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "similarity",
-        "search_kwargs": {"k": 25},
+        "search_kwargs": {"k": 10},
     },
     "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
-    "summary": "similariy search + re-ranking",
+    "summary": "similarity search + re-ranking",
     "description": """
         Requires k in search_kwargs for similarity search.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
@@ -119,10 +119,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
-            "k": 25,
+            "k": 10,
             "fetch_k": 30,
         },
     },
@@ -154,7 +154,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
     },
@@ -284,10 +284,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
-            "k": 25,
+            "k": 10,
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
@@ -322,9 +322,9 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "similarity",
-        "search_kwargs": {"k": 25},
+        "search_kwargs": {"k": 10},
         "retriever_llm_configuration": {
             "name": "openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
@@ -357,7 +357,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
-        "top_k": 7,
+        "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
