@@ -58,7 +58,12 @@ class IntelligentSummaryQueryController:
     def _format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
-    def _format_docs_for_stream(self, docs):
+    def _format_docs_for_stream_v1(self, docs):
+        return [
+            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
+        ]
+
+    def _format_docs_for_stream_v2(self, docs):
         formatted_docs = list()
         # docs is a list of list of document objects
         for doc in docs:
@@ -225,7 +230,7 @@ class IntelligentSummaryQueryController:
                     elif "context" in chunk:
                         # print("Context: ", self._format_docs_for_stream(chunk['context']))
                         yield json.dumps(
-                            {"docs": self._format_docs_for_stream(chunk["context"])}
+                            {"docs": self._format_docs_for_stream_v1(chunk["context"])}
                         )
                         await asyncio.sleep(0.1)
                     elif "answer" in chunk:
@@ -241,7 +246,7 @@ class IntelligentSummaryQueryController:
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 final_docs = list()
-                all_answers = {"answer": ""}
+                all_answers = list()
                 for query in queries:
                     yield json.dumps(
                         {"answer": "\n\n**Q:** " + query + "\n\n**Ans:** "}
@@ -250,23 +255,28 @@ class IntelligentSummaryQueryController:
                     async for chunk in rag_chain.astream(query):
                         if "context" in chunk:
                             final_docs.append(chunk["context"])
+                            # yield json.dumps(
+                            #     {"docs": self._format_docs_for_stream_v1(chunk["context"])}
+                            # )
                             await asyncio.sleep(0.1)
                         elif "answer" in chunk:
+                            all_answers.append(chunk["answer"])
                             yield json.dumps({"answer": chunk["answer"]})
-                            all_answers["answer"] += chunk["answer"] + " "
                             await asyncio.sleep(0.1)
-                    yield json.dumps({"answer": "\n\n"})
-                    await asyncio.sleep(0.1)
+                    # yield json.dumps({"answer": "\n\n"})
+                    # await asyncio.sleep(0.1)
 
                 # summarize all answers
                 # if len(queries) > 1:
-                #     yield json.dumps({"answer": "**Summary:** "})
+                #     combined_ans = dict()
+                #     combined_ans["answer"] = " ".join(all_answers)
+                #     yield json.dumps({"answer": "**\n\nSummary:** "})
                 #     await asyncio.sleep(0.1)
-                #     async for chunk in summary_rag_chain.astream(all_answers):
+                #     async for chunk in summary_rag_chain.astream(combined_ans):
                 #         yield json.dumps({"answer": chunk})
                 #         await asyncio.sleep(0.1)
 
-                yield json.dumps({"docs": self._format_docs_for_stream(final_docs)})
+                yield json.dumps({"docs": self._format_docs_for_stream_v2(final_docs)})
                 await asyncio.sleep(0.1)
                 yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:
