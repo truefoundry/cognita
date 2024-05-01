@@ -262,13 +262,11 @@ class IntelligentSummaryQueryController:
                 if len(queries) > 1:
                     yield json.dumps({"answer": "**Summary:** "})
                     await asyncio.sleep(0.1)
-                    async for chunk in summary_rag_chain.astream(all_answers):
+                    for chunk in summary_rag_chain.stream(all_answers):
                         print(f"Summary chunk: {chunk}")
                         yield json.dumps({"answer": chunk})
-                        await asyncio.sleep(0.2)
+                        await asyncio.sleep(0.1)
 
-                # return final docs
-                await asyncio.sleep(0.1)
                 yield json.dumps({"docs": self._format_docs_for_stream(final_docs)})
                 await asyncio.sleep(0.1)
                 yield json.dumps({"end": "<END>"})
