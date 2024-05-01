@@ -1,18 +1,13 @@
-collection_name: bradysmall
-# collection_name: brady
+collection_name: finance
 data_source:
     type: localdir
-    uri: /Users/prathamesh/Desktop/brady
+    uri: ./sample-data/finance
 parser_config:
     chunk_size: 1000
     chunk_overlap: 20
     parser_map:
         ".pdf": MultiModalParser
 embedder_config:
-    # provider: mixedbread
-    # config:
-    #     model: mixedbread-ai/mxbai-embed-large-v1
-    # For Truefoundry Embeddings
     provider: truefoundry
     config:
         model: "openai-main/text-embedding-ada-002"
