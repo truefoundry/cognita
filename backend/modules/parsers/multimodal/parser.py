@@ -4,6 +4,7 @@ import io
 import json
 import os
 import pathlib
+from itertools import islice
 from typing import Any, Optional
 
 import aiohttp
@@ -172,6 +173,7 @@ class MultiModalParser(BaseParser):
         page_number: int,
         prompt: str = "Describe the information present in the image in a structured format.",
     ):
+        logger.debug(f"Processing Image... {page_number}")
         print(f"Processing Image... {page_number}")
         headers = {
             "Content-Type": "application/json",
@@ -402,12 +404,15 @@ class MultiModalParser(BaseParser):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
-        if not filepath.endswith(".pdf"):
-            print("Invalid file extension. MultiModalParser only supports PDF files.")
-            return []
 
-        final_texts = list()
         try:
+            if not filepath.endswith(".pdf"):
+                print(
+                    "Invalid file extension. MultiModalParser only supports PDF files."
+                )
+                return []
+
+            final_texts = list()
             # Open the PDF file using pdfplumber
             doc = fitz.open(filepath)
 
@@ -451,41 +456,52 @@ class MultiModalParser(BaseParser):
             else:
                 # make parallel requests to VLM for all pages
                 prompt = "You are an AI assistant with the multi-modal/vision conversational capabilities. Your role provide clear explanation of an image for another AI assistant to accomplish a information retrieval task. Provide detailed and insightful responses for image inputs while engaging in meaningful discussions. Your aim is to offer clear explanations and precise explanations for a wide range of topics, leveraging a unique blend of text and image understanding.Your responses should demonstrate your proficiency in explaining complex concepts with precision and clarity, contributing to the exemplary nature of the multi-modal conversational assistant."
-                tasks = [
-                    self.call_vlm_agent(
-                        base64_image=image_b64, page_number=page_number, prompt=prompt
-                    )
-                    for page_number, image_b64 in pages.items()
-                ]
-                responses = await asyncio.gather(*tasks)
 
-                for response in responses:
-                    if "error" in response:
-                        print(f"Error in page: {response['error']}")
-                        continue
-                    else:
-                        pg_no, page_content = response["response"]
-                        if contains_text(page_content):
-                            print("Processed page: ", pg_no)
-                            final_texts.append(
-                                Document(
-                                    page_content="File Name: "
-                                    + file_name
-                                    + "\n\n"
-                                    + page_content
-                                    + "\n\nFile Name: "
-                                    + file_name,
-                                    metadata={
-                                        "image_b64": pages[pg_no],
-                                        "type": "Figure",
-                                        "page_number": pg_no,
-                                        "source": file_name,
-                                        "category": "main_image",
-                                    },
+                def break_chunks(data, size=30):
+                    it = iter(data)
+                    for i in range(0, len(data), size):
+                        yield {k: data[k] for k in islice(it, size)}
+
+                for page_items in break_chunks(pages):
+                    tasks = [
+                        self.call_vlm_agent(
+                            base64_image=image_b64,
+                            page_number=page_number,
+                            prompt=prompt,
+                        )
+                        for page_number, image_b64 in page_items.items()
+                    ]
+                    responses = await asyncio.gather(*tasks)
+
+                    for response in responses:
+                        if "error" in response:
+                            print(f"Error in page: {response['error']}")
+                            continue
+                        else:
+                            pg_no, page_content = response["response"]
+                            if contains_text(page_content):
+                                print("Processed page: ", pg_no)
+                                logger.debug(f"Processed page: {pg_no}")
+                                final_texts.append(
+                                    Document(
+                                        page_content="File Name: "
+                                        + file_name
+                                        + "\n\n"
+                                        + page_content
+                                        + "\n\nFile Name: "
+                                        + file_name,
+                                        metadata={
+                                            "image_b64": pages[pg_no],
+                                            "type": "Figure",
+                                            "page_number": pg_no,
+                                            "source": file_name,
+                                            "category": "main_image",
+                                        },
+                                    )
                                 )
-                            )
 
             return final_texts
         except Exception as e:
+            logger.error(f"Final Exception: {e}")
             print(f"Final Exception: {e}")
             return final_texts
