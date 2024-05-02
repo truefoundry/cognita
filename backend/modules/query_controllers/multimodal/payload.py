@@ -99,7 +99,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
-    "summary": "similariy search + re-ranking",
+    "summary": "similarity search + re-ranking",
     "description": """
         Requires k in search_kwargs for similarity search.
         search_type can either be similarity or mmr or similarity_score_threshold.""",
