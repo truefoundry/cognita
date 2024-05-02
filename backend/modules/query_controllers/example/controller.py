@@ -76,9 +76,12 @@ class ExampleQueryController:
         return "\n\n".join(doc.page_content for doc in docs)
 
     def _format_docs_for_stream(self, docs):
-        return [
-            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
-        ]
+        metadata_list = []
+        for doc in docs:
+            doc.metadata.pop("image_b64", None)
+            metadata_list.appen(
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+            )
 
     def _get_llm(self, model_configuration, stream=False):
         """
