@@ -455,7 +455,15 @@ class MultiModalParser(BaseParser):
                         final_texts.extend(parsed_page_layouts)
             else:
                 # make parallel requests to VLM for all pages
-                prompt = "You are an AI assistant with the multi-modal/vision conversational capabilities. Your role provide clear explanation of an image for another AI assistant to accomplish a information retrieval task. Provide detailed and insightful responses for image inputs while engaging in meaningful discussions. Your aim is to offer clear explanations and precise explanations for a wide range of topics, leveraging a unique blend of text and image understanding.Your responses should demonstrate your proficiency in explaining complex concepts with precision and clarity, contributing to the exemplary nature of the multi-modal conversational assistant."
+                prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
+Specifically, the information should include but not limited to:
+Title of the Image: Provide a title from the charts or image if any.
+Type of Chart: Determine the type of each chart (e.g., bar chart, line chart, pie chart, scatter plot, etc.) and its key features (e.g., labels, legends, data points).
+Data Trends: Describe any notable trends or patterns visible in the data. This may include increasing/decreasing trends, seasonality, outliers, etc.
+Key Insights: Extract key insights or observations from the charts. What do the charts reveal about the underlying data? Are there any significant findings that stand out?
+Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
+Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
+Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
 
                 def break_chunks(data, size=30):
                     it = iter(data)
@@ -473,33 +481,38 @@ class MultiModalParser(BaseParser):
                     ]
                     responses = await asyncio.gather(*tasks)
 
-                    for response in responses:
-                        if "error" in response:
-                            print(f"Error in page: {response['error']}")
-                            continue
-                        else:
-                            pg_no, page_content = response["response"]
-                            if contains_text(page_content):
-                                print("Processed page: ", pg_no)
-                                logger.debug(f"Processed page: {pg_no}")
-                                final_texts.append(
-                                    Document(
-                                        page_content="File Name: "
-                                        + file_name
-                                        + "\n\n"
-                                        + page_content
-                                        + "\n\nFile Name: "
-                                        + file_name,
-                                        metadata={
-                                            "image_b64": pages[pg_no],
-                                            "type": "Figure",
-                                            "page_number": pg_no,
-                                            "source": file_name,
-                                            "category": "main_image",
-                                        },
-                                    )
-                                )
+                    print("Total Responses:", len(responses))
 
+                    if responses is not None:
+                        for response in responses:
+                            if response is not None:
+                                if "error" in response:
+                                    print(f"Error in page: {response['error']}")
+                                    continue
+                                else:
+                                    pg_no, page_content = response["response"]
+                                    if contains_text(page_content):
+                                        print("Processed page: ", pg_no)
+                                        logger.debug(f"Processed page: {pg_no}")
+                                        final_texts.append(
+                                            Document(
+                                                page_content="File Name: "
+                                                + file_name
+                                                + "\n\n"
+                                                + page_content
+                                                + "\n\nFile Name: "
+                                                + file_name,
+                                                metadata={
+                                                    "image_b64": pages[pg_no],
+                                                    "page_number": pg_no,
+                                                    "source": file_name,
+                                                },
+                                            )
+                                        )
+                    else:
+                        logger.debug("No response from VLM...")
+                        print("No response from VLM...")
+                    await asyncio.sleep(5)
             return final_texts
         except Exception as e:
             logger.error(f"Final Exception: {e}")

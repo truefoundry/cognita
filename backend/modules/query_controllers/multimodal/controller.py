@@ -255,7 +255,10 @@ class MultiModalQueryController:
             content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"},
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{b64_image}",
+                        "detail": "high",
+                    },
                 }
             )
 
@@ -346,6 +349,7 @@ class MultiModalQueryController:
                 "docs": outputs["context"],
             }
         except Exception as e:
+            print(f"Error in generating response from VLM: {e}")
             logger.error(f"Error in generating response from VLM: {e}")
             return {
                 "answer": e,
