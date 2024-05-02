@@ -11,12 +11,13 @@ from langchain_community.chat_models.ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_openai.chat_models import ChatOpenAI
+from openai import OpenAI
 from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
-from backend.modules.query_controllers.summary.payload import (
+from backend.modules.query_controllers.multimodal.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
@@ -30,7 +31,7 @@ from backend.modules.query_controllers.summary.payload import (
     QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 )
-from backend.modules.query_controllers.summary.types import (
+from backend.modules.query_controllers.multimodal.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
@@ -42,13 +43,13 @@ from backend.settings import settings
 EXAMPLES = {
     "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
     "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    # "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    # "contextual-compression-multi-query-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
+    "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+    "contextual-compression-multi-query-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 }
 
 
-@query_controller("/intelligent-summary")
-class IntelligentSummaryQueryController:
+@query_controller("/multimodal")
+class MultiModalQueryController:
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -242,47 +243,48 @@ class IntelligentSummaryQueryController:
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
-    async def _stream_answer_queries(self, rag_chain, queries, summary_rag_chain):
+    def _generate_payload_for_vlm(self, prompt: str, images_set: set):
+        content = [
+            {
+                "type": "text",
+                "text": prompt,
+            }
+        ]
+
+        for b64_image in images_set:
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"},
+                }
+            )
+
+        return [{"role": "user", "content": content}]
+
+    async def stream_vlm_answer(self, model, messages, max_tokens, docs):
+        client = OpenAI(
+            api_key=settings.TFY_API_KEY,
+            base_url=settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai",
+        )
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
-                final_docs = list()
-                all_answers = list()
-                for query in queries:
-                    yield json.dumps(
-                        {"answer": "\n\n**Q:** " + query + "\n\n**Ans:** "}
-                    )
-                    await asyncio.sleep(0.1)
-                    async for chunk in rag_chain.astream(query):
-                        if "context" in chunk:
-                            final_docs.append(chunk["context"])
-                            # yield json.dumps(
-                            #     {"docs": self._format_docs_for_stream_v1(chunk["context"])}
-                            # )
-                            await asyncio.sleep(0.1)
-                        elif "answer" in chunk:
-                            all_answers.append(chunk["answer"])
-                            yield json.dumps({"answer": chunk["answer"]})
-                            await asyncio.sleep(0.1)
-                    # yield json.dumps({"answer": "\n\n"})
-                    # await asyncio.sleep(0.1)
-
-                # summarize all answers
-                # if len(queries) > 1:
-                #     combined_ans = dict()
-                #     combined_ans["answer"] = " ".join(all_answers)
-                #     yield json.dumps({"answer": "**\n\nSummary:** "})
-                #     await asyncio.sleep(0.1)
-                #     async for chunk in summary_rag_chain.astream(combined_ans):
-                #         yield json.dumps({"answer": chunk})
-                #         await asyncio.sleep(0.1)
-
-                yield json.dumps({"docs": self._format_docs_for_stream_v2(final_docs)})
-                await asyncio.sleep(0.1)
-                yield json.dumps({"end": "<END>"})
+                async for chunk in client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    stream=True,
+                ):
+                    print("Chunks:", chunk)
+                    if "choices" in chunk:
+                        yield json.dumps(
+                            {"answer": chunk["choices"][0]["message"]["content"]}
+                        )
+                        await asyncio.sleep(0.1)
+                    elif "end" in chunk:
+                        yield json.dumps({"end": "<END>"})
+                        break
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
-            except Exception as e:
-                print(f"Stream Error: {e}")
 
     @post("/answer")
     async def answer(
@@ -295,22 +297,8 @@ class IntelligentSummaryQueryController:
         Sample answer method to answer the question using the context from the collection
         """
 
-        if not request.stream:
-            return {
-                "answer": "This controller requires streaming to be enables please enable streaming!"
-            }
-
         # Get the vector store
         vector_store = await self._get_vector_store(request.collection_name)
-
-        # Create the QA prompt templates
-        QA_PROMPT = self._get_prompt_template(
-            input_variables=["context", "question"],
-            template=request.prompt_template,
-        )
-
-        # Get the LLM
-        llm = self._get_llm(request.model_configuration, request.stream)
 
         # get retriever
         retriever = await self._get_retriever(
@@ -318,47 +306,91 @@ class IntelligentSummaryQueryController:
             retriever_name=request.retriever_name,
             retriever_config=request.retriever_config,
         )
+        images_set = set()
 
-        rag_chain_from_docs = (
-            RunnablePassthrough.assign(
-                context=(lambda x: self._format_docs(x["context"]))
-            )
-            | QA_PROMPT
-            | llm
-            | StrOutputParser()
-        )
-
-        rag_chain_with_source = RunnableParallel(
+        setup_and_retrieval = RunnableParallel(
             {"context": retriever, "question": RunnablePassthrough()}
-        ).assign(answer=rag_chain_from_docs)
+        )
+        outputs = await setup_and_retrieval.ainvoke(request.query)
 
-        # split query into individual sentences based on '.', '?', or '\n'
-        query = request.query.strip()
-        query = query.replace("\n", ".")
-        query = query.replace("?", ".")
-        query = query.split(".")
-        queries = [q.strip() for q in query if q.strip() != "" and len(q.strip()) > 5]
+        if "context" in outputs:
+            docs = outputs["context"]
+            for doc in docs:
+                image_b64 = doc.metadata.get("image_b64", None)
+                if image_b64 is not None:
+                    images_set.add(image_b64)
 
-        logger.debug(f"Total queries: {len(queries)}")
-        SUMMARY_PROMPT = "Give a one pager summary of the given text: {context}"
-        # Get the summary
-        summary_rag_chain = (
-            RunnablePassthrough.assign(
-                context=lambda x: x["answer"],
-            )
-            | PromptTemplate(
-                input_variables=["context"],
-                template=SUMMARY_PROMPT,
-            )
-            | llm
-            | StrOutputParser()
+        try:
+            prompt = request.prompt_template.format(question=request.query)
+        except Exception as e:
+            print(f"Error in formatting prompt: {e}")
+            print(f"Using default prompt")
+            prompt = f"You are an AI assistant specialising in information retieval and analysis. Answer the following question using the information provided in the images. Question: {request.query}"
+
+        message_payload = self._generate_payload_for_vlm(
+            prompt=prompt, images_set=images_set
+        )
+        client = OpenAI(
+            api_key=settings.TFY_API_KEY,
+            base_url=settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai",
         )
 
-        if request.stream:
-            # return streaming response over queries
-            return StreamingResponse(
-                self._stream_answer_queries(
-                    rag_chain_with_source, queries, summary_rag_chain
-                ),
-                media_type="text/event-stream",
+        try:
+            response = client.chat.completions.create(
+                model=request.model_configuration.name,
+                messages=message_payload,
+                max_tokens=2048,
             )
+            return {
+                "answer": response.choices[0].message.content,
+                "docs": outputs["context"],
+            }
+        except Exception as e:
+            logger.error(f"Error in generating response from VLM: {e}")
+            return {
+                "answer": e,
+            }
+
+        # rag_chain_from_docs = (
+        #     RunnablePassthrough.assign(
+        #         context=(lambda x: self._format_docs(x["context"]))
+        #     )
+        #     | QA_PROMPT
+        #     | llm
+        #     | StrOutputParser()
+        # )
+
+        # rag_chain_with_source = RunnableParallel(
+        #     {"context": retriever, "question": RunnablePassthrough()}
+        # ).assign(answer=rag_chain_from_docs)
+
+        # # split query into individual sentences based on '.', '?', or '\n'
+        # query = request.query.strip()
+        # query = query.replace("\n", ".")
+        # query = query.replace("?", ".")
+        # query = query.split(".")
+        # queries = [q.strip() for q in query if q.strip() != "" and len(q.strip()) > 5]
+
+        # logger.debug(f"Total queries: {len(queries)}")
+        # SUMMARY_PROMPT = "Give a one pager summary of the given text: {context}"
+        # # Get the summary
+        # summary_rag_chain = (
+        #     RunnablePassthrough.assign(
+        #         context=lambda x: x["answer"],
+        #     )
+        #     | PromptTemplate(
+        #         input_variables=["context"],
+        #         template=SUMMARY_PROMPT,
+        #     )
+        #     | llm
+        #     | StrOutputParser()
+        # )
+
+        # if request.stream:
+        #     # return streaming response over queries
+        #     return StreamingResponse(
+        #         self._stream_answer_queries(
+        #             rag_chain_with_source, queries, summary_rag_chain
+        #         ),
+        #         media_type="text/event-stream",
+        #     )

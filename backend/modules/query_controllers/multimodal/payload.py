@@ -1,10 +1,4 @@
-SUMMARY_PROMPT_TEMPLATE = """You are an AI assistant specialising in information retieval and analysis. Your role is to provide detailed answers, drawing directly from the context.
-In your responses:
-- Use ONLY the information found in the context
-- Do not generate speculative answers or information not supported by the context
-Context: {context}
-Question: {question}
-"""
+SUMMARY_PROMPT_TEMPLATE = "You are an AI assistant specialising in information retieval and analysis.Answer the following question using the information provided in the images. Question: {question}"
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "creditcard",

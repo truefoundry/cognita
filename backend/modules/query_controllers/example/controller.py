@@ -76,7 +76,6 @@ class ExampleQueryController:
         final_list = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            print("Metadata: ", doc.metadata)
             final_list.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
