@@ -1,5 +1,4 @@
-SUMMARY_PROMPT_TEMPLATE = "You are an AI assistant specialising in information retieval and analysis.Answer the following question using the information provided in the images. Question: {question}"
-
+PROMPT = "You are an AI assistant specialising in information retrieval. Answer the following question precisely by extracting the relavant information given in the images.\nQuestion: {question}"
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
@@ -8,7 +7,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
     "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
     "stream": True,
@@ -31,7 +30,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
     "retriever_config": {
         "search_type": "mmr",
@@ -60,7 +59,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
@@ -86,7 +85,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -116,7 +115,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -151,7 +150,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -182,7 +181,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity",
@@ -214,7 +213,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "mmr",
@@ -248,7 +247,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "multi-query",
     "retriever_config": {
         "search_type": "similarity_score_threshold",
@@ -281,7 +280,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -319,7 +318,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",
@@ -354,7 +353,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
-    "prompt_template": SUMMARY_PROMPT_TEMPLATE,
+    "prompt_template": PROMPT,
     "retriever_name": "contexual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixbread-ai",

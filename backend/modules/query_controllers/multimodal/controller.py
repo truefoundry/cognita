@@ -18,6 +18,7 @@ from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.multimodal.payload import (
+    PROMPT,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
@@ -328,7 +329,7 @@ class MultiModalQueryController:
         except Exception as e:
             print(f"Error in formatting prompt: {e}")
             print(f"Using default prompt")
-            prompt = f"You are an AI assistant specialising in information retieval and analysis. Answer the following question using the information provided in the images. Question: {request.query}"
+            prompt = PROMPT.format(question=request.query)
 
         message_payload = self._generate_payload_for_vlm(
             prompt=prompt, images_set=images_set
