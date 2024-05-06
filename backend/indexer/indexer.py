@@ -353,6 +353,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         parser_config=created_data_ingestion_run.parser_config,
                         data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                        batch_size=request.batch_size,
                     )
                 )
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
