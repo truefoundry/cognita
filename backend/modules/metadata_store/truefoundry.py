@@ -1,8 +1,8 @@
 import enum
 import json
-import logging
 import os
 import tempfile
+import time
 import warnings
 from typing import Any, Dict, List
 
@@ -46,7 +46,6 @@ class TrueFoundry(BaseMetadataStore):
         logger.info(
             f"[Metadata Store] Initializing TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
-        logging.getLogger("truefoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = ml.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
@@ -191,6 +190,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_collections(self) -> List[Collection]:
         """Get all the collections for the given client"""
+        start = time.time()
         logger.debug(f"[Metadata Store] Listing all collection")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -201,6 +201,10 @@ class TrueFoundry(BaseMetadataStore):
             collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
             collections.append(self._polulate_collection(collection))
         logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
+        end = time.time()
+        print(
+            f"[Metadata Store] Listed {len(collections)} collections in {end-start} seconds"
+        )
         return collections
 
     def _polulate_collection(self, collection: Collection):
@@ -529,3 +533,15 @@ class TrueFoundry(BaseMetadataStore):
             )
         except Exception as e:
             logger.exception(e)
+
+    def list_collections(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all collection")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
+        )
+        collections = []
+        for ml_run in ml_runs:
+            collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            collections.append(collection.name)
+        return collections

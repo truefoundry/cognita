@@ -19,6 +19,12 @@ from backend.types import (
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
 
+@router.get("/list-collections")
+def list_collections():
+    collections = METADATA_STORE_CLIENT.list_collections()
+    return JSONResponse(content={"collections": collections})
+
+
 @router.get("/")
 def get_collections():
     """API to list all collections"""

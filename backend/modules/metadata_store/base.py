@@ -150,6 +150,15 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def list_collections(
+        self,
+    ) -> List[str]:
+        """
+        List all collection names from metadata store
+        """
+        raise NotImplementedError()
+
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:
     return f"{FQN_SEPARATOR}".join([data_source.type, data_source.uri])

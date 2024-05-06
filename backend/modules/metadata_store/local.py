@@ -92,6 +92,11 @@ class LocalMetadataStore(BaseMetadataStore):
     ) -> List[Collection]:
         return [self.collection]
 
+    def list_collections(
+        self,
+    ) -> List[str]:
+        return [self.collection.name]
+
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         return self.data_source
 
