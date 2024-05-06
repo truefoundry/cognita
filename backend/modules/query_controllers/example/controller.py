@@ -73,12 +73,21 @@ class ExampleQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        return "\n\n".join(doc.page_content for doc in docs)
+        final_list = list()
+        for doc in docs:
+            doc.metadata.pop("image_b64", None)
+            final_list.append(
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+            )
+        return "\n\n".join([f"{doc['page_content']}" for doc in final_list])
 
     def _format_docs_for_stream(self, docs):
-        return [
-            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
-        ]
+        metadata_list = []
+        for doc in docs:
+            doc.metadata.pop("image_b64", None)
+            metadata_list.append(
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+            )
 
     def _get_llm(self, model_configuration, stream=False):
         """

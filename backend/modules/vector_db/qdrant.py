@@ -36,6 +36,7 @@ class QdrantVectorDB(BaseVectorDB):
                 port=self.port,
                 prefer_grpc=self.prefer_grpc,
                 prefix=self.prefix,
+                timeout=300,
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
