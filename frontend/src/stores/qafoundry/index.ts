@@ -93,7 +93,8 @@ export interface SourceDocs {
   metadata: {
     _data_point_fqn: string
     _data_point_hash: string
-    page_num: number
+    page_num?: number
+    page_number?: number
     type: string
     _id: string
     _collection_name: string
