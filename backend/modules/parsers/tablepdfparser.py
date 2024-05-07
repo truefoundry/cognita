@@ -1,32 +1,11 @@
 import re
 
-import deepdoctection as dd
 import pandas as pd
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-
-config_overwrite = [
-    "TEXT_ORDERING.INCLUDE_RESIDUAL_TEXT_CONTAINER=True",
-    "USE_PDF_MINER=False",
-    "SEGMENTATION.THRESHOLD_ROWS=0.8",
-    "SEGMENTATION.THRESHOLD_COLS=0.8",
-    "SEGMENTATION.REMOVE_IOU_THRESHOLD_ROWS=0.6",
-    "SEGMENTATION.REMOVE_IOU_THRESHOLD_COLS=0.6",
-    "PT.LAYOUT.WEIGHTS=microsoft/table-transformer-detection/pytorch_model.bin",
-    "PT.LAYOUT.PAD.TOP=60",
-    "PT.LAYOUT.PAD.RIGHT=60",
-    "PT.LAYOUT.PAD.BOTTOM=60",
-    "PT.LAYOUT.PAD.LEFT=60",
-    "PT.ITEM.WEIGHTS=microsoft/table-transformer-structure-recognition/pytorch_model.bin",
-    "PT.CELL.WEIGHTS=microsoft/table-transformer-structure-recognition/pytorch_model.bin",
-    "PT.ITEM.FILTER=['table']",
-    "USE_OCR=True",
-    "OCR.USE_DOCTR=True",
-    "OCR.USE_TESSERACT=False",
-]
 
 
 class PdfTableParser(BaseParser):
@@ -46,6 +25,28 @@ class PdfTableParser(BaseParser):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
+        import deepdoctection as dd
+
+        config_overwrite = [
+            "TEXT_ORDERING.INCLUDE_RESIDUAL_TEXT_CONTAINER=True",
+            "USE_PDF_MINER=False",
+            "SEGMENTATION.THRESHOLD_ROWS=0.8",
+            "SEGMENTATION.THRESHOLD_COLS=0.8",
+            "SEGMENTATION.REMOVE_IOU_THRESHOLD_ROWS=0.6",
+            "SEGMENTATION.REMOVE_IOU_THRESHOLD_COLS=0.6",
+            "PT.LAYOUT.WEIGHTS=microsoft/table-transformer-detection/pytorch_model.bin",
+            "PT.LAYOUT.PAD.TOP=60",
+            "PT.LAYOUT.PAD.RIGHT=60",
+            "PT.LAYOUT.PAD.BOTTOM=60",
+            "PT.LAYOUT.PAD.LEFT=60",
+            "PT.ITEM.WEIGHTS=microsoft/table-transformer-structure-recognition/pytorch_model.bin",
+            "PT.CELL.WEIGHTS=microsoft/table-transformer-structure-recognition/pytorch_model.bin",
+            "PT.ITEM.FILTER=['table']",
+            "USE_OCR=True",
+            "OCR.USE_DOCTR=True",
+            "OCR.USE_TESSERACT=False",
+        ]
+
         print("Parsing file - " + str(filepath))
         analyzer = dd.get_dd_analyzer(
             reset_config_file=False, config_overwrite=config_overwrite
