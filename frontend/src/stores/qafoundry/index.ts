@@ -127,6 +127,14 @@ export const qafoundryApi = createApi({
       }),
       providesTags: ['Collections'],
     }),
+    getCollectionNames: builder.query<string[], void>({
+      query: () => ({
+        url: '/v1/list-collections',
+        method: 'GET',
+        responseHandler: (response) =>
+          response.json().then((data: { collections: string[] }) => data.collections),
+      }),
+    }),
     getCollectionStatus: builder.query({
       query: (payload: { collectionName: string }) => ({
         url: `/v1/collections/data_ingestion_run/${payload.collectionName}/status`,
@@ -267,6 +275,7 @@ export const qafoundryApi = createApi({
 export const {
   // queries
   useGetCollectionsQuery,
+  useGetCollectionNamesQuery,
   useGetCollectionStatusQuery,
   useGetAllEnabledChatModelsQuery,
   useGetAllEnabledEmbeddingModelsQuery,
