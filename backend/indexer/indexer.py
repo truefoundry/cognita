@@ -261,18 +261,23 @@ async def ingest_data_points(
         try:
             if loaded_data_point.local_filepath:
                 os.remove(loaded_data_point.local_filepath)
-                print(
-                    f"Processing done! Deleting file {loaded_data_point.local_filepath}"
-                )
                 logger.debug(
                     f"Processing done! Deleting file {loaded_data_point.local_filepath}"
                 )
         except Exception as e:
-            print(
-                f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
-            )
             logger.error(
                 f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
+            )
+        # delete the local_filepath from the loaded_data_point object
+        try:
+            if loaded_data_point.local_metadata_file_path:
+                os.remove(loaded_data_point.local_metadata_file_path)
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_metadata_file_path}"
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_metadata_file_path} after processing. Error: {e}"
             )
 
     docs_to_index_count = len(documents_to_be_upserted)

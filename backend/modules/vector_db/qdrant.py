@@ -51,6 +51,7 @@ class QdrantVectorDB(BaseVectorDB):
             vectors_config=VectorParams(
                 size=vector_size,  # embedding dimension
                 distance=Distance.COSINE,
+                on_disk=True,
             ),
             replication_factor=3,
         )
