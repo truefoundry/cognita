@@ -63,7 +63,7 @@ class MultiModalParser(BaseParser):
         # Multi-modal parser needs to be configured with the base url, vision model and summary model
         if "base_url" in additional_config:
             self.client = additional_config["base_url"]
-            print(f"Using custom base url..., {self.client}")
+            logger.info(f"Using custom base url..., {self.client}")
         else:
             self.client = (
                 settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai/chat/completions"
@@ -71,7 +71,7 @@ class MultiModalParser(BaseParser):
 
         if "vision_model" in additional_config:
             self.vision_model = additional_config["vision_model"]
-            print(f"Using custom vision model..., {self.vision_model}")
+            logger.info(f"Using custom vision model..., {self.vision_model}")
         else:
             self.vision_model = "openai-main/gpt-4-turbo"
 
@@ -81,8 +81,7 @@ class MultiModalParser(BaseParser):
         page_number: int,
         prompt: str = "Describe the information present in the image in a structured format.",
     ):
-        logger.debug(f"Processing Image... {page_number}")
-        print(f"Processing Image... {page_number}")
+        logger.info(f"Processing Image... {page_number}")
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {settings.TFY_API_KEY}",
@@ -134,7 +133,7 @@ class MultiModalParser(BaseParser):
 
         try:
             if not filepath.endswith(".pdf"):
-                print(
+                logger.error(
                     "Invalid file extension. MultiModalParser only supports PDF files."
                 )
                 return []
@@ -148,7 +147,7 @@ class MultiModalParser(BaseParser):
             pages = dict()
 
             # Iterate over each page in the PDF
-            print(f"\n\nLoading all pages...")
+            logger.info(f"\n\nLoading all pages...")
             for page in doc:
                 try:
                     page_number = page.number + 1
@@ -164,7 +163,7 @@ class MultiModalParser(BaseParser):
 
                     pages[page_number] = image_base64
                 except Exception as e:
-                    print(f"Error in page: {page_number} - {e}")
+                    logger.error(f"Error in page: {page_number} - {e}")
                     continue
 
             # make parallel requests to VLM for all pages
@@ -194,18 +193,17 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 ]
                 responses = await asyncio.gather(*tasks)
 
-                print("Total Responses:", len(responses))
+                logger.info("Total Responses:", len(responses))
 
                 if responses is not None:
                     for response in responses:
                         if response is not None:
                             if "error" in response:
-                                print(f"Error in page: {response['error']}")
+                                logger.error(f"Error in page: {response['error']}")
                                 continue
                             else:
                                 pg_no, page_content = response["response"]
                                 if contains_text(page_content):
-                                    print("Processed page: ", pg_no)
                                     logger.debug(f"Processed page: {pg_no}")
                                     final_texts.append(
                                         Document(
@@ -222,10 +220,8 @@ Conclude with a summary of the key findings from your analysis and any recommend
                                     )
                 else:
                     logger.debug("No response from VLM...")
-                    print("No response from VLM...")
                 await asyncio.sleep(5)
             return final_texts
         except Exception as e:
             logger.error(f"Final Exception: {e}")
-            print(f"Final Exception: {e}")
             return final_texts
