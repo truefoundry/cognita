@@ -30,7 +30,3 @@ singlestoredb==1.0.4
 
 ### transformers
 transformers==4.40.2
-
-#### Reranker
-#### For use Mxbread Reranker
-sentence_transformers==2.5.1
