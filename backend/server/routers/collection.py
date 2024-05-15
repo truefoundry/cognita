@@ -19,15 +19,9 @@ from backend.types import (
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
 
-@router.get("/list-collections")
-def list_collections():
-    collections = METADATA_STORE_CLIENT.list_collections()
-    return JSONResponse(content={"collections": collections})
-
-
 @router.get("/")
 def get_collections():
-    """API to list all collections"""
+    """API to list all collections with details"""
     try:
         logger.debug("Listing all the collections...")
         collections = METADATA_STORE_CLIENT.get_collections()
@@ -36,6 +30,16 @@ def get_collections():
         return JSONResponse(
             content={"collections": [obj.dict() for obj in collections]}
         )
+    except Exception as exp:
+        logger.exception(exp)
+        raise HTTPException(status_code=500, detail=str(exp))
+
+
+@router.get("/list-collections")
+async def list_collections():
+    try:
+        collections = await METADATA_STORE_CLIENT.list_collections()
+        return JSONResponse(content={"collections": collections})
     except Exception as exp:
         logger.exception(exp)
         raise HTTPException(status_code=500, detail=str(exp))

@@ -534,14 +534,30 @@ class TrueFoundry(BaseMetadataStore):
         except Exception as e:
             logger.exception(e)
 
-    def list_collections(self) -> List[str]:
+    async def list_collections(self) -> List[str]:
         logger.info(f"[Metadata Store] Listing all collection")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
         )
-        collections = []
-        for ml_run in ml_runs:
-            collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
-            collections.append(collection.name)
-        return collections
+        return [run.run_name for run in ml_runs]
+
+    async def list_data_sources(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all data sources")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
+        )
+
+        data_sources = []
+        for run in ml_runs:
+            run_params = run.get_params()
+            data_sources.append(
+                {
+                    "type": run_params.get("data_source_fqn").split("::")[0],
+                    "uri": run_params.get("data_source_fqn").split("::")[1],
+                    "fqn": run_params.get("data_source_fqn"),
+                    "metadata": run_params.get("metadata", {}),
+                }
+            )
+        return data_sources

@@ -1,7 +1,7 @@
 ### Some heavy packages
 
 ### for doctr
-deepdoctection==0.30
+deepdoctection==0.32.0
 timm==0.9.16
 python-doctr==0.8.1
 

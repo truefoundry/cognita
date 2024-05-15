@@ -106,6 +106,9 @@ class LocalMetadataStore(BaseMetadataStore):
     def get_data_sources(self) -> List[DataSource]:
         return [self.data_source]
 
+    def list_data_sources(self) -> List[str]:
+        return [self.data_source.fqn]
+
     def associate_data_source_with_collection(
         self,
         collection_name: str,
