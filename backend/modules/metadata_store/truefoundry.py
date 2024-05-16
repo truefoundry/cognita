@@ -2,7 +2,6 @@ import enum
 import json
 import os
 import tempfile
-import time
 import warnings
 from typing import Any, Dict, List
 
@@ -190,7 +189,6 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_collections(self) -> List[Collection]:
         """Get all the collections for the given client"""
-        start = time.time()
         logger.debug(f"[Metadata Store] Listing all collection")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -201,10 +199,6 @@ class TrueFoundry(BaseMetadataStore):
             collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
             collections.append(self._polulate_collection(collection))
         logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
-        end = time.time()
-        print(
-            f"[Metadata Store] Listed {len(collections)} collections in {end-start} seconds"
-        )
         return collections
 
     def _polulate_collection(self, collection: Collection):
@@ -557,7 +551,6 @@ class TrueFoundry(BaseMetadataStore):
                     "type": run_params.get("data_source_fqn").split("::")[0],
                     "uri": run_params.get("data_source_fqn").split("::")[1],
                     "fqn": run_params.get("data_source_fqn"),
-                    "metadata": run_params.get("metadata", {}),
                 }
             )
         return data_sources

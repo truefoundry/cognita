@@ -35,7 +35,7 @@ def get_collections():
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-@router.get("/list-collections")
+@router.get("/list")
 async def list_collections():
     try:
         collections = await METADATA_STORE_CLIENT.list_collections()
