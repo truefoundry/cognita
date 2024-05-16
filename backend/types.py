@@ -84,6 +84,9 @@ class LoadedDataPoint(DataPoint):
     file_extension: Optional[str] = Field(
         title="File extension of the loaded data point",
     )
+    local_metadata_file_path: Optional[str] = Field(
+        title="Local file path of the metadata file",
+    )
 
 
 class EmbedderConfig(BaseModel):

@@ -34,7 +34,6 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
-from backend.modules.reranker import MxBaiReranker
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
@@ -159,6 +158,8 @@ class ExampleQueryController:
         """
         # Using mixbread-ai Reranker
         if retriever_config.compressor_model_provider == "mixbread-ai":
+            from backend.modules.reranker import MxBaiReranker
+
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
             compressor = MxBaiReranker(
