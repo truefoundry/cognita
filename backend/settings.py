@@ -42,6 +42,7 @@ class Settings(BaseSettings):
 
     LOCAL: bool = os.getenv("LOCAL", False)
     OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    EMBEDDING_SVC_URL: str = os.getenv("EMBEDDING_SVC_URL", "")
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")

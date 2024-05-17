@@ -14,3 +14,7 @@ if settings.LOCAL:
     from backend.modules.embedder.mixbread_embedder import MixBreadEmbeddings
 
     register_embedder("mixedbread", MixBreadEmbeddings)
+
+from backend.modules.embedder.embedding_svc import EmbeddingSvc
+
+register_embedder("embedding-svc", EmbeddingSvc)
