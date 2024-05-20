@@ -10,6 +10,21 @@ from backend.settings import settings
 
 
 class EmbeddingSvc(Embeddings):
+    """If you deploying the embedding service using hf inference server, you can use this class to interact with it.
+    It does not require any model to be loaded in the backend. It sends the text to the embedding service and gets the embeddings back.
+
+    ```
+    embedder_config:
+        provider: embedding-svc
+    ```
+    OR
+    ```
+    'embedder_config' : {
+        'provider': 'embedding-svc'
+    }
+    ```
+    """
+
     def __init__(self, **kwargs) -> None:
         # ideally get url from settings
         self.url = settings.EMBEDDING_SVC_URL
