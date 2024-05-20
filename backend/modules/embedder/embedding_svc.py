@@ -10,7 +10,7 @@ from backend.settings import settings
 
 
 class EmbeddingSvc(Embeddings):
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         # ideally get url from settings
         self.url = settings.EMBEDDING_SVC_URL
         # 8 tokens for query and 2 for start and stop tokens
