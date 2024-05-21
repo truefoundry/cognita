@@ -23,7 +23,7 @@ black==24.3.0
 async-timeout==4.0.3
 pre-commit==3.7.0
 huggingface-hub==0.20.3
-requests==2.31.0
+requests==2.32.0
 python-multipart==0.0.9
 
 #### singlestore db
