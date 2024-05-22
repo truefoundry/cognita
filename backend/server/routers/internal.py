@@ -63,7 +63,7 @@ def get_enabled_models(
         if settings.LOCAL:
             try:
                 # OLLAMA models
-                url = f"{settings.OLLAMA_URL}/api/tags"
+                url = f"{settings.OLLAMA_URL.rstrip('/')}/api/tags"
                 response = requests.get(url=url)
                 data = response.json()
                 for model in data["models"]:
@@ -93,7 +93,9 @@ def get_enabled_models(
     # Models from the llm gateway
     if settings.TFY_API_KEY:
         try:
-            url = f"{settings.TFY_HOST}/api/svc/v1/llm-gateway/model/enabled"
+            url = (
+                f"{settings.TFY_HOST.rstrip('/')}/api/svc/v1/llm-gateway/model/enabled"
+            )
             headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
             response = requests.get(url=url, headers=headers)
             response.raise_for_status()

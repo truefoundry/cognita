@@ -1,6 +1,5 @@
 import enum
 import json
-import logging
 import os
 import tempfile
 import warnings
@@ -46,7 +45,6 @@ class TrueFoundry(BaseMetadataStore):
         logger.info(
             f"[Metadata Store] Initializing TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
-        logging.getLogger("truefoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = ml.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
@@ -529,3 +527,30 @@ class TrueFoundry(BaseMetadataStore):
             )
         except Exception as e:
             logger.exception(e)
+
+    async def list_collections(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all collection")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
+        )
+        return [run.run_name for run in ml_runs]
+
+    async def list_data_sources(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all data sources")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
+        )
+
+        data_sources = []
+        for run in ml_runs:
+            run_params = run.get_params()
+            data_sources.append(
+                {
+                    "type": run_params.get("data_source_fqn").split("::")[0],
+                    "uri": run_params.get("data_source_fqn").split("::")[1],
+                    "fqn": run_params.get("data_source_fqn"),
+                }
+            )
+        return data_sources
