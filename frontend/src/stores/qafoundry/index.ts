@@ -114,7 +114,7 @@ export const qafoundryApi = createApi({
   baseQuery: createBaseQuery({
     baseUrl: baseQAFoundryPath,
   }),
-  tagTypes: ['Collections', 'DataSources'],
+  tagTypes: ['Collections', 'CollectionNames', 'DataSources'],
   endpoints: (builder) => ({
     // * Queries
     getCollections: builder.query<Collection[], void>({
@@ -136,6 +136,7 @@ export const qafoundryApi = createApi({
             .json()
             .then((data: { collections: string[] }) => data.collections),
       }),
+      providesTags: ['CollectionNames'],
     }),
     getCollectionStatus: builder.query({
       query: (payload: { collectionName: string }) => ({
@@ -214,7 +215,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
       }),
-      invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
+      invalidatesTags: ['Collections', 'CollectionNames'],
     }),
     addDocsToCollection: builder.mutation({
       query: (payload: object) => ({
