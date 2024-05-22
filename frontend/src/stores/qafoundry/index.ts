@@ -114,7 +114,7 @@ export const qafoundryApi = createApi({
   baseQuery: createBaseQuery({
     baseUrl: baseQAFoundryPath,
   }),
-  tagTypes: ['Collections', 'DataSources'],
+  tagTypes: ['Collections', 'CollectionNames', 'DataSources'],
   endpoints: (builder) => ({
     // * Queries
     getCollections: builder.query<Collection[], void>({
@@ -126,6 +126,17 @@ export const qafoundryApi = createApi({
             .then((data: { collections: Collection[] }) => data.collections),
       }),
       providesTags: ['Collections'],
+    }),
+    getCollectionNames: builder.query<string[], void>({
+      query: () => ({
+        url: '/v1/collections/list',
+        method: 'GET',
+        responseHandler: (response) =>
+          response
+            .json()
+            .then((data: { collections: string[] }) => data.collections),
+      }),
+      providesTags: ['CollectionNames'],
     }),
     getCollectionStatus: builder.query({
       query: (payload: { collectionName: string }) => ({
@@ -157,7 +168,7 @@ export const qafoundryApi = createApi({
     }),
     getDataSources: builder.query<DataSource[], void>({
       query: () => ({
-        url: '/v1/data_source/',
+        url: '/v1/data_source/list',
         method: 'GET',
         providesTags: ['DataSources'],
         responseHandler: (response) =>
@@ -204,7 +215,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
       }),
-      invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
+      invalidatesTags: ['Collections', 'CollectionNames'],
     }),
     addDocsToCollection: builder.mutation({
       query: (payload: object) => ({
@@ -267,6 +278,7 @@ export const qafoundryApi = createApi({
 export const {
   // queries
   useGetCollectionsQuery,
+  useGetCollectionNamesQuery,
   useGetCollectionStatusQuery,
   useGetAllEnabledChatModelsQuery,
   useGetAllEnabledEmbeddingModelsQuery,
