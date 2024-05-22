@@ -129,10 +129,12 @@ export const qafoundryApi = createApi({
     }),
     getCollectionNames: builder.query<string[], void>({
       query: () => ({
-        url: '/v1/list-collections',
+        url: '/v1/collections/list',
         method: 'GET',
         responseHandler: (response) =>
-          response.json().then((data: { collections: string[] }) => data.collections),
+          response
+            .json()
+            .then((data: { collections: string[] }) => data.collections),
       }),
     }),
     getCollectionStatus: builder.query({
@@ -165,7 +167,7 @@ export const qafoundryApi = createApi({
     }),
     getDataSources: builder.query<DataSource[], void>({
       query: () => ({
-        url: '/v1/data_source/',
+        url: '/v1/data_source/list',
         method: 'GET',
         providesTags: ['DataSources'],
         responseHandler: (response) =>
