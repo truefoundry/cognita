@@ -44,7 +44,6 @@ declare interface ImportMetaEnv {
   readonly VITE_DOCS_QA_STANDALONE_PATH: string
   readonly VITE_DOCS_QA_ENABLE_REDIRECT: string
   readonly VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: string
-  readonly VITE_DEPLOYMENT_PATH?: string
   // * Seeded by VITE
   readonly DEV: boolean
   readonly PROD: boolean

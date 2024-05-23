@@ -65,9 +65,6 @@ export default defineConfig(({ mode }) => {
       base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
-        'import.meta.env': {
-          VITE_DEPLOYMENT_PATH: process.env.VITE_DEPLOYMENT_PATH,
-        },
       },
     }
   } else {
@@ -84,9 +81,6 @@ export default defineConfig(({ mode }) => {
       base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
-        'import.meta.env': {
-          VITE_DEPLOYMENT_PATH: process.env.VITE_DEPLOYMENT_PATH,
-        },
       },
     }
   }

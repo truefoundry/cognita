@@ -13,15 +13,12 @@ import history from './router/history'
 import { DOCS_QA_STANDALONE_PATH } from './stores/constants'
 
 const getBaseName = () => {
-  return DOCS_QA_STANDALONE_PATH
-    ? '/' + DOCS_QA_STANDALONE_PATH
-    : undefined
+  return DOCS_QA_STANDALONE_PATH ? '/' + DOCS_QA_STANDALONE_PATH : undefined
 }
 
 function App() {
   // disable scroll on number inputs
   useEffect(() => {
-    console.log("DOCS_QA_STANDALONE_PATH", DOCS_QA_STANDALONE_PATH)
     const onWheel = () => {
       const ele = document.activeElement as any
       if (ele?.type === 'number') {
