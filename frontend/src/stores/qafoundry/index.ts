@@ -2,7 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react'
 
 // import * as T from './types'
 import { createBaseQuery } from '../utils'
-
+import { DOCS_QA_PATH_BASED_ROUTING } from '../constants'
 export interface ModelConfig {
   name: string
   parameters: {
@@ -106,8 +106,17 @@ interface QueryAnswer {
   answer: string
   docs: SourceDocs[]
 }
+function getBackendUrl() {
+  const url = import.meta.env.VITE_QA_FOUNDRY_URL
+  if (url.startsWith('http')) {
+    return url
+  }
+  return DOCS_QA_PATH_BASED_ROUTING
+    ? '/' + window.location.pathname.split('/')?.[1] + '/api'
+    : '/api'
+}
 
-export const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
+export const baseQAFoundryPath = getBackendUrl()
 
 export const qafoundryApi = createApi({
   reducerPath: 'qafoundry',
