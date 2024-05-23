@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => {
   const basePath =
     process.env.VITE_USE_RELATIVE_BASE_URL == 'true' ? '' : undefined
   const buildSourceMaps = process.env.VITE_SKIP_SENTRY_SOURCE_MAP != 'true'
-  const deploymentPath = process.env.VITE_DEPLOYMENT_PATH
 
   if (mode === 'default') {
     return {
@@ -66,7 +65,9 @@ export default defineConfig(({ mode }) => {
       base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
-        'process.env.VITE_DEPLOYMENT_PATH': deploymentPath,
+        'import.meta.env': {
+          VITE_DEPLOYMENT_PATH: process.env.VITE_DEPLOYMENT_PATH,
+        },
       },
     }
   } else {
@@ -83,7 +84,9 @@ export default defineConfig(({ mode }) => {
       base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
-        'process.env.VITE_DEPLOYMENT_PATH': deploymentPath,
+        'import.meta.env': {
+          VITE_DEPLOYMENT_PATH: process.env.VITE_DEPLOYMENT_PATH,
+        },
       },
     }
   }
