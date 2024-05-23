@@ -21,6 +21,7 @@ const getBaseName = () => {
 function App() {
   // disable scroll on number inputs
   useEffect(() => {
+    console.log("DOCS_QA_STANDALONE_PATH", DOCS_QA_STANDALONE_PATH)
     const onWheel = () => {
       const ele = document.activeElement as any
       if (ele?.type === 'number') {
