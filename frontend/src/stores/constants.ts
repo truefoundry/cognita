@@ -1,7 +1,3 @@
-import { loadEnv } from 'vite'
-
-const env = loadEnv('.env', process.cwd())
-
 export const IS_DOCS_QA_REDIRECT_ENABLED =
   import.meta.env.VITE_DOCS_QA_ENABLE_REDIRECT === 'true'
 export const DOCS_QA_STANDALONE_PATH =
