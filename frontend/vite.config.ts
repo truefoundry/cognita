@@ -6,6 +6,10 @@ import postcss from './postcss.config.js'
 // https://vitejs.dev/config/
 /** @type {import('vite').UserConfig} */
 export default defineConfig(({ mode }) => {
+  const env = loadEnv('.env', process.cwd())
+
+  // options from docker build args
+  const basePath = ''
   const buildSourceMaps = process.env.VITE_SKIP_SENTRY_SOURCE_MAP != 'true'
 
   if (mode === 'default') {
@@ -57,6 +61,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+      base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
       },
@@ -72,6 +77,7 @@ export default defineConfig(({ mode }) => {
       css: {
         postcss,
       },
+      base: basePath,
       define: {
         'process.env.NODE_DEBUG': false,
       },
