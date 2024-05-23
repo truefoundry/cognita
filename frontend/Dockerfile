@@ -1,5 +1,7 @@
 FROM node:18.2.0 AS build-step
 WORKDIR /build
+ARG VITE_USE_RELATIVE_BASE_URL
+ENV VITE_USE_RELATIVE_BASE_URL=${VITE_USE_RELATIVE_BASE_URL}
 COPY . .
 RUN yarn install
 RUN test -e .env || cp .env.example .env
