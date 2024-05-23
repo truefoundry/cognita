@@ -546,11 +546,15 @@ class TrueFoundry(BaseMetadataStore):
         data_sources = []
         for run in ml_runs:
             run_params = run.get_params()
-            data_sources.append(
-                {
-                    "type": run_params.get("data_source_fqn").split("::")[0],
-                    "uri": run_params.get("data_source_fqn").split("::")[1],
-                    "fqn": run_params.get("data_source_fqn"),
-                }
-            )
+            try:
+                data_sources.append(
+                    {
+                        "type": run_params.get("data_source_fqn").split("::")[0],
+                        "uri": run_params.get("data_source_fqn").split("::")[1],
+                        "fqn": run_params.get("data_source_fqn"),
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Error in listing data sources: {e}")
+                continue
         return data_sources
