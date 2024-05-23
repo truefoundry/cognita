@@ -41,7 +41,7 @@ declare module '*.svg'
 declare interface ImportMetaEnv {
   readonly VITE_QA_FOUNDRY_URL: string
   readonly VITE_DOCS_QA_DELETE_COLLECTIONS: string
-  readonly VITE_DOCS_QA_STANDALONE_PATH: string
+  readonly VITE_PATH_BASED_ROUTING_ENABLED: string
   readonly VITE_DOCS_QA_ENABLE_REDIRECT: string
   readonly VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: string
   // * Seeded by VITE

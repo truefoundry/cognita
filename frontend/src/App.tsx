@@ -10,10 +10,12 @@ import AppRoutes from '@/router'
 import theme from './materialTheme'
 import Fallback from './components/base/molecules/ScreenFallbackLoader'
 import history from './router/history'
-import { DOCS_QA_STANDALONE_PATH } from './stores/constants'
+import { DOCS_QA_PATH_BASED_ROUTING } from './stores/constants'
 
 const getBaseName = () => {
-  return DOCS_QA_STANDALONE_PATH ? '/' + DOCS_QA_STANDALONE_PATH : undefined
+  return DOCS_QA_PATH_BASED_ROUTING
+    ? '/' + window.location.pathname.split('/')?.[1]
+    : undefined
 }
 
 function App() {
