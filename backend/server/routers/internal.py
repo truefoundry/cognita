@@ -24,7 +24,7 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     # Create a new data directory.
     dataset = truefoundry_client.create_data_directory(
         settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
-        str(uuid.uuid4()),
+        req.upload_name,
     )
 
     _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()

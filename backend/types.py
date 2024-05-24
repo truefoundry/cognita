@@ -1,4 +1,5 @@
 import enum
+import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
@@ -424,6 +425,12 @@ class CreateCollectionDto(CreateCollection):
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
+    # allow only small case alphanumeric with hyphen
+    upload_name: str = Field(
+        title="Name of the upload",
+        regex=r"^[a-z0-9\-]+$",
+        default=str(uuid.uuid4()),
+    )
 
 
 class ModelType(str, Enum):
