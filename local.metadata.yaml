@@ -1,13 +1,29 @@
-collection_name: finance
+# Test 1
+# collection_name: sdocs1
+# data_source:
+#     type: localdir
+#     uri: /Users/prathamesh/Desktop/s-docs
+# parser_config:
+#     chunk_size: 1000
+#     chunk_overlap: 40
+#     parser_map:
+#         ".pdf": PdfTableParser
+# embedder_config:
+#     provider: mixedbread
+#     config:
+#         model: "mixedbread-ai/mxbai-embed-large-v1"
+
+# Test 2
+collection_name: sdocs2string
 data_source:
     type: localdir
-    uri: ./sample-data/finance
+    uri: /Users/prathamesh/Desktop/s-docs
 parser_config:
     chunk_size: 1000
-    chunk_overlap: 20
+    chunk_overlap: 40
     parser_map:
-        ".pdf": MultiModalParser
+        ".pdf": PdfTableParser
 embedder_config:
-    provider: truefoundry
+    provider: mixedbread
     config:
-        model: "openai-main/text-embedding-ada-002"
+        model: "mixedbread-ai/mxbai-embed-large-v1"
