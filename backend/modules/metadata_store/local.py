@@ -92,7 +92,7 @@ class LocalMetadataStore(BaseMetadataStore):
     ) -> List[Collection]:
         return [self.collection]
 
-    def list_collections(
+    async def list_collections(
         self,
     ) -> List[str]:
         return [self.collection.name]
