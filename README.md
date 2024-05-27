@@ -116,7 +116,7 @@ Following are the instructions for running Cognita locally without any additiona
 In the project root execute the following command:
 
 ```
-pip install -r backend/requirements.txt
+pip install -r backend/requirements.txt -r backend/additional.requirements.txt
 ```
 
 ## Setting up .env file:
