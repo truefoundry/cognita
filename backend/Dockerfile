@@ -8,9 +8,10 @@ RUN python3 -m venv /virtualenvs/venv/
 
 # Copy requirements.txt
 COPY backend/requirements.txt /tmp/requirements.txt
-COPY backend/embedder/embedder.requirements.txt /tmp/embedder.requirements.txt
-COPY backend/parser/parsers.requirements.txt /tmp/parsers.requirements.txt
-COPY backend/rerankers/rerankers.requirements.txt /tmp/rerankers.requirements.txt
+COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
+COPY backend/embedder.requirements.txt /tmp/embedder.requirements.txt
+COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
+COPY backend/rerankers.requirements.txt /tmp/rerankers.requirements.txt
 
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel && \
@@ -33,6 +34,10 @@ RUN if [ "${ADD_RERANKER}" = "1" ]; then python3 -m pip install --use-pep517 --n
 # Install Embedder packages
 ARG ADD_EMBEDDER=0
 RUN if [ "${ADD_EMBEDDER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/embedder.requirements.txt; fi
+
+# Install VectorDB packages
+ARG ADD_VECTORDB=0
+RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
 
 # Copy the project files
 COPY . /app
