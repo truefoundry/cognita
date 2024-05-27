@@ -6,40 +6,38 @@ from langchain.embeddings.base import Embeddings
 from backend.settings import settings
 
 
-class EmbeddingSvc(Embeddings):
-    """If you deploying the embedding service using hf inference server, you can use this class to interact with it.
-    It does not require any model to be loaded in the backend. It sends the text to the embedding service and gets the embeddings back.
-
-    ```
-    embedder_config:
-        provider: embedding-svc
-    ```
-    OR
-    ```
-    'embedder_config' : {
-        'provider': 'embedding-svc'
-    }
-    ```
+class InfinityEmbeddingSvc(Embeddings):
+    """If you deploying the embedding service deployed using infinity API.
+    Github: https://github.com/michaelfeil/infinity
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, model, **kwargs) -> None:
         # ideally get url from settings
         self.url = settings.EMBEDDING_SVC_URL
+        self.model = model
+
+    def transform_query(self, query: str) -> str:
+        """For retrieval, add the prompt for query (not for documents)."""
+        return f"Represent this sentence for searching relevant passages: {query}"
 
     def call_embedding_service(
         self, texts: Union[str, List[str]], type: str
     ) -> Union[List[float], List[List[float]]]:
         """Call the embedding service."""
-        if type == "query":
-            response = requests.post(
-                self.url.rstrip("/") + "/embed-query", json={"text": texts}
-            )
-        elif type == "documents":
-            response = requests.post(
-                self.url.rstrip("/") + "/embed-documents", json={"texts": texts}
-            )
+        if type == "query" and self.model.startswith("mixedbread"):
+            # Only for mixedbread models
+            texts = [self.transform_query(texts)]
+        elif type == "query":
+            texts = [texts]
+
+        payload = {
+            "input": texts,
+            "model": self.model,
+        }
+
+        response = requests.post(self.url.rstrip("/") + "/embeddings", json=payload)
         response.raise_for_status()
-        return response.json()["embeddings"]
+        return [data["embedding"] for data in response.json()["data"]]
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
@@ -47,4 +45,4 @@ class EmbeddingSvc(Embeddings):
 
     def embed_query(self, text: str) -> List[float]:
         """Embed query text."""
-        return self.call_embedding_service(text, "query")
+        return self.call_embedding_service(text, "query")[0]

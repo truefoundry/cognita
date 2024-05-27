@@ -28,14 +28,16 @@
 #     config:
 #         model: "mixedbread-ai/mxbai-embed-large-v1"
 # Test 3
-# collection_name: sdocs2stringsvc
-# data_source:
-#     type: localdir
-#     uri: /Users/prathamesh/Desktop/s-docs
-# parser_config:
-#     chunk_size: 512
-#     chunk_overlap: 40
-#     parser_map:
-#         ".pdf": PdfTableParser
-# embedder_config:
-#     provider: embedding-svc
+collection_name: sdocs2stringsvc
+data_source:
+    type: localdir
+    uri: /Users/prathamesh/Desktop/s-docs
+parser_config:
+    chunk_size: 512
+    chunk_overlap: 40
+    parser_map:
+        ".pdf": PdfTableParser
+embedder_config:
+    provider: embedding-svc
+    config:
+        model: "mixedbread-ai/mxbai-embed-large-v1"

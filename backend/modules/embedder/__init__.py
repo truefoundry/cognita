@@ -1,6 +1,7 @@
 from truefoundry.langchain import TrueFoundryEmbeddings
 
 from backend.modules.embedder.embedder import register_embedder
+from backend.modules.embedder.embedding_svc import InfinityEmbeddingSvc
 from backend.settings import settings
 
 if settings.OPENAI_API_KEY:
@@ -10,11 +11,9 @@ if settings.OPENAI_API_KEY:
 
 register_embedder("truefoundry", TrueFoundryEmbeddings)
 
-if settings.LOCAL:
-    from backend.modules.embedder.mixbread_embedder import MixBreadEmbeddings
+# Using embedding th' a deployed service such as Infinity API
+register_embedder("embedding-svc", InfinityEmbeddingSvc)
 
-    register_embedder("mixedbread", MixBreadEmbeddings)
-
-from backend.modules.embedder.embedding_svc import EmbeddingSvc
-
-register_embedder("embedding-svc", EmbeddingSvc)
+# Register the MixBreadEmbeddings class if required
+# from backend.modules.embedder.mixbread_embedder import MixBreadEmbeddings
+# register_embedder("mixbread", MixBreadEmbeddings)

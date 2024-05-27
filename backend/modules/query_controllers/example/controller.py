@@ -156,26 +156,35 @@ class ExampleQueryController:
         """
         Get the contextual compression retriever
         """
-        # Using mixbread-ai Reranker
-        if retriever_config.compressor_model_provider == "mixbread-ai":
-            from backend.modules.reranker import MxBaiReranker
-
+        try:
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
+            if settings.RERANKER_SVC_URL:
+                from backend.modules.rerankers.reranker_svc import InfinityReranker
 
-            compressor = MxBaiReranker(
-                model=retriever_config.compressor_model_name,
-                top_k=retriever_config.top_k,
-            )
+                compressor = InfinityReranker(
+                    top_k=retriever_config.top_k,
+                    model=retriever_config.compressor_model_name,
+                )
+
+            else:
+                # Using mixbread-ai Reranker
+                from backend.modules.rerankers.mxbai_reranker import MxBaiReranker
+
+                compressor = MxBaiReranker(
+                    top_k=retriever_config.top_k,
+                    model=retriever_config.compressor_model_name,
+                )
 
             compression_retriever = ContextualCompressionRetriever(
                 base_compressor=compressor, base_retriever=retriever
             )
 
             return compression_retriever
-        # Can add other rerankers too!
-        else:
+        except Exception as e:
+            logger.error(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(
-                status_code=404, detail="Compressor model provider not found"
+                status_code=500,
+                detail="Error in getting contextual compression retriever",
             )
 
     def _get_multi_query_retriever(

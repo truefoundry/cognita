@@ -1,0 +1,4 @@
+### for table detection parser
+deepdoctection==0.32.0
+timm==0.9.16
+python-doctr==0.8.1

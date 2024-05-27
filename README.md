@@ -11,6 +11,13 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
+# 🎉 What's new in Cognita
+
+-   [April, 2024] Support for multi-modal vision parser using GPT-4
+-   [May, 2024] Added support for Embedding and Reranking using [Infninty](<(https://github.com/michaelfeil/infinity)>). You can use hosted services for embeddings and reranking and develop similar services for your usecase. This reduces the burden on your system and makes it more scalable.
+-   [May, 2024] Cleaned up requirements for optional package installations for parsers, embedders and rerankers in respective directories
+-   [May, 2024] Conditional docker builds with arguments for optional package installations
+
 # Contents
 
 -   [Cognita](#cognita)
@@ -116,8 +123,30 @@ Following are the instructions for running Cognita locally without any additiona
 In the project root execute the following command:
 
 ```
-pip install -r backend/requirements.txt -r backend/additional.requirements.txt
+pip install -r backend/requirements.txt
 ```
+
+### Install Additional packages:
+
+-   Install packages for `PDFTableParser` that uses deep doctection for table extraction from PDFs. This is optional and can be skipped if you don't need to extract tables from PDFs.
+
+    ```
+    pip install -r backend/modules/parsers/parsers.requirements.txt
+    ```
+
+-   Install packages for `reranker` that uses mixedbread-ai for reranking. This is optional and can be skipped if you don't need to use mxbai-reranker.
+
+    ```
+    pip install -r backend/modules/reranker/reranker.requirements.txt
+    ```
+
+-   Install packages for `embedder` that uses mixedbread-ai for embeddings. This is optional and can be skipped if you don't need to use mxbai-embedder.
+
+    ```
+    pip install -r backend/modules/embedder/embedder.requirements.txt
+    ```
+
+-   Rerankers and Embedders can also be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective files can be found under embedder and reranker directories. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
 
 ## Setting up .env file:
 
