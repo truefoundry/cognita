@@ -1,4 +1,4 @@
-PROMPT = "You are an AI assistant specialising in information retieval and analysis. Answer the following question based only on the following context:\nContext: {context} \nQuestion: {question}"
+PROMPT = "You are an AI assistant specialising in information retrieval and analysis. Answer the following question based only on the given context:\nContext: {context} \nQuestion: {question}"
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
