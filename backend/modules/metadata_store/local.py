@@ -109,8 +109,8 @@ class LocalMetadataStore(BaseMetadataStore):
     async def list_data_sources(self) -> List[str]:
         return [
             {
-                "type": self.data_source.fqn.split("::")[0],
-                "uri": self.data_source.fqn.split("::")[1],
+                "type": self.data_source.type,
+                "uri": self.data_source.uri,
                 "fqn": self.data_source.fqn,
             }
         ]
