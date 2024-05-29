@@ -203,7 +203,11 @@ export const qafoundryApi = createApi({
 
     // * Mutations
     uploadDataToDataDirectory: builder.mutation({
-      query: (payload: { collection_name: string; filepaths: string[] }) => ({
+      query: (payload: {
+        collection_name: string
+        filepaths: string[]
+        upload_name: string
+      }) => ({
         url: '/v1/internal/upload-to-data-directory',
         body: payload,
         method: 'POST',

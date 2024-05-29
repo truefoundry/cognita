@@ -239,13 +239,18 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                     border: 'none !important',
                   },
                 }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { maxWidth: 'calc(65vw - 4rem)' },
+                  },
+                }}
               >
                 <MenuItem value={'none'} disabled>
                   Select a Data Source FQN
                 </MenuItem>
                 {dataSources?.map((source: any) => (
                   <MenuItem value={source.fqn} key={source.fqn}>
-                    <span>{source.fqn}</span>
+                    <span className="truncate w-full">{source.fqn}</span>
                   </MenuItem>
                 ))}
               </Select>
