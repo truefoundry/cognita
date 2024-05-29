@@ -22,7 +22,7 @@ black==24.3.0
 async-timeout==4.0.3
 pre-commit==3.7.0
 huggingface-hub==0.20.3
-requests==2.31.0
+requests==2.32.2
 python-multipart==0.0.9
 opencv-python==4.9.0.80
 pillow==10.2.0
