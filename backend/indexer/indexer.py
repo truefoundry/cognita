@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import Dict, List
 
@@ -33,9 +34,9 @@ def get_data_point_fqn_to_hash_map(
     data_point_fqn_to_hash: Dict[str, str] = {}
     for data_point_vector in data_point_vectors:
         if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[data_point_vector.data_point_fqn] = (
-                data_point_vector.data_point_hash
-            )
+            data_point_fqn_to_hash[
+                data_point_vector.data_point_fqn
+            ] = data_point_vector.data_point_hash
 
     return data_point_fqn_to_hash
 
@@ -229,6 +230,8 @@ async def ingest_data_points(
             file_extension=loaded_data_point.file_extension,
             parsers_map=inputs.parser_config.parser_map,
             max_chunk_size=inputs.parser_config.chunk_size,
+            chunk_overlap=inputs.parser_config.chunk_overlap,
+            additional_config=inputs.parser_config.additional_config,
         )
         if parser is None:
             logger.warning(
@@ -253,6 +256,29 @@ async def ingest_data_points(
             )
             documents_to_be_upserted.append(chunk)
         logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
+
+        # delete the file from temp dir after processing
+        try:
+            if loaded_data_point.local_filepath:
+                os.remove(loaded_data_point.local_filepath)
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_filepath}"
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
+            )
+        # delete the local_filepath from the loaded_data_point object
+        try:
+            if loaded_data_point.local_metadata_file_path:
+                os.remove(loaded_data_point.local_metadata_file_path)
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_metadata_file_path}"
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_metadata_file_path} after processing. Error: {e}"
+            )
 
     docs_to_index_count = len(documents_to_be_upserted)
     if docs_to_index_count == 0:
@@ -332,6 +358,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         parser_config=created_data_ingestion_run.parser_config,
                         data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                        batch_size=request.batch_size,
                     )
                 )
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED

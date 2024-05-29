@@ -1,14 +1,13 @@
 import enum
 import json
-import logging
 import os
 import tempfile
 import warnings
 from typing import Any, Dict, List
 
 import mlflow
-from truefoundry import ml
 from fastapi import HTTPException
+from truefoundry import ml
 
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
@@ -46,7 +45,6 @@ class TrueFoundry(BaseMetadataStore):
         logger.info(
             f"[Metadata Store] Initializing TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
-        logging.getLogger("truefoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = ml.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
@@ -248,9 +246,9 @@ class TrueFoundry(BaseMetadataStore):
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[data_source_association.data_source_fqn] = (
-            associated_data_source
-        )
+        collection.associated_data_sources[
+            data_source_association.data_source_fqn
+        ] = associated_data_source
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
         logger.debug(
@@ -529,3 +527,34 @@ class TrueFoundry(BaseMetadataStore):
             )
         except Exception as e:
             logger.exception(e)
+
+    async def list_collections(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all collection")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
+        )
+        return [run.run_name for run in ml_runs]
+
+    async def list_data_sources(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all data sources")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
+        )
+
+        data_sources = []
+        for run in ml_runs:
+            run_params = run.get_params()
+            try:
+                data_sources.append(
+                    {
+                        "type": run_params.get("data_source_fqn").split("::")[0],
+                        "uri": run_params.get("data_source_fqn").split("::")[1],
+                        "fqn": run_params.get("data_source_fqn"),
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Error in listing data sources: {e}")
+                continue
+        return data_sources

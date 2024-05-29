@@ -1,7 +1,8 @@
-from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
-from langchain.docstore.document import Document
 from typing import List, Optional, Sequence
+
 from langchain.callbacks.manager import Callbacks
+from langchain.docstore.document import Document
+from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 from sentence_transformers import CrossEncoder
 
 
@@ -21,7 +22,8 @@ class MxBaiReranker(BaseDocumentCompressor):
         callbacks: Optional[Callbacks] = None,
     ) -> Sequence[Document]:
         """Compress retrieved documents given the query context."""
-        model = CrossEncoder(self.model)
+        import torch
+        model = CrossEncoder(self.model, device="cuda" if torch.cuda.is_available() else "cpu")
         docs = [doc.page_content for doc in documents]
         reranked_docs = model.rank(query, docs, return_documents=True, top_k=self.top_k)
 

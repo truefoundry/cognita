@@ -1,4 +1,5 @@
 import enum
+import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
@@ -84,6 +85,9 @@ class LoadedDataPoint(DataPoint):
     file_extension: Optional[str] = Field(
         title="File extension of the loaded data point",
     )
+    local_metadata_file_path: Optional[str] = Field(
+        title="Local file path of the metadata file",
+    )
 
 
 class EmbedderConfig(BaseModel):
@@ -104,17 +108,21 @@ class ParserConfig(BaseModel):
     Parser configuration
     """
 
-    chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=500)
+    chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
 
-    chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=0)
+    chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
 
     parser_map: Dict[str, str] = Field(
         title="Mapping of file extensions to parsers",
         default={
             ".md": "MarkdownParser",
             ".pdf": "PdfParserFast",
-            ".txt": "TextParser",
         },
+    )
+
+    additional_config: Optional[Dict[str, Any]] = Field(
+        title="Additional optional configuration for the parser",
+        default={"key": "value"},
     )
 
 
@@ -417,6 +425,12 @@ class CreateCollectionDto(CreateCollection):
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
+    # allow only small case alphanumeric and hyphen, should contain atleast one alphabet and begin with alphabet
+    upload_name: str = Field(
+        title="Name of the upload",
+        regex=r"^[a-z][a-z0-9-]*$",
+        default=str(uuid.uuid4()),
+    )
 
 
 class ModelType(str, Enum):

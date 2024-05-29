@@ -1,8 +1,8 @@
-import yaml
 import random
 import string
 from typing import List
 
+import yaml
 from pydantic import BaseModel
 
 from backend.logger import logger
@@ -92,6 +92,11 @@ class LocalMetadataStore(BaseMetadataStore):
     ) -> List[Collection]:
         return [self.collection]
 
+    async def list_collections(
+        self,
+    ) -> List[str]:
+        return [self.collection.name]
+
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         return self.data_source
 
@@ -100,6 +105,15 @@ class LocalMetadataStore(BaseMetadataStore):
 
     def get_data_sources(self) -> List[DataSource]:
         return [self.data_source]
+
+    async def list_data_sources(self) -> List[str]:
+        return [
+            {
+                "type": self.data_source.type,
+                "uri": self.data_source.uri,
+                "fqn": self.data_source.fqn,
+            }
+        ]
 
     def associate_data_source_with_collection(
         self,

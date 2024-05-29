@@ -8,7 +8,7 @@ import {
   SourceDocs,
   baseQAFoundryPath,
   useGetAllEnabledChatModelsQuery,
-  useGetCollectionsQuery,
+  useGetCollectionNamesQuery,
   useGetOpenapiSpecsQuery,
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
@@ -85,7 +85,7 @@ const DocsQA = () => {
   const [isStreamEnabled, setIsStreamEnabled] = useState(false)
 
   const { data: collections, isLoading: isCollectionsLoading } =
-    useGetCollectionsQuery()
+    useGetCollectionNamesQuery()
   const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
   const [searchAnswer] = useQueryCollectionMutation()
@@ -210,7 +210,7 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (collections && collections.length) {
-      setSelectedCollection(collections[0].name)
+      setSelectedCollection(collections[0])
     }
   }, [collections])
 
@@ -296,8 +296,8 @@ const DocsQA = () => {
                   }}
                 >
                   {collections?.map((collection: any) => (
-                    <MenuItem value={collection.name} key={collection.name}>
-                      {collection.name}
+                    <MenuItem value={collection} key={collection}>
+                      {collection}
                     </MenuItem>
                   ))}
                 </Select>
@@ -432,6 +432,8 @@ const DocsQA = () => {
                       {sourceDocs?.map((doc, index) => {
                         const splittedFqn =
                           doc?.metadata?._data_point_fqn.split('::')
+                        const pageNumber =
+                          doc?.metadata?.page_number || doc?.metadata?.page_num
                         return (
                           <div key={index} className="mb-3">
                             <div className="text-sm">
@@ -443,6 +445,7 @@ const DocsQA = () => {
                             </div>
                             <div className="text-sm text-indigo-600 mt-1">
                               Source: {splittedFqn?.[splittedFqn.length - 1]}
+                              {pageNumber && `, Page No.: ${pageNumber}`}
                             </div>
                           </div>
                         )

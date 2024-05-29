@@ -11,6 +11,13 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
+# 🎉 What's new in Cognita
+
+-   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
+-   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
+-   [May, 2024] Conditional docker builds with arguments for optional package installations
+-   [April, 2024] Support for multi-modal vision parser using GPT-4
+
 # Contents
 
 -   [Cognita](#cognita)
@@ -23,6 +30,8 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
         -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
 -   🚀 [Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
     -   [Install necessary packages:](#install-necessary-packages)
+    -   [Install Additional Packages:](#install-additional-packages)
+    -   [Infinity Service:](#infinity-service)
     -   [Setting up .env file:](#setting-up-env-file)
     -   [Executing the Code:](#executing-the-code)
 -   🛠️ [Project Architecture](#hammer_and_pick-project-architecture)
@@ -47,7 +56,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 Cognita is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
 
-1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be trigerred via an event to keep the data updated.
+1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be triggered via an event to keep the data updated.
 2. **Query Service**: The code that generates the answer from the query needs to be wrapped up in a api server like FastAPI and should be deployed as a service. This service should be able to handle multiple queries at the same time and also autoscale with higher traffic.
 3. **LLM / Embedding Model Deployment**: Often times, if we are using open-source models, we load the model in the Jupyter notebook. This will need to be hosted as a separate service in production and model will need to be called as an API.
 4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way.
@@ -117,6 +126,54 @@ In the project root execute the following command:
 
 ```
 pip install -r backend/requirements.txt
+```
+
+### Install Additional packages:
+
+-   Install packages for additional parsers like `PDFTableParser` that uses deep doctection for table extraction from PDFs. This is optional and can be skipped if you don't need to extract tables from PDFs.
+
+    ```
+    pip install -r backend/parsers.requirements.txt
+    ```
+
+-   Install packages for `reranker` that uses mixedbread-ai for reranking. This is optional and can be skipped if you don't need to use mxbai-reranker.
+
+    ```
+    pip install -r backend/reranker.requirements.txt
+    ```
+
+-   Install packages for `embedder` that uses mixedbread-ai for embeddings. This is optional and can be skipped if you don't need to use mxbai-embedder.
+
+    ```
+    pip install -r backend/embedder.requirements.txt
+    ```
+
+    > Uncomment the respective embedder in `backend/modules/embedder/__init__.py` to use it.
+
+-   Install packages for `vector_db` that uses singlestore for vector db. This is optional and can be skipped if you don't need to use singlestore.
+
+    ```
+    pip install -r backend/vectordb.requirements.txt
+    ```
+
+    > Uncomment the respective vector db in `backend/modules/vector_db/__init__.py` to use it.
+
+-   Rerankers and Embedders can also be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
+
+### Infinity Service:
+
+-   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.36/)
+-   You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
+
+```docker
+    docker run -it --gpus all \
+    -v $PWD/infinity/data:/app/.cache \
+    -p 7997:7997 \
+    michaelf34/infinity:latest \
+    v2 \
+    --model-id mixedbread-ai/mxbai-embed-large-v1 \
+    --model-id mixedbread-ai/mxbai-rerank-xsmall-v1 \
+    --port 7997
 ```
 
 ## Setting up .env file:

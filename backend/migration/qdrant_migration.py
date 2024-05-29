@@ -17,13 +17,14 @@ Add --overwrite to overwrite destination collection if exists in separate qdrant
 """
 
 
-import requests, argparse
+import argparse
 
-from backend.types import CreateCollectionDto, AssociateDataSourceWithCollection
-from backend.logger import logger
-
+import requests
 from qdrant_client import QdrantClient
+
+from backend.logger import logger
 from backend.migration.utils import get_collection, migrate
+from backend.types import AssociateDataSourceWithCollection, CreateCollectionDto
 
 
 def migrate_collection(
@@ -38,7 +39,6 @@ def migrate_collection(
     batch_size: int,
     overwrite: bool,
 ):
-
     try:
         fetched_source_collection = get_collection(
             source_backend_url, source_collection_name, type="source"

@@ -45,13 +45,13 @@ const CollectionCard = ({
       onMouseLeave={() => setIsInfoIconVisible(false)}
     >
       <div className="flex justify-between items-center">
-        <div className="flex gap-2.5 items-center">
+        <div className="flex gap-2.5 items-center max-w-[calc(100%-24px)]">
           <IconProvider
             icon="fa-regular fa-files"
             size={1}
             className="text-gray-500"
           />
-          <div className="text-gray-950 font-[500] text-base">
+          <div className="text-gray-950 font-[500] text-base truncate">
             {collectionName}
           </div>
         </div>

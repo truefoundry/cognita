@@ -51,7 +51,6 @@ class TrueFoundryLoader(BaseDataLoader):
             logger.debug(f"Data directory download info: {download_info}")
 
         if download_info:
-
             if os.path.exists(os.path.join(download_info, "files")):
                 logger.debug("Files directory exists")
                 download_info = os.path.join(download_info, "files")

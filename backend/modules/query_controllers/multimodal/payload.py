@@ -1,4 +1,4 @@
-PROMPT = "You are an AI assistant specialising in information retrieval and analysis. Answer the following question based only on the given context:\nContext: {context} \nQuestion: {question}"
+PROMPT = "You are an AI assistant specialising in information retrieval. Answer the following question precisely by extracting the relavant information given in the images.\nQuestion: {question}"
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "creditcard",
     "query": "Explain in detail different categories of credit cards",
@@ -10,7 +10,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
     "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
@@ -39,7 +39,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
             "fetch_k": 7,
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
@@ -65,7 +65,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -94,7 +94,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
@@ -127,7 +127,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
             "fetch_k": 30,
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
@@ -159,7 +159,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD = {
@@ -192,7 +192,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -227,7 +227,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -258,7 +258,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -297,7 +297,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -332,7 +332,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
             "parameters": {"temperature": 0.1},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -367,7 +367,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
             "parameters": {"temperature": 0.1},
         },
     },
-    "stream": False,
+    "stream": True,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {

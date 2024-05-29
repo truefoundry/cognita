@@ -1,10 +1,12 @@
 import re
 from typing import Optional
+
 import fitz
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
+from backend.modules.parsers.utils import contains_text
 from backend.types import LoadedDataPoint
 
 
@@ -76,18 +78,20 @@ class PdfParserUsingPyMuPDF(BaseParser):
                             },
                         )
                         for text_split in text_splits
+                        if contains_text(text_split)
                     ]
                     final_texts.extend(texts)
                 else:
-                    final_texts.append(
-                        Document(
-                            page_content=text,
-                            metadata={
-                                "page_num": page.number,
-                                "type": "text",
-                            },
+                    if contains_text(text):
+                        final_texts.append(
+                            Document(
+                                page_content=text,
+                                metadata={
+                                    "page_num": page.number,
+                                    "type": "text",
+                                },
+                            )
                         )
-                    )
         except Exception:
             print(f"Error while parsing PDF file at {filepath}")
             # Return an empty list if there was an error during processing

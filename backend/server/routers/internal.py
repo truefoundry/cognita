@@ -1,15 +1,16 @@
-from typing import Optional
 import uuid
+from types import SimpleNamespace
+from typing import Optional
+
 import requests
-from backend.logger import logger
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
-
 from truefoundry import ml
 from truefoundry.ml import DataDirectory
-from types import SimpleNamespace
+
+from backend.logger import logger
 from backend.settings import settings
-from backend.types import ModelType, UploadToDataDirectoryDto, LLMConfig, EmbedderConfig
+from backend.types import EmbedderConfig, LLMConfig, ModelType, UploadToDataDirectoryDto
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 
@@ -18,27 +19,30 @@ router = APIRouter(prefix="/v1/internal", tags=["internal"])
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     if settings.METADATA_STORE_CONFIG.provider != "truefoundry":
         raise Exception("API only supported for metadata store provider: truefoundry")
-    truefoundry_client = ml.get_client()
+    try:
+        truefoundry_client = ml.get_client()
 
-    # Create a new data directory.
-    dataset = truefoundry_client.create_data_directory(
-        settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
-        str(uuid.uuid4()),
-    )
+        # Create a new data directory.
+        dataset = truefoundry_client.create_data_directory(
+            settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
+            req.upload_name,
+        )
 
-    _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()
+        _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()
 
-    urls = _artifacts_repo.get_signed_urls_for_write(
-        artifact_identifier=SimpleNamespace(
-            artifact_version_id=None, dataset_fqn=dataset.fqn
-        ),
-        paths=req.filepaths,
-    )
+        urls = _artifacts_repo.get_signed_urls_for_write(
+            artifact_identifier=SimpleNamespace(
+                artifact_version_id=None, dataset_fqn=dataset.fqn
+            ),
+            paths=req.filepaths,
+        )
 
-    data = [url.dict() for url in urls]
-    return JSONResponse(
-        content={"data": data, "data_directory_fqn": dataset.fqn},
-    )
+        data = [url.dict() for url in urls]
+        return JSONResponse(
+            content={"data": data, "data_directory_fqn": dataset.fqn},
+        )
+    except Exception as ex:
+        raise Exception(f"Error uploading files to data directory: {ex}")
 
 
 @router.get("/models")
@@ -56,13 +60,26 @@ def get_enabled_models(
                     config={"model": "mixedbread-ai/mxbai-embed-large-v1"},
                 ).dict()
             )
+        if settings.EMBEDDING_SVC_URL:
+            try:
+                url = f"{settings.EMBEDDING_SVC_URL.rstrip('/')}/models"
+                response = requests.get(url=url).json()
+                for models in response["data"]:
+                    enabled_models.append(
+                        EmbedderConfig(
+                            provider="embedding_svc",
+                            config={"model": models["id"]},
+                        ).dict()
+                    )
+            except Exception as ex:
+                logger.error(f"Error fetching embedding models: {ex}")
 
     # Local LLM models
     if model_type == ModelType.chat:
         if settings.LOCAL:
             try:
                 # OLLAMA models
-                url = f"{settings.OLLAMA_URL}/api/tags"
+                url = f"{settings.OLLAMA_URL.rstrip('/')}/api/tags"
                 response = requests.get(url=url)
                 data = response.json()
                 for model in data["models"]:
@@ -92,7 +109,9 @@ def get_enabled_models(
     # Models from the llm gateway
     if settings.TFY_API_KEY:
         try:
-            url = f"{settings.TFY_HOST}/api/svc/v1/llm-gateway/model/enabled"
+            url = (
+                f"{settings.TFY_HOST.rstrip('/')}/api/svc/v1/llm-gateway/model/enabled"
+            )
             headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
             response = requests.get(url=url, headers=headers)
             response.raise_for_status()

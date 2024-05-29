@@ -1,22 +1,21 @@
-from typing import List, Iterable, Optional, Any
 import json
+from typing import Any, Iterable, List, Optional
+
+import singlestoredb as s2
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
+from langchain_community.vectorstores.singlestoredb import SingleStoreDB
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
 
-from langchain_community.vectorstores.singlestoredb import SingleStoreDB
-import singlestoredb as s2
-
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 
 
 class SSDB(SingleStoreDB):
-
     def _create_table(self: SingleStoreDB) -> None:
         """Create table if it doesn't exist."""
         conn = self.connection_pool.connect()
@@ -118,7 +117,6 @@ class SingleStoreVectorDB(BaseVectorDB):
         self.host = config.url
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-
         logger.debug(f"[SingleStore] Creating new collection {collection_name}...")
 
         # Calculate embedding size

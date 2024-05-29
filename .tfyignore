@@ -20,3 +20,6 @@ tf-docs-crawled/
 truefoundry-docs/
 *.zip
 ragenv/
+qdrant_storage/
+*.pth
+.truefoundry
