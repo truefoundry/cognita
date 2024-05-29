@@ -28,6 +28,8 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
     -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
         -   [Create a Virtual Environment:](#create-a-virtual-environment)
         -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
+        -   [Install Additional Packages:](#install-additional-packages)
+        -   [Infinity Service:](#infinity-service)
 -   🚀 [Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
     -   [Install necessary packages:](#install-necessary-packages)
     -   [Setting up .env file:](#setting-up-env-file)
