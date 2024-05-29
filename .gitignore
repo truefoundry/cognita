@@ -27,3 +27,4 @@ truefoundry-docs/
 qdrant_storage/
 *.pth
 .truefoundry
+infinity/

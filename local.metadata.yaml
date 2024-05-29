@@ -1,34 +1,4 @@
-# Test 1
-# collection_name: sdocs1
-# data_source:
-#     type: localdir
-#     uri: /Users/prathamesh/Desktop/s-docs
-# parser_config:
-#     chunk_size: 1000
-#     chunk_overlap: 40
-#     parser_map:
-#         ".pdf": PdfTableParser
-# embedder_config:
-#     provider: mixedbread
-#     config:
-#         model: "mixedbread-ai/mxbai-embed-large-v1"
-
-# # Test 2
-# collection_name: sdocs2string
-# data_source:
-#     type: localdir
-#     uri: /Users/prathamesh/Desktop/s-docs
-# parser_config:
-#     chunk_size: 1000
-#     chunk_overlap: 40
-#     parser_map:
-#         ".pdf": PdfTableParser
-# embedder_config:
-#     provider: mixedbread
-#     config:
-#         model: "mixedbread-ai/mxbai-embed-large-v1"
-# Test 3
-collection_name: sdocs2stringsvc
+collection_name: docs
 data_source:
     type: localdir
     uri: /Users/prathamesh/Desktop/s-docs

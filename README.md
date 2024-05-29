@@ -13,10 +13,10 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
--   [April, 2024] Support for multi-modal vision parser using GPT-4
--   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](<(https://github.com/michaelfeil/infinity)>). You can use hosted services for embeddings and reranking and develop similar services for your usecase. This reduces the burden on your system and makes it more scalable.
+-   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
 -   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
 -   [May, 2024] Conditional docker builds with arguments for optional package installations
+-   [April, 2024] Support for multi-modal vision parser using GPT-4
 
 # Contents
 
@@ -156,7 +156,23 @@ pip install -r backend/requirements.txt
 
     > Uncomment the respective vector db in `backend/modules/vector_db/__init__.py` to use it.
 
--   Rerankers and Embedders can also be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective files can be found under embedder and reranker directories. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
+-   Rerankers and Embedders can also be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
+
+### Infinity Service:
+
+-   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.36/)
+-   You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
+
+```docker
+    docker run -it --gpus all \
+    -v $PWD/infinity/data:/app/.cache \
+    -p 7997:7997 \
+    michaelf34/infinity:latest \
+    v2 \
+    --model-id mixedbread-ai/mxbai-embed-large-v1 \
+    --model-id mixedbread-ai/mxbai-rerank-xsmall-v1 \
+    --port 7997
+```
 
 ## Setting up .env file:
 
