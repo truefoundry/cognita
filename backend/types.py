@@ -425,10 +425,10 @@ class CreateCollectionDto(CreateCollection):
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
-    # allow only small case alphanumeric with hyphen
+    # allow only small case alphanumeric and hyphen, should contain atleast one alphabet and begin with alphabet
     upload_name: str = Field(
         title="Name of the upload",
-        regex=r"^[a-z0-9\-]+$",
+        regex=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
 
