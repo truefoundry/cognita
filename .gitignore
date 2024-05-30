@@ -4,11 +4,8 @@
 test/.pytest_cache
 dist/
 .serverless
-examples/*/.servicefoundry
 .pytest_cache
-.servicefoundry_templates/
 .DS_Store
-.servicefoundry
 venv
 .vscode/
 repo-data/

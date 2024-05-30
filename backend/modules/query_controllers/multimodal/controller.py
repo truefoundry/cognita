@@ -48,8 +48,8 @@ EXAMPLES = {
 }
 
 
-@query_controller("/multimodal")
-class MultiModalQueryController:
+@query_controller("/multimodal-rag")
+class MultiModalRAGQueryController:
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
