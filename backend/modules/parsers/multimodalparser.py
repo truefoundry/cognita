@@ -60,7 +60,7 @@ class MultiModalParser(BaseParser):
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
 
-        # Multi-modal parser needs to be configured with the base url, vision model and summary model
+        # Multi-modal parser needs to be configured with the openai compatible client url and vision model
         if "base_url" in additional_config:
             self.client = additional_config["base_url"]
             logger.info(f"Using custom base url..., {self.client}")
