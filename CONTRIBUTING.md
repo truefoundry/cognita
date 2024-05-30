@@ -22,6 +22,9 @@ If you've identified a bug or have an idea for an enhancement, please begin by c
 
 We welcome all ideas and feedback. If you're not ready to open an Issue or if you're just looking for a place to discuss ideas, head over to our [GitHub Discussions](https://github.com/truefoundry/docs-qa-playground/discussions).
 
+## Developing the code locally
+
+
 ## 📝 Pull Requests
 
 If you're ready to contribute code or documentation, please submit a Pull Request (PR) to the dev branch. Here's the process:
