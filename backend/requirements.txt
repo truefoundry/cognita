@@ -1,29 +1,132 @@
-
-Description:
-  Exports the lock file to alternative formats.
-
-Usage:
-  export [options]
-
-Options:
-  -f, --format=FORMAT        Format to export to. Currently, only constraints.txt and requirements.txt are supported. [default: "requirements.txt"]
-  -o, --output=OUTPUT        The name of the output file.
-      --without-hashes       Exclude hashes from the exported file.
-      --without-urls         Exclude source repository urls from the exported file.
-      --dev                  Include development dependencies. (Deprecated)
-      --without=WITHOUT      The dependency groups to ignore. (multiple values allowed)
-      --with=WITH            The optional dependency groups to include. (multiple values allowed)
-      --only=ONLY            The only dependency groups to include. (multiple values allowed)
-  -E, --extras=EXTRAS        Extra sets of dependencies to include. (multiple values allowed)
-      --all-extras           Include all sets of extra dependencies.
-      --with-credentials     Include credentials for extra indices.
-  -h, --help                 Display help for the given command. When no command is given display help for the list command.
-  -q, --quiet                Do not output any message.
-  -V, --version              Display this application version.
-      --ansi                 Force ANSI output.
-      --no-ansi              Disable ANSI output.
-  -n, --no-interaction       Do not ask any interactive question.
-      --no-plugins           Disables plugins.
-      --no-cache             Disables Poetry source caches.
-  -C, --directory=DIRECTORY  The working directory for the Poetry command (defaults to the current working directory).
-  -v|vv|vvv, --verbose       Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug.
+aiohttp==3.9.5 ; python_version >= "3.9" and python_version < "3.13"
+aiosignal==1.3.1 ; python_version >= "3.9" and python_version < "3.13"
+anyio==4.4.0 ; python_version >= "3.9" and python_version < "3.13"
+argcomplete==3.3.0 ; python_version >= "3.9" and python_version < "3.13"
+async-timeout==4.0.3 ; python_version >= "3.9" and python_version < "3.13"
+attrs==23.2.0 ; python_version >= "3.9" and python_version < "3.13"
+beautifulsoup4==4.12.3 ; python_version >= "3.9" and python_version < "3.13"
+bidict==0.23.1 ; python_version >= "3.9" and python_version < "3.13"
+certifi==2024.2.2 ; python_version >= "3.9" and python_version < "3.13"
+cfgv==3.4.0 ; python_version >= "3.9" and python_version < "3.13"
+charset-normalizer==3.3.2 ; python_version >= "3.9" and python_version < "3.13"
+click==8.1.7 ; python_version >= "3.9" and python_version < "3.13"
+cloudpickle==3.0.0 ; python_version >= "3.9" and python_version < "3.13"
+colorama==0.4.6 ; python_version >= "3.9" and python_version < "3.13" and platform_system == "Windows"
+coolname==1.1.0 ; python_version >= "3.9" and python_version < "3.13"
+databricks-cli==0.18.0 ; python_version >= "3.9" and python_version < "3.13"
+dataclasses-json==0.6.6 ; python_version >= "3.9" and python_version < "3.13"
+distlib==0.3.8 ; python_version >= "3.9" and python_version < "3.13"
+distro==1.9.0 ; python_version >= "3.9" and python_version < "3.13"
+docker==7.1.0 ; python_version >= "3.9" and python_version < "3.13"
+entrypoints==0.4 ; python_version >= "3.9" and python_version < "3.13"
+exceptiongroup==1.2.1 ; python_version >= "3.9" and python_version < "3.11"
+fastapi==0.109.2 ; python_version >= "3.9" and python_version < "3.13"
+filelock==3.14.0 ; python_version >= "3.9" and python_version < "3.13"
+frozenlist==1.4.1 ; python_version >= "3.9" and python_version < "3.13"
+fsspec==2024.5.0 ; python_version >= "3.9" and python_version < "3.13"
+gitdb==4.0.11 ; python_version >= "3.9" and python_version < "3.13"
+gitignorefile==1.1.2 ; python_version >= "3.9" and python_version < "3.13"
+gitpython==3.1.43 ; python_version >= "3.9" and python_version < "3.13"
+greenlet==3.0.3 ; python_version >= "3.9" and python_version < "3.13" and (platform_machine == "aarch64" or platform_machine == "ppc64le" or platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64" or platform_machine == "win32" or platform_machine == "WIN32")
+grpcio-tools==1.62.2 ; python_version >= "3.9" and python_version < "3.13"
+grpcio==1.64.0 ; python_version >= "3.9" and python_version < "3.13"
+gunicorn==22.0.0 ; python_version >= "3.9" and python_version < "3.13"
+h11==0.14.0 ; python_version >= "3.9" and python_version < "3.13"
+h2==4.1.0 ; python_version >= "3.9" and python_version < "3.13"
+hpack==4.0.0 ; python_version >= "3.9" and python_version < "3.13"
+httpcore==1.0.5 ; python_version >= "3.9" and python_version < "3.13"
+httpx==0.27.0 ; python_version >= "3.9" and python_version < "3.13"
+httpx[http2]==0.27.0 ; python_version >= "3.9" and python_version < "3.13"
+huggingface-hub==0.23.2 ; python_version >= "3.9" and python_version < "3.13"
+hyperframe==6.0.1 ; python_version >= "3.9" and python_version < "3.13"
+identify==2.5.36 ; python_version >= "3.9" and python_version < "3.13"
+idna==3.7 ; python_version >= "3.9" and python_version < "3.13"
+importlib-metadata==6.11.0 ; python_version >= "3.9" and python_version < "3.13"
+importlib-resources==5.13.0 ; python_version >= "3.9" and python_version < "3.13"
+joblib==1.4.2 ; python_version >= "3.9" and python_version < "3.13"
+jsonpatch==1.33 ; python_version >= "3.9" and python_version < "3.13"
+jsonpointer==2.4 ; python_version >= "3.9" and python_version < "3.13"
+langchain-community==0.0.38 ; python_version >= "3.9" and python_version < "3.13"
+langchain-core==0.1.52 ; python_version >= "3.9" and python_version < "3.13"
+langchain-openai==0.0.8 ; python_version >= "3.9" and python_version < "3.13"
+langchain-text-splitters==0.0.2 ; python_version >= "3.9" and python_version < "3.13"
+langchain==0.1.20 ; python_version >= "3.9" and python_version < "3.13"
+langsmith==0.1.64 ; python_version >= "3.9" and python_version < "3.13"
+mako==1.3.5 ; python_version >= "3.9" and python_version < "3.13"
+markdown-crawler==0.0.8 ; python_version >= "3.9" and python_version < "3.13"
+markdown-it-py==3.0.0 ; python_version >= "3.9" and python_version < "3.13"
+markdownify==0.11.6 ; python_version >= "3.9" and python_version < "3.13"
+markupsafe==2.1.5 ; python_version >= "3.9" and python_version < "3.13"
+marshmallow==3.21.2 ; python_version >= "3.9" and python_version < "3.13"
+mdurl==0.1.2 ; python_version >= "3.9" and python_version < "3.13"
+mlfoundry==0.10.9 ; python_version >= "3.9" and python_version < "3.13"
+multidict==6.0.5 ; python_version >= "3.9" and python_version < "3.13"
+mypy-extensions==1.0.0 ; python_version >= "3.9" and python_version < "3.13"
+nodeenv==1.9.0 ; python_version >= "3.9" and python_version < "3.13"
+numpy==1.26.4 ; python_version >= "3.9" and python_version < "3.13"
+oauthlib==3.2.2 ; python_version >= "3.9" and python_version < "3.13"
+openai==1.30.5 ; python_version >= "3.9" and python_version < "3.13"
+opencv-python==4.9.0.80 ; python_version >= "3.9" and python_version < "3.13"
+orjson==3.10.3 ; python_version >= "3.9" and python_version < "3.13"
+packaging==23.2 ; python_version >= "3.9" and python_version < "3.13"
+pandas==2.2.2 ; python_version >= "3.9" and python_version < "3.13"
+pillow==10.3.0 ; python_version >= "3.9" and python_version < "3.13"
+platformdirs==4.2.2 ; python_version >= "3.9" and python_version < "3.13"
+portalocker==2.8.2 ; python_version >= "3.9" and python_version < "3.13"
+pre-commit==3.7.1 ; python_version >= "3.9" and python_version < "3.13"
+prompt-toolkit==3.0.45 ; python_version >= "3.9" and python_version < "3.13"
+protobuf==4.25.3 ; python_version >= "3.9" and python_version < "3.13"
+psutil==5.9.8 ; python_version >= "3.9" and python_version < "3.13"
+pydantic==1.10.15 ; python_version >= "3.9" and python_version < "3.13"
+pygments==2.18.0 ; python_version >= "3.9" and python_version < "3.13"
+pyjwt==2.8.0 ; python_version >= "3.9" and python_version < "3.13"
+pymupdf==1.24.4 ; python_version >= "3.9" and python_version < "3.13"
+pymupdfb==1.24.3 ; python_version >= "3.9" and python_version < "3.13"
+python-dateutil==2.9.0.post0 ; python_version >= "3.9" and python_version < "3.13"
+python-dotenv==1.0.1 ; python_version >= "3.9" and python_version < "3.13"
+python-engineio==4.9.1 ; python_version >= "3.9" and python_version < "3.13"
+python-multipart==0.0.9 ; python_version >= "3.9" and python_version < "3.13"
+python-socketio[client]==5.11.2 ; python_version >= "3.9" and python_version < "3.13"
+pytz==2024.1 ; python_version >= "3.9" and python_version < "3.13"
+pywin32==306 ; python_version >= "3.9" and python_version < "3.13" and (sys_platform == "win32" or platform_system == "Windows")
+pyyaml==6.0.1 ; python_version >= "3.9" and python_version < "3.13"
+qdrant-client==1.9.1 ; python_version >= "3.9" and python_version < "3.13"
+questionary==1.10.0 ; python_version >= "3.9" and python_version < "3.13"
+redis==5.0.4 ; python_version >= "3.9" and python_version < "3.13"
+regex==2024.5.15 ; python_version >= "3.9" and python_version < "3.13"
+requests==2.32.3 ; python_version >= "3.9" and python_version < "3.13"
+rich-click==1.8.2 ; python_version >= "3.9" and python_version < "3.13"
+rich==13.7.1 ; python_version >= "3.9" and python_version < "3.13"
+scikit-learn==1.5.0 ; python_version >= "3.9" and python_version < "3.13"
+scipy==1.13.1 ; python_version >= "3.9" and python_version < "3.13"
+servicefoundry==0.10.13 ; python_version >= "3.9" and python_version < "3.13"
+setuptools==70.0.0 ; python_version >= "3.9" and python_version < "3.13"
+simple-websocket==1.0.0 ; python_version >= "3.9" and python_version < "3.13"
+six==1.16.0 ; python_version >= "3.9" and python_version < "3.13"
+smmap==5.0.1 ; python_version >= "3.9" and python_version < "3.13"
+sniffio==1.3.1 ; python_version >= "3.9" and python_version < "3.13"
+soupsieve==2.5 ; python_version >= "3.9" and python_version < "3.13"
+sqlalchemy==2.0.30 ; python_version >= "3.9" and python_version < "3.13"
+sqlparse==0.5.0 ; python_version >= "3.9" and python_version < "3.13"
+starlette==0.36.3 ; python_version >= "3.9" and python_version < "3.13"
+tabulate==0.9.0 ; python_version >= "3.9" and python_version < "3.13"
+tenacity==8.3.0 ; python_version >= "3.9" and python_version < "3.13"
+tfy-mlflow-client==0.0.42 ; python_version >= "3.9" and python_version < "3.13"
+threadpoolctl==3.5.0 ; python_version >= "3.9" and python_version < "3.13"
+tiktoken==0.6.0 ; python_version >= "3.9" and python_version < "3.13"
+tomlkit==0.12.5 ; python_version >= "3.9" and python_version < "3.13"
+tqdm==4.64.0 ; python_version >= "3.9" and python_version < "3.13"
+truefoundry[ml]==0.2.4 ; python_version >= "3.9" and python_version < "3.13"
+typing-extensions==4.12.0 ; python_version >= "3.9" and python_version < "3.13"
+typing-inspect==0.9.0 ; python_version >= "3.9" and python_version < "3.13"
+tzdata==2024.1 ; python_version >= "3.9" and python_version < "3.13"
+urllib3==2.2.1 ; python_version >= "3.9" and python_version < "3.13"
+uvicorn==0.23.2 ; python_version >= "3.9" and python_version < "3.13"
+virtualenv==20.26.2 ; python_version >= "3.9" and python_version < "3.13"
+wcwidth==0.2.13 ; python_version >= "3.9" and python_version < "3.13"
+websocket-client==1.8.0 ; python_version >= "3.9" and python_version < "3.13"
+wsproto==1.2.0 ; python_version >= "3.9" and python_version < "3.13"
+xmltodict==0.13.0 ; python_version >= "3.9" and python_version < "3.13"
+yarl==1.9.4 ; python_version >= "3.9" and python_version < "3.13"
+yq==3.4.3 ; python_version >= "3.9" and python_version < "3.13"
+zipp==3.19.0 ; python_version >= "3.9" and python_version < "3.13"
