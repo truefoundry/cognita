@@ -28,3 +28,4 @@ qdrant_storage/
 *.pth
 .truefoundry
 infinity/
+volumes/

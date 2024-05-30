@@ -1,0 +1,130 @@
+version: "3.8"
+services:
+    ollama-server:
+        image: ollama/ollama:0.1.39
+        pull_policy: always
+        restart: always
+        container_name: ollama
+        ports:
+            - "${OLLAMA_PORT}:11434"
+        volumes:
+            - ./volumes/ollama:/root/.ollama
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:${OLLAMA_PORT}"]
+            interval: 1m
+            timeout: 10s
+            retries: 3
+        environment:
+            - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
+            - OLLAMA_HOST=${OLLAMA_HOST}
+        entrypoint: /bin/bash
+        command: -c "set -e; ollama serve & sleep 10 && ollama pull ${OLLAMA_MODEL} && sleep infinity"
+        networks:
+            - cognita-docker
+
+    infinity-server:
+        image: michaelf34/infinity:0.0.36
+        pull_policy: always
+        restart: always
+        container_name: infinity
+        ports:
+            - "${INFINITY_PORT}:7997"
+        volumes:
+            - ./volumes/infinity:/app/.cache
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "-f",
+                    "http://localhost:${INFINITY_PORT}/health",
+                ]
+            interval: 1m
+            timeout: 10s
+            retries: 3
+        command: v2 --model-id ${INFINITY_EMBEDDING_MODEL} --model-id ${INFINITY_RERANKING_MODEL} --batch-size ${INFINITY_BATCH_SIZE}
+        networks:
+            - cognita-docker
+
+    qdrant-server:
+        image: qdrant/qdrant:v1.8.4
+        pull_policy: always
+        restart: always
+        container_name: qdrant
+        ports:
+            - "${QDRANT_REST}:6333"
+            - "${QDRANT_GRPC}:6334"
+        volumes:
+            - ./volumes/qdrant_storage:/qdrant/storage:z
+        networks:
+            - cognita-docker
+
+    cognita-backend:
+        build:
+            context: .
+            dockerfile: ./backend/Dockerfile
+            args:
+                - ADD_PYTORCH=0
+                - ADD_PARSER=0
+        restart: always
+        container_name: cognita-backend
+        ports:
+            - "${COGNITA_BACKEND_PORT}:8000"
+        depends_on:
+            - ollama-server
+            - infinity-server
+            - qdrant-server
+        volumes:
+            - .:/app
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "-f",
+                    "http://localhost:${COGNITA_BACKEND_PORT}/health-check",
+                ]
+            interval: 1m
+            timeout: 10s
+            retries: 3
+        environment:
+            - DEBUG_MODE=true
+            - LOG_LEVEL=DEBUG
+            - OLLAMA_URL=${OLLAMA_URL}
+            - EMBEDDING_SVC_URL=${EMBEDDING_SVC_URL}
+            - RERANKER_SVC_URL=${RERANKER_SVC_URL}
+            - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
+            - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
+            - TFY_API_URL=${TFY_API_KEY}
+            - TFY_HOST=${TFY_HOST}
+            - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
+        entrypoint: /bin/bash
+        command: -c "set -e; python -m local.ingest && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
+        networks:
+            - cognita-docker
+
+    cognita-frontend:
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile
+        restart: always
+        container_name: cognita-frontend
+        volumes:
+            - .:/app
+        ports:
+            - "${COGNITA_FRONTEND_PORT}:5000"
+        depends_on:
+            - ollama-server
+            - infinity-server
+            - qdrant-server
+            - cognita-backend
+        environment:
+            - VITE_QA_FOUNDRY_URL=http://host.docker.internal:${COGNITA_FRONTEND_PORT}
+            - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
+            - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
+            - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_STANDALONE_PATH}
+            - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
+
+networks:
+    cognita-docker:
+        external: false

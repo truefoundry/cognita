@@ -76,7 +76,7 @@ def get_enabled_models(
 
     # Local LLM models
     if model_type == ModelType.chat:
-        if settings.LOCAL:
+        if settings.OLLAMA_URL:
             try:
                 # OLLAMA models
                 url = f"{settings.OLLAMA_URL.rstrip('/')}/api/tags"
