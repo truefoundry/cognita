@@ -1,6 +1,6 @@
 import asyncio
 
-from backend.modules.query_controllers import ExampleQueryController
+from backend.modules.query_controllers import BasicRAGQueryController
 from backend.modules.query_controllers.example.types import ExampleQueryInput
 
 # Payload for the query
@@ -35,7 +35,7 @@ request = {
 # print(f"Payload: {request}")
 
 # Create a controller object
-controller = ExampleQueryController()
+controller = BasicRAGQueryController()
 
 # Get the answer
 answer = asyncio.run(controller.answer(ExampleQueryInput(**request)))

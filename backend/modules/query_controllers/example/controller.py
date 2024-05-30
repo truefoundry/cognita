@@ -63,8 +63,8 @@ EXAMPLES = {
 #     )
 
 
-@query_controller("/example-app")
-class ExampleQueryController:
+@query_controller("/basic-rag")
+class BasicRAGQueryController:
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
