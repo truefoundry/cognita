@@ -1,31 +1,29 @@
-GitPython==3.1.43
-langchain==0.1.9
-langchain-community==0.0.24
-langchain-openai==0.0.8
-langchain-core==0.1.30
-openai==1.16.2
-tiktoken==0.6.0
-uvicorn==0.23.2
-fastapi==0.109.1
-qdrant-client==1.7.3
-python-dotenv==1.0.1
-pydantic==1.10.13
-orjson==3.9.15
-PyMuPDF==1.23.6
-redis==5.0.1
-beautifulsoup4==4.12.2
-truefoundry[ml]==0.2.1
-markdownify==0.11.6
-gunicorn==22.0.0
-markdown-crawler==0.0.8
-black==24.3.0
-async-timeout==4.0.3
-pre-commit==3.7.0
-huggingface-hub==0.20.3
-requests==2.32.2
-python-multipart==0.0.9
-opencv-python==4.9.0.80
-pillow==10.2.0
 
-### transformers
-transformers==4.40.2
+Description:
+  Exports the lock file to alternative formats.
+
+Usage:
+  export [options]
+
+Options:
+  -f, --format=FORMAT        Format to export to. Currently, only constraints.txt and requirements.txt are supported. [default: "requirements.txt"]
+  -o, --output=OUTPUT        The name of the output file.
+      --without-hashes       Exclude hashes from the exported file.
+      --without-urls         Exclude source repository urls from the exported file.
+      --dev                  Include development dependencies. (Deprecated)
+      --without=WITHOUT      The dependency groups to ignore. (multiple values allowed)
+      --with=WITH            The optional dependency groups to include. (multiple values allowed)
+      --only=ONLY            The only dependency groups to include. (multiple values allowed)
+  -E, --extras=EXTRAS        Extra sets of dependencies to include. (multiple values allowed)
+      --all-extras           Include all sets of extra dependencies.
+      --with-credentials     Include credentials for extra indices.
+  -h, --help                 Display help for the given command. When no command is given display help for the list command.
+  -q, --quiet                Do not output any message.
+  -V, --version              Display this application version.
+      --ansi                 Force ANSI output.
+      --no-ansi              Disable ANSI output.
+  -n, --no-interaction       Do not ask any interactive question.
+      --no-plugins           Disables plugins.
+      --no-cache             Disables Poetry source caches.
+  -C, --directory=DIRECTORY  The working directory for the Poetry command (defaults to the current working directory).
+  -v|vv|vvv, --verbose       Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug.

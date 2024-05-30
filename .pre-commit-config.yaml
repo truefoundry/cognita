@@ -13,10 +13,7 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
-        args:
-          - --line-length=88
-          - --safe
-          - --target-version=py310
+        args: [ --config=pyproject.toml ]
         stages: [commit]
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0

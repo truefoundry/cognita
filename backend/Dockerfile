@@ -1,46 +1,35 @@
 FROM --platform=linux/amd64 python:3.11
 
-RUN apt-get update -y && apt-get install ffmpeg libsm6 libxext6 poppler-utils qpdf tesseract-ocr -y
+# Set the working directory
+WORKDIR /app
 
-# Set environment variables
-ENV PATH=/virtualenvs/venv/bin:$PATH
-RUN python3 -m venv /virtualenvs/venv/
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends ffmpeg libsm6 libxext6 poppler-utils qpdf tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements.txt
-COPY backend/requirements.txt /tmp/requirements.txt
-COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
-COPY backend/embedder.requirements.txt /tmp/embedder.requirements.txt
-COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
-COPY backend/rerankers.requirements.txt /tmp/rerankers.requirements.txt
+RUN mkdir -p /virtualenvs/app/ \
+    && python3 -m venv /virtualenvs/poetry-venv
 
-# Install Python packages
-RUN python3 -m pip install -U pip setuptools wheel && \
-    python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/requirements.txt
+ENV PATH="/virtualenvs/poetry-venv/bin:$PATH"
 
-ENV LD_LIBRARY_PATH=/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cublas/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_cupti/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_runtime/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cufft/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/curand/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusolver/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusparse/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nccl/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nvtx/lib:/virtualenvs/venv/lib/python3.11/site-packages/torch/lib/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+COPY pyproject.toml poetry.lock /virtualenvs/app/
 
-ARG ADD_PYTORCH=0
-# Install torch
-RUN if [ "${ADD_PYTORCH}" = "1" ]; then pip install "torch==2.2.2+cu121" --extra-index-url https://download.pytorch.org/whl/cu121; fi
+ARG EXTRAS="qdrant"
+RUN cd /virtualenvs/app/ \
+    && pip install --no-cache-dir -U pip setuptools wheel \
+    && pip install --no-cache-dir "poetry<1.9.0" \
+    && poetry config virtualenvs.create true \
+    && poetry config virtualenvs.in-project true \
+    && poetry install --extras "${EXTRAS}" --no-interaction --no-root --no-dev \
+    && poetry cache clear pypi --all \
+    && poetry env info \
+    && rm -rf /virtualenvs/poetry-venv
 
-# Install Parser packages
-ARG ADD_PARSER=0
-RUN if [ "${ADD_PARSER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/parsers.requirements.txt; fi
+ENV PATH="/virtualenvs/app/.venv/bin:$PATH"
+ENV LD_LIBRARY_PATH=/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cublas/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cuda_cupti/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cuda_runtime/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cufft/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/curand/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cusolver/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/cusparse/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/nccl/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/nvidia/nvtx/lib:/virtualenvs/app/.venv/lib/python3.11/site-packages/torch/lib/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-# Install Reranker packages
-ARG ADD_RERANKER=0
-RUN if [ "${ADD_RERANKER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/rerankers.requirements.txt; fi
-
-# Install Embedder packages
-ARG ADD_EMBEDDER=0
-RUN if [ "${ADD_EMBEDDER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/embedder.requirements.txt; fi
-
-# Install VectorDB packages
-ARG ADD_VECTORDB=0
-RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
+COPY . .
 
 # Copy the project files
 COPY . /app
 
-# Set the working directory
-WORKDIR /app
