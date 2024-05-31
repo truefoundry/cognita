@@ -141,7 +141,7 @@ def get_enabled_models(
                                     ).dict()
                                 )
         except Exception as ex:
-            raise Exception(f"Error fetching the models: {ex}") from ex
+            logger.error(f"Error fetching openai models: {ex}")
     return JSONResponse(
         content={"models": enabled_models},
     )
