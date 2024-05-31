@@ -1,2 +1,0 @@
-from backend.modules.rerankers.mxbai_reranker import MxBaiRerankerSmall
-from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc

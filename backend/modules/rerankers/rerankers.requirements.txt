@@ -1,2 +1,0 @@
-#### For use Mxbread Reranker
-sentence_transformers==2.5.1
