@@ -92,8 +92,6 @@ services:
             dockerfile: ./Dockerfile
         restart: unless-stopped
         container_name: cognita-frontend
-        volumes:
-            - .:/app
         ports:
             - "${COGNITA_FRONTEND_PORT}:5000"
         depends_on:
@@ -105,7 +103,7 @@ services:
             - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
             - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
             - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
-            - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_STANDALONE_PATH}
+            - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
             - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
 
 networks:
