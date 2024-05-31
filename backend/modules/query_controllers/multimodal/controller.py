@@ -155,6 +155,7 @@ class MultiModalRAGQueryController:
 
             else:
                 # Using mixbread-ai Reranker
+                # Requires rerankers.requirements.txt installed
                 from backend.modules.rerankers.mxbai_reranker import MxBaiReranker
 
                 compressor = MxBaiReranker(

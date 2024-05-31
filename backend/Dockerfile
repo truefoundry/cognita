@@ -9,7 +9,6 @@ RUN python3 -m venv /virtualenvs/venv/
 # Copy requirements.txt
 COPY backend/requirements.txt /tmp/requirements.txt
 COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
-COPY backend/embedder.requirements.txt /tmp/embedder.requirements.txt
 COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
 COPY backend/rerankers.requirements.txt /tmp/rerankers.requirements.txt
 
@@ -30,10 +29,6 @@ RUN if [ "${ADD_PARSER}" = "1" ]; then python3 -m pip install --use-pep517 --no-
 # Install Reranker packages
 ARG ADD_RERANKER=0
 RUN if [ "${ADD_RERANKER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/rerankers.requirements.txt; fi
-
-# Install Embedder packages
-ARG ADD_EMBEDDER=0
-RUN if [ "${ADD_EMBEDDER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/embedder.requirements.txt; fi
 
 # Install VectorDB packages
 ARG ADD_VECTORDB=0

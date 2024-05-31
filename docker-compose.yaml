@@ -2,15 +2,13 @@ version: "3.8"
 services:
     ollama-server:
         image: ollama/ollama:0.1.39
-        pull_policy: always
-        restart: always
+        pull_policy: if_not_present
+        restart: unless-stopped
         container_name: ollama
-        ports:
-            - "${OLLAMA_PORT}:11434"
         volumes:
             - ./volumes/ollama:/root/.ollama
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:${OLLAMA_PORT}"]
+            test: ["CMD", "curl", "-f", "http://localhost:11434"]
             interval: 1m
             timeout: 10s
             retries: 3
@@ -24,21 +22,15 @@ services:
 
     infinity-server:
         image: michaelf34/infinity:0.0.36
-        pull_policy: always
-        restart: always
+        pull_policy: if_not_present
+        restart: unless-stopped
         container_name: infinity
         ports:
             - "${INFINITY_PORT}:7997"
         volumes:
             - ./volumes/infinity:/app/.cache
         healthcheck:
-            test:
-                [
-                    "CMD",
-                    "curl",
-                    "-f",
-                    "http://localhost:${INFINITY_PORT}/health",
-                ]
+            test: ["CMD", "curl", "-f", "http://localhost:7997/health"]
             interval: 1m
             timeout: 10s
             retries: 3
@@ -48,12 +40,9 @@ services:
 
     qdrant-server:
         image: qdrant/qdrant:v1.8.4
-        pull_policy: always
-        restart: always
+        pull_policy: if_not_present
+        restart: unless-stopped
         container_name: qdrant
-        ports:
-            - "${QDRANT_REST}:6333"
-            - "${QDRANT_GRPC}:6334"
         volumes:
             - ./volumes/qdrant_storage:/qdrant/storage:z
         networks:
@@ -64,9 +53,10 @@ services:
             context: .
             dockerfile: ./backend/Dockerfile
             args:
-                - ADD_PYTORCH=0
-                - ADD_PARSER=0
-        restart: always
+                - ADD_PYTORCH=0 # Only for PdfTableParser
+                - ADD_PARSER=0 # Only for PdfTableParser
+                - ADD_RERANKER=0 # Not required when using infinity
+        restart: unless-stopped
         container_name: cognita-backend
         ports:
             - "${COGNITA_BACKEND_PORT}:8000"
@@ -77,13 +67,7 @@ services:
         volumes:
             - .:/app
         healthcheck:
-            test:
-                [
-                    "CMD",
-                    "curl",
-                    "-f",
-                    "http://localhost:${COGNITA_BACKEND_PORT}/health-check",
-                ]
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
             interval: 1m
             timeout: 10s
             retries: 3
@@ -107,7 +91,7 @@ services:
         build:
             context: ./frontend
             dockerfile: ./Dockerfile
-        restart: always
+        restart: unless-stopped
         container_name: cognita-frontend
         volumes:
             - .:/app
@@ -119,7 +103,7 @@ services:
             - qdrant-server
             - cognita-backend
         environment:
-            - VITE_QA_FOUNDRY_URL=http://host.docker.internal:${COGNITA_FRONTEND_PORT}
+            - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
             - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
             - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
             - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_STANDALONE_PATH}

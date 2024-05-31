@@ -53,24 +53,18 @@ def get_enabled_models(
 
     # Local Embedding models
     if model_type == ModelType.embedding:
-        if settings.LOCAL:
-            enabled_models.append(
-                EmbedderConfig(
-                    provider="mixedbread",
-                    config={"model": "mixedbread-ai/mxbai-embed-large-v1"},
-                ).dict()
-            )
         if settings.EMBEDDING_SVC_URL:
             try:
                 url = f"{settings.EMBEDDING_SVC_URL.rstrip('/')}/models"
                 response = requests.get(url=url).json()
                 for models in response["data"]:
-                    enabled_models.append(
-                        EmbedderConfig(
-                            provider="embedding_svc",
-                            config={"model": models["id"]},
-                        ).dict()
-                    )
+                    if "rerank" not in models["id"]:
+                        enabled_models.append(
+                            EmbedderConfig(
+                                provider="embedding_svc",
+                                config={"model": models["id"]},
+                            ).dict()
+                        )
             except Exception as ex:
                 logger.error(f"Error fetching embedding models: {ex}")
 
