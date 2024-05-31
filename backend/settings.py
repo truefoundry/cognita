@@ -4,6 +4,7 @@ from typing import Optional
 import orjson
 from pydantic import BaseSettings
 
+from backend.logger import logger
 from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
 
 
@@ -67,4 +68,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print("Settings: ", settings)
+logger.info("Settings: ", settings)
