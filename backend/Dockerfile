@@ -10,7 +10,6 @@ RUN python3 -m venv /virtualenvs/venv/
 COPY backend/requirements.txt /tmp/requirements.txt
 COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
 COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
-COPY backend/rerankers.requirements.txt /tmp/rerankers.requirements.txt
 
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel && \
@@ -26,15 +25,11 @@ RUN if [ "${ADD_PYTORCH}" = "1" ]; then pip install "torch==2.2.2+cu121" --extra
 ARG ADD_PARSER=0
 RUN if [ "${ADD_PARSER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/parsers.requirements.txt; fi
 
-# Install Reranker packages
-ARG ADD_RERANKER=0
-RUN if [ "${ADD_RERANKER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/rerankers.requirements.txt; fi
-
 # Install VectorDB packages
 ARG ADD_VECTORDB=0
 RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
 
-# Temporary addition until templates have been updated
+# Temporary addition until templates have been updated using build args as environment variables
 ARG ADD_RERANKER_SVC_URL=""
 ENV RERANKER_SVC_URL=${ADD_RERANKER_SVC_URL}
 

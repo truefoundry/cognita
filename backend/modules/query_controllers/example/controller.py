@@ -34,36 +34,39 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
-
-# from backend.modules.rerankers.mxbai_reranker import MxBaiRerankerSmall
 from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
 
 EXAMPLES = {
-    # "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    # "vector-store-similarity-threshold": QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    "contextual-compression-multi-query-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    # Keeping these for future use:
-    # "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    # "vector-store-mmr": QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
-    # "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    # "multi-query-mmr": QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+    "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
 }
 
-# if settings.LOCAL:
-#     EXAMPLES.update(
-#         {
-#             "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-#             "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-#             "multi-query-similarity": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-#             "multi-query-similarity-threshold": QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-#         }
-#     )
+if settings.RERANKER_SVC_URL:
+    EXAMPLES.update(
+        {
+            "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+        }
+    )
+
+    EXAMPLES.update(
+        {
+            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+        }
+    )
+
+    EXAMPLES.update(
+        {
+            "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+        }
+    )
+
+    EXAMPLES.update(
+        {
+            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+        }
+    )
 
 
 @query_controller("/basic-rag")
@@ -160,28 +163,26 @@ class BasicRAGQueryController:
         Get the contextual compression retriever
         """
         try:
-            retriever = self._get_vector_store_retriever(vector_store, retriever_config)
             if settings.RERANKER_SVC_URL:
+                retriever = self._get_vector_store_retriever(
+                    vector_store, retriever_config
+                )
                 logger.info("Using MxBaiRerankerSmall th' service...")
                 compressor = InfinityRerankerSvc(
                     top_k=retriever_config.top_k,
                     model=retriever_config.compressor_model_name,
                 )
 
-            # else:
-            #     # Using mixbread-ai Reranker
-            #     # Requires rerankers.requirements.txt installed
-            #     logger.info("Using MxBaiRerankerSmall local model...")
-            #     compressor = MxBaiRerankerSmall(
-            #         top_k=retriever_config.top_k,
-            #         model=retriever_config.compressor_model_name,
-            #     )
+                compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=compressor, base_retriever=retriever
+                )
 
-            compression_retriever = ContextualCompressionRetriever(
-                base_compressor=compressor, base_retriever=retriever
-            )
-
-            return compression_retriever
+                return compression_retriever
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Reranker service is not available",
+                )
         except Exception as e:
             logger.error(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(

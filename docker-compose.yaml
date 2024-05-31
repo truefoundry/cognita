@@ -55,7 +55,6 @@ services:
             args:
                 - ADD_PYTORCH=0 # Only for PdfTableParser
                 - ADD_PARSER=0 # Only for PdfTableParser
-                - ADD_RERANKER=0 # Not required when using infinity
         restart: unless-stopped
         container_name: cognita-backend
         ports:
