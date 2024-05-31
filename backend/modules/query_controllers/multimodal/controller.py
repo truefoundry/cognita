@@ -36,6 +36,8 @@ from backend.modules.query_controllers.multimodal.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
+from backend.modules.rerankers.mxbai_reranker import MxBaiRerankerSmall
+from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
@@ -146,9 +148,7 @@ class MultiModalRAGQueryController:
         try:
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
             if settings.RERANKER_SVC_URL:
-                from backend.modules.rerankers.reranker_svc import InfinityReranker
-
-                compressor = InfinityReranker(
+                compressor = InfinityRerankerSvc(
                     top_k=retriever_config.top_k,
                     model=retriever_config.compressor_model_name,
                 )
@@ -156,9 +156,8 @@ class MultiModalRAGQueryController:
             else:
                 # Using mixbread-ai Reranker
                 # Requires rerankers.requirements.txt installed
-                from backend.modules.rerankers.mxbai_reranker import MxBaiReranker
-
-                compressor = MxBaiReranker(
+                logger.info("Using MxBaiRerankerSmall local model...")
+                compressor = MxBaiRerankerSmall(
                     top_k=retriever_config.top_k,
                     model=retriever_config.compressor_model_name,
                 )
