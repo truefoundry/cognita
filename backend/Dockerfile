@@ -35,8 +35,8 @@ ARG ADD_VECTORDB=0
 RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
 
 # Temporary addition until templates have been updated
-ARG RERANKER_SVC_URL
-RUN if [ -n "${RERANKER_SVC_URL}"]; then export RERANKER_SVC_URL=${RERANKER_SVC_URL}; fi
+ARG ADD_RERANKER_SVC_URL=""
+ENV RERANKER_SVC_URL=${ADD_RERANKER_SVC_URL}
 
 # Copy the project files
 COPY . /app
