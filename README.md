@@ -179,7 +179,7 @@ pip install -r backend/requirements.txt
 
 ### Setting up .env file:
 
--   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
+-   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively which will be `http://localhost:7997"
 
 ### Executing the Code:
 
