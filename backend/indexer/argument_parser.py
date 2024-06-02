@@ -1,27 +1,9 @@
 import argparse
-from typing import Optional
 
-from pydantic import BaseModel
-
-from backend.constants import DEFAULT_BATCH_SIZE
-from backend.types import DataIngestionMode
+from backend.types import DataIngestionMode, IngestDataToCollectionDto
 
 
-class ParsedIndexingArguments(BaseModel):
-    """
-    Configuration for storing indexing arguments.
-    Requires a collection name (already exisiting) and data source fqn.
-    """
-
-    collection_name: str
-    data_source_fqn: str
-    data_ingestion_run_name: Optional[str] = None
-    data_ingestion_mode: DataIngestionMode
-    raise_error_on_failure: bool
-    batch_size: int = DEFAULT_BATCH_SIZE
-
-
-def parse_args() -> ParsedIndexingArguments:
+def parse_args_ingest_total_collection() -> IngestDataToCollectionDto:
     parser = argparse.ArgumentParser(
         prog="train",
         usage="%(prog)s [options]",
@@ -34,19 +16,14 @@ def parse_args() -> ParsedIndexingArguments:
         required=True,
         help="a unique name for your collection",
     )
+
     parser.add_argument(
         "--data_source_fqn",
         type=str,
-        required=True,
-        help="fully qualified name for your data source run",
-    )
-    parser.add_argument(
-        "--data_ingestion_run_name",
-        type=str,
         required=False,
-        default=None,
-        help="a unique name for your data ingestion run",
+        help="unique identifier for the data source",
     )
+
     parser.add_argument(
         "--data_ingestion_mode",
         type=str,
@@ -70,10 +47,9 @@ def parse_args() -> ParsedIndexingArguments:
     )
     args = parser.parse_args()
 
-    return ParsedIndexingArguments(
+    return IngestDataToCollectionDto(
         collection_name=args.collection_name,
         data_source_fqn=args.data_source_fqn,
-        data_ingestion_run_name=args.data_ingestion_run_name,
         data_ingestion_mode=DataIngestionMode(args.data_ingestion_mode),
         raise_error_on_failure=args.raise_error_on_failure == "True",
         batch_size=int(args.batch_size),

@@ -75,6 +75,20 @@ class MultiModalParser(BaseParser):
         else:
             self.vision_model = "openai-main/gpt-4-turbo"
 
+        if "prompt" in additional_config:
+            self.prompt = additional_config["prompt"]
+            logger.info(f"Using custom prompt..., {self.prompt}")
+        else:
+            self.prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
+Specifically, the information should include but not limited to:
+Title of the Image: Provide a title from the charts or image if any.
+Type of Chart: Determine the type of each chart (e.g., bar chart, line chart, pie chart, scatter plot, etc.) and its key features (e.g., labels, legends, data points).
+Data Trends: Describe any notable trends or patterns visible in the data. This may include increasing/decreasing trends, seasonality, outliers, etc.
+Key Insights: Extract key insights or observations from the charts. What do the charts reveal about the underlying data? Are there any significant findings that stand out?
+Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
+Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
+Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
+
     async def call_vlm_agent(
         self,
         base64_image: str,
@@ -167,15 +181,7 @@ class MultiModalParser(BaseParser):
                     continue
 
             # make parallel requests to VLM for all pages
-            prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
-Specifically, the information should include but not limited to:
-Title of the Image: Provide a title from the charts or image if any.
-Type of Chart: Determine the type of each chart (e.g., bar chart, line chart, pie chart, scatter plot, etc.) and its key features (e.g., labels, legends, data points).
-Data Trends: Describe any notable trends or patterns visible in the data. This may include increasing/decreasing trends, seasonality, outliers, etc.
-Key Insights: Extract key insights or observations from the charts. What do the charts reveal about the underlying data? Are there any significant findings that stand out?
-Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
-Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
-Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
+            prompt = self.prompt
 
             def break_chunks(data, size=30):
                 it = iter(data)
