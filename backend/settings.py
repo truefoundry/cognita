@@ -67,3 +67,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+# Check the env vars set
+print("Settings: ", settings)

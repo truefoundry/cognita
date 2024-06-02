@@ -53,30 +53,24 @@ def get_enabled_models(
 
     # Local Embedding models
     if model_type == ModelType.embedding:
-        if settings.LOCAL:
-            enabled_models.append(
-                EmbedderConfig(
-                    provider="mixedbread",
-                    config={"model": "mixedbread-ai/mxbai-embed-large-v1"},
-                ).dict()
-            )
         if settings.EMBEDDING_SVC_URL:
             try:
                 url = f"{settings.EMBEDDING_SVC_URL.rstrip('/')}/models"
                 response = requests.get(url=url).json()
                 for models in response["data"]:
-                    enabled_models.append(
-                        EmbedderConfig(
-                            provider="embedding_svc",
-                            config={"model": models["id"]},
-                        ).dict()
-                    )
+                    if "rerank" not in models["id"]:
+                        enabled_models.append(
+                            EmbedderConfig(
+                                provider="embedding_svc",
+                                config={"model": models["id"]},
+                            ).dict()
+                        )
             except Exception as ex:
                 logger.error(f"Error fetching embedding models: {ex}")
 
     # Local LLM models
     if model_type == ModelType.chat:
-        if settings.LOCAL:
+        if settings.OLLAMA_URL:
             try:
                 # OLLAMA models
                 url = f"{settings.OLLAMA_URL.rstrip('/')}/api/tags"
@@ -147,7 +141,7 @@ def get_enabled_models(
                                     ).dict()
                                 )
         except Exception as ex:
-            raise Exception(f"Error fetching the models: {ex}") from ex
+            logger.error(f"Error fetching openai models: {ex}")
     return JSONResponse(
         content={"models": enabled_models},
     )

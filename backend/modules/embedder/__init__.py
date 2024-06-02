@@ -13,7 +13,3 @@ register_embedder("truefoundry", TrueFoundryEmbeddings)
 
 # Using embedding th' a deployed service such as Infinity API
 register_embedder("embedding-svc", InfinityEmbeddingSvc)
-
-# Register the MixBreadEmbeddings class if required
-# from backend.modules.embedder.mixbread_embedder import MixBreadEmbeddings
-# register_embedder("mixbread", MixBreadEmbeddings)

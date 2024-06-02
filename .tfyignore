@@ -21,5 +21,7 @@ truefoundry-docs/
 *.zip
 ragenv/
 qdrant_storage/
+qdrant_db/
 *.pth
 .truefoundry
+volumes/

@@ -10,7 +10,7 @@ from backend.settings import settings
 
 
 # Reranking Service using Infinity API
-class InfinityReranker(BaseDocumentCompressor):
+class InfinityRerankerSvc(BaseDocumentCompressor):
     """
     Reranker Service that uses Infinity API
     Github: https://github.com/michaelfeil/infinity
