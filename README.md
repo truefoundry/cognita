@@ -13,6 +13,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
+-   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
 -   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
 -   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
 -   [May, 2024] Conditional docker builds with arguments for optional package installations
