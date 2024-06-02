@@ -20,42 +20,34 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # Contents
 
-- [Cognita](#cognita)
-  - [Why use Cognita?](#why-use-cognita)
-- [🎉 What's new in Cognita](#-whats-new-in-cognita)
-- [Contents](#contents)
-  - [Introduction](#introduction)
-    - [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
-    - [Features:](#features)
-- [:sparkles: Getting Started](#sparkles-getting-started)
-- [:snake: Installing Python and Setting Up a Virtual Environment](#snake-installing-python-and-setting-up-a-virtual-environment)
-  - [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
-    - [Create a Virtual Environment:](#create-a-virtual-environment)
-    - [Activate the Virtual Environment:](#activate-the-virtual-environment)
-- [:rocket: Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
-  - [Install necessary packages:](#install-necessary-packages)
-    - [Install Additional packages:](#install-additional-packages)
-    - [Infinity Service:](#infinity-service)
-  - [Setting up .env file:](#setting-up-env-file)
-  - [Executing the Code:](#executing-the-code)
-- [:hammer\_and\_pick: Project Architecture](#hammer_and_pick-project-architecture)
-  - [Cognita Components:](#cognita-components)
-  - [Data Indexing:](#data-indexing)
-  - [:question: Question-Answering using API Server:](#question-question-answering-using-api-server)
-  - [:computer: Code Structure:](#computer-code-structure)
-  - [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
-    - [Customizing Dataloaders:](#customizing-dataloaders)
-    - [Customizing Embedder:](#customizing-embedder)
-    - [Customizing Parsers:](#customizing-parsers)
-    - [Adding Custom VectorDB:](#adding-custom-vectordb)
-    - [Rerankers:](#rerankers)
-- [:bulb: Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
-  - [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
-- [:whale: Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
-  - [Using the **RAG UI**:](#using-the-rag-ui)
-- [:sparkling\_heart: Open Source Contribution](#sparkling_heart-open-source-contribution)
-- [:crystal\_ball: Future developments](#crystal_ball-future-developments)
-- [Star History](#star-history)
+-   [Cognita](#cognita)
+    -   [Why use Cognita?](#why-use-cognita)
+-   [🎉 What's new in Cognita](#-whats-new-in-cognita)
+-   [Contents](#contents)
+    -   [Introduction](#introduction)
+        -   [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
+        -   [Features:](#features)
+-   [:rocket: Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
+    -   [:whale: Using Docker compose (recommended)](#whale-using-docker-compose-recommended)
+    -   [Cognita from source](#cognita-from-source)
+-   [:hammer_and_pick: Project Architecture](#hammer_and_pick-project-architecture)
+    -   [Cognita Components:](#cognita-components)
+    -   [Data Indexing:](#data-indexing)
+    -   [:question: Question-Answering using API Server:](#question-question-answering-using-api-server)
+    -   [:computer: Code Structure:](#computer-code-structure)
+    -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
+        -   [Customizing Dataloaders:](#customizing-dataloaders)
+        -   [Customizing Embedder:](#customizing-embedder)
+        -   [Customizing Parsers:](#customizing-parsers)
+        -   [Adding Custom VectorDB:](#adding-custom-vectordb)
+        -   [Rerankers:](#rerankers)
+-   [:bulb: Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
+    -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
+-   [:whale: Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
+    -   [Using the **RAG UI**:](#using-the-rag-ui)
+-   [:sparkling_heart: Open Source Contribution](#sparkling_heart-open-source-contribution)
+-   [:crystal_ball: Future developments](#crystal_ball-future-developments)
+-   [Star History](#star-history)
 
 ## Introduction
 
@@ -82,19 +74,39 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 1. Support for using LLMs using `Ollama`
 1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
 
-# :sparkles: Getting Started
+# :rocket: Quickstart: Running Cognita Locally
+
+## :whale: Using Docker compose (recommended)
+
+Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. You can run the following command to start the services:
+
+```docker
+docker-compose --env-file compose.env up --build
+```
+
+-   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
+-   The compose file will start the following services:
+    -   `ollama-server` - Used to start local LLM server. `compose.env` has `OLLAMA_MODEL` as the environment variable to specify the model.
+    -   `infinity-server` - Used to start local embeddings and rerankers server. `compose.env` has `INFINITY_EMBEDDING_MODEL` and `INFINITY_EMBEDDING_MODEL` as the environment variable to specify the embedding and reranker.
+    -   `qdrant-server` - Used to start local vector db server.
+    -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
+    -   `cognita-frontend` - Used to start the frontend for Cognita.
+-   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
+-   Backend uses `local.metadata.yaml` file for configuration. You can modify it as per your needs. The file is used to setup collection name, different data source path, and embedder configurations. Before starting of backend an indexer job is run to index the data sources mentioned in `local.metadata.yaml` file.
+
+## Cognita from source
 
 You can play around with the code locally using the python [script](#rocket-quickstart-running-cognita-locally) or using the UI component that ships with the code.
 
-# :snake: Installing Python and Setting Up a Virtual Environment
+### :snake: Installing Python and Setting Up a Virtual Environment
 
 Before you can use Cognita, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
 
-## Setting Up a Virtual Environment
+#### Setting Up a Virtual Environment
 
 It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
 
-### Create a Virtual Environment:
+#### Create a Virtual Environment:
 
 Navigate to your project's directory in the terminal.
 Run the following command to create a virtual environment named venv (you can name it anything you like):
@@ -103,7 +115,7 @@ Run the following command to create a virtual environment named venv (you can na
 python3 -m venv ./venv
 ```
 
-### Activate the Virtual Environment:
+#### Activate the Virtual Environment:
 
 -   On Windows, activate the virtual environment by running:
 
@@ -121,11 +133,9 @@ Once your virtual environment is activated, you'll see its name in the terminal 
 
 > Remember to deactivate the virtual environment when you're done working with Cognita by simply running deactivate in the terminal.
 
-# :rocket: Quickstart: Running Cognita Locally
-
 Following are the instructions for running Cognita locally without any additional Truefoundry dependencies
 
-## Install necessary packages:
+### Install necessary packages:
 
 In the project root execute the following command:
 
@@ -141,20 +151,6 @@ pip install -r backend/requirements.txt
     pip install -r backend/parsers.requirements.txt
     ```
 
--   Install packages for `reranker` that uses mixedbread-ai for reranking. This is optional and can be skipped if you don't need to use mxbai-reranker.
-
-    ```
-    pip install -r backend/reranker.requirements.txt
-    ```
-
--   Install packages for `embedder` that uses mixedbread-ai for embeddings. This is optional and can be skipped if you don't need to use mxbai-embedder.
-
-    ```
-    pip install -r backend/embedder.requirements.txt
-    ```
-
-    > Uncomment the respective embedder in `backend/modules/embedder/__init__.py` to use it.
-
 -   Install packages for `vector_db` that uses singlestore for vector db. This is optional and can be skipped if you don't need to use singlestore.
 
     ```
@@ -163,12 +159,11 @@ pip install -r backend/requirements.txt
 
     > Uncomment the respective vector db in `backend/modules/vector_db/__init__.py` to use it.
 
--   Rerankers and Embedders can also be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
-
 ### Infinity Service:
 
--   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.36/)
--   You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
+-   Rerankers and Embedders are to be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories.
+
+-   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.36/). You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
 
 ```docker
     docker run -it --gpus all \
@@ -181,28 +176,23 @@ pip install -r backend/requirements.txt
     --port 7997
 ```
 
-## Setting up .env file:
+### Setting up .env file:
 
--   Create a `.env` file by copying copy from `env.local.example` set up relavant fields.
+-   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
 
-## Executing the Code:
+### Executing the Code:
 
 -   Now we index the data (`sample-data/creditcards`) by executing the following command from project root:
+
     ```
     python -m local.ingest
     ```
--   To run the query execute the following command from project root:
-    ```
-    python -m local.run
-    ```
 
-> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations.
+-   You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
 
-> You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
+-   To use frontend UI for quering you can go to : `cd frontend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md). You can then query the documents using the UI hosted at `http://localhost:5000/`
 
-> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
-
-> To use frontend UI for quering you can go to : `cd frontend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md)
+> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations. You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`. To run the query execute the query script from project root: `python -m local.run`
 
 # :hammer_and_pick: Project Architecture
 
