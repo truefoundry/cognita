@@ -12,7 +12,8 @@ async def main():
         collection_name=args.collection_name,
         data_source_fqn=args.data_source_fqn,
         data_ingestion_mode=DataIngestionMode(args.data_ingestion_mode),
-        raise_error_on_failure=args.raise_error_on_failure == "True",
+        raise_error_on_failure=args.raise_error_on_failure,
+        run_as_job=args.run_as_job,
         batch_size=int(args.batch_size),
     )
     try:

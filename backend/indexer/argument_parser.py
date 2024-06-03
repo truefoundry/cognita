@@ -25,6 +25,14 @@ def parse_args_ingest_total_collection() -> IngestDataToCollectionDto:
     )
 
     parser.add_argument(
+        "--data_ingestion_run_name",
+        type=str,
+        required=False,
+        default=None,
+        help="a unique name for your data ingestion run",
+    )
+
+    parser.add_argument(
         "--data_ingestion_mode",
         type=str,
         required=False,
@@ -37,6 +45,13 @@ def parse_args_ingest_total_collection() -> IngestDataToCollectionDto:
         required=False,
         default="True",
         help="If true, raise error on failure of batch, else continue for other batch",
+    )
+    parser.add_argument(
+        "--run_as_job",
+        type=str,
+        required=False,
+        default="False",
+        help="If true, run as job, else run as script",
     )
     parser.add_argument(
         "--batch_size",
@@ -52,5 +67,6 @@ def parse_args_ingest_total_collection() -> IngestDataToCollectionDto:
         data_source_fqn=args.data_source_fqn,
         data_ingestion_mode=DataIngestionMode(args.data_ingestion_mode),
         raise_error_on_failure=args.raise_error_on_failure == "True",
+        run_as_job=args.run_as_job == "True",
         batch_size=int(args.batch_size),
     )
