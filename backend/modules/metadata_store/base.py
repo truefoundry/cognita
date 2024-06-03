@@ -151,7 +151,7 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def list_collections(
+    async def list_collections(
         self,
     ) -> List[str]:
         """
@@ -160,7 +160,7 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def list_data_sources(
+    async def list_data_sources(
         self,
     ) -> List[str]:
         """

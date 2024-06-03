@@ -1,0 +1,1 @@
+pymongo[srv]==3.11

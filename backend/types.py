@@ -395,7 +395,7 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
+    name: constr(regex=r"^[a-z][a-z0-9-]*$") = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character",
     )
