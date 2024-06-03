@@ -88,7 +88,7 @@ docker-compose --env-file compose.env up --build
 -   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
 -   The compose file will start the following services:
     -   `ollama-server` - Used to start local LLM server. `compose.env` has `OLLAMA_MODEL` as the environment variable to specify the model.
-    -   `infinity-server` - Used to start local embeddings and rerankers server. `compose.env` has `INFINITY_EMBEDDING_MODEL` and `INFINITY_EMBEDDING_MODEL` as the environment variable to specify the embedding and reranker.
+    -   `infinity-server` - Used to start local embeddings and rerankers server. `compose.env` has `INFINITY_EMBEDDING_MODEL` and `INFINITY_RERANKING_MODEL` as the environment variable to specify the embedding and reranker.
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
@@ -179,7 +179,7 @@ pip install -r backend/requirements.txt
 
 ### Setting up .env file:
 
--   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively.
+-   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively which will be `http://localhost:7997"
 
 ### Executing the Code:
 
