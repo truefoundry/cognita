@@ -202,44 +202,44 @@ class MongoMetadataStore(BaseMetadataStore):
                 associated_data_src = AssociatedDataSources(
                     data_source_fqn=data_source_association.data_source_fqn,
                     parser_config=data_source_association.parser_config,
+                    data_source=data_source.dict(),
                 )
                 # Add an associated_data_sources dict, where each key is associated_data_src.data_source_fqn and value is associated_data_src
                 collection.associated_data_sources[
                     data_source_association.data_source_fqn
                 ] = associated_data_src
-
-                new_data_src = dict()
-                new_data_src[
-                    data_source_association.data_source_fqn
-                ] = associated_data_src.dict()
-                # try:
-                # append the data source fqn to the collection's data_sources list
-                result = self.collections.update_one(
-                    {"name": collection_name},
-                    {"$set": {"associated_data_sources": new_data_src}},
+                try:
+                    # append the data source fqn to the collection's data_sources list
+                    result = self.collections.update_one(
+                        {"name": collection_name},
+                        {
+                            "$set": {
+                                f"associated_data_sources.{data_source_association.data_source_fqn}": associated_data_src.dict()
+                            }
+                        },
+                    )
+                    if not result.acknowledged:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"Failed to associate data source {data_source_association.data_source_fqn} with collection {collection_name}",
+                        )
+                    return collection
+                except Exception as e:
+                    logger.error(e)
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to associate data source {data_source_association.data_source_fqn} with collection {collection_name}",
+                    )
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Data source {data_source_association.data_source_fqn} not found",
                 )
-                # if not result.acknowledged:
-                #     raise HTTPException(
-                #         status_code=500,
-                #         detail=f"Failed to associate data source {data_source_association.data_source_fqn} with collection {collection_name}",
-                #     )
-                # return Collection(**collection)
-                # except Exception as e:
-                #     logger.error(e)
-                #     raise HTTPException(
-                #         status_code=500,
-                #         detail=f"Failed to associate data source {data_source_association.data_source_fqn} with collection {collection_name}",
-                #     )
-        #     else:
-        #         raise HTTPException(
-        #             status_code=404,
-        #             detail=f"Data source {data_source_association.data_source_fqn} not found",
-        #         )
-        # else:
-        #     raise HTTPException(
-        #         status_code=404,
-        #         detail=f"Collection {collection_name} not found",
-        #     )
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection {collection_name} not found",
+            )
 
     def unassociate_data_source_with_collection(
         self,
