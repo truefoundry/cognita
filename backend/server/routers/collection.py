@@ -45,6 +45,21 @@ async def list_collections():
         raise HTTPException(status_code=500, detail=str(exp))
 
 
+@router.get("/{collection_name}")
+def get_collection_by_name(collection_name: str = Path(title="Collection name")):
+    """Get the collection config given it's name"""
+    try:
+        collection = METADATA_STORE_CLIENT.get_collection_by_name(collection_name)
+        if collection is None:
+            return JSONResponse(content={"collection": []})
+        return JSONResponse(content={"collection": collection.dict()})
+    except HTTPException as exp:
+        raise exp
+    except Exception as exp:
+        logger.exception(exp)
+        raise HTTPException(status_code=500, detail=str(exp))
+
+
 @router.post("/")
 def create_collection(collection: CreateCollectionDto):
     """API to create a collection"""
