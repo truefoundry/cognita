@@ -95,6 +95,8 @@ docker-compose --env-file compose.env up --build
 -   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 -   Backend uses `local.metadata.yaml` file for configuration. You can modify it as per your needs. The file is used to setup collection name, different data source path, and embedder configurations. Before starting of backend an indexer job is run to index the data sources mentioned in `local.metadata.yaml` file.
 
+:warning: **Note**: Currently UI supports only QnA and not the data source and collection creation. These have to be done via `local.metadata.yaml` only. Post that restart the docker-compose services. The work is in progress to bring that facility via UI as well and make the experience seamless.
+
 ## Cognita from source
 
 You can play around with the code locally using the python [script](#rocket-quickstart-running-cognita-locally) or using the UI component that ships with the code.
