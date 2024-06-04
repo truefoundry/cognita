@@ -24,13 +24,13 @@ export const defaultParserConfigs = `{
 }`
 
 interface NewCollectionProps {
-  collection: Collection
+  collectionName: string
   open: boolean
   onClose: () => void
 }
 
 const AddDataSourceToCollection = ({
-  collection,
+  collectionName,
   open,
   onClose,
 }: NewCollectionProps) => {
@@ -52,13 +52,13 @@ const AddDataSourceToCollection = ({
     try {
       const addDocsParams = {
         data_source_fqn: selectedDataSource,
-        collection_name: collection.name,
+        collection_name: collectionName,
         parser_config: JSON.parse(parserConfigs),
       }
 
       await addDocsToCollection(addDocsParams).unwrap()
       await ingestDataSource({
-        collection_name: collection.name,
+        collection_name: collectionName,
         data_source_fqn: selectedDataSource,
         data_ingestion_mode: 'INCREMENTAL',
         raise_error_on_failure: true,
@@ -116,7 +116,7 @@ const AddDataSourceToCollection = ({
             <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4 flex gap-1 items-center">
               Add data source to collection{' '}
               <Badge
-                text={collection.name}
+                text={collectionName}
                 className="text-xl bg-gray-150 border font-semibold border-gray-200 mx-1"
                 style={{ color: '#010202' }}
                 customPadding="py-[0.75rem]"

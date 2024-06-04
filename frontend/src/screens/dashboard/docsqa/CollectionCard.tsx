@@ -7,7 +7,6 @@ import { useDeleteCollectionMutation } from '@/stores/qafoundry'
 interface CollectionCardProps {
   isSelectedCollection: boolean
   collectionName: string
-  embedderConfig: object
   hideInfo?: boolean
   enableErrorSelection?: boolean
   onClick: () => void
@@ -16,7 +15,6 @@ interface CollectionCardProps {
 const CollectionCard = ({
   isSelectedCollection,
   collectionName,
-  embedderConfig: embedderConfigRaw,
   hideInfo,
   enableErrorSelection,
   onClick,
@@ -26,11 +24,6 @@ const CollectionCard = ({
   const isDeleteOptionEnabled = import.meta.env.VITE_DOCS_QA_DELETE_COLLECTIONS
 
   const [deleteCollection, deleteCollectionRes] = useDeleteCollectionMutation()
-
-  const embedderConfig = useMemo(
-    () => (embedderConfigRaw ? Object.entries(embedderConfigRaw) : []),
-    [embedderConfigRaw]
-  )
 
   return (
     <div
@@ -46,50 +39,28 @@ const CollectionCard = ({
     >
       <div className="flex justify-between items-center">
         <div className="flex gap-2.5 items-center max-w-[calc(100%-24px)]">
-          <IconProvider
-            icon="fa-regular fa-files"
-            size={1}
-            className="text-gray-500"
-          />
           <div className="text-gray-950 font-[500] text-base truncate">
             {collectionName}
           </div>
         </div>
-        {!hideInfo && (
+        {isDeleteOptionEnabled === 'true' && (
           <LightTooltip
+            classes={{
+              tooltip: '!w-[100px]',
+            }}
             title={
-              <div className="p-2 bg-white text-black cursor-default w-[16rem]">
-                <p className="font-[500] text-xs mb-1">Embedder Config:</p>
-                <div className="text-gray-600 text-xs mb-2">
-                  {!!embedderConfig.length
-                    ? embedderConfig.map((e) => {
-                        if (e[1]) {
-                          return (
-                            <div key={e[0]}>
-                              {e[0]}:{' '}
-                              {typeof e[1] === 'object'
-                                ? JSON.stringify(e[1])
-                                : e[1]}
-                            </div>
-                          )
-                        }
-                        return
-                      })
-                    : ''}
+              <div className="p-2 bg-white text-black cursor-default">
+                <div className="flex justify-center">
+                  <Button
+                    text="Delete Collection"
+                    outline
+                    disabled={deleteCollectionRes.isLoading}
+                    className="border-gray-200 shadow bg-base-100 btn-sm font-normal px-2.5"
+                    onClick={() =>
+                      deleteCollection({ collectionName: collectionName })
+                    }
+                  />
                 </div>
-                {isDeleteOptionEnabled === 'true' && (
-                  <div className="flex justify-center">
-                    <Button
-                      text="Delete Collection"
-                      outline
-                      disabled={deleteCollectionRes.isLoading}
-                      className="border-gray-200 shadow bg-base-100 btn-sm font-normal px-2.5"
-                      onClick={() =>
-                        deleteCollection({ collectionName: collectionName })
-                      }
-                    />
-                  </div>
-                )}
               </div>
             }
           >
