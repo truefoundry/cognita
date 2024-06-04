@@ -9,37 +9,22 @@ generator client {
 }
 
 model DataSource {
-    id                    Int                    @id @default(autoincrement())
-    type                  String
-    uri                   String                 @unique
-    metadata              Json
-    fqn                   String                 @unique
-    // Data source can be part of multiple collections
-    associatedDataSources AssociatedDataSource[]
+    id       Int    @id @default(autoincrement())
+    type     String
+    uri      String @unique
+    metadata Json?
+    fqn      String @unique
 
     @@map("data_sources")
 }
 
-model AssociatedDataSource {
-    id            Int        @id @default(autoincrement())
-    dataSourceFqn String     @unique
-    parserConfig  Json
-    // Associated data source can be part of multiple collections
-    dataSource    DataSource @relation(fields: [dataSourceId], references: [id])
-    dataSourceId  Int
-    collection    Collection @relation(fields: [collectionId], references: [id])
-    collectionId  Int
-
-    @@map("associated_data_sources")
-}
-
 model Collection {
-    id                    Int                    @id @default(autoincrement())
-    name                  String                 @unique
+    id                    Int     @id @default(autoincrement())
+    name                  String  @unique
     description           String?
     embedderConfig        Json
     // Collection can have multiple data sources
-    associatedDataSources AssociatedDataSource[]
+    associatedDataSources Json
 
     @@map("collections")
 }
@@ -51,7 +36,17 @@ enum Role {
 
 // From project root:
 // Validate: prisma validate --schema ./backend/database/schema.prisma
+
 // Generate Client: prisma generate --schema ./backend/database/schema.prisma
+
 // Push: prisma db push --schema ./backend/database/schema.prisma
+// The db push command also generates the client for you. If you want to generate the client without modifying your database, use the generate command.
+
 // It should be noted that whenever you make changes to your schema.prisma file you will have to re-generate the client,
 // you can do this automatically by running `prisma generate --schema ./backend/database/schema.prisma --watch`
+
+// Whenever you make changes to your model, migrate your database and re-generate your prisma code:
+// # apply migrations
+// prisma migrate dev --name "add comment model"
+// # generate
+// prisma generate

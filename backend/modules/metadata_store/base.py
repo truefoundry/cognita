@@ -205,10 +205,13 @@ def register_metadata_store(provider: str, cls):
     METADATA_STORE_REGISTRY[provider] = cls
 
 
-def get_metadata_store_client(
+async def get_metadata_store_client(
     config: MetadataStoreConfig,
 ) -> BaseMetadataStore:
     if config.provider in METADATA_STORE_REGISTRY:
+        if config.provider == "prisma":
+            prisma_client = await METADATA_STORE_REGISTRY[config.provider].connect()
+            return prisma_client
         return METADATA_STORE_REGISTRY[config.provider](config=config.config)
     else:
         raise ValueError(f"Unknown metadata store type: {config.provider}")

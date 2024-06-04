@@ -536,7 +536,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         return [run.run_name for run in ml_runs]
 
-    async def list_data_sources(self) -> List[str]:
+    async def list_data_sources(self) -> List[dict[str, str]]:
         logger.info(f"[Metadata Store] Listing all data sources")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
