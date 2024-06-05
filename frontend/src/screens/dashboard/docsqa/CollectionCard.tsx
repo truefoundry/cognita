@@ -45,9 +45,6 @@ const CollectionCard = ({
         </div>
         {isDeleteOptionEnabled === 'true' && (
           <LightTooltip
-            classes={{
-              tooltip: '!w-[100px]',
-            }}
             title={
               <div className="p-2 bg-white text-black cursor-default">
                 <div className="flex justify-center">
