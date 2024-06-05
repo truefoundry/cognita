@@ -5,6 +5,7 @@ import requests
 from qdrant_client._pydantic_compat import to_dict
 from qdrant_client.client_base import QdrantBase
 from qdrant_client.http import models
+from tqdm import tqdm
 
 from backend.logger import logger
 
@@ -94,7 +95,9 @@ def _recreate_collection(
     src_config = src_collection_info.config
     src_payload_schema = src_collection_info.payload_schema
 
-    dest_client.recreate_collection(
+    # delete destination collection only from qdrant that was created while creating metadatastore entry
+    dest_client.delete_collection(destination_collection_name, timeout=300)
+    dest_client.create_collection(
         destination_collection_name,
         vectors_config=src_config.params.vectors,
         sparse_vectors_config=src_config.params.sparse_vectors,
@@ -108,6 +111,7 @@ def _recreate_collection(
         ),
         wal_config=models.WalConfigDiff(**to_dict(src_config.wal_config)),
         quantization_config=src_config.quantization_config,
+        timeout=300,
     )
 
     _recreate_payload_schema(
@@ -154,20 +158,19 @@ def _migrate_collection(
     # upload_records has been deprecated due to the usage of models.Record; models.Record has been deprecated as a
     # structure for uploading due to a `shard_key` field, and now is used only as a result structure.
     # since shard_keys are not supported in migration, we can safely type ignore here and use Records for uploading
+
     while next_offset is not None:
-        records, next_offset = source_client.scroll(
-            source_collection_name,
-            offset=next_offset,
-            limit=batch_size,
-            with_vectors=True,
+        records, next_offset = tqdm(
+            source_client.scroll(
+                source_collection_name,
+                offset=next_offset,
+                limit=batch_size,
+                with_vectors=True,
+            )
         )
         dest_client.upload_points(destination_collection_name, records, wait=True)
-    source_client_vectors_count = source_client.get_collection(
-        source_collection_name
-    ).vectors_count
-    dest_client_vectors_count = dest_client.get_collection(
-        destination_collection_name
-    ).vectors_count
+    source_client_vectors_count = source_client.count(source_collection_name).count
+    dest_client_vectors_count = dest_client.count(destination_collection_name).count
 
     if source_client_vectors_count != dest_client_vectors_count:
         warnings.warn(
