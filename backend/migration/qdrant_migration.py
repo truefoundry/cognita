@@ -56,13 +56,19 @@ def migrate_collection(
         fetched_destination_collection = get_collection(
             destination_backend_url, destination_collection_name, type="destination"
         )
-        if fetched_destination_collection and not overwrite and not same_qdrant_loc:
+        if fetched_destination_collection and same_qdrant_loc:
             raise Exception(
-                f"Destination collection '{destination_collection_name}' already exists. Either delete it or set overwrite flag to True"
+                f"Source and destination qdrant locations are same. Destination collection '{destination_collection_name}' already exists."
             )
-        logger.debug(
-            f"Destination collection '{destination_collection_name}' not found at destination. Proceeding..."
-        )
+
+        elif fetched_destination_collection and not overwrite and not same_qdrant_loc:
+            raise Exception(
+                f"Source and destination qdrant locations are different. Destination collection '{destination_collection_name}' already exists in the destination qdrant. Add --overwrite to overwrite the collection."
+            )
+        else:
+            logger.debug(
+                f"Destination collection '{destination_collection_name}' not found at destination. Proceeding..."
+            )
     except Exception as e:
         raise e
 
@@ -200,7 +206,7 @@ def main():
         type=bool,
         help="Overwrite destination collection if exists in separate qdrant",
         required=False,
-        default=False,
+        action="store_true",
     )
 
     args = parser.parse_args()
