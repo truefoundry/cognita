@@ -114,7 +114,12 @@ export const qafoundryApi = createApi({
   baseQuery: createBaseQuery({
     baseUrl: baseQAFoundryPath,
   }),
-  tagTypes: ['Collections', 'CollectionNames', 'DataSources'],
+  tagTypes: [
+    'Collections',
+    'CollectionNames',
+    'CollectionDetails',
+    'DataSources',
+  ],
   endpoints: (builder) => ({
     // * Queries
     getCollections: builder.query<Collection[], void>({
@@ -137,6 +142,17 @@ export const qafoundryApi = createApi({
             .then((data: { collections: string[] }) => data.collections),
       }),
       providesTags: ['CollectionNames'],
+    }),
+    getCollectionDetails: builder.query<Collection, string>({
+      query: (collectionName) => ({
+        url: `/v1/collections/${collectionName}`,
+        method: 'GET',
+        responseHandler: (response) =>
+          response
+            .json()
+            .then((data: { collection: Collection }) => data.collection),
+      }),
+      providesTags: ['CollectionDetails'],
     }),
     getCollectionStatus: builder.query({
       query: (payload: { collectionName: string }) => ({
@@ -227,7 +243,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
       }),
-      invalidatesTags: ['Collections'],
+      invalidatesTags: ['Collections', 'CollectionDetails'],
     }),
     unassociateDataSource: builder.mutation({
       query: (payload: object) => ({
@@ -235,7 +251,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
       }),
-      invalidatesTags: ['Collections'],
+      invalidatesTags: ['Collections', 'CollectionDetails'],
     }),
     deleteCollection: builder.mutation({
       query: (payload: { collectionName: string }) => ({
@@ -243,7 +259,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _opts) => [{ type: 'Collections' }],
+      invalidatesTags: ['Collections', 'CollectionNames', 'CollectionDetails'],
     }),
     queryCollection: builder.mutation<
       QueryAnswer,
@@ -275,6 +291,7 @@ export const qafoundryApi = createApi({
         body: payload,
         method: 'POST',
       }),
+      invalidatesTags: ['CollectionDetails'],
     }),
   }),
 })
@@ -283,6 +300,7 @@ export const {
   // queries
   useGetCollectionsQuery,
   useGetCollectionNamesQuery,
+  useGetCollectionDetailsQuery,
   useGetCollectionStatusQuery,
   useGetAllEnabledChatModelsQuery,
   useGetAllEnabledEmbeddingModelsQuery,
