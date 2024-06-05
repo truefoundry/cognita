@@ -206,7 +206,7 @@ def main():
         type=bool,
         help="Overwrite destination collection if exists in separate qdrant",
         required=False,
-        default=False,
+        action="store_true",
     )
 
     args = parser.parse_args()
@@ -223,7 +223,7 @@ def main():
         destination_qdrant_url=args.destination_qdrant_url,
         destination_prefix=args.destination_prefix,
         batch_size=args.batch_size,
-        overwrite=args.overwrite == "True",
+        overwrite=args.overwrite,
     )
 
 
