@@ -63,7 +63,7 @@ def migrate_collection(
 
         elif fetched_destination_collection and not overwrite and not same_qdrant_loc:
             raise Exception(
-                f"Source and destination qdrant locations are different. Destination collection '{destination_collection_name}' already exists in the destination qdrant. Set --overwrite True to overwrite the collection."
+                f"Source and destination qdrant locations are different. Destination collection '{destination_collection_name}' already exists in the destination qdrant. Add --overwrite to overwrite the collection."
             )
         else:
             logger.debug(
