@@ -94,9 +94,16 @@ def get_enabled_models(
                 # OpenAI models
                 url = "https://api.openai.com/v1/models"
                 headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
-                response = requests.get(url=url)
+                response = requests.get(url=url, headers=headers)
                 data = response.json()
-                # TODO: Add the models to the enabled_models list
+                                
+                for model in data["data"]:
+                    model_config = {
+                        "name": f"openai/{model['id']}",
+                        "parameters": {"temperature": 0.1},
+                        "provider": "openai",
+                    }
+                    enabled_models.append(model_config)
             except Exception as ex:
                 logger.error(f"Error fetching openai models: {ex}")
 
