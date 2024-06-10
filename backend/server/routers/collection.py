@@ -19,6 +19,8 @@ from backend.types import (
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
 
+@router.get("")
+# TODO: Keep additional route until FE is updated
 @router.get("/")
 def get_collections():
     """API to list all collections with details"""
@@ -60,6 +62,8 @@ def get_collection_by_name(collection_name: str = Path(title="Collection name"))
         raise HTTPException(status_code=500, detail=str(exp))
 
 
+@router.post("")
+# TODO: Keep additional route until FE is updated
 @router.post("/")
 def create_collection(collection: CreateCollectionDto):
     """API to create a collection"""
