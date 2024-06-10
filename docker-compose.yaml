@@ -1,20 +1,22 @@
 version: "3.8"
 services:
     ollama-server:
-        image: ollama/ollama:0.1.39
+        image: ollama/ollama:0.1.42
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: ollama
         volumes:
             - ./volumes/ollama:/root/.ollama
+        ports:
+            - ${OLLAMA_PORT}:11434
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:11434"]
-            interval: 1m
+            interval: 30s
             timeout: 10s
             retries: 3
         environment:
-            - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
-            - OLLAMA_HOST=${OLLAMA_HOST}
+            - OLLAMA_KEEP_ALIVE=24h
+            - OLLAMA_HOST=0.0.0.0
         entrypoint: /bin/bash
         command: -c "set -e; ollama serve & sleep 10 && ollama pull ${OLLAMA_MODEL} && sleep infinity"
         networks:
@@ -31,7 +33,7 @@ services:
             - ./volumes/infinity:/app/.cache
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:7997/health"]
-            interval: 1m
+            interval: 45s
             timeout: 10s
             retries: 3
         command: v2 --model-id ${INFINITY_EMBEDDING_MODEL} --model-id ${INFINITY_RERANKING_MODEL} --batch-size ${INFINITY_BATCH_SIZE}
@@ -43,6 +45,13 @@ services:
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: qdrant
+        ports:
+            - 6333:6333
+            - 6334:6334
+        expose:
+            - 6333
+            - 6334
+            - 6335
         volumes:
             - ./volumes/qdrant_storage:/qdrant/storage:z
         networks:
@@ -60,14 +69,17 @@ services:
         ports:
             - "${COGNITA_BACKEND_PORT}:8000"
         depends_on:
-            - ollama-server
-            - infinity-server
-            - qdrant-server
+            ollama-server:
+                condition: service_healthy
+                restart: true
+            infinity-server:
+                condition: service_healthy
+                restart: true
         volumes:
             - .:/app
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
-            interval: 1m
+            interval: 30s
             timeout: 10s
             retries: 3
         environment:
@@ -95,10 +107,15 @@ services:
         ports:
             - "${COGNITA_FRONTEND_PORT}:5000"
         depends_on:
-            - ollama-server
-            - infinity-server
-            - qdrant-server
-            - cognita-backend
+            ollama-server:
+                condition: service_healthy
+                restart: true
+            infinity-server:
+                condition: service_healthy
+                restart: true
+            cognita-backend:
+                condition: service_healthy
+                restart: true
         environment:
             - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
             - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
