@@ -8,7 +8,7 @@ from backend.types import CreateDataSource
 router = APIRouter(prefix="/v1/data_source", tags=["data_source"])
 
 
-@router.get("/")
+@router.get("")
 def get_data_source():
     """Get data sources"""
     try:
@@ -32,7 +32,7 @@ async def list_data_sources():
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-@router.post("/")
+@router.post("")
 def add_data_source(
     data_source: CreateDataSource,
 ):

@@ -19,7 +19,7 @@ from backend.types import (
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
 
-@router.get("/")
+@router.get("")
 def get_collections():
     """API to list all collections with details"""
     try:
@@ -60,7 +60,7 @@ def get_collection_by_name(collection_name: str = Path(title="Collection name"))
         raise HTTPException(status_code=500, detail=str(exp))
 
 
-@router.post("/")
+@router.post("")
 def create_collection(collection: CreateCollectionDto):
     """API to create a collection"""
     try:
