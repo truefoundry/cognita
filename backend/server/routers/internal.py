@@ -95,15 +95,16 @@ def get_enabled_models(
                 url = "https://api.openai.com/v1/models"
                 headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
                 response = requests.get(url=url, headers=headers)
-                data = response.json()
+                models = response.json()
                                 
-                for model in data["data"]:
-                    model_config = {
-                        "name": f"openai/{model['id']}",
-                        "parameters": {"temperature": 0.1},
-                        "provider": "openai",
-                    }
-                    enabled_models.append(model_config)
+                for model in models["data"]:
+                    enabled_models.append(
+                        LLMConfig(
+                            name=f"openai/{model['id']}",
+                            parameters={"temparature": 0.1},
+                            provider="openai",
+                        ).dict()
+                    )
             except Exception as ex:
                 logger.error(f"Error fetching openai models: {ex}")
 
