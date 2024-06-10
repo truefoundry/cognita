@@ -10,7 +10,7 @@ services:
         ports:
             - ${OLLAMA_PORT}:11434
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:11434"]
+            test: ["CMD", "ollama", "list"]
             interval: 30s
             timeout: 10s
             retries: 3
