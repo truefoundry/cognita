@@ -37,7 +37,7 @@ services:
             retries: 3
             start_period: 60s
         environment:
-            - INFINITY_MODEL_ID=${INFINITY_MODEL_ID}
+            - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
         command: v2
         networks:
