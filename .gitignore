@@ -26,3 +26,4 @@ qdrant_storage/
 .truefoundry
 infinity/
 volumes/
+pgdata/

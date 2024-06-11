@@ -12,4 +12,4 @@ if settings.OPENAI_API_KEY:
 register_embedder("truefoundry", TrueFoundryEmbeddings)
 
 # Using embedding th' a deployed service such as Infinity API
-register_embedder("embedding-svc", InfinityEmbeddingSvc)
+register_embedder("infinity", InfinityEmbeddingSvc)

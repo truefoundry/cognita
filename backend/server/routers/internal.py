@@ -61,7 +61,7 @@ def get_enabled_models(
                     if "rerank" not in models["id"]:
                         enabled_models.append(
                             EmbedderConfig(
-                                provider="embedding_svc",
+                                provider="infinity",
                                 config={"model": models["id"]},
                             ).dict()
                         )

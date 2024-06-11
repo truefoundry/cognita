@@ -19,14 +19,28 @@ model DataSource {
 }
 
 model Collection {
-    id                    Int     @id @default(autoincrement())
-    name                  String  @unique
-    description           String?
-    embedderConfig        Json
+    id                      Int     @id @default(autoincrement())
+    name                    String  @unique
+    description             String?
+    embedder_config         Json
     // Collection can have multiple data sources
-    associatedDataSources Json
+    associated_data_sources Json?
 
     @@map("collections")
+}
+
+model IngestionRuns {
+    id                     Int     @id @default(autoincrement())
+    name                   String  @unique
+    collection_name        String
+    data_source_fqn        String
+    parser_config          Json
+    data_ingestion_mode    String
+    status                 String
+    raise_error_on_failure Boolean
+    errors                 Json?
+
+    @@map("ingestion_runs")
 }
 
 enum Role {

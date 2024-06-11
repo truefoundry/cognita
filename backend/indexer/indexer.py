@@ -11,7 +11,7 @@ from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder.embedder import get_embedder
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
@@ -62,7 +62,9 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    client = await get_client()
+
+    await client.update_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
     )
@@ -80,12 +82,12 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
         )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    await client.update_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
     )
@@ -96,18 +98,18 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
         )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    await client.update_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
     )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.update_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
         )
@@ -118,12 +120,12 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+            await client.update_data_ingestion_run_status(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
             )
             raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    await client.update_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.COMPLETED,
     )
@@ -145,6 +147,8 @@ async def _sync_data_source_to_collection(
     Returns:
         None
     """
+
+    client = await get_client()
 
     failed_data_point_fqns = []
     documents_ingested_count = 0
@@ -184,7 +188,7 @@ async def _sync_data_source_to_collection(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
             logger.error(failed_data_point_fqns)
-            METADATA_STORE_CLIENT.log_errors_for_data_ingestion_run(
+            await client.log_errors_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 errors={"failed_data_point_fqns": failed_data_point_fqns},
             )
@@ -300,109 +304,109 @@ async def ingest_data_points(
 
 async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
-    try:
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(
-            collection_name=request.collection_name, no_cache=True
-        )
-        if not collection:
-            logger.error(
-                f"Collection with name {request.collection_name} does not exist."
-            )
-            raise HTTPException(
-                status_code=404,
-                detail=f"Collection with name {request.collection_name} does not exist.",
-            )
+    client = await get_client()
+    # try:
+    collection = await client.get_collection_by_name(
+        collection_name=request.collection_name, no_cache=True
+    )
 
-        if not collection.associated_data_sources:
-            logger.error(
-                f"Collection {request.collection_name} does not have any associated data sources."
+    logger.info(f"Starting ingestion for collection: {type(collection)}")
+    if not collection:
+        logger.error(f"Collection with name {request.collection_name} does not exist.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Collection with name {request.collection_name} does not exist.",
+        )
+
+    if not collection.associated_data_sources:
+        logger.error(
+            f"Collection {request.collection_name} does not have any associated data sources."
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collection {request.collection_name} does not have any associated data sources.",
+        )
+    associated_data_sources_to_be_ingested = []
+    if request.data_source_fqn:
+        associated_data_sources_to_be_ingested = [
+            collection.associated_data_sources.get(request.data_source_fqn)
+        ]
+    else:
+        associated_data_sources_to_be_ingested = (
+            collection.associated_data_sources.values()
+        )
+
+    logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
+    for associated_data_source in associated_data_sources_to_be_ingested:
+        logger.debug(
+            f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
+        )
+        if not request.run_as_job:
+            data_ingestion_run = CreateDataIngestionRun(
+                collection_name=collection.name,
+                data_source_fqn=associated_data_source.data_source_fqn,
+                embedder_config=collection.embedder_config,
+                parser_config=associated_data_source.parser_config,
+                data_ingestion_mode=request.data_ingestion_mode,
+                raise_error_on_failure=request.raise_error_on_failure,
             )
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection {request.collection_name} does not have any associated data sources.",
+            created_data_ingestion_run = await client.create_data_ingestion_run(
+                data_ingestion_run=data_ingestion_run
             )
-        associated_data_sources_to_be_ingested = []
-        if request.data_source_fqn:
-            associated_data_sources_to_be_ingested = [
-                collection.associated_data_sources.get(request.data_source_fqn)
-            ]
+            await sync_data_source_to_collection(
+                inputs=DataIngestionConfig(
+                    collection_name=created_data_ingestion_run.collection_name,
+                    data_ingestion_run_name=created_data_ingestion_run.name,
+                    data_source=associated_data_source.data_source,
+                    embedder_config=collection.embedder_config,
+                    parser_config=created_data_ingestion_run.parser_config,
+                    data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                    raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                    batch_size=request.batch_size,
+                )
+            )
+            created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
         else:
-            associated_data_sources_to_be_ingested = (
-                collection.associated_data_sources.values()
+            if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
+                logger.error(
+                    "Job FQN and Job Component Name are required to trigger the job"
+                )
+                raise HTTPException(
+                    status_code=500,
+                    detail="Job FQN and Job Component Name are required to trigger the job",
+                )
+            data_ingestion_run = CreateDataIngestionRun(
+                collection_name=collection.name,
+                data_source_fqn=associated_data_source.data_source_fqn,
+                embedder_config=collection.embedder_config,
+                parser_config=associated_data_source.parser_config,
+                data_ingestion_mode=request.data_ingestion_mode,
+                raise_error_on_failure=request.raise_error_on_failure,
             )
+            created_data_ingestion_run = await client.create_data_ingestion_run(
+                data_ingestion_run=data_ingestion_run
+            )
+            trigger_job(
+                application_fqn=settings.JOB_FQN,
+                component_name=settings.JOB_COMPONENT_NAME,
+                params={
+                    "collection_name": collection.name,
+                    "data_source_fqn": associated_data_source.data_source_fqn,
+                    "data_ingestion_run_name": created_data_ingestion_run.name,
+                    "data_ingestion_mode": request.data_ingestion_mode.value,
+                    "raise_error_on_failure": (
+                        "True" if request.raise_error_on_failure else "False"
+                    ),
+                },
+            )
+    return JSONResponse(
+        status_code=201,
+        content={"message": "triggered"},
+    )
 
-        for associated_data_source in associated_data_sources_to_be_ingested:
-            logger.debug(
-                f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
-            )
-            if not request.run_as_job:
-                data_ingestion_run = CreateDataIngestionRun(
-                    collection_name=collection.name,
-                    data_source_fqn=associated_data_source.data_source_fqn,
-                    embedder_config=collection.embedder_config,
-                    parser_config=associated_data_source.parser_config,
-                    data_ingestion_mode=request.data_ingestion_mode,
-                    raise_error_on_failure=request.raise_error_on_failure,
-                )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
-                )
-                await sync_data_source_to_collection(
-                    inputs=DataIngestionConfig(
-                        collection_name=created_data_ingestion_run.collection_name,
-                        data_ingestion_run_name=created_data_ingestion_run.name,
-                        data_source=associated_data_source.data_source,
-                        embedder_config=collection.embedder_config,
-                        parser_config=created_data_ingestion_run.parser_config,
-                        data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                        raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                        batch_size=request.batch_size,
-                    )
-                )
-                created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
-            else:
-                if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
-                    logger.error(
-                        "Job FQN and Job Component Name are required to trigger the job"
-                    )
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Job FQN and Job Component Name are required to trigger the job",
-                    )
-                data_ingestion_run = CreateDataIngestionRun(
-                    collection_name=collection.name,
-                    data_source_fqn=associated_data_source.data_source_fqn,
-                    embedder_config=collection.embedder_config,
-                    parser_config=associated_data_source.parser_config,
-                    data_ingestion_mode=request.data_ingestion_mode,
-                    raise_error_on_failure=request.raise_error_on_failure,
-                )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
-                )
-                trigger_job(
-                    application_fqn=settings.JOB_FQN,
-                    component_name=settings.JOB_COMPONENT_NAME,
-                    params={
-                        "collection_name": collection.name,
-                        "data_source_fqn": associated_data_source.data_source_fqn,
-                        "data_ingestion_run_name": created_data_ingestion_run.name,
-                        "data_ingestion_mode": request.data_ingestion_mode.value,
-                        "raise_error_on_failure": (
-                            "True" if request.raise_error_on_failure else "False"
-                        ),
-                    },
-                )
-        return JSONResponse(
-            status_code=201,
-            content={"message": "triggered"},
-        )
-    except HTTPException as exp:
-        raise exp
-    except Exception as exp:
-        logger.exception(exp)
-        raise HTTPException(status_code=500, detail=str(exp))
+
+# except HTTPException as exp:
+#     raise exp
+# except Exception as exp:
+#     logger.exception(exp)
+#     raise HTTPException(status_code=500, detail=str(exp))

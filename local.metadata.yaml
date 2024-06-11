@@ -8,6 +8,6 @@ parser_config:
     parser_map:
         ".md": MarkdownParser
 embedder_config:
-    provider: embedding-svc
+    provider: infinity
     config:
         model: "mixedbread-ai/mxbai-embed-large-v1"
