@@ -14,6 +14,7 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+            start_period: 60s
         environment:
             - OLLAMA_KEEP_ALIVE=24h
             - OLLAMA_HOST=0.0.0.0
@@ -23,7 +24,7 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.36
+        image: michaelf34/infinity:0.0.42
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
@@ -36,7 +37,11 @@ services:
             interval: 45s
             timeout: 10s
             retries: 3
-        command: v2 --model-id ${INFINITY_EMBEDDING_MODEL} --model-id ${INFINITY_RERANKING_MODEL} --batch-size ${INFINITY_BATCH_SIZE}
+            start_period: 60s
+        environment:
+            - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
+            - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
+        command: v2
         networks:
             - cognita-docker
 
