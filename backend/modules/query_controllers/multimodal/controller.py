@@ -17,6 +17,7 @@ from truefoundry.langchain import TrueFoundryChat
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import get_client
+from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
@@ -144,7 +145,13 @@ class MultiModalRAGQueryController:
         Get the vector store for the collection
         """
         client = await get_client()
-        collection = await client.get_collection_by_name(collection_name)
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            collection = await loop.run_in_executor(
+                None, client.get_collection_by_name, collection_name
+            )
+        else:
+            collection = await client.get_collection_by_name(collection_name)
 
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
