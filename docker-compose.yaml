@@ -21,7 +21,7 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.36
+        image: michaelf34/infinity:0.0.42
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
@@ -34,7 +34,10 @@ services:
             interval: 1m
             timeout: 10s
             retries: 3
-        command: v2 --model-id ${INFINITY_EMBEDDING_MODEL} --model-id ${INFINITY_RERANKING_MODEL} --batch-size ${INFINITY_BATCH_SIZE}
+        environment:
+            - INFINITY_MODEL_ID=${INFINITY_MODEL_ID}
+            - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
+        command: v2
         networks:
             - cognita-docker
 
