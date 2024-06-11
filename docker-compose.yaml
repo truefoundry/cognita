@@ -12,6 +12,7 @@ services:
             interval: 1m
             timeout: 10s
             retries: 3
+            start_period: 60s
         environment:
             - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
             - OLLAMA_HOST=${OLLAMA_HOST}
@@ -34,6 +35,7 @@ services:
             interval: 1m
             timeout: 10s
             retries: 3
+            start_period: 60s
         environment:
             - INFINITY_MODEL_ID=${INFINITY_MODEL_ID}
             - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
