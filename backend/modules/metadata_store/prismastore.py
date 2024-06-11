@@ -1,11 +1,8 @@
 import asyncio
-import enum
 import json
-import os
 import random
 import string
-import tempfile
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List
 
 from fastapi import HTTPException
 from prisma import Prisma
@@ -111,11 +108,13 @@ class PrismaStore(BaseMetadataStore):
 
         try:
             await self.db.collection.delete(where={"name": collection_name})
-            # TODO: Add support for deleting associated runs
-            # if include_runs:
-            #     await self.db.ingestionruns.delete(
-            #         where={"collectionName": collection_name}
-            #     )
+            if include_runs:
+                try:
+                    await self.db.ingestionruns.delete_many(
+                        where={"collection_name": collection_name}
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to delete data ingestion runs: {e}")
         except Exception as e:
             logger.error(f"Failed to delete collection: {e}")
             raise HTTPException(status_code=500, detail="Failed to delete collection")
@@ -412,28 +411,3 @@ if __name__ == "__main__":
     prisma_store = PrismaStore.connect()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(prisma_store)
-
-    {
-        "name": "test",
-        "description": "test prisma collection",
-        "embedder_config": {
-            "provider": "embedding_svc",
-            "config": {"model": "mixedbread-ai/mxbai-embed-large-v1"},
-        },
-        "associated_data_sources": [
-            {
-                "data_source_fqn": "truefoundry::data-dir:internal/ps-test/creditcards-md",
-                "parser_config": {
-                    "chunk_size": 1000,
-                    "chunk_overlap": 20,
-                    "parser_map": {".md": "MarkdownParser"},
-                },
-            }
-        ],
-    }
-
-    {
-        "type": "truefoundry",
-        "uri": "data-dir:internal/ps-test/creditcards-md",
-        "metadata": {},
-    }
