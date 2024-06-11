@@ -95,8 +95,9 @@ def get_enabled_models(
             try:
                 # OpenAI models
                 url = "https://api.openai.com/v1/models"
-                headers = {"Authorization": f"Bearer {
-                    settings.OPENAI_API_KEY}"}
+
+                headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
+
                 response = requests.get(url=url, headers=headers)
                 models = response.json()
 
@@ -123,8 +124,7 @@ def get_enabled_models(
     if settings.TFY_API_KEY:
         try:
             url = (
-                f"{settings.TFY_HOST.rstrip(
-                    '/')}/api/svc/v1/llm-gateway/model/enabled"
+                f"{settings.TFY_HOST.rstrip('/')}/api/svc/v1/llm-gateway/model/enabled"
             )
             headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
             response = requests.get(url=url, headers=headers)
