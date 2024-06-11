@@ -178,9 +178,6 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
 
 @router.post("/data_ingestion_runs/list")
 async def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
-    # data_ingestion_runs = METADATA_STORE_CLIENT.get_data_ingestion_runs(
-    #     request.collection_name, request.data_source_fqn
-    # )
     client = await get_client()
     data_ingestion_runs = await client.get_data_ingestion_runs(
         request.collection_name, request.data_source_fqn
@@ -195,9 +192,6 @@ async def get_collection_status(
     data_ingestion_run_name: str = Path(title="Data Ingestion Run name"),
 ):
     """Get status for given data ingestion run"""
-    # data_ingestion_run = METADATA_STORE_CLIENT.get_data_ingestion_run(
-    #     data_ingestion_run_name=data_ingestion_run_name, no_cache=True
-    # )
     client = await get_client()
     data_ingestion_run = await client.get_data_ingestion_run(
         data_ingestion_run_name=data_ingestion_run_name, no_cache=True

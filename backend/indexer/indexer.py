@@ -16,6 +16,7 @@ from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
+    Collection,
     CreateDataIngestionRun,
     DataIngestionMode,
     DataIngestionRunStatus,
@@ -304,109 +305,114 @@ async def ingest_data_points(
 
 async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
-    client = await get_client()
-    # try:
-    collection = await client.get_collection_by_name(
-        collection_name=request.collection_name, no_cache=True
-    )
-
-    logger.info(f"Starting ingestion for collection: {type(collection)}")
-    if not collection:
-        logger.error(f"Collection with name {request.collection_name} does not exist.")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Collection with name {request.collection_name} does not exist.",
+    try:
+        client = await get_client()
+        collection = await client.get_collection_by_name(
+            collection_name=request.collection_name, no_cache=True
         )
 
-    if not collection.associated_data_sources:
-        logger.error(
-            f"Collection {request.collection_name} does not have any associated data sources."
-        )
-        raise HTTPException(
-            status_code=400,
-            detail=f"Collection {request.collection_name} does not have any associated data sources.",
-        )
-    associated_data_sources_to_be_ingested = []
-    if request.data_source_fqn:
-        associated_data_sources_to_be_ingested = [
-            collection.associated_data_sources.get(request.data_source_fqn)
-        ]
-    else:
-        associated_data_sources_to_be_ingested = (
-            collection.associated_data_sources.values()
-        )
+        # convert to pydantic model if not already -> For prisma models
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
 
-    logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
-    for associated_data_source in associated_data_sources_to_be_ingested:
-        logger.debug(
-            f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
-        )
-        if not request.run_as_job:
-            data_ingestion_run = CreateDataIngestionRun(
-                collection_name=collection.name,
-                data_source_fqn=associated_data_source.data_source_fqn,
-                embedder_config=collection.embedder_config,
-                parser_config=associated_data_source.parser_config,
-                data_ingestion_mode=request.data_ingestion_mode,
-                raise_error_on_failure=request.raise_error_on_failure,
+        logger.info(f"Starting ingestion for collection: {type(collection)}")
+        if not collection:
+            logger.error(
+                f"Collection with name {request.collection_name} does not exist."
             )
-            created_data_ingestion_run = await client.create_data_ingestion_run(
-                data_ingestion_run=data_ingestion_run
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection with name {request.collection_name} does not exist.",
             )
-            await sync_data_source_to_collection(
-                inputs=DataIngestionConfig(
-                    collection_name=created_data_ingestion_run.collection_name,
-                    data_ingestion_run_name=created_data_ingestion_run.name,
-                    data_source=associated_data_source.data_source,
-                    embedder_config=collection.embedder_config,
-                    parser_config=created_data_ingestion_run.parser_config,
-                    data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                    raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                    batch_size=request.batch_size,
-                )
+
+        if not collection.associated_data_sources:
+            logger.error(
+                f"Collection {request.collection_name} does not have any associated data sources."
             )
-            created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
+            raise HTTPException(
+                status_code=400,
+                detail=f"Collection {request.collection_name} does not have any associated data sources.",
+            )
+        associated_data_sources_to_be_ingested = []
+        if request.data_source_fqn:
+            associated_data_sources_to_be_ingested = [
+                collection.associated_data_sources.get(request.data_source_fqn)
+            ]
         else:
-            if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
-                logger.error(
-                    "Job FQN and Job Component Name are required to trigger the job"
-                )
-                raise HTTPException(
-                    status_code=500,
-                    detail="Job FQN and Job Component Name are required to trigger the job",
-                )
-            data_ingestion_run = CreateDataIngestionRun(
-                collection_name=collection.name,
-                data_source_fqn=associated_data_source.data_source_fqn,
-                embedder_config=collection.embedder_config,
-                parser_config=associated_data_source.parser_config,
-                data_ingestion_mode=request.data_ingestion_mode,
-                raise_error_on_failure=request.raise_error_on_failure,
+            associated_data_sources_to_be_ingested = (
+                collection.associated_data_sources.values()
             )
-            created_data_ingestion_run = await client.create_data_ingestion_run(
-                data_ingestion_run=data_ingestion_run
-            )
-            trigger_job(
-                application_fqn=settings.JOB_FQN,
-                component_name=settings.JOB_COMPONENT_NAME,
-                params={
-                    "collection_name": collection.name,
-                    "data_source_fqn": associated_data_source.data_source_fqn,
-                    "data_ingestion_run_name": created_data_ingestion_run.name,
-                    "data_ingestion_mode": request.data_ingestion_mode.value,
-                    "raise_error_on_failure": (
-                        "True" if request.raise_error_on_failure else "False"
-                    ),
-                },
-            )
-    return JSONResponse(
-        status_code=201,
-        content={"message": "triggered"},
-    )
 
+        logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
+        for associated_data_source in associated_data_sources_to_be_ingested:
+            logger.debug(
+                f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
+            )
+            if not request.run_as_job:
+                data_ingestion_run = CreateDataIngestionRun(
+                    collection_name=collection.name,
+                    data_source_fqn=associated_data_source.data_source_fqn,
+                    embedder_config=collection.embedder_config,
+                    parser_config=associated_data_source.parser_config,
+                    data_ingestion_mode=request.data_ingestion_mode,
+                    raise_error_on_failure=request.raise_error_on_failure,
+                )
+                created_data_ingestion_run = await client.create_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
+                await sync_data_source_to_collection(
+                    inputs=DataIngestionConfig(
+                        collection_name=created_data_ingestion_run.collection_name,
+                        data_ingestion_run_name=created_data_ingestion_run.name,
+                        data_source=associated_data_source.data_source,
+                        embedder_config=collection.embedder_config,
+                        parser_config=created_data_ingestion_run.parser_config,
+                        data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                        raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                        batch_size=request.batch_size,
+                    )
+                )
+                created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
+            else:
+                if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
+                    logger.error(
+                        "Job FQN and Job Component Name are required to trigger the job"
+                    )
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Job FQN and Job Component Name are required to trigger the job",
+                    )
+                data_ingestion_run = CreateDataIngestionRun(
+                    collection_name=collection.name,
+                    data_source_fqn=associated_data_source.data_source_fqn,
+                    embedder_config=collection.embedder_config,
+                    parser_config=associated_data_source.parser_config,
+                    data_ingestion_mode=request.data_ingestion_mode,
+                    raise_error_on_failure=request.raise_error_on_failure,
+                )
+                created_data_ingestion_run = await client.create_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
+                trigger_job(
+                    application_fqn=settings.JOB_FQN,
+                    component_name=settings.JOB_COMPONENT_NAME,
+                    params={
+                        "collection_name": collection.name,
+                        "data_source_fqn": associated_data_source.data_source_fqn,
+                        "data_ingestion_run_name": created_data_ingestion_run.name,
+                        "data_ingestion_mode": request.data_ingestion_mode.value,
+                        "raise_error_on_failure": (
+                            "True" if request.raise_error_on_failure else "False"
+                        ),
+                    },
+                )
+        return JSONResponse(
+            status_code=201,
+            content={"message": "triggered"},
+        )
 
-# except HTTPException as exp:
-#     raise exp
-# except Exception as exp:
-#     logger.exception(exp)
-#     raise HTTPException(status_code=500, detail=str(exp))
+    except HTTPException as exp:
+        raise exp
+    except Exception as exp:
+        logger.exception(exp)
+        raise HTTPException(status_code=500, detail=str(exp))

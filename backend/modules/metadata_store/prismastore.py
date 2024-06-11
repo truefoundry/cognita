@@ -335,7 +335,7 @@ class PrismaStore(BaseMetadataStore):
             run_data = created_data_ingestion_run.dict()
             run_data["parser_config"] = json.dumps(run_data["parser_config"])
             data_ingestion_run = await self.db.ingestionruns.create(data=run_data)
-            return data_ingestion_run
+            return DataIngestionRun(**data_ingestion_run.dict())
         except Exception as e:
             logger.error(f"Failed to create data ingestion run: {e}")
             raise HTTPException(
@@ -349,8 +349,9 @@ class PrismaStore(BaseMetadataStore):
             data_ingestion_run = await self.db.ingestionruns.find_first(
                 where={"name": data_ingestion_run_name}
             )
+            logger.info(f"Data ingestion run: {data_ingestion_run}")
             if data_ingestion_run:
-                return data_ingestion_run
+                return DataIngestionRun(**data_ingestion_run.dict())
             return None
         except Exception as e:
             logger.error(f"Failed to get data ingestion run: {e}")
