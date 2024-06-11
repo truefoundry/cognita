@@ -1,5 +1,30 @@
 version: "3.8"
 services:
+    db:
+        image: postgres:13
+        container_name: cognita-postgres
+        restart: unless-stopped
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        volumes:
+            - ./volumes/pgdata:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+                ]
+            interval: 30s
+            timeout: 60s
+            retries: 5
+            start_period: 80s
+        networks:
+            - cognita-docker
+
     ollama-server:
         image: ollama/ollama:0.1.42
         pull_policy: if_not_present
@@ -23,7 +48,7 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.36
+        image: michaelf34/infinity:0.0.42
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
@@ -36,7 +61,11 @@ services:
             interval: 45s
             timeout: 10s
             retries: 3
-        command: v2 --model-id ${INFINITY_EMBEDDING_MODEL} --model-id ${INFINITY_RERANKING_MODEL} --batch-size ${INFINITY_BATCH_SIZE}
+            start_period: 60s
+        environment:
+            - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
+            - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
+        command: v2
         networks:
             - cognita-docker
 
@@ -75,8 +104,12 @@ services:
             infinity-server:
                 condition: service_healthy
                 restart: true
+            db:
+                condition: service_healthy
+                restart: true
         volumes:
             - .:/app
+            - ./volumes/pgdata:/var/lib/postgresql/data
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
             interval: 30s
@@ -85,16 +118,17 @@ services:
         environment:
             - DEBUG_MODE=true
             - LOG_LEVEL=DEBUG
-            - OLLAMA_URL=${OLLAMA_URL}
-            - EMBEDDING_SVC_URL=${EMBEDDING_SVC_URL}
-            - RERANKER_SVC_URL=${RERANKER_SVC_URL}
+            - OLLAMA_URL=http://ollama-server:${OLLAMA_PORT}
+            - EMBEDDING_SVC_URL=http://infinity-server:${INFINITY_PORT}
+            - RERANKER_SVC_URL=http://infinity-server:${INFINITY_PORT}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
             - TFY_API_URL=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DOCKER_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         entrypoint: /bin/bash
-        command: -c "set -e; python -m local.ingest && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
+        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
         networks:
             - cognita-docker
 
