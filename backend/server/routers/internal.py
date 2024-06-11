@@ -18,7 +18,8 @@ router = APIRouter(prefix="/v1/internal", tags=["internal"])
 @router.post("/upload-to-data-directory")
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     if settings.METADATA_STORE_CONFIG.provider != "truefoundry":
-        raise Exception("API only supported for metadata store provider: truefoundry")
+        raise Exception(
+            "API only supported for metadata store provider: truefoundry")
     try:
         truefoundry_client = ml.get_client()
 
@@ -28,7 +29,8 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
             req.upload_name,
         )
 
-        _artifacts_repo = DataDirectory.from_fqn(fqn=dataset.fqn)._get_artifacts_repo()
+        _artifacts_repo = DataDirectory.from_fqn(
+            fqn=dataset.fqn)._get_artifacts_repo()
 
         urls = _artifacts_repo.get_signed_urls_for_write(
             artifact_identifier=SimpleNamespace(
@@ -93,18 +95,27 @@ def get_enabled_models(
             try:
                 # OpenAI models
                 url = "https://api.openai.com/v1/models"
-                headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
+                headers = {"Authorization": f"Bearer {
+                    settings.OPENAI_API_KEY}"}
                 response = requests.get(url=url, headers=headers)
                 models = response.json()
-                                
+
                 for model in models["data"]:
-                    enabled_models.append(
-                        LLMConfig(
-                            name=f"openai/{model['id']}",
-                            parameters={"temparature": 0.1},
-                            provider="openai",
-                        ).dict()
-                    )
+                    if model["id"].startswith("gpt-"):
+                        enabled_models.append(
+                            LLMConfig(
+                                name=f"openai/{model['id']}",
+                                parameters={"temparature": 0.1},
+                                provider="openai",
+                            ).dict()
+                        )
+                    else:
+                        enabled_models.append(
+                            EmbedderConfig(
+                                provider="openai",
+                                config={"model": model["id"]},
+                            ).dict()
+                        )
             except Exception as ex:
                 logger.error(f"Error fetching openai models: {ex}")
 
@@ -112,7 +123,8 @@ def get_enabled_models(
     if settings.TFY_API_KEY:
         try:
             url = (
-                f"{settings.TFY_HOST.rstrip('/')}/api/svc/v1/llm-gateway/model/enabled"
+                f"{settings.TFY_HOST.rstrip(
+                    '/')}/api/svc/v1/llm-gateway/model/enabled"
             )
             headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
             response = requests.get(url=url, headers=headers)
