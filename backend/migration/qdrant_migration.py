@@ -203,7 +203,6 @@ def main():
     )
     parser.add_argument(
         "--overwrite",
-        type=bool,
         help="Overwrite destination collection if exists in separate qdrant",
         required=False,
         action="store_true",

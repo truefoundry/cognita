@@ -139,12 +139,6 @@ export default function NavBar({ children }: any) {
       <div className="flex flex-col border bg-white font-inter">
         <div className="flex items-center inline-block pl-5 px-5 py-4 gap-x-4 flex-wrap">
           <div className="flex items-center">
-            <div
-              className="mr-4 cursor-pointer hover:bg-[#f5f5f5] p-1"
-              onClick={() => setIsDrawerOpen(true)}
-            >
-              <img src={Bars} className="h-7 w-7" />
-            </div>
             <Link to={'/'} className="mr-6">
               <img src={Logo} className="h-8" />
             </Link>
