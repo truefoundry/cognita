@@ -48,7 +48,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
-  const pattern = /^[a-z0-9\-]+$/
+  const pattern = /^[a-z][a-z0-9-]*$/
   const isValidUploadName = pattern.test(uploadName)
 
   const [uploadDataToDataDirectory] = useUploadDataToDataDirectoryMutation()

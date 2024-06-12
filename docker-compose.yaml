@@ -117,6 +117,7 @@ services:
             retries: 3
         environment:
             - DEBUG_MODE=true
+            - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
             - OLLAMA_URL=http://ollama-server:${OLLAMA_PORT}
             - EMBEDDING_SVC_URL=http://infinity-server:${INFINITY_PORT}
