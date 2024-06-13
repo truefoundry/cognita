@@ -124,7 +124,7 @@ services:
             - RERANKER_SVC_URL=http://infinity-server:${INFINITY_PORT}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
-            - TFY_API_URL=${TFY_API_KEY}
+            - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DOCKER_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}

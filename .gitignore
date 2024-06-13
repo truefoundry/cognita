@@ -27,3 +27,4 @@ qdrant_storage/
 infinity/
 volumes/
 pgdata/
+*.bak

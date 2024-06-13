@@ -434,7 +434,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
             logger.debug(
                 f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
             )
-            if not request.run_as_job:
+            if not request.run_as_job or settings.LOCAL:
                 data_ingestion_run = CreateDataIngestionRun(
                     collection_name=collection.name,
                     data_source_fqn=associated_data_source.data_source_fqn,
