@@ -1,0 +1,67 @@
+// SUPPORT FOR PRISMA WILL BE ADDED SOON.
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider             = "prisma-client-py"
+    recursive_type_depth = 5
+}
+
+model DataSource {
+    id       Int    @id @default(autoincrement())
+    type     String
+    uri      String @unique
+    metadata Json?
+    fqn      String @unique
+
+    @@map("data_sources")
+}
+
+model Collection {
+    id                      Int     @id @default(autoincrement())
+    name                    String  @unique
+    description             String?
+    embedder_config         Json
+    // Collection can have multiple data sources
+    associated_data_sources Json?
+
+    @@map("collections")
+}
+
+model IngestionRuns {
+    id                     Int     @id @default(autoincrement())
+    name                   String  @unique
+    collection_name        String
+    data_source_fqn        String
+    parser_config          Json
+    data_ingestion_mode    String
+    status                 String
+    raise_error_on_failure Boolean
+    errors                 Json?
+
+    @@map("ingestion_runs")
+}
+
+enum Role {
+    USER
+    ADMIN
+}
+
+// From project root:
+// Validate: prisma validate --schema ./backend/database/schema.prisma
+
+// Generate Client: prisma generate --schema ./backend/database/schema.prisma
+
+// Push: prisma db push --schema ./backend/database/schema.prisma
+// The db push command also generates the client for you. If you want to generate the client without modifying your database, use the generate command.
+
+// It should be noted that whenever you make changes to your schema.prisma file you will have to re-generate the client,
+// you can do this automatically by running `prisma generate --schema ./backend/database/schema.prisma --watch`
+
+// Whenever you make changes to your model, migrate your database and re-generate your prisma code:
+// # apply migrations
+// prisma migrate dev --name "add comment model"
+// # generate
+// prisma generate
