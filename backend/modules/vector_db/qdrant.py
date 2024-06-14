@@ -1,6 +1,7 @@
+import warnings
 from typing import List
+from urllib.parse import urlparse
 
-from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
@@ -9,7 +10,7 @@ from qdrant_client.http.models import Distance, VectorParams
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, VectorDBConfig
+from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
@@ -18,25 +19,25 @@ BATCH_SIZE = 1000
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
         if config.local is True:
-            self.local = True
-            self.location = config.url
+            # TODO: make this path customizable
             self.qdrant_client = QdrantClient(
                 path="./qdrant_db",
             )
         else:
-            self.local = False
-            self.url = config.url
-            self.api_key = config.api_key
-            self.port = 443 if self.url.startswith("https://") else 6333
-            self.prefix = config.config.get("prefix", None) if config.config else None
-            self.prefer_grpc = False if self.url.startswith("https://") else True
+            url = config.url
+            api_key = config.api_key
+            if not api_key:
+                api_key = None
+            qdrant_kwargs = QdrantClientConfig.parse_obj(config.config)
+            if url.startswith("http://") or url.startswith("https://"):
+                if qdrant_kwargs.port is None:
+                    parsed_port = urlparse(url).port
+                    if parsed_port:
+                        qdrant_kwargs.port = parsed_port
+                    else:
+                        qdrant_kwargs.port = 443 if url.startswith("https://") else 6443
             self.qdrant_client = QdrantClient(
-                url=self.url,
-                **({"api_key": self.api_key} if self.api_key else {}),
-                port=self.port,
-                prefer_grpc=self.prefer_grpc,
-                prefix=self.prefix,
-                timeout=300,
+                url=url, api_key=api_key, **qdrant_kwargs.dict()
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
