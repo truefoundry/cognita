@@ -138,6 +138,21 @@ class VectorDBConfig(BaseModel):
     config: Optional[dict] = None
 
 
+class QdrantClientConfig(BaseModel):
+    """
+    Qdrant extra configuration
+    """
+
+    class Config:
+        extra = "allow"
+
+    port: Optional[int] = None
+    grpc_port: int = 6334
+    prefix: Optional[str] = None
+    prefer_grpc: bool = False
+    timeout: int = 300
+
+
 class MetadataStoreConfig(BaseModel):
     """
     Metadata store configuration
