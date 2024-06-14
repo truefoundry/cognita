@@ -28,7 +28,7 @@ class QdrantVectorDB(BaseVectorDB):
             api_key = config.api_key
             if not api_key:
                 api_key = None
-            qdrant_kwargs = QdrantClientConfig.parse_obj(config.config)
+            qdrant_kwargs = QdrantClientConfig.parse_obj(config.config or {})
             if url.startswith("http://") or url.startswith("https://"):
                 if qdrant_kwargs.port is None:
                     parsed_port = urlparse(url).port
