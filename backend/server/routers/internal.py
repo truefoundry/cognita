@@ -105,7 +105,7 @@ def get_enabled_models(
                     if model["id"].startswith("gpt-"):
                         enabled_models.append(
                             LLMConfig(
-                                name=f"openai/{model['id']}",
+                                name=f"{model['id']}",
                                 parameters={"temparature": 0.1},
                                 provider="openai",
                             ).dict()
