@@ -1,0 +1,25 @@
+[
+  {
+    "provider_name": "openai",
+    "api_format": "openai",
+    "llm_model_ids": ["gpt4", "gpt3.5"],
+    "embedding_model_ids": ["text-ada"],
+    "api_key_env_var": "OPENAI_API_KEY"
+  },
+  {
+    "provider_name": "truefoundry",
+    "api_format": "openai",
+    "llm_model_ids": ["tfy-mistral"],
+    "embedding_model_ids": ["text-d"],
+    "api_key_env_var": "TFY_API_KEY",
+    "base_url": "https://truefoundry.com"
+  },
+  {
+    "provider_name": "local",
+    "api_format": "openai",
+    "llm_model_ids": ["mistral"],
+    "embedding_model_ids": ["mixedbread"],
+    "api_key_env_var": "TFY_API_KEY",
+    "base_url": "http://localhost:8000/"
+  }
+]

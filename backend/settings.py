@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -14,6 +15,7 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = "info"
     METADATA_STORE_CONFIG: MetadataStoreConfig
+    AI_GATEWAY_CONFIG = ""
     VECTOR_DB_CONFIG: VectorDBConfig
     TFY_SERVICE_ROOT_PATH: Optional[str] = "/"
     TFY_API_KEY: str
@@ -23,6 +25,8 @@ class Settings(BaseSettings):
     EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
 
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
+    AI_GATEWAY = os.getenv("AI_GATEWAY", "openai")
+    AI_GATEWAY_CONFIG = json.loads(os.getenv("AI_GATEWAY_CONFIG", "{}"))
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
     TFY_SERVICE_ROOT_PATH = os.getenv("TFY_SERVICE_ROOT_PATH", "")
@@ -67,5 +71,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-# Check the env vars set
-print("Settings: ", settings)

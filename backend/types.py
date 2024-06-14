@@ -90,14 +90,32 @@ class LoadedDataPoint(DataPoint):
     )
 
 
+class ModelType(str, Enum):
+    """
+    Model types available in LLM gateway
+    """
+
+    completion = "completion"
+    chat = "chat"
+    embedding = "embedding"
+    
+class ModelConfig(BaseModel):
+    name: str
+    type: ModelType
+    
+class ModelProviderConfig(BaseModel):
+    provider_name: str
+    api_format: str
+    llm_model_ids: List[str]
+    embedding_model_ids: List[str]
+    api_key_env_var: str
+    base_url: Optional[str] = None
+
 class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
-
-    provider: str = Field(
-        title="Provider of the embedder",
-    )
+    model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default={"model": "string"}
     )
@@ -161,14 +179,14 @@ class MetadataStoreConfig(BaseModel):
     provider: str
     config: Optional[dict] = None
 
-
 class EmbeddingCacheConfig(BaseModel):
     """
     Embedding cache configuration
     """
 
-    provider: str
-    url: Optional[str] = None
+    # provider: str
+    name: str = Field(title="Name of the model")
+    base_url:str = Field(title="Base URL of the model")
     config: Optional[dict] = None
 
 
@@ -177,12 +195,14 @@ class LLMConfig(BaseModel):
     LLM configuration
     """
 
-    name: str = Field(title="Name of the model")
+    model_name: str = Field(title="Name of the model")
+    model_fqn: str = Field(title="Fully qualified name of the model")
+    base_url: Optional[str] = Field(title="Base URL of the model")
     parameters: dict = None
-    provider: Literal["openai", "ollama", "truefoundry"] = Field(
-        title="Model provider any one between openai, ollama, truefoundry",
-        default="truefoundry",
-    )
+    # provider: Literal["openai", "ollama", "truefoundry"] = Field(
+    #     title="Model provider any one between openai, ollama, truefoundry",
+    #     default="truefoundry",
+    # )
 
 
 class RetrieverConfig(BaseModel):
@@ -446,16 +466,6 @@ class UploadToDataDirectoryDto(BaseModel):
         regex=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
-
-
-class ModelType(str, Enum):
-    """
-    Model types available in LLM gateway
-    """
-
-    completion = "completion"
-    chat = "chat"
-    embedding = "embedding"
 
 
 class ListDataIngestionRunsDto(BaseModel):

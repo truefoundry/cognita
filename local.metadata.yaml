@@ -8,6 +8,11 @@ parser_config:
     parser_map:
         ".md": MarkdownParser
 embedder_config:
-    provider: embedding-svc
-    config:
-        model: "mixedbread-ai/mxbai-embed-large-v1"
+    model_config:
+        name: "mixedbread-ai/mxbai-embed-large-v1"
+# embedder_config:
+#     model_name: "mixedbread-ai/mxbai-embed-large-v1"
+#     model_fqn: "mixedbread-ai/mxbai-embed-large-v1"
+#     # provider: embedding-svc
+#     config:
+#         model: "mixedbread-ai/mxbai-embed-large-v1"
