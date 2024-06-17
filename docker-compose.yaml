@@ -39,6 +39,7 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+            start_period: 60s
         environment:
             - OLLAMA_KEEP_ALIVE=24h
             - OLLAMA_HOST=0.0.0.0
