@@ -1,6 +1,6 @@
 from typing import Any, ClassVar, Collection, Dict, Literal, Optional
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import field_validator, model_validator, BaseModel, Field, root_validator
 from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import LLMConfig
@@ -87,7 +87,8 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
 
     allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixbread-ai",)
 
-    @validator("compressor_model_provider")
+    @field_validator("compressor_model_provider")
+    @classmethod
     def validate_retriever_type(cls, value) -> Dict:
         assert (
             value in cls.allowed_compressor_model_providers
@@ -142,7 +143,8 @@ class ExampleQueryInput(BaseModel):
 
     stream: Optional[bool] = Field(title="Stream the results", default=False)
 
-    @root_validator()
+    @model_validator()
+    @classmethod
     def validate_retriever_type(cls, values: Dict) -> Dict:
         retriever_name = values.get("retriever_name")
 

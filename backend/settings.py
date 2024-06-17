@@ -2,9 +2,9 @@ import os
 from typing import Optional
 
 import orjson
-from pydantic import BaseSettings
 
 from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

@@ -3,9 +3,10 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, constr, root_validator
+from pydantic import StringConstraints, ConfigDict, BaseModel, Field, root_validator
 
 from backend.constants import FQN_SEPARATOR
+from typing_extensions import Annotated
 
 
 class DataIngestionMode(str, Enum):
@@ -42,7 +43,7 @@ class DataPoint(BaseModel):
     )
 
     metadata: Optional[Dict[str, str]] = Field(
-        title="Additional metadata for the data point",
+        None, title="Additional metadata for the data point",
     )
 
     @property
@@ -83,10 +84,10 @@ class LoadedDataPoint(DataPoint):
         title="Local file path of the loaded data point",
     )
     file_extension: Optional[str] = Field(
-        title="File extension of the loaded data point",
+        None, title="File extension of the loaded data point",
     )
     local_metadata_file_path: Optional[str] = Field(
-        title="Local file path of the metadata file",
+        None, title="Local file path of the metadata file",
     )
 
 
@@ -142,9 +143,7 @@ class QdrantClientConfig(BaseModel):
     """
     Qdrant extra configuration
     """
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     port: Optional[int] = None
     grpc_port: int = 6334
@@ -276,7 +275,7 @@ class DataIngestionRun(BaseDataIngestionRun):
         title="Name of the data ingestion run",
     )
     status: Optional[DataIngestionRunStatus] = Field(
-        title="Status of the data ingestion run",
+        None, title="Status of the data ingestion run",
     )
 
 
@@ -292,7 +291,7 @@ class BaseDataSource(BaseModel):
         title="A unique identifier for the data source",
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        title="Additional config for your data source"
+        None, title="Additional config for your data source"
     )
 
     @property
@@ -325,7 +324,7 @@ class AssociatedDataSources(BaseModel):
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
-        title="Data source associated with the collection"
+        None, title="Data source associated with the collection"
     )
 
 
@@ -339,7 +338,7 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
     data_source_fqn: Optional[str] = Field(
-        title="Fully qualified name of the data source",
+        None, title="Fully qualified name of the data source",
     )
 
     data_ingestion_mode: DataIngestionMode = Field(
@@ -410,12 +409,12 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
+    name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9]*$")] = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character",
     )
     description: Optional[str] = Field(
-        title="a description for your collection",
+        None, title="a description for your collection",
     )
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration", default_factory=dict
@@ -434,7 +433,7 @@ class Collection(BaseCollection):
 
 class CreateCollectionDto(CreateCollection):
     associated_data_sources: Optional[List[AssociateDataSourceWithCollection]] = Field(
-        title="Data sources associated with the collection"
+        None, title="Data sources associated with the collection"
     )
 
 
@@ -443,7 +442,7 @@ class UploadToDataDirectoryDto(BaseModel):
     # allow only small case alphanumeric and hyphen, should contain atleast one alphabet and begin with alphabet
     upload_name: str = Field(
         title="Name of the upload",
-        regex=r"^[a-z][a-z0-9-]*$",
+        pattern=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
 
