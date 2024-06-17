@@ -1,6 +1,5 @@
 from typing import Any, ClassVar, Collection, Dict, Literal, Optional
-
-from pydantic import field_validator, model_validator, BaseModel, Field, root_validator
+from pydantic import field_validator, model_validator, BaseModel, Field
 from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import LLMConfig
@@ -35,7 +34,8 @@ class VectorStoreRetrieverConfig(BaseModel):
         "mmr",
     )
 
-    @root_validator
+    @model_validator()
+    @classmethod
     def validate_search_type(cls, values: Dict) -> Dict:
         """Validate search type."""
         search_type = values.get("search_type")

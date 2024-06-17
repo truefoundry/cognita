@@ -2,8 +2,7 @@ import enum
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
-
-from pydantic import StringConstraints, ConfigDict, BaseModel, Field, root_validator
+from pydantic import StringConstraints, ConfigDict, BaseModel, Field, model_validator
 
 from backend.constants import FQN_SEPARATOR
 from typing_extensions import Annotated
@@ -298,7 +297,8 @@ class BaseDataSource(BaseModel):
     def fqn(self):
         return f"{FQN_SEPARATOR}".join([self.type, self.uri])
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def validate_fqn(cls, values: Dict) -> Dict:
         values["fqn"] = f"{FQN_SEPARATOR}".join([values["type"], values["uri"]])
         return values

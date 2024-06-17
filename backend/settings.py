@@ -55,11 +55,11 @@ class Settings(BaseSettings):
         TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
 
     try:
-        VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
+        VECTOR_DB_CONFIG = VectorDBConfig.model_validate(orjson.loads(VECTOR_DB_CONFIG))
     except Exception as e:
         raise ValueError(f"VECTOR_DB_CONFIG is invalid: {e}")
     try:
-        METADATA_STORE_CONFIG = MetadataStoreConfig.parse_obj(
+        METADATA_STORE_CONFIG = MetadataStoreConfig.model_validate(
             orjson.loads(METADATA_STORE_CONFIG)
         )
     except Exception as e:
