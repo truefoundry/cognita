@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional,ClassVar
 
 import orjson
 
@@ -26,14 +26,14 @@ class Settings(BaseSettings):
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
     TFY_SERVICE_ROOT_PATH = os.getenv("TFY_SERVICE_ROOT_PATH", "")
-    JOB_FQN = os.getenv("JOB_FQN", "")
-    JOB_COMPONENT_NAME = os.getenv("JOB_COMPONENT_NAME", "")
+    JOB_FQN:ClassVar[str] = os.getenv("JOB_FQN", "")
+    JOB_COMPONENT_NAME:ClassVar[str] = os.getenv("JOB_COMPONENT_NAME", "")
     TFY_API_KEY = os.getenv("TFY_API_KEY", "")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     TFY_HOST = os.getenv("TFY_HOST", "")
     TFY_LLM_GATEWAY_URL = os.getenv("TFY_LLM_GATEWAY_URL", "")
     EMBEDDING_CACHE_CONFIG = (
-        EmbeddingCacheConfig.parse_obj(
+        EmbeddingCacheConfig.model_validate(
             orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
         )
         if os.getenv("EMBEDDING_CACHE_CONFIG", None)
