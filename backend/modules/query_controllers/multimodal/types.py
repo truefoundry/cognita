@@ -34,7 +34,7 @@ class VectorStoreRetrieverConfig(BaseModel):
         "mmr",
     )
 
-    @model_validator()
+    @model_validator(mode="before")
     @classmethod
     def validate_search_type(cls, values: Dict) -> Dict:
         """Validate search type."""
@@ -143,7 +143,7 @@ class ExampleQueryInput(BaseModel):
 
     stream: Optional[bool] = Field(title="Stream the results", default=False)
 
-    @model_validator()
+    @model_validator(mode="before")
     @classmethod
     def validate_retriever_type(cls, values: Dict) -> Dict:
         retriever_name = values.get("retriever_name")

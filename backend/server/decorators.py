@@ -4,10 +4,9 @@ Source: https://github.com/dmontagu/fastapi-utils/blob/master/fastapi_utils/cbv.
 """
 
 import inspect
-from typing import Any, Callable, List, Type, TypeVar, Union, get_type_hints
+from typing import Any, Callable, List, Type, TypeVar, Union, get_type_hints, ClassVar
 
 from fastapi import APIRouter, Depends
-from pydantic.typing import is_classvar
 from starlette.routing import Route, WebSocketRoute
 
 T = TypeVar("T")
@@ -59,7 +58,7 @@ def _init_cbv(cls: Type[Any]) -> None:
     ]
     dependency_names: List[str] = []
     for name, hint in get_type_hints(cls).items():
-        if is_classvar(hint):
+        if getattr(hint, "__origin__", None) is ClassVar:
             continue
         parameter_kwargs = {"default": getattr(cls, name, Ellipsis)}
         dependency_names.append(name)
