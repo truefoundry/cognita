@@ -46,17 +46,8 @@ class LocalDirLoader(BaseDataLoader):
             # Temrinate the function
             return
 
-        def copy(src, dst):
-            if os.path.islink(src):
-                linkto = os.readlink(src)
-                os.symlink(linkto, dst)
-            else:
-                shutil.copyfile(src, dst, follow_symlinks=True)
-
         # Copy the entire directory (including subdirectories) from source to destination.
-        shutil.copytree(
-            source_dir, dest_dir, dirs_exist_ok=True, symlinks=False, copy_function=copy
-        )
+        shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
 
         logger.info(f"Dest dir contents: {os.listdir(dest_dir)}")
 
