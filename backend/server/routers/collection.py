@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.types import (

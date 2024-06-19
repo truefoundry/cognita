@@ -23,17 +23,6 @@ class ModelGateway:
                 for model_id in list.llm_model_ids:
                     model_name = f"{list.provider_name}/{model_id}"
                     self.modelsToProviderMap[model_name] = list
-    
-    # def get_models(self):
-    #     models: List[ModelConfig] = []
-    #     for list in self.config:
-    #         for model_id in list.embedding_model_ids:
-    #             models.append(ModelConfig(
-    #                 name=f"{list.provider_name}/{model_id}", 
-    #                 type=ModelType.embedding
-    #             ).dict())
-                              
-    #     return models
             
     def get_embedding_models(self) -> List[ModelConfig]:
         models: List[ModelConfig] = []

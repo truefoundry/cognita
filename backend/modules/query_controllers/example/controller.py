@@ -15,7 +15,6 @@ from langchain_openai.chat_models import ChatOpenAI
 from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
@@ -101,41 +100,6 @@ class BasicRAGQueryController:
         Get the LLM
         """
         return model_gateway.get_llm_from_model_config(model_configuration)
-        # system = "You are a helpful assistant."
-        # if model_configuration.provider == "openai":
-        #     logger.debug(f"Using OpenAI model {model_configuration.name}")
-        #     llm = ChatOpenAI(
-        #         model=model_configuration.name,
-        #         temperature=model_configuration.parameters.get("temperature", 0.1),
-        #         streaming=stream,
-        #     )
-        # elif model_configuration.provider == "ollama":
-        #     logger.debug(f"Using Ollama model {model_configuration.name}")
-        #     llm = ChatOllama(
-        #         base_url=settings.OLLAMA_URL,
-        #         model=(
-        #             model_configuration.name.split("/")[1]
-        #             if "/" in model_configuration.name
-        #             else model_configuration.name
-        #         ),
-        #         temperature=model_configuration.parameters.get("temperature", 0.1),
-        #         system=system,
-        #     )
-        # elif model_configuration.provider == "truefoundry":
-        #     logger.debug(f"Using TrueFoundry model {model_configuration.name}")
-        #     llm = TrueFoundryChat(
-        #         model=model_configuration.name,
-        #         model_parameters=model_configuration.parameters,
-        #         system_prompt=system,
-        #     )
-        # else:
-        #     logger.debug(f"Using TrueFoundry model {model_configuration.name}")
-        #     llm = TrueFoundryChat(
-        #         model=model_configuration.name,
-        #         model_parameters=model_configuration.parameters,
-        #         system_prompt=system,
-        #     )
-        # return llm
 
     async def _get_vector_store(self, collection_name: str):
         """

@@ -6,7 +6,6 @@ import yaml
 from pydantic import BaseModel
 
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings

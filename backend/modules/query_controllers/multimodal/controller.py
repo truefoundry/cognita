@@ -16,7 +16,6 @@ from truefoundry.langchain import TrueFoundryChat
 from backend.modules.model_gateway.model_gateway import model_gateway
 
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
