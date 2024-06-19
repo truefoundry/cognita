@@ -236,7 +236,7 @@ export const qafoundryApi = createApi({
           url: '/v1/internal/upload-to-local-directory',
           body: bodyFormData,
           method: 'POST',
-          formData: true
+          formData: true,
         }
       },
     }),
@@ -271,6 +271,13 @@ export const qafoundryApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Collections', 'CollectionNames', 'CollectionDetails'],
+    }),
+    deleteDataSource: builder.mutation({
+      query: (payload: { data_source_fqn: string }) => ({
+        url: `/v1/data_source/delete?data_source_fqn=${payload.data_source_fqn}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DataSources'],
     }),
     queryCollection: builder.mutation<
       QueryAnswer,
@@ -327,6 +334,7 @@ export const {
   useAddDocsToCollectionMutation,
   useUnassociateDataSourceMutation,
   useDeleteCollectionMutation,
+  useDeleteDataSourceMutation,
   useQueryCollectionMutation,
   useAddDataSourceMutation,
   useIngestDataSourceMutation,
