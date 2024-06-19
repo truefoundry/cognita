@@ -173,7 +173,7 @@ class BaseMetadataStore(ABC):
         """
         Delete a data source from the metadata store
         """
-        pass
+        raise NotImplementedError()
 
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:

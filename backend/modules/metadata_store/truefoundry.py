@@ -558,3 +558,6 @@ class TrueFoundry(BaseMetadataStore):
                 logger.error(f"Error in listing data sources: {e}")
                 continue
         return data_sources
+
+    def delete_data_source(self, data_source_fqn: str):
+        return None
