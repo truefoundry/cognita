@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from typing import Optional
 
 import requests
-from backend.modules.ai_gateway.model_gateway import model_gateway
+from backend.modules.model_gateway.model_gateway import model_gateway
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from truefoundry import ml

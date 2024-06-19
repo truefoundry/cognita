@@ -22,6 +22,7 @@ from backend.types import (
     EmbedderConfig,
     ParserConfig,
 )
+from backend.modules.model_gateway.model_gateway import model_gateway
 
 
 class LocalMetadata(BaseModel):
@@ -68,7 +69,10 @@ class LocalMetadataStore(BaseMetadataStore):
         if not self.local_metadata.collection_name in get_collection:
             VECTOR_STORE_CLIENT.create_collection(
                 collection_name=self.local_metadata.collection_name,
-                embeddings=get_embedder(self.local_metadata.embedder_config),
+                embeddings=model_gateway.get_embedder_from_model_config(
+                    model_name=self.local_metadata.embedder_config.model_config.name
+                ),
+                # embeddings=get_embedder(self.local_metadata.embedder_config),
             )
             self.data_ingestion_runs = []
             logger.debug(f"Local metadata store initialized with {self.local_metadata}")

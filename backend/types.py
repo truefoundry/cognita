@@ -101,7 +101,8 @@ class ModelType(str, Enum):
     
 class ModelConfig(BaseModel):
     name: str
-    type: ModelType
+    type: Optional[ModelType]
+    parameters: Optional[Dict[str, Any]] = None
     
 class ModelProviderConfig(BaseModel):
     provider_name: str
@@ -115,6 +116,7 @@ class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
+    # model_name: str
     model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default={"model": "string"}
@@ -194,10 +196,12 @@ class LLMConfig(BaseModel):
     """
     LLM configuration
     """
+    model: ModelConfig
+    # model_name: str
 
-    model_name: str = Field(title="Name of the model")
-    model_fqn: str = Field(title="Fully qualified name of the model")
-    base_url: Optional[str] = Field(title="Base URL of the model")
+    # model_name: str = Field(title="Name of the model")
+    # model_fqn: str = Field(title="Fully qualified name of the model")
+    # base_url: Optional[str] = Field(title="Base URL of the model")
     parameters: dict = None
     # provider: Literal["openai", "ollama", "truefoundry"] = Field(
     #     title="Model provider any one between openai, ollama, truefoundry",

@@ -4,7 +4,6 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -27,7 +26,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -56,7 +55,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -82,7 +81,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -112,7 +111,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -147,7 +146,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -178,7 +177,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -210,7 +209,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -244,7 +243,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -277,7 +276,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -315,7 +314,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "query": "Explain in detail different categories of credit cards",
     "model_configuration": {
         "name": "openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
+        # "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,

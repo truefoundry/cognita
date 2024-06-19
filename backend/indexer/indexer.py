@@ -23,6 +23,7 @@ from backend.types import (
     IngestDataToCollectionDto,
     LoadedDataPoint,
 )
+from backend.modules.model_gateway.model_gateway import model_gateway
 
 
 def get_data_point_fqn_to_hash_map(
@@ -213,10 +214,12 @@ async def ingest_data_points(
         None
 
     """
-
-    embeddings = get_embedder(
-        embedder_config=inputs.embedder_config,
+    embeddings = model_gateway.get_embedder_from_model_config(
+        model_name=inputs.embedder_config.model_config.name
     )
+    # embeddings = get_embedder(
+    #     embedder_config=inputs.embedder_config,
+    # )
     documents_to_be_upserted = []
     logger.info(
         f"Processing {len(loaded_data_points)} new documents and completed: {documents_ingested_count}"

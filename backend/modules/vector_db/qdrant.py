@@ -46,6 +46,7 @@ class QdrantVectorDB(BaseVectorDB):
         # Calculate embedding size
         partial_embeddings = embeddings.embed_documents(["Initial document"])
         vector_size = len(partial_embeddings[0])
+        print(f"Vector size: {vector_size}")
 
         self.qdrant_client.create_collection(
             collection_name=collection_name,

@@ -1,5 +1,5 @@
 # A global registry to store all available embedders.
-from backend.modules.ai_gateway import model_gateway
+from backend.modules.model_gateway import model_gateway
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain.embeddings.base import Embeddings
 from langchain_community.storage.redis import RedisStore
@@ -54,12 +54,12 @@ def get_embedder(
     Returns:
         Embeddings: An instance of the specified embedding class.
     """
-    base_embedder: Embeddings = None
-    api_format = model_gateway.get_api_format_for_model(embedder_config)
-    if api_format == "openai":
-        base_embedder = OpenAIEmbeddings(
-            api_key=settings.OPENAI_API_KEY, model=embedder_config.model_name
-        )
+    # base_embedder: Embeddings = None
+    # api_format = model_gateway.get_api_format_for_model(embedder_config)
+    # if api_format == "openai":
+    #     base_embedder = OpenAIEmbeddings(
+    #         api_key=settings.OPENAI_API_KEY, model=embedder_config.model_name
+    #     )
         
     # global EMBEDDER_REGISTRY
     # if embedder_config.provider not in EMBEDDER_REGISTRY:
