@@ -219,15 +219,26 @@ export const qafoundryApi = createApi({
 
     // * Mutations
     uploadDataToDataDirectory: builder.mutation({
-      query: (payload: {
-        collection_name: string
-        filepaths: string[]
-        upload_name: string
-      }) => ({
+      query: (payload: { filepaths: string[]; upload_name: string }) => ({
         url: '/v1/internal/upload-to-data-directory',
         body: payload,
         method: 'POST',
       }),
+    }),
+    uploadDataToLocalDirectory: builder.mutation({
+      query: (payload: { files: File[]; upload_name: string }) => {
+        var bodyFormData = new FormData()
+        bodyFormData.append('upload_name', payload.upload_name)
+        payload.files.forEach((file) => {
+          bodyFormData.append('files', file)
+        })
+        return {
+          url: '/v1/internal/upload-to-local-directory',
+          body: bodyFormData,
+          method: 'POST',
+          formData: true,
+        }
+      },
     }),
     createCollection: builder.mutation({
       query: (payload: object) => ({
@@ -260,6 +271,13 @@ export const qafoundryApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Collections', 'CollectionNames', 'CollectionDetails'],
+    }),
+    deleteDataSource: builder.mutation({
+      query: (payload: { data_source_fqn: string }) => ({
+        url: `/v1/data_source/delete?data_source_fqn=${payload.data_source_fqn}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DataSources'],
     }),
     queryCollection: builder.mutation<
       QueryAnswer,
@@ -311,10 +329,12 @@ export const {
 
   // mutations
   useUploadDataToDataDirectoryMutation,
+  useUploadDataToLocalDirectoryMutation,
   useCreateCollectionMutation,
   useAddDocsToCollectionMutation,
   useUnassociateDataSourceMutation,
   useDeleteCollectionMutation,
+  useDeleteDataSourceMutation,
   useQueryCollectionMutation,
   useAddDataSourceMutation,
   useIngestDataSourceMutation,
