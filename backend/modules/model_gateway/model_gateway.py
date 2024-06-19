@@ -46,9 +46,6 @@ class ModelGateway:
                               
         return models
     
-    def call_model():
-        pass
-    
     def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
         if model_name not in self.modelsToProviderMap:
             raise ValueError(f"Model {model_name} not registered in the model gateway.")

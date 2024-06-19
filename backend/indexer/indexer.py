@@ -216,9 +216,6 @@ async def ingest_data_points(
     embeddings = model_gateway.get_embedder_from_model_config(
         model_name=inputs.embedder_config.model_config.name
     )
-    # embeddings = get_embedder(
-    #     embedder_config=inputs.embedder_config,
-    # )
     documents_to_be_upserted = []
     logger.info(
         f"Processing {len(loaded_data_points)} new documents and completed: {documents_ingested_count}"

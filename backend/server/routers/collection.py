@@ -82,7 +82,6 @@ def create_collection(collection: CreateCollectionDto):
             embeddings=model_gateway.get_embedder_from_model_config(
                 model_name=collection.embedder_config.model_config.name
             ),
-            # embeddings=get_embedder(collection.embedder_config),
         )
         if collection.associated_data_sources:
             for data_source in collection.associated_data_sources:
