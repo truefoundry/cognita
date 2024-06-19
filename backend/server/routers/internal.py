@@ -1,3 +1,4 @@
+import os
 import uuid
 from types import SimpleNamespace
 from typing import Optional
@@ -9,10 +10,50 @@ from truefoundry import ml
 from truefoundry.ml import DataDirectory
 
 from backend.logger import logger
+from backend.server.routers.data_source import add_data_source
 from backend.settings import settings
-from backend.types import EmbedderConfig, LLMConfig, ModelType, UploadToDataDirectoryDto
+from backend.types import (
+    CreateDataSource,
+    EmbedderConfig,
+    LLMConfig,
+    ModelType,
+    UploadToDataDirectoryDto,
+)
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
+
+
+@router.post("/upload-to-docker-directory")
+async def upload_to_docker_directory(req: UploadToDataDirectoryDto):
+    """This function creates a folder within `/volumes/user_data/` given by the name req.upload_name in the docker volume and add symlinks of the files in the folder."""
+    if settings.LOCAL == False:
+        return JSONResponse(
+            content={"error": "API only supported for local docker environment"},
+            status_code=500,
+        )
+    try:
+        # Create a folder with the name req.upload_name in the docker volume.
+        folder_path = os.path.abspath(f"./volumes/user_data/{req.upload_name}")
+        os.makedirs(folder_path, exist_ok=False)
+
+        # Create symlinks of the files in the folder.
+        for filepath in req.filepaths:
+            filename = os.path.basename(filepath)
+            symlink_path = f"{folder_path}/{filename}"
+            os.symlink(filepath, symlink_path)
+
+        data_source = CreateDataSource(
+            type="localdir",
+            uri=folder_path,
+        )
+
+        # Add the data source to the metadata store.
+        return await add_data_source(data_source)
+    except Exception as ex:
+        return JSONResponse(
+            content={"error": f"Error uploading files to docker directory: {ex}"},
+            status_code=500,
+        )
 
 
 @router.post("/upload-to-data-directory")

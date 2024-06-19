@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from typing import Dict, Iterator, List
 
 from backend.logger import logger
@@ -28,8 +29,12 @@ class LocalDirLoader(BaseDataLoader):
 
         # Check if the source_dir is a relative path or an absolute path.
         if not os.path.isabs(source_dir):
+            logger.info("source_dir is a relative path")
             source_dir = os.path.join(os.getcwd(), source_dir)
 
+        logger.info(
+            f"CURRENT DIR:{os.getcwd()}, Path exists: {os.path.exists(source_dir)}, Dir contents: {os.listdir(source_dir)}"
+        )
         # Check if the source directory exists.
         if not os.path.exists(source_dir):
             raise Exception("Source directory does not exist")
@@ -41,8 +46,19 @@ class LocalDirLoader(BaseDataLoader):
             # Temrinate the function
             return
 
+        def copy(src, dst):
+            if os.path.islink(src):
+                linkto = os.readlink(src)
+                os.symlink(linkto, dst)
+            else:
+                shutil.copyfile(src, dst, follow_symlinks=True)
+
         # Copy the entire directory (including subdirectories) from source to destination.
-        shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
+        shutil.copytree(
+            source_dir, dest_dir, dirs_exist_ok=True, symlinks=False, copy_function=copy
+        )
+
+        logger.info(f"Dest dir contents: {os.listdir(dest_dir)}")
 
         loaded_data_points: List[LoadedDataPoint] = []
         for root, d_names, f_names in os.walk(dest_dir):
@@ -52,10 +68,13 @@ class LocalDirLoader(BaseDataLoader):
                 full_path = os.path.join(root, f)
                 rel_path = os.path.relpath(full_path, dest_dir)
                 file_ext = os.path.splitext(f)[1]
+                logger.info(
+                    f"full_path: {full_path}, rel_path: {rel_path}, file_ext: {file_ext}"
+                )
                 data_point = DataPoint(
                     data_source_fqn=data_source.fqn,
                     data_point_uri=rel_path,
-                    data_point_hash=str(os.path.getsize(full_path)),
+                    data_point_hash=str(os.lstat(full_path)),
                     local_filepath=full_path,
                     file_extension=file_ext,
                 )
