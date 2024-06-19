@@ -1,6 +1,8 @@
 import asyncio
 import json
+import os
 import random
+import shutil
 import string
 from typing import Any, Dict, List
 
@@ -9,6 +11,7 @@ from prisma import Prisma
 
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
+from backend.settings import settings
 from backend.types import (
     AssociateDataSourceWithCollection,
     AssociatedDataSources,
@@ -306,6 +309,68 @@ class PrismaStore(BaseMetadataStore):
         except Exception as e:
             logger.error(f"Failed to list data sources: {e}")
             raise HTTPException(status_code=500, detail="Failed to list data sources")
+
+    async def delete_data_source(self, data_source_fqn: str):
+        if settings.LOCAL == False:
+            logger.error(f"Data source deletion is not allowed in local mode")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source deletion is not allowed in local mode",
+            )
+        # Check if data source exists if not raise an error
+        try:
+            data_source = await self.get_data_source_from_fqn(data_source_fqn)
+            if not data_source:
+                logger.error(f"Data source with fqn {data_source_fqn} does not exist")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Data source with fqn {data_source_fqn} does not exist",
+                )
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        # Check if data source is associated with any collection
+        try:
+            collections = await self.get_collections()
+            for collection in collections:
+                associated_data_sources = collection.associated_data_sources
+                if (
+                    associated_data_sources
+                    and data_source_fqn in associated_data_sources
+                ):
+                    logger.error(
+                        f"Data source with fqn {data_source_fqn} is already associated with collection {collection.name}"
+                    )
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Data source with fqn {data_source_fqn} is associated with collection {collection.name}. Delete the necessary collections or unassociate them from the collection(s) before deleting the data source",
+                    )
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        # Delete the data source
+        try:
+            logger.info(f"Data source to delete: {data_source}")
+            await self.db.datasource.delete(where={"fqn": data_source.fqn})
+            # Delete the data from `/users_data` directory if data source is of type `localdir`
+            if data_source.type == "localdir":
+                data_source_uri = data_source.uri
+                # data_source_uri is of the form: `/app/users_data/folder_name`
+                folder_name = data_source_uri.split("/")[-1]
+                folder_path = os.path.join("/app/user_data", folder_name)
+                logger.info(
+                    f"Deleting folder: {folder_path}, path exists: {os.path.exists(folder_path)}"
+                )
+                if os.path.exists(folder_path):
+                    shutil.rmtree(folder_path)
+                else:
+                    logger.error(f"Folder does not exist: {folder_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to delete data source: {e}")
+            raise HTTPException(status_code=500, detail="Failed to delete data source")
 
     ######
     # DATA INGESTION RUN APIS

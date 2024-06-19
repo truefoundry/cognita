@@ -1,6 +1,7 @@
 import asyncio
+from urllib.parse import unquote
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import JSONResponse
 
 from backend.logger import logger
@@ -68,6 +69,28 @@ async def add_data_source(
         return JSONResponse(
             content={"data_source": created_data_source.dict()}, status_code=201
         )
+    except HTTPException as exp:
+        raise exp
+    except Exception as exp:
+        logger.exception(exp)
+        raise HTTPException(status_code=500, detail=str(exp))
+
+
+@router.delete("/delete")
+async def delete_data_source(data_source_fqn: str):
+    """Delete a data source"""
+    decoded_data_source_fqn = unquote(data_source_fqn)
+    logger.info(f"Deleting data source: {decoded_data_source_fqn}")
+    try:
+        client = await get_client()
+        if isinstance(client, TrueFoundry):
+            raise HTTPException(
+                status_code=501,
+                detail="Truefoundry Metadatastore does not support delete data source",
+            )
+        else:
+            await client.delete_data_source(decoded_data_source_fqn)
+            return JSONResponse(content={"deleted": True})
     except HTTPException as exp:
         raise exp
     except Exception as exp:

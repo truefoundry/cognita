@@ -168,6 +168,13 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def delete_data_source(self, data_source_fqn: str):
+        """
+        Delete a data source from the metadata store
+        """
+        pass
+
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:
     return f"{FQN_SEPARATOR}".join([data_source.type, data_source.uri])
