@@ -13,6 +13,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
+-   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. What it means for you is, you can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
 -   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
 -   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
 -   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
@@ -93,13 +94,8 @@ docker-compose --env-file compose.env up --build
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
 -   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
--   Backend uses `local.metadata.yaml` file for configuration. You can modify it as per your needs. The file is used to setup collection name, different data source path, and embedder configurations. Before starting of backend an indexer job is run to index the data sources mentioned in `local.metadata.yaml` file.
-
-:warning: **Note**: Currently UI supports only QnA and not the data source and collection creation. These have to be done via `local.metadata.yaml` only. Post that restart the docker-compose services. The work is in progress to bring that facility via UI as well and make the experience seamless.
 
 ## Cognita from source
-
-You can play around with the code locally using the python [script](#rocket-quickstart-running-cognita-locally) or using the UI component that ships with the code.
 
 ### :snake: Installing Python and Setting Up a Virtual Environment
 
@@ -185,17 +181,9 @@ pip install -r backend/requirements.txt
 
 ### Executing the Code:
 
--   Now we index the data (`sample-data/creditcards`) by executing the following command from project root:
-
-    ```
-    python -m local.ingest
-    ```
-
--   You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
+-   You can start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
 
 -   To use frontend UI for quering you can go to : `cd frontend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md). You can then query the documents using the UI hosted at `http://localhost:5000/`
-
-> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations. You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`. To run the query execute the query script from project root: `python -m local.run`
 
 # :hammer_and_pick: Project Architecture
 
@@ -262,68 +250,6 @@ Overall the architecture of Cognita is composed of several entities
 7. The answer and relevant document chunks are returned in response.
 
     **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
-
-## :computer: Code Structure:
-
-Entire codebase lives in `backend/`
-
-```
-.
-|-- Dockerfile
-|-- README.md
-|-- __init__.py
-|-- backend/
-|   |-- indexer/
-|   |   |-- __init__.py
-|   |   |-- indexer.py
-|   |   |-- main.py
-|   |   `-- types.py
-|   |-- modules/
-|   |   |-- __init__.py
-|   |   |-- dataloaders/
-|   |   |   |-- __init__.py
-|   |   |   |-- loader.py
-|   |   |   |-- localdirloader.py
-|   |   |   `-- ...
-|   |   |-- embedder/
-|   |   |   |-- __init__.py
-|   |   |   |-- embedder.py
-|   |   |   -- mixbread_embedder.py
-|   |   |   `-- embedding.requirements.txt
-|   |   |-- metadata_store/
-|   |   |   |-- base.py
-|   |   |   |-- client.py
-|   |   |   `-- truefoundry.py
-|   |   |-- parsers/
-|   |   |   |-- __init__.py
-|   |   |   |-- parser.py
-|   |   |   |-- pdfparser_fast.py
-|   |   |   `-- ...
-|   |   |-- query_controllers/
-|   |   |   |-- default/
-|   |   |   |   |-- controller.py
-|   |   |   |   `-- types.py
-|   |   |   |-- query_controller.py
-|   |   |-- reranker/
-|   |   |   |-- mxbai_reranker.py
-|   |   |   |-- reranker.requirements.txt
-|   |   |   `-- ...
-|   |   `-- vector_db/
-|   |       |-- __init__.py
-|   |       |-- base.py
-|   |       |-- qdrant.py
-|   |       `-- ...
-|   |-- requirements.txt
-|   |-- server/
-|   |   |-- __init__.py
-|   |   |-- app.py
-|   |   |-- decorators.py
-|   |   |-- routers/
-|   |   `-- services/
-|   |-- settings.py
-|   |-- types.py
-|   `-- utils.py
-```
 
 ## Customizing the Code for your usecase
 
@@ -395,11 +321,6 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 -   To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
 
 -   Register the vectordb under `backend/modules/vector_db/__init__.py`
-
-### Rerankers:
-
--   Rerankers are used to sort relavant documents such that top k docs can be used as context effectively reducing the context and prompt in general.
--   Sample reranker is written under `backend/modules/reranker/mxbai_reranker.py`
 
 # :bulb: Writing your Query Controller (QnA):
 
