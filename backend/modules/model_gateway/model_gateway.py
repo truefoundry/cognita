@@ -50,8 +50,12 @@ class ModelGateway:
         if model_name not in self.modelsToProviderMap:
             raise ValueError(f"Model {model_name} not registered in the model gateway.")
         model_provider_config: ModelProviderConfig = self.modelsToProviderMap[model_name]
+        if not model_provider_config.api_key_env_var:
+            api_key = None
+        else:
+            api_key = os.environ.get(model_provider_config.api_key_env_var, '')
         return OpenAIEmbeddings(
-            openai_api_key=os.environ[model_provider_config.api_key_env_var], 
+            openai_api_key=api_key, 
             model=model_name.split("/")[1],
             openai_api_base=model_provider_config.base_url
         )
@@ -62,12 +66,15 @@ class ModelGateway:
         model_provider_config: ModelProviderConfig = self.modelsToProviderMap[model_config.name]
         if not model_config.parameters:
            model_config.parameters = {} 
-        print("base_url", model_provider_config.base_url)
+        if not model_provider_config.api_key_env_var:
+            api_key = None
+        else:
+            api_key = os.environ.get(model_provider_config.api_key_env_var, '')
         return ChatOpenAI(
                 model=model_config.name.split("/")[1],
                 temperature=model_config.parameters.get("temperature", 0.1),
                 streaming=stream,
-                # api_key=os.environ.get(model_provider_config.api_key_env_var, ''),
+                api_key=api_key,
                 base_url=model_provider_config.base_url
             )
     

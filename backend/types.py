@@ -186,7 +186,7 @@ class EmbeddingCacheConfig(BaseModel):
     Embedding cache configuration
     """
 
-    # provider: str
+    provider: str
     name: str = Field(title="Name of the model")
     base_url:str = Field(title="Base URL of the model")
     config: Optional[dict] = None
