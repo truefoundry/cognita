@@ -40,14 +40,14 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
 
   useEffect(() => {
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].name)
     }
   }, [allEmbeddingModels])
 
   const resetForm = () => {
     setCollectionName('')
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].name)
     }
     setChunkSize(1000)
     setSelectedDataSource('none')
@@ -66,7 +66,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         )
       }
       const embeddingModel = allEmbeddingModels.find(
-        (model: any) => model.config.model == selectedEmbeddingModel
+        (model: any) => model.name == selectedEmbeddingModel
       )
 
       const params = {
@@ -74,7 +74,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         embedder_config: {
           provider: embeddingModel.provider,
           config: {
-            model: embeddingModel.config.model,
+            model: embeddingModel.name,
           },
         },
         chunk_size: chunkSize,
@@ -210,8 +210,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                 }}
               >
                 {allEmbeddingModels?.map((model: any) => (
-                  <MenuItem value={model.config.model} key={model.config.model}>
-                    {model.config.model}
+                  <MenuItem value={model.name} key={model.name}>
+                    {model.name}
                   </MenuItem>
                 ))}
               </Select>
