@@ -12,18 +12,18 @@ import { IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
 import notify from '@/components/base/molecules/Notify'
 
 const DeleteDataSource = ({ fqn }: { fqn: string }) => {
-  const [deleteDataSource, { isLoading, error }] = useDeleteDataSourceMutation()
+  const [deleteDataSource, { isLoading }] = useDeleteDataSourceMutation()
 
   const handleSubmit = async () => {
     try {
-      const res = await deleteDataSource({ data_source_fqn: fqn })
-      if (res?.error?.data?.detail)
-        notify('error', 'Something went wrong!', res.error.data.detail)
+      await deleteDataSource({ data_source_fqn: fqn }).unwrap()
+      notify('success', 'Data Source is successfully deleted!')
     } catch (e) {
       notify(
         'error',
         'Something went wrong!',
-        'The data source deletion failed. Please try again later.'
+        e?.data?.detail ??
+          'The data source deletion failed. Please try again later.'
       )
     }
   }
@@ -76,21 +76,20 @@ const DataHub = () => {
         </div>
       ),
     },
-    // TODO: Fix Later
-    // ...(IS_LOCAL_DEVELOPMENT
-    //   ? [
-    //       {
-    //         field: 'actions',
-    //         headerName: '',
-    //         width: 80,
-    //         renderCell: (params: GridRenderCellParams) => (
-    //           <div className="w-full flex justify-center">
-    //             <DeleteDataSource fqn={params.row.fqn as string} />
-    //           </div>
-    //         ),
-    //       },
-    //     ]
-    //   : []),
+    ...(IS_LOCAL_DEVELOPMENT
+      ? [
+          {
+            field: 'actions',
+            headerName: '',
+            width: 80,
+            renderCell: (params: GridRenderCellParams) => (
+              <div className="w-full flex justify-center">
+                <DeleteDataSource fqn={params.row.fqn as string} />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
   const rows = useMemo(
     () =>
