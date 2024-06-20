@@ -14,12 +14,7 @@ from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.server.routers.data_source import add_data_source
 from backend.settings import settings
-from backend.types import (
-    CreateDataSource,
-    EmbedderConfig,
-    ModelType,
-    UploadToDataDirectoryDto,
-)
+from backend.types import CreateDataSource, ModelType, UploadToDataDirectoryDto
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 

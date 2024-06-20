@@ -168,7 +168,6 @@ class MultiModalRAGQueryController:
                     detail="Reranker service is not available",
                 )
 
-            return compression_retriever
         except Exception as e:
             logger.error(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(

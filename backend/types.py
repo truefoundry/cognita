@@ -115,6 +115,31 @@ class ModelProviderConfig(BaseModel):
     base_url: Optional[str] = None
 
 
+class ModelType(str, Enum):
+    """
+    Model types available in LLM gateway
+    """
+
+    completion = "completion"
+    chat = "chat"
+    embedding = "embedding"
+
+
+class ModelConfig(BaseModel):
+    name: str
+    type: Optional[ModelType]
+    parameters: Optional[Dict[str, Any]] = None
+
+
+class ModelProviderConfig(BaseModel):
+    provider_name: str
+    api_format: str
+    llm_model_ids: List[str]
+    embedding_model_ids: List[str]
+    api_key_env_var: str
+    base_url: Optional[str] = None
+
+
 class EmbedderConfig(BaseModel):
     """
     Embedder configuration
