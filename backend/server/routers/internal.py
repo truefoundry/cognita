@@ -12,7 +12,7 @@ from truefoundry.ml import DataDirectory
 
 from backend.logger import logger
 from backend.settings import settings
-from backend.types import EmbedderConfig, LLMConfig, ModelType, UploadToDataDirectoryDto
+from backend.types import ModelType, UploadToDataDirectoryDto
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 

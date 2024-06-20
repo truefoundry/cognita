@@ -99,7 +99,7 @@ class BasicRAGQueryController:
         """
         Get the LLM
         """
-        return model_gateway.get_llm_from_model_config(model_configuration)
+        return model_gateway.get_llm_from_model_config(model_configuration, stream)
 
     async def _get_vector_store(self, collection_name: str):
         """
@@ -115,7 +115,6 @@ class BasicRAGQueryController:
             embeddings=model_gateway.get_embedder_from_model_config(
                 model_name=collection.embedder_config.model_config.name
             )
-            # (collection.embedder_config),
         )
 
     def _get_vector_store_retriever(self, vector_store, retriever_config):

@@ -71,7 +71,6 @@ class LocalMetadataStore(BaseMetadataStore):
                 embeddings=model_gateway.get_embedder_from_model_config(
                     model_name=self.local_metadata.embedder_config.model_config.name
                 ),
-                # embeddings=get_embedder(self.local_metadata.embedder_config),
             )
             self.data_ingestion_runs = []
             logger.debug(f"Local metadata store initialized with {self.local_metadata}")

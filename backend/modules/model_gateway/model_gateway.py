@@ -1,9 +1,9 @@
 import json
 from pydantic import BaseModel
 from typing import List, Optional
-from backend.types import ModelConfig, EmbedderConfig, LLMConfig, ModelProviderConfig, ModelType
+from backend.types import ModelConfig, ModelProviderConfig, ModelType
 from langchain.embeddings.base import Embeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai.chat_models import ChatOpenAI
 import os
@@ -35,7 +35,7 @@ class ModelGateway:
                               
         return models
     
-    def get_llm_models(self) -> List[LLMConfig]:
+    def get_llm_models(self) -> List[ModelConfig]:
         models: List[ModelConfig] = []
         for list in self.config:
             for model_id in list.llm_model_ids:
@@ -57,24 +57,18 @@ class ModelGateway:
         )
     
     def get_llm_from_model_config(self, model_config: ModelConfig, stream=False) -> BaseChatModel:
-        for key in self.modelsToProviderMap:
-            print(key)
         if model_config.name not in self.modelsToProviderMap:
             raise ValueError(f"Model {model_config.name} not registered in the model gateway.")
         model_provider_config: ModelProviderConfig = self.modelsToProviderMap[model_config.name]
         if not model_config.parameters:
            model_config.parameters = {} 
+        print("base_url", model_provider_config.base_url)
         return ChatOpenAI(
                 model=model_config.name.split("/")[1],
                 temperature=model_config.parameters.get("temperature", 0.1),
                 streaming=stream,
+                # api_key=os.environ.get(model_provider_config.api_key_env_var, ''),
+                base_url=model_provider_config.base_url
             )
-    
-    def get_api_format_for_model(self, config: EmbedderConfig | LLMConfig):
-        provider = config.model_name.split("/")[0]
-        for list in self.config:
-            if list.provider_name == provider:
-                return list.api_format
-        return None
     
 model_gateway = ModelGateway()
