@@ -13,7 +13,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
--   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. What it means for you is, you can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
+-   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
 -   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
 -   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
 -   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
