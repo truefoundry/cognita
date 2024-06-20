@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -67,5 +68,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-# Check the env vars set
-print("Settings: ", settings)

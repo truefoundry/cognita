@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import get_client
 from backend.modules.metadata_store.truefoundry import TrueFoundry
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.types import (
     AssociateDataSourceWithCollection,
@@ -112,7 +112,9 @@ async def create_collection(collection: CreateCollectionDto):
 
         VECTOR_STORE_CLIENT.create_collection(
             collection_name=collection.name,
-            embeddings=get_embedder(collection.embedder_config),
+            embeddings=model_gateway.get_embedder_from_model_config(
+                model_name=collection.embedder_config.model_config.name
+            ),
         )
         logger.info(f"Created collection... {created_collection}")
 

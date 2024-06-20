@@ -1,5 +1,6 @@
 import os
 import uuid
+from http.client import HTTPException
 from types import SimpleNamespace
 from typing import List, Optional
 
@@ -10,12 +11,12 @@ from truefoundry import ml
 from truefoundry.ml import DataDirectory
 
 from backend.logger import logger
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.server.routers.data_source import add_data_source
 from backend.settings import settings
 from backend.types import (
     CreateDataSource,
     EmbedderConfig,
-    LLMConfig,
     ModelType,
     UploadToDataDirectoryDto,
 )
@@ -107,98 +108,16 @@ def get_enabled_models(
     model_type: Optional[ModelType] = Query(default=None),
 ):
     enabled_models = []
-
-    # Local Embedding models
     if model_type == ModelType.embedding:
-        if settings.EMBEDDING_SVC_URL:
-            try:
-                url = f"{settings.EMBEDDING_SVC_URL.rstrip('/')}/models"
-                response = requests.get(url=url).json()
-                for models in response["data"]:
-                    if "rerank" not in models["id"]:
-                        enabled_models.append(
-                            EmbedderConfig(
-                                provider="infinity",
-                                config={"model": models["id"]},
-                            ).dict()
-                        )
-            except Exception as ex:
-                logger.error(f"Error fetching embedding models: {ex}")
+        enabled_models = model_gateway.get_embedding_models()
+    elif model_type == ModelType.chat:
+        enabled_models = model_gateway.get_llm_models()
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid model type: {model_type}",
+        )
 
-    # Local LLM models
-    if model_type == ModelType.chat:
-        if settings.OLLAMA_URL:
-            try:
-                # OLLAMA models
-                url = f"{settings.OLLAMA_URL.rstrip('/')}/api/tags"
-                response = requests.get(url=url)
-                data = response.json()
-                for model in data["models"]:
-                    enabled_models.append(
-                        LLMConfig(
-                            name=f"ollama/{model['model']}",
-                            parameters={"temparature": 0.1},
-                            provider="ollama",
-                        ).dict()
-                    )
-            except Exception as ex:
-                logger.error(f"Error fetching ollama models: {ex}")
-
-            # Similarly u can add other local models fetch from api
-
-        if settings.OPENAI_API_KEY:
-            try:
-                # OpenAI models
-                url = "https://api.openai.com/v1/models"
-                headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
-                response = requests.get(url=url)
-                data = response.json()
-                # TODO: Add the models to the enabled_models list
-            except Exception as ex:
-                logger.error(f"Error fetching openai models: {ex}")
-
-    # Models from the llm gateway
-    if settings.TFY_API_KEY:
-        try:
-            url = (
-                f"{settings.TFY_HOST.rstrip('/')}/api/svc/v1/llm-gateway/model/enabled"
-            )
-            headers = {"Authorization": f"Bearer {settings.TFY_API_KEY}"}
-            response = requests.get(url=url, headers=headers)
-            response.raise_for_status()
-
-            data: dict[str, dict[str, list[dict]]] = response.json()
-
-            for provider_accounts in data.values():
-                for models in provider_accounts.values():
-                    for model in models:
-                        if model_type is None or model_type in model["types"]:
-                            if model_type == ModelType.embedding:
-                                enabled_models.append(
-                                    EmbedderConfig(
-                                        provider="truefoundry",
-                                        config={"model": model["model_fqn"]},
-                                    ).dict()
-                                )
-
-                            elif model_type == ModelType.chat:
-                                enabled_models.append(
-                                    LLMConfig(
-                                        name=model["model_fqn"],
-                                        parameters={"temparature": 0.1},
-                                        provider="truefoundry",
-                                    ).dict()
-                                )
-                            elif model_type == ModelType.completion:
-                                enabled_models.append(
-                                    LLMConfig(
-                                        name=model["model_fqn"],
-                                        parameters={"temparature": 0.9},
-                                        provider="truefoundry",
-                                    ).dict()
-                                )
-        except Exception as ex:
-            logger.error(f"Error fetching openai models: {ex}")
     return JSONResponse(
         content={"models": enabled_models},
     )
