@@ -13,8 +13,6 @@ router = APIRouter(prefix="/v1/data_source", tags=["data_source"])
 
 
 @router.get("")
-# TODO: Keep additional route until FE is updated
-@router.get("/")
 async def get_data_source():
     """Get data sources"""
     try:
@@ -49,8 +47,6 @@ async def list_data_sources():
 
 
 @router.post("")
-# TODO: Keep additional route until FE is updated
-@router.post("/")
 async def add_data_source(
     data_source: CreateDataSource,
 ):
