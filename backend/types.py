@@ -98,12 +98,14 @@ class ModelType(str, Enum):
     completion = "completion"
     chat = "chat"
     embedding = "embedding"
-    
+
+
 class ModelConfig(BaseModel):
     name: str
     type: Optional[ModelType]
     parameters: Optional[Dict[str, Any]] = None
-    
+
+
 class ModelProviderConfig(BaseModel):
     provider_name: str
     api_format: str
@@ -112,10 +114,12 @@ class ModelProviderConfig(BaseModel):
     api_key_env_var: str
     base_url: Optional[str] = None
 
+
 class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
+
     # model_name: str
     model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
@@ -181,6 +185,7 @@ class MetadataStoreConfig(BaseModel):
     provider: str
     config: Optional[dict] = None
 
+
 class EmbeddingCacheConfig(BaseModel):
     """
     Embedding cache configuration
@@ -188,8 +193,9 @@ class EmbeddingCacheConfig(BaseModel):
 
     provider: str
     name: str = Field(title="Name of the model")
-    base_url:str = Field(title="Base URL of the model")
+    base_url: str = Field(title="Base URL of the model")
     config: Optional[dict] = None
+
 
 class RetrieverConfig(BaseModel):
     """
@@ -416,9 +422,9 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: constr(regex=r"^[a-z][a-z0-9]*$") = Field(  # type: ignore
+    name: constr(regex=r"^[a-z][a-z0-9-]*$") = Field(  # type: ignore
         title="a unique name to your collection",
-        description="Should only contain lowercase alphanumeric character",
+        description="Should only contain lowercase alphanumeric character and hypen, should start with alphabet",
     )
     description: Optional[str] = Field(
         title="a description for your collection",

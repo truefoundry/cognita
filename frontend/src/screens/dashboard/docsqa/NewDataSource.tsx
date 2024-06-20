@@ -6,11 +6,15 @@ import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
-import { DOCS_QA_MAX_UPLOAD_SIZE_MB } from '@/stores/constants'
+import {
+  DOCS_QA_MAX_UPLOAD_SIZE_MB,
+  IS_LOCAL_DEVELOPMENT,
+} from '@/stores/constants'
 import {
   useAddDataSourceMutation,
   useGetDataLoadersQuery,
   useUploadDataToDataDirectoryMutation,
+  useUploadDataToLocalDirectoryMutation,
 } from '@/stores/qafoundry'
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
@@ -48,10 +52,11 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
-  const pattern = /^[a-z0-9\-]+$/
+  const pattern = /^[a-z][a-z0-9-]*$/
   const isValidUploadName = pattern.test(uploadName)
 
   const [uploadDataToDataDirectory] = useUploadDataToDataDirectoryMutation()
+  const [uploadDataToLocalDirectory] = useUploadDataToLocalDirectoryMutation()
   const [addDataSource] = useAddDataSourceMutation()
 
   useEffect(() => {
@@ -131,12 +136,20 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
 
       let fqn
       if (selectedDataSourceType === 'localdir') {
-        const ddFqn = await uploadDocs()
-        const res = await addDataSource({
-          type: 'truefoundry',
-          uri: ddFqn,
-          metadata: {},
-        }).unwrap()
+        let res
+        if (IS_LOCAL_DEVELOPMENT) {
+          res = await uploadDataToLocalDirectory({
+            files: files?.map((f) => f.file),
+            upload_name: uploadName,
+          }).unwrap()
+        } else {
+          const ddFqn = await uploadDocs()
+          res = await addDataSource({
+            type: 'truefoundry',
+            uri: ddFqn,
+            metadata: {},
+          }).unwrap()
+        }
         fqn = res.data_source?.fqn
       } else {
         const res = await addDataSource({

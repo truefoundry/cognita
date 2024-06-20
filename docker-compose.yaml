@@ -1,5 +1,30 @@
 version: "3.8"
 services:
+    db:
+        image: postgres:13
+        container_name: cognita-postgres
+        restart: unless-stopped
+        ports:
+            - "${POSTGRES_PORT}:5432"
+        volumes:
+            - ./volumes/pgdata:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+                ]
+            interval: 30s
+            timeout: 60s
+            retries: 5
+            start_period: 80s
+        networks:
+            - cognita-docker
+
     ollama-server:
         image: ollama/ollama:0.1.42
         pull_policy: if_not_present
@@ -80,8 +105,13 @@ services:
             infinity-server:
                 condition: service_healthy
                 restart: true
+            db:
+                condition: service_healthy
+                restart: true
         volumes:
             - .:/app
+            - ./volumes/pgdata:/var/lib/postgresql/data
+            - ./volumes/user_data:/app/user_data
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
             interval: 30s
@@ -89,17 +119,19 @@ services:
             retries: 3
         environment:
             - DEBUG_MODE=true
+            - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
-            - OLLAMA_URL=${OLLAMA_URL}
-            - EMBEDDING_SVC_URL=${EMBEDDING_SVC_URL}
-            - RERANKER_SVC_URL=${RERANKER_SVC_URL}
+            - OLLAMA_URL=http://ollama-server:${OLLAMA_PORT}
+            - EMBEDDING_SVC_URL=http://infinity-server:${INFINITY_PORT}
+            - RERANKER_SVC_URL=http://infinity-server:${INFINITY_PORT}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
-            - TFY_API_URL=${TFY_API_KEY}
+            - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DOCKER_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         entrypoint: /bin/bash
-        command: -c "set -e; python -m local.ingest && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
+        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
         networks:
             - cognita-docker
 
@@ -107,6 +139,13 @@ services:
         build:
             context: ./frontend
             dockerfile: ./Dockerfile
+            args:
+                - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
+                - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
+                - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
+                - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
+                - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
+                - VITE_USE_LOCAL=${LOCAL}
         restart: unless-stopped
         container_name: cognita-frontend
         ports:
@@ -121,12 +160,8 @@ services:
             cognita-backend:
                 condition: service_healthy
                 restart: true
-        environment:
-            - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
-            - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
-            - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
-            - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
-            - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
+        networks:
+            - cognita-docker
 
 networks:
     cognita-docker:

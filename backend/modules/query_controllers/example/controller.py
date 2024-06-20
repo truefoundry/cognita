@@ -2,7 +2,6 @@ import asyncio
 import json
 
 import async_timeout
-from backend.types import ModelConfig
 from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
@@ -15,7 +14,9 @@ from langchain_openai.chat_models import ChatOpenAI
 from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
+from backend.modules.metadata_store.truefoundry import TrueFoundry
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
@@ -38,7 +39,7 @@ from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
-from backend.modules.model_gateway.model_gateway import model_gateway
+from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -105,16 +106,26 @@ class BasicRAGQueryController:
         """
         Get the vector store for the collection
         """
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(collection_name)
+        client = await get_client()
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            collection = await loop.run_in_executor(
+                None, client.get_collection_by_name, collection_name
+            )
+        else:
+            collection = await client.get_collection_by_name(collection_name)
 
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
+
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
             embeddings=model_gateway.get_embedder_from_model_config(
                 model_name=collection.embedder_config.model_config.name
-            )
+            ),
         )
 
     def _get_vector_store_retriever(self, vector_store, retriever_config):

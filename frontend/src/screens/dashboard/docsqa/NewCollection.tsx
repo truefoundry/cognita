@@ -35,7 +35,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const [createCollection] = useCreateCollectionMutation()
   const [ingestDataSource] = useIngestDataSourceMutation()
 
-  const pattern = /^[a-z][a-z0-9]*$/
+  const pattern = /^[a-z][a-z0-9-]*$/
   const isValidCollectionName = pattern.test(collectionName)
 
   useEffect(() => {
