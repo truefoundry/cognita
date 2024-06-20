@@ -124,7 +124,7 @@ export const qafoundryApi = createApi({
     // * Queries
     getCollections: builder.query<Collection[], void>({
       query: () => ({
-        url: '/v1/collections/',
+        url: '/v1/collections',
         responseHandler: (response) =>
           response
             .json()
@@ -186,12 +186,12 @@ export const qafoundryApi = createApi({
       query: () => ({
         url: '/v1/data_source/list',
         method: 'GET',
-        providesTags: ['DataSources'],
         responseHandler: (response) =>
           response
             .json()
             .then((data: { data_sources: DataSource[] }) => data.data_sources),
       }),
+      providesTags: ['DataSources'],
     }),
     getDataIngestionRuns: builder.query<DataIngestionRun[], any>({
       query: (payload: {
@@ -242,7 +242,7 @@ export const qafoundryApi = createApi({
     }),
     createCollection: builder.mutation({
       query: (payload: object) => ({
-        url: '/v1/collections/',
+        url: '/v1/collections',
         body: payload,
         method: 'POST',
       }),
@@ -291,7 +291,7 @@ export const qafoundryApi = createApi({
     }),
     addDataSource: builder.mutation({
       query: (payload: AddDataSourcePayload) => ({
-        url: '/v1/data_source/',
+        url: '/v1/data_source',
         body: payload,
         method: 'POST',
       }),

@@ -17,6 +17,7 @@ import { NavLink } from 'react-router-dom'
 import IconProvider from '@/components/assets/IconProvider'
 import { Link } from 'react-router-dom'
 import Button from '@/components/base/atoms/Button'
+import { baseQAFoundryPath } from '@/stores/qafoundry'
 
 function getMenuOptions(): {
   label: string
@@ -151,7 +152,12 @@ export default function NavBar({ children }: any) {
             className="btn-xs text-sm h-7"
             text="View All APIs"
             onClick={() => {
-              window.open(`${window.location.origin}/api/`, '_blank')
+              window.open(
+                baseQAFoundryPath?.includes('http')
+                  ? `${baseQAFoundryPath}/`
+                  : `${window.location.origin}${baseQAFoundryPath}/`,
+                '_blank'
+              )
             }}
           />
           <div
