@@ -76,20 +76,21 @@ const DataHub = () => {
         </div>
       ),
     },
-    ...(IS_LOCAL_DEVELOPMENT
-      ? [
-          {
-            field: 'actions',
-            headerName: '',
-            width: 80,
-            renderCell: (params: GridRenderCellParams) => (
-              <div className="w-full flex justify-center">
-                <DeleteDataSource fqn={params.row.fqn as string} />
-              </div>
-            ),
-          },
-        ]
-      : []),
+    // TODO: Fix Later
+    // ...(IS_LOCAL_DEVELOPMENT
+    //   ? [
+    //       {
+    //         field: 'actions',
+    //         headerName: '',
+    //         width: 80,
+    //         renderCell: (params: GridRenderCellParams) => (
+    //           <div className="w-full flex justify-center">
+    //             <DeleteDataSource fqn={params.row.fqn as string} />
+    //           </div>
+    //         ),
+    //       },
+    //     ]
+    //   : []),
   ]
   const rows = useMemo(
     () =>
