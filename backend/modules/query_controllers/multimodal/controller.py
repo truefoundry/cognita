@@ -127,7 +127,9 @@ class MultiModalRAGQueryController:
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
-            embeddings=get_embedder(collection.embedder_config),
+            embeddings=model_gateway.get_embedder_from_model_config(
+                model_name=collection.embedder_config.model_config.name
+            ),
         )
 
     def _get_vector_store_retriever(self, vector_store, retriever_config):
