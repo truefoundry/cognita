@@ -191,24 +191,6 @@ class EmbeddingCacheConfig(BaseModel):
     base_url:str = Field(title="Base URL of the model")
     config: Optional[dict] = None
 
-
-class LLMConfig(BaseModel):
-    """
-    LLM configuration
-    """
-    model: ModelConfig
-    # model_name: str
-
-    # model_name: str = Field(title="Name of the model")
-    # model_fqn: str = Field(title="Fully qualified name of the model")
-    # base_url: Optional[str] = Field(title="Base URL of the model")
-    parameters: dict = None
-    # provider: Literal["openai", "ollama", "truefoundry"] = Field(
-    #     title="Model provider any one between openai, ollama, truefoundry",
-    #     default="truefoundry",
-    # )
-
-
 class RetrieverConfig(BaseModel):
     """
     Retriever configuration

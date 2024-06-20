@@ -10,10 +10,3 @@ parser_config:
 embedder_config:
     model_config:
         name: "openai/text-embedding-3-small"
-        # name: "mixedbread-ai/mxbai-embed-large-v1"
-# embedder_config:
-#     model_name: "mixedbread-ai/mxbai-embed-large-v1"
-#     model_fqn: "mixedbread-ai/mxbai-embed-large-v1"
-#     # provider: embedding-svc
-#     config:
-#         model: "mixedbread-ai/mxbai-embed-large-v1"
