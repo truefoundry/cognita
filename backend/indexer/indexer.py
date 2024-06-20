@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 from typing import Dict, List
@@ -11,11 +12,13 @@ from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.embedder.embedder import get_embedder
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
+from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
+    Collection,
     CreateDataIngestionRun,
     DataIngestionMode,
     DataIngestionRunStatus,
@@ -62,10 +65,21 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-        data_ingestion_run_name=inputs.data_ingestion_run_name,
-        status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
-    )
+    client = await get_client()
+
+    if isinstance(client, TrueFoundry):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            client.update_data_ingestion_run_status,
+            inputs.data_ingestion_run_name,
+            DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
+        )
+    else:
+        await client.update_data_ingestion_run_status(
+            data_ingestion_run_name=inputs.data_ingestion_run_name,
+            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
+        )
     try:
         existing_data_point_vectors = VECTOR_STORE_CLIENT.list_data_point_vectors(
             collection_name=inputs.collection_name,
@@ -80,15 +94,33 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
-        )
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                client.update_data_ingestion_run_status,
+                inputs.data_ingestion_run_name,
+                DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
+            )
+        else:
+            await client.update_data_ingestion_run_status(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
+            )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-        data_ingestion_run_name=inputs.data_ingestion_run_name,
-        status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
-    )
+    if isinstance(client, TrueFoundry):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            client.update_data_ingestion_run_status,
+            inputs.data_ingestion_run_name,
+            DataIngestionRunStatus.DATA_INGESTION_STARTED,
+        )
+    else:
+        await client.update_data_ingestion_run_status(
+            data_ingestion_run_name=inputs.data_ingestion_run_name,
+            status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
+        )
     try:
         await _sync_data_source_to_collection(
             inputs=inputs,
@@ -96,21 +128,48 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
-        )
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                client.update_data_ingestion_run_status,
+                inputs.data_ingestion_run_name,
+                DataIngestionRunStatus.DATA_INGESTION_FAILED,
+            )
+        else:
+            await client.update_data_ingestion_run_status(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
+            )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-        data_ingestion_run_name=inputs.data_ingestion_run_name,
-        status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
-    )
+    if isinstance(client, TrueFoundry):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            client.update_data_ingestion_run_status,
+            inputs.data_ingestion_run_name,
+            DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
+        )
+    else:
+        await client.update_data_ingestion_run_status(
+            data_ingestion_run_name=inputs.data_ingestion_run_name,
+            status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
+        )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
-        )
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                client.update_data_ingestion_run_status,
+                inputs.data_ingestion_run_name,
+                DataIngestionRunStatus.DATA_CLEANUP_STARTED,
+            )
+        else:
+            await client.update_data_ingestion_run_status(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
+            )
         try:
             VECTOR_STORE_CLIENT.delete_data_point_vectors(
                 collection_name=inputs.collection_name,
@@ -118,15 +177,33 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
-            )
+            if isinstance(client, TrueFoundry):
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None,
+                    client.update_data_ingestion_run_status,
+                    inputs.data_ingestion_run_name,
+                    DataIngestionRunStatus.DATA_CLEANUP_FAILED,
+                )
+            else:
+                await client.update_data_ingestion_run_status(
+                    data_ingestion_run_name=inputs.data_ingestion_run_name,
+                    status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
+                )
             raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
-        data_ingestion_run_name=inputs.data_ingestion_run_name,
-        status=DataIngestionRunStatus.COMPLETED,
-    )
+    if isinstance(client, TrueFoundry):
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            client.update_data_ingestion_run_status,
+            inputs.data_ingestion_run_name,
+            DataIngestionRunStatus.COMPLETED,
+        )
+    else:
+        await client.update_data_ingestion_run_status(
+            data_ingestion_run_name=inputs.data_ingestion_run_name,
+            status=DataIngestionRunStatus.COMPLETED,
+        )
 
 
 async def _sync_data_source_to_collection(
@@ -145,6 +222,8 @@ async def _sync_data_source_to_collection(
     Returns:
         None
     """
+
+    client = await get_client()
 
     failed_data_point_fqns = []
     documents_ingested_count = 0
@@ -184,10 +263,19 @@ async def _sync_data_source_to_collection(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
             logger.error(failed_data_point_fqns)
-            METADATA_STORE_CLIENT.log_errors_for_data_ingestion_run(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                errors={"failed_data_point_fqns": failed_data_point_fqns},
-            )
+            if isinstance(client, TrueFoundry):
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None,
+                    client.log_errors_for_data_ingestion_run,
+                    inputs.data_ingestion_run_name,
+                    {"failed_data_point_fqns": failed_data_point_fqns},
+                )
+            else:
+                await client.log_errors_for_data_ingestion_run(
+                    data_ingestion_run_name=inputs.data_ingestion_run_name,
+                    errors={"failed_data_point_fqns": failed_data_point_fqns},
+                )
             raise Exception(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points"
             )
@@ -301,9 +389,19 @@ async def ingest_data_points(
 async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
     try:
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(
-            collection_name=request.collection_name, no_cache=True
-        )
+        client = await get_client()
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            collection = await loop.run_in_executor(
+                None, client.get_collection_by_name, request.collection_name
+            )
+        else:
+            collection = await client.get_collection_by_name(request.collection_name)
+
+        # convert to pydantic model if not already -> For prisma models
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
+
         if not collection:
             logger.error(
                 f"Collection with name {request.collection_name} does not exist."
@@ -331,11 +429,12 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 collection.associated_data_sources.values()
             )
 
+        logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
         for associated_data_source in associated_data_sources_to_be_ingested:
             logger.debug(
                 f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
             )
-            if not request.run_as_job:
+            if not request.run_as_job or settings.LOCAL:
                 data_ingestion_run = CreateDataIngestionRun(
                     collection_name=collection.name,
                     data_source_fqn=associated_data_source.data_source_fqn,
@@ -344,11 +443,15 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
+                if isinstance(client, TrueFoundry):
+                    loop = asyncio.get_event_loop()
+                    created_data_ingestion_run = await loop.run_in_executor(
+                        None, client.create_data_ingestion_run, data_ingestion_run
+                    )
+                else:
+                    created_data_ingestion_run = await client.create_data_ingestion_run(
                         data_ingestion_run=data_ingestion_run
                     )
-                )
                 await sync_data_source_to_collection(
                     inputs=DataIngestionConfig(
                         collection_name=created_data_ingestion_run.collection_name,
@@ -379,11 +482,15 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
+                if isinstance(client, TrueFoundry):
+                    loop = asyncio.get_event_loop()
+                    created_data_ingestion_run = await loop.run_in_executor(
+                        None, client.create_data_ingestion_run, data_ingestion_run
+                    )
+                else:
+                    created_data_ingestion_run = await client.create_data_ingestion_run(
                         data_ingestion_run=data_ingestion_run
                     )
-                )
                 trigger_job(
                     application_fqn=settings.JOB_FQN,
                     component_name=settings.JOB_COMPONENT_NAME,
@@ -401,6 +508,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
             status_code=201,
             content={"message": "triggered"},
         )
+
     except HTTPException as exp:
         raise exp
     except Exception as exp:

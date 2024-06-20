@@ -1,10 +1,44 @@
 import Button from '@/components/base/atoms/Button'
 import Table from '@/components/base/molecules/Table'
-import { useGetDataSourcesQuery } from '@/stores/qafoundry'
+import {
+  useDeleteDataSourceMutation,
+  useGetDataSourcesQuery,
+} from '@/stores/qafoundry'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import React, { useMemo } from 'react'
 import NewDataSource from '../NewDataSource'
 import CopyField from '@/components/base/atoms/CopyField'
+import { IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
+import notify from '@/components/base/molecules/Notify'
+
+const DeleteDataSource = ({ fqn }: { fqn: string }) => {
+  const [deleteDataSource, { isLoading, error }] = useDeleteDataSourceMutation()
+
+  const handleSubmit = async () => {
+    try {
+      const res = await deleteDataSource({ data_source_fqn: fqn })
+      if (res?.error?.data?.detail)
+        notify('error', 'Something went wrong!', res.error.data.detail)
+    } catch (e) {
+      notify(
+        'error',
+        'Something went wrong!',
+        'The data source deletion failed. Please try again later.'
+      )
+    }
+  }
+
+  return (
+    <Button
+      outline
+      icon="trash-can"
+      iconClasses="text-xs text-red-400"
+      className="border-red-200 shadow bg-base-100 btn-sm font-normal px-2.5 mr-1"
+      loading={isLoading}
+      onClick={handleSubmit}
+    />
+  )
+}
 
 const DataHub = () => {
   const [isNewDataSourceDrawerOpen, setIsNewDataSourceDrawerOpen] =
@@ -42,6 +76,21 @@ const DataHub = () => {
         </div>
       ),
     },
+    // TODO: Fix Later
+    // ...(IS_LOCAL_DEVELOPMENT
+    //   ? [
+    //       {
+    //         field: 'actions',
+    //         headerName: '',
+    //         width: 80,
+    //         renderCell: (params: GridRenderCellParams) => (
+    //           <div className="w-full flex justify-center">
+    //             <DeleteDataSource fqn={params.row.fqn as string} />
+    //           </div>
+    //         ),
+    //       },
+    //     ]
+    //   : []),
   ]
   const rows = useMemo(
     () =>

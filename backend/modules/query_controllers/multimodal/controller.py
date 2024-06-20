@@ -16,7 +16,8 @@ from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.embedder.embedder import get_embedder
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
+from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
@@ -40,6 +41,7 @@ from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
+from backend.types import Collection
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -142,10 +144,20 @@ class MultiModalRAGQueryController:
         """
         Get the vector store for the collection
         """
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(collection_name)
+        client = await get_client()
+        if isinstance(client, TrueFoundry):
+            loop = asyncio.get_event_loop()
+            collection = await loop.run_in_executor(
+                None, client.get_collection_by_name, collection_name
+            )
+        else:
+            collection = await client.get_collection_by_name(collection_name)
 
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
+
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
