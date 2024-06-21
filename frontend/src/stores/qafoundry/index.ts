@@ -274,7 +274,9 @@ export const qafoundryApi = createApi({
     }),
     deleteDataSource: builder.mutation({
       query: (payload: { data_source_fqn: string }) => ({
-        url: `/v1/data_source/delete?data_source_fqn=${payload.data_source_fqn}`,
+        url: `/v1/data_source/delete?data_source_fqn=${encodeURIComponent(
+          payload.data_source_fqn
+        )}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['DataSources'],
