@@ -78,7 +78,7 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 # :rocket: Quickstart: Running Cognita Locally
 
-## :whale: Using Docker compose (recommended)
+## :whale: Using Docker compose (recommended - version 25+)
 
 Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. You can run the following command to start the services:
 
