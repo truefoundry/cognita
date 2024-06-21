@@ -93,7 +93,7 @@ docker-compose --env-file compose.env up
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
--   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
+-   Once the services are up, you can access the qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 
 To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
