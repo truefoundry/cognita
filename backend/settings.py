@@ -5,7 +5,7 @@ from typing import Optional
 import orjson
 from pydantic import BaseSettings
 
-from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
+from backend.types import MetadataStoreConfig, VectorDBConfig
 
 
 class Settings(BaseSettings):
@@ -21,8 +21,6 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str]
     TFY_HOST: Optional[str]
     TFY_LLM_GATEWAY_URL: str
-    EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
-
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
     VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
     METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
@@ -33,13 +31,6 @@ class Settings(BaseSettings):
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     TFY_HOST = os.getenv("TFY_HOST", "")
     TFY_LLM_GATEWAY_URL = os.getenv("TFY_LLM_GATEWAY_URL", "")
-    EMBEDDING_CACHE_CONFIG = (
-        EmbeddingCacheConfig.parse_obj(
-            orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
-        )
-        if os.getenv("EMBEDDING_CACHE_CONFIG", None)
-        else None
-    )
 
     LOCAL: bool = os.getenv("LOCAL", False)
     OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
