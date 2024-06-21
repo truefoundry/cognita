@@ -9,10 +9,10 @@
   {
     "provider_name": "truefoundry",
     "api_format": "openai",
-    "llm_model_ids": [],
-    "embedding_model_ids": [],
-    "api_key_env_var": "TFY_API_KEY",
-    "base_url": "<truefoundry_gateway_url>"
+    "llm_model_ids": ["openai-main/gpt-3-5-turbo"],
+    "embedding_model_ids": ["openai-main/text-embedding-ada-002"],
+    "api_key_env_var": "TFY_GATEWAY_API_KEY",
+    "base_url": "https://app.devtest.truefoundry.tech/api/llm/api/inference/openai"
   },
   {
     "provider_name": "local",

@@ -17,6 +17,8 @@ class ModelGateway:
             self.config = [ModelProviderConfig(**item) for item in data]
             self.models: List[ModelConfig] = []
             for list in self.config:
+                if list.api_key_env_var and not os.environ.get(list.api_key_env_var):
+                    raise ValueError(f"Environment variable {list.api_key_env_var} not set.")
                 for model_id in list.embedding_model_ids:
                     model_name = f"{list.provider_name}/{model_id}"
                     self.modelsToProviderMap[model_name] = list
