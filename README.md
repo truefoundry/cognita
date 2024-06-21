@@ -90,6 +90,7 @@ docker-compose --env-file compose.env up
 
 -   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
 -   The compose file will start the following services:
+    -   `postgres` - Used to store metadata for collections and data sources.
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
