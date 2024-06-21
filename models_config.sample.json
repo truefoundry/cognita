@@ -9,7 +9,10 @@
     {
         "provider_name": "truefoundry",
         "api_format": "openai",
-        "llm_model_ids": ["openai-main/gpt-3-5-turbo"],
+        "llm_model_ids": [
+            "openai-main/gpt-4-turbo",
+            "openai-main/gpt-3-5-turbo"
+        ],
         "embedding_model_ids": ["openai-main/text-embedding-ada-002"],
         "api_key_env_var": "TFY_API_KEY",
         "base_url": "https://llm-gateway.truefoundry.com/api/inference/openai"

@@ -7,11 +7,8 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_openai.chat_models import ChatOpenAI
-from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
@@ -54,19 +51,7 @@ if settings.RERANKER_SVC_URL:
 
     EXAMPLES.update(
         {
-            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
             "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
-            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
         }
     )
 
@@ -224,9 +209,9 @@ class BasicRAGQueryController:
 
         else:
             raise HTTPException(status_code=404, detail="Retriever not found")
-
         return retriever
 
+    # TODO: Fix the stream answer method
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:

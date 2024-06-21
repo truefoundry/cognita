@@ -1,9 +1,9 @@
 PROMPT = "You are an AI assistant specialising in information retrieval. Answer the following question precisely by extracting the relavant information given in the images.\nQuestion: {question}"
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -23,10 +23,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -52,10 +52,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -78,10 +78,10 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -108,10 +108,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -143,10 +143,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -174,10 +174,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PA
 #####
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -187,7 +187,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "search_type": "similarity",
         "search_kwargs": {"k": 5},
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
@@ -206,10 +206,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
 
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -222,7 +222,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 10,
         },
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
@@ -240,10 +240,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-3-5-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -253,7 +253,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-4-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
@@ -273,10 +273,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
 
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -292,7 +292,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
             "fetch_k": 30,
         },
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
@@ -311,10 +311,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -327,7 +327,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.1},
         },
@@ -346,10 +346,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
 #######
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
-    "collection_name": "creditcard",
-    "query": "Explain in detail different categories of credit cards",
+    "collection_name": "finance",
+    "query": "Explain key operating metrics of FY20",
     "model_configuration": {
-        "name": "openai-main/gpt-3-5-turbo",
+        "name": "truefoundry/openai-main/gpt-4-turbo",
         "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
@@ -362,7 +362,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
-            "name": "openai-main/gpt-3-5-turbo",
+            "name": "truefoundry/openai-main/gpt-3-5-turbo",
             "provider": "truefoundry",
             "parameters": {"temperature": 0.1},
         },

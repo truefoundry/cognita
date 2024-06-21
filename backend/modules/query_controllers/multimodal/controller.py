@@ -7,12 +7,9 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.ollama import ChatOllama
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_openai.chat_models import ChatOpenAI
 from openai import OpenAI
-from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
@@ -41,7 +38,7 @@ from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
-from backend.types import Collection
+from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -56,19 +53,7 @@ if settings.RERANKER_SVC_URL:
 
     EXAMPLES.update(
         {
-            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
             "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
-            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
         }
     )
 
@@ -100,7 +85,7 @@ class MultiModalRAGQueryController:
                 )
         return formatted_docs
 
-    def _get_llm(self, model_configuration, stream=False):
+    def _get_llm(self, model_configuration: ModelConfig, stream=False):
         """
         Get the LLM
         """
@@ -233,6 +218,7 @@ class MultiModalRAGQueryController:
 
         return retriever
 
+    # TODO: Fix the stream answer method
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
@@ -256,27 +242,7 @@ class MultiModalRAGQueryController:
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
-    def _generate_payload_for_vlm(self, prompt: str, images_set: set):
-        content = [
-            {
-                "type": "text",
-                "text": prompt,
-            }
-        ]
-
-        for b64_image in images_set:
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{b64_image}",
-                        "detail": "high",
-                    },
-                }
-            )
-
-        return [{"role": "user", "content": content}]
-
+    # TODO: Fix the stream answer method
     async def stream_vlm_answer(self, model, messages, max_tokens, docs):
         client = OpenAI(
             api_key=settings.TFY_API_KEY,
@@ -302,6 +268,26 @@ class MultiModalRAGQueryController:
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
+    def _generate_payload_for_vlm(self, prompt: str, images_set: set):
+        content = [
+            {
+                "type": "text",
+                "text": prompt,
+            }
+        ]
+
+        for b64_image in images_set:
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{b64_image}",
+                        "detail": "high",
+                    },
+                }
+            )
+        return [HumanMessage(content=content)]
+
     @post("/answer")
     async def answer(
         self,
@@ -312,58 +298,53 @@ class MultiModalRAGQueryController:
         """
         Sample answer method to answer the question using the context from the collection
         """
-
-        # Get the vector store
-        vector_store = await self._get_vector_store(request.collection_name)
-
-        # get retriever
-        retriever = await self._get_retriever(
-            vector_store=vector_store,
-            retriever_name=request.retriever_name,
-            retriever_config=request.retriever_config,
-        )
-        images_set = set()
-
-        setup_and_retrieval = RunnableParallel(
-            {"context": retriever, "question": RunnablePassthrough()}
-        )
-        outputs = await setup_and_retrieval.ainvoke(request.query)
-
-        if "context" in outputs:
-            docs = outputs["context"]
-            for doc in docs:
-                image_b64 = doc.metadata.get("image_b64", None)
-                if image_b64 is not None:
-                    images_set.add(image_b64)
-
         try:
-            prompt = request.prompt_template.format(question=request.query)
-        except Exception as e:
-            print(f"Error in formatting prompt: {e}")
-            print(f"Using default prompt")
-            prompt = PROMPT.format(question=request.query)
+            # Get the vector store
+            vector_store = await self._get_vector_store(request.collection_name)
 
-        message_payload = self._generate_payload_for_vlm(
-            prompt=prompt, images_set=images_set
-        )
-        client = OpenAI(
-            api_key=settings.TFY_API_KEY,
-            base_url=settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai",
-        )
-
-        try:
-            response = client.chat.completions.create(
-                model=request.model_configuration.name,
-                messages=message_payload,
-                max_tokens=2048,
+            # get retriever
+            retriever = await self._get_retriever(
+                vector_store=vector_store,
+                retriever_name=request.retriever_name,
+                retriever_config=request.retriever_config,
             )
+            llm = self._get_llm(request.model_configuration, request.stream)
+
+            images_set = set()
+
+            setup_and_retrieval = RunnableParallel(
+                {"context": retriever, "question": RunnablePassthrough()}
+            )
+            outputs = await setup_and_retrieval.ainvoke(request.query)
+
+            if "context" in outputs:
+                docs = outputs["context"]
+                for doc in docs:
+                    image_b64 = doc.metadata.get("image_b64", None)
+                    if image_b64 is not None:
+                        images_set.add(image_b64)
+                        # Remove the image_b64 from the metadata
+                        doc.metadata.pop("image_b64")
+
+            try:
+                prompt = request.prompt_template.format(question=request.query)
+            except Exception as e:
+                print(f"Error in formatting prompt: {e}")
+                print(f"Using default prompt")
+                prompt = PROMPT.format(question=request.query)
+
+            message_payload = self._generate_payload_for_vlm(
+                prompt=prompt, images_set=images_set
+            )
+            response = await llm.ainvoke(message_payload)
+
             return {
-                "answer": response.choices[0].message.content,
+                "answer": response.content,
                 "docs": outputs["context"],
             }
-        except Exception as e:
-            print(f"Error in generating response from VLM: {e}")
-            logger.error(f"Error in generating response from VLM: {e}")
-            return {
-                "answer": e,
-            }
+
+        except HTTPException as exp:
+            raise exp
+        except Exception as exp:
+            logger.exception(exp)
+            raise HTTPException(status_code=500, detail=str(exp))
