@@ -30,10 +30,12 @@ services:
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: ollama
+        profiles:
+            - ollama
         volumes:
             - ./volumes/ollama:/root/.ollama
         ports:
-            - ${OLLAMA_PORT}:11434
+            - 11434:11434
         healthcheck:
             test: ["CMD", "ollama", "list"]
             interval: 30s
@@ -43,6 +45,7 @@ services:
         environment:
             - OLLAMA_KEEP_ALIVE=24h
             - OLLAMA_HOST=0.0.0.0
+            - OLLAMA_PORT=11434
         entrypoint: /bin/bash
         command: -c "set -e; ollama serve & sleep 10 && ollama pull ${OLLAMA_MODEL} && sleep infinity"
         networks:
@@ -53,8 +56,10 @@ services:
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
+        profiles:
+            - infinity
         ports:
-            - "${INFINITY_PORT}:7997"
+            - "7797:7997"
         volumes:
             - ./volumes/infinity:/app/.cache
         healthcheck:
@@ -65,7 +70,7 @@ services:
             start_period: 60s
         environment:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
-            - INFINITY_BATCH_SIZE=${INFINITY_BATCH_SIZE}
+            - INFINITY_BATCH_SIZE=8
         command: v2
         networks:
             - cognita-docker
@@ -99,12 +104,6 @@ services:
         ports:
             - "${COGNITA_BACKEND_PORT}:8000"
         depends_on:
-            ollama-server:
-                condition: service_healthy
-                restart: true
-            infinity-server:
-                condition: service_healthy
-                restart: true
             db:
                 condition: service_healthy
                 restart: true
@@ -121,9 +120,9 @@ services:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
-            - OLLAMA_URL=http://ollama-server:${OLLAMA_PORT}
-            - EMBEDDING_SVC_URL=http://infinity-server:${INFINITY_PORT}
-            - RERANKER_SVC_URL=http://infinity-server:${INFINITY_PORT}
+            - OLLAMA_URL=${OLLAMA_URL}
+            - EMBEDDING_SVC_URL=${INFINITY_URL}
+            - RERANKER_SVC_URL=${INFINITY_URL}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
             - TFY_API_KEY=${TFY_API_KEY}
@@ -151,12 +150,6 @@ services:
         ports:
             - "${COGNITA_FRONTEND_PORT}:5000"
         depends_on:
-            ollama-server:
-                condition: service_healthy
-                restart: true
-            infinity-server:
-                condition: service_healthy
-                restart: true
             cognita-backend:
                 condition: service_healthy
                 restart: true

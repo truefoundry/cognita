@@ -28,3 +28,4 @@ infinity/
 volumes/
 pgdata/
 *.bak
+models_config.json
