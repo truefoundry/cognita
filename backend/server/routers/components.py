@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from backend.modules.dataloaders.loader import list_dataloaders
-from backend.modules.embedder.embedder import list_embedders
 from backend.modules.parsers.parser import list_parsers
 from backend.modules.query_controllers.query_controller import list_query_controllers
 
@@ -13,14 +12,6 @@ def get_parsers():
     """Get available parsers from the registered parsers"""
     parsers = list_parsers()
     return parsers
-
-
-@router.get("/embedders")
-def get_embedders():
-    """Get available embedders from registered embedders"""
-    embedders = list_embedders()
-    return embedders
-
 
 @router.get("/dataloaders")
 def get_dataloaders():

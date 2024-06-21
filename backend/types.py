@@ -90,14 +90,38 @@ class LoadedDataPoint(DataPoint):
     )
 
 
+class ModelType(str, Enum):
+    """
+    Model types available in LLM gateway
+    """
+
+    completion = "completion"
+    chat = "chat"
+    embedding = "embedding"
+
+
+class ModelConfig(BaseModel):
+    name: str
+    type: Optional[ModelType]
+    parameters: Optional[Dict[str, Any]] = None
+
+
+class ModelProviderConfig(BaseModel):
+    provider_name: str
+    api_format: str
+    llm_model_ids: List[str]
+    embedding_model_ids: List[str]
+    api_key_env_var: str
+    base_url: Optional[str] = None
+
+
 class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
 
-    provider: str = Field(
-        title="Provider of the embedder",
-    )
+    # model_name: str
+    model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default={"model": "string"}
     )
@@ -168,21 +192,9 @@ class EmbeddingCacheConfig(BaseModel):
     """
 
     provider: str
-    url: Optional[str] = None
-    config: Optional[dict] = None
-
-
-class LLMConfig(BaseModel):
-    """
-    LLM configuration
-    """
-
     name: str = Field(title="Name of the model")
-    parameters: dict = None
-    provider: Literal["openai", "ollama", "truefoundry"] = Field(
-        title="Model provider any one between openai, ollama, truefoundry",
-        default="truefoundry",
-    )
+    base_url: str = Field(title="Base URL of the model")
+    config: Optional[dict] = None
 
 
 class RetrieverConfig(BaseModel):
@@ -446,16 +458,6 @@ class UploadToDataDirectoryDto(BaseModel):
         regex=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
-
-
-class ModelType(str, Enum):
-    """
-    Model types available in LLM gateway
-    """
-
-    completion = "completion"
-    chat = "chat"
-    embedding = "embedding"
 
 
 class ListDataIngestionRunsDto(BaseModel):

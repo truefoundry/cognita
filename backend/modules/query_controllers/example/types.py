@@ -3,7 +3,7 @@ from typing import Any, ClassVar, Collection, Dict, Literal, Optional
 from pydantic import BaseModel, Field, root_validator, validator
 from qdrant_client.models import Filter as QdrantFilter
 
-from backend.types import LLMConfig
+from backend.types import ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 5
 
@@ -67,7 +67,7 @@ class VectorStoreRetrieverConfig(BaseModel):
 
 
 class MultiQueryRetrieverConfig(VectorStoreRetrieverConfig):
-    retriever_llm_configuration: LLMConfig = Field(
+    retriever_llm_configuration: ModelConfig = Field(
         title="LLM configuration for the retriever",
     )
 
@@ -118,7 +118,7 @@ class ExampleQueryInput(BaseModel):
 
     query: str = Field(title="Question to search for")
 
-    model_configuration: LLMConfig
+    model_configuration: ModelConfig
 
     prompt_template: str = Field(
         title="Prompt Template to use for generating answer to the question using the context",

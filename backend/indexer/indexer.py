@@ -11,9 +11,9 @@ from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METAD
 from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
-from backend.modules.embedder.embedder import get_embedder
 from backend.modules.metadata_store.client import get_client
 from backend.modules.metadata_store.truefoundry import TrueFoundry
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
@@ -301,9 +301,8 @@ async def ingest_data_points(
         None
 
     """
-
-    embeddings = get_embedder(
-        embedder_config=inputs.embedder_config,
+    embeddings = model_gateway.get_embedder_from_model_config(
+        model_name=inputs.embedder_config.model_config.name
     )
     documents_to_be_upserted = []
     logger.info(
