@@ -119,11 +119,9 @@ class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
-
-    # model_name: str
     model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
-        title="Configuration for the embedder", default={"model": "string"}
+        title="Configuration for the embedder", default={}
     )
 
 
@@ -184,18 +182,6 @@ class MetadataStoreConfig(BaseModel):
 
     provider: str
     config: Optional[dict] = None
-
-
-class EmbeddingCacheConfig(BaseModel):
-    """
-    Embedding cache configuration
-    """
-
-    provider: str
-    name: str = Field(title="Name of the model")
-    base_url: str = Field(title="Base URL of the model")
-    config: Optional[dict] = None
-
 
 class RetrieverConfig(BaseModel):
     """
