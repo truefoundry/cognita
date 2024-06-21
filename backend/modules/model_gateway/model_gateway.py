@@ -56,9 +56,10 @@ class ModelGateway:
             api_key = None
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, '')
+        model_id = "/".join(model_name.split("/")[1:])
         return OpenAIEmbeddings(
             openai_api_key=api_key, 
-            model=model_name.split("/")[1],
+            model=model_id,
             openai_api_base=model_provider_config.base_url
         )
     
@@ -72,8 +73,9 @@ class ModelGateway:
             api_key = None
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, '')
+        model_id = "/".join(model_config.name.split("/")[1:])
         return ChatOpenAI(
-                model=model_config.name.split("/")[1],
+                model=model_id,
                 temperature=model_config.parameters.get("temperature", 0.1),
                 streaming=stream,
                 api_key=api_key,
