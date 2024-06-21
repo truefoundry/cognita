@@ -80,110 +80,35 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 ## :whale: Using Docker compose (recommended - version 25+)
 
-Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. You can run the following command to start the services:
+Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
+
+You can run the following command to start the services:
 
 ```docker
-docker-compose --env-file compose.env up --build
+docker-compose --env-file compose.env up
 ```
 
 -   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
 -   The compose file will start the following services:
-    -   `ollama-server` - Used to start local LLM server. `compose.env` has `OLLAMA_MODEL` as the environment variable to specify the model.
-    -   `infinity-server` - Used to start local embeddings and rerankers server. `compose.env` has `INFINITY_EMBEDDING_MODEL` and `INFINITY_RERANKING_MODEL` as environment variables to specify the embedding and reranker from HuggingFace Hub.
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
 -   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 
-## Cognita from source
-
-### :snake: Installing Python and Setting Up a Virtual Environment
-
-Before you can use Cognita, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
-
-#### Setting Up a Virtual Environment
-
-It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
-
-#### Create a Virtual Environment:
-
-Navigate to your project's directory in the terminal.
-Run the following command to create a virtual environment named venv (you can name it anything you like):
-
-```
-python3 -m venv ./venv
-```
-
-#### Activate the Virtual Environment:
-
--   On Windows, activate the virtual environment by running:
-
-```
-venv\Scripts\activate.bat
-```
-
--   On macOS and Linux, activate it with:
-
-```
-source venv/bin/activate
-```
-
-Once your virtual environment is activated, you'll see its name in the terminal prompt. Now you're ready to install Cognita using the steps provided in the Quickstart sections.
-
-> Remember to deactivate the virtual environment when you're done working with Cognita by simply running deactivate in the terminal.
-
-Following are the instructions for running Cognita locally without any additional Truefoundry dependencies
-
-### Install necessary packages:
-
-In the project root execute the following command:
-
-```
-pip install -r backend/requirements.txt
-```
-
-### Install Additional packages:
-
--   Install packages for additional parsers like `PDFTableParser` that uses deep doctection for table extraction from PDFs. This is optional and can be skipped if you don't need to extract tables from PDFs.
-
-    ```
-    pip install -r backend/parsers.requirements.txt
-    ```
-
--   Install packages for `vector_db` that uses singlestore for vector db. This is optional and can be skipped if you don't need to use singlestore.
-
-    ```
-    pip install -r backend/vectordb.requirements.txt
-    ```
-
-    > Uncomment the respective vector db in `backend/modules/vector_db/__init__.py` to use it.
-
-### Infinity Service:
-
--   Rerankers and Embedders are to be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories.
-
--   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.42/). You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
+To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
 ```docker
-    docker run -it --gpus all \
-    -v $PWD/infinity/data:/app/.cache \
-    -p 7997:7997 \
-    michaelf34/infinity:latest \
-    v2 \
-    --model-id mixedbread-ai/mxbai-embed-large-v1 \
-    --model-id mixedbread-ai/mxbai-rerank-xsmall-v1 \
-    --port 7997
+docker-compose --env-file compose.env --profile ollama --profile infinity up
 ```
 
-### Setting up .env file:
+-   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
+-   You can also have these services hosted somewhere else and provide the respective `OLLAMA_URL` and `INFINITY_URL` in the `compose.env` file.
 
--   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively which will be `http://localhost:7997"
+## Developing in Cognita
 
-### Executing the Code:
+Docker compose is a great way to run the entire Cognita system locally. Any changes that you make in the `backend` folder will be automatically reflected in the running backend server. You can test out different APIs and endpoints by making changes in the backend code.
 
--   You can start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/`
-
--   To use frontend UI for quering you can go to : `cd frontend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md). You can then query the documents using the UI hosted at `http://localhost:5000/`
+If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can run `docker-compose build` before running `docker-compose up`
 
 # :hammer_and_pick: Project Architecture
 
