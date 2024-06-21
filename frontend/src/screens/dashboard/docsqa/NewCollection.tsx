@@ -72,9 +72,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
       const params = {
         name: collectionName,
         embedder_config: {
-          provider: embeddingModel.provider,
-          config: {
-            model: embeddingModel.name,
+          model_config: {
+            name: embeddingModel.name,
           },
         },
         chunk_size: chunkSize,
