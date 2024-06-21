@@ -95,7 +95,6 @@ class ModelType(str, Enum):
     Model types available in LLM gateway
     """
 
-    completion = "completion"
     chat = "chat"
     embedding = "embedding"
 
@@ -119,6 +118,7 @@ class EmbedderConfig(BaseModel):
     """
     Embedder configuration
     """
+
     model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default={}
@@ -182,6 +182,7 @@ class MetadataStoreConfig(BaseModel):
 
     provider: str
     config: Optional[dict] = None
+
 
 class RetrieverConfig(BaseModel):
     """
