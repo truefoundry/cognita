@@ -72,7 +72,6 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
       const params = {
         name: collectionName,
         embedder_config: {
-          provider: embeddingModel.provider,
           model_config: {
             name: embeddingModel.name,
           },
