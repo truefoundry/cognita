@@ -65,21 +65,22 @@ class BasicRAGQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        final_list = list()
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            final_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
-        return "\n\n".join([f"{doc['page_content']}" for doc in final_list])
+        return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
-        metadata_list = []
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            metadata_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
+        return formatted_docs
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False):
         """
@@ -211,17 +212,11 @@ class BasicRAGQueryController:
             raise HTTPException(status_code=404, detail="Retriever not found")
         return retriever
 
-    # TODO: Fix the stream answer method
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
-                    if "question " in chunk:
-                        # print("Question: ", chunk['question'])
-                        yield json.dumps({"question": chunk["question"]})
-                        await asyncio.sleep(0.1)
-                    elif "context" in chunk:
-                        # print("Context: ", self._format_docs_for_stream(chunk['context']))
+                    if "context" in chunk:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )

@@ -67,23 +67,33 @@ class MultiModalRAGQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-
-    def _format_docs_for_stream_v1(self, docs):
-        return [
-            {"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs
-        ]
-
-    def _format_docs_for_stream_v2(self, docs):
         formatted_docs = list()
-        # docs is a list of list of document objects
         for doc in docs:
-            for pages in doc:
-                pages.metadata.pop("image_b64", None)
-                formatted_docs.append(
-                    {"page_content": pages.page_content, "metadata": pages.metadata}
-                )
+            doc.metadata.pop("image_b64", None)
+            formatted_docs.append(
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+            )
+        return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
+
+    def _format_docs_for_stream(self, docs):
+        formatted_docs = list()
+        for doc in docs:
+            doc.metadata.pop("image_b64", None)
+            formatted_docs.append(
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+            )
         return formatted_docs
+
+    # def _format_docs_for_stream_v2(self, docs):
+    #     formatted_docs = list()
+    #     # docs is a list of list of document objects
+    #     for doc in docs:
+    #         for pages in doc:
+    #             pages.metadata.pop("image_b64", None)
+    #             formatted_docs.append(
+    #                 {"page_content": pages.page_content, "metadata": pages.metadata}
+    #             )
+    #     return formatted_docs
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False):
         """
@@ -218,7 +228,6 @@ class MultiModalRAGQueryController:
 
         return retriever
 
-    # TODO: Fix the stream answer method
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
@@ -230,7 +239,7 @@ class MultiModalRAGQueryController:
                     elif "context" in chunk:
                         # print("Context: ", self._format_docs_for_stream(chunk['context']))
                         yield json.dumps(
-                            {"docs": self._format_docs_for_stream_v1(chunk["context"])}
+                            {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
                         await asyncio.sleep(0.1)
                     elif "answer" in chunk:
@@ -242,31 +251,25 @@ class MultiModalRAGQueryController:
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
-    # TODO: Fix the stream answer method
-    async def stream_vlm_answer(self, model, messages, max_tokens, docs):
-        client = OpenAI(
-            api_key=settings.TFY_API_KEY,
-            base_url=settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai",
-        )
-        async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
-            try:
-                async for chunk in client.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    stream=True,
-                ):
-                    print("Chunks:", chunk)
-                    if "choices" in chunk:
-                        yield json.dumps(
-                            {"answer": chunk["choices"][0]["message"]["content"]}
-                        )
-                        await asyncio.sleep(0.1)
-                    elif "end" in chunk:
-                        yield json.dumps({"end": "<END>"})
-                        break
-            except asyncio.TimeoutError:
-                raise HTTPException(status_code=504, detail="Stream timed out")
+    async def _stream_vlm_answer(self, llm, message_payload, docs):
+        try:
+            async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
+                yield json.dumps(
+                    {
+                        "docs": self._format_docs_for_stream(docs),
+                    }
+                )
+                await asyncio.sleep(0.1)
+
+                async for chunk in llm.astream(message_payload):
+                    yield json.dumps({"answer": chunk.content})
+                    await asyncio.sleep(0.1)
+
+                await asyncio.sleep(0.1)
+                yield json.dumps({"end": "<END>"})
+                await asyncio.sleep(0.1)
+        except asyncio.TimeoutError:
+            raise HTTPException(status_code=504, detail="Stream timed out")
 
     def _generate_payload_for_vlm(self, prompt: str, images_set: set):
         content = [
@@ -310,6 +313,14 @@ class MultiModalRAGQueryController:
             )
             llm = self._get_llm(request.model_configuration, request.stream)
 
+            try:
+                prompt = request.prompt_template.format(question=request.query)
+            except Exception as e:
+                logger.error(f"Error in formatting prompt: {e}")
+                logger.info(f"Using default prompt")
+                prompt = PROMPT.format(question=request.query)
+
+            # Generate payload for VLM
             images_set = set()
 
             setup_and_retrieval = RunnableParallel(
@@ -326,22 +337,22 @@ class MultiModalRAGQueryController:
                         # Remove the image_b64 from the metadata
                         doc.metadata.pop("image_b64")
 
-            try:
-                prompt = request.prompt_template.format(question=request.query)
-            except Exception as e:
-                print(f"Error in formatting prompt: {e}")
-                print(f"Using default prompt")
-                prompt = PROMPT.format(question=request.query)
-
             message_payload = self._generate_payload_for_vlm(
                 prompt=prompt, images_set=images_set
             )
-            response = await llm.ainvoke(message_payload)
 
-            return {
-                "answer": response.content,
-                "docs": outputs["context"],
-            }
+            if request.stream:
+                return StreamingResponse(
+                    self._stream_vlm_answer(llm, message_payload, outputs["context"]),
+                    media_type="text/event-stream",
+                )
+
+            else:
+                response = await llm.ainvoke(message_payload)
+                return {
+                    "answer": response.content,
+                    "docs": outputs["context"],
+                }
 
         except HTTPException as exp:
             raise exp
