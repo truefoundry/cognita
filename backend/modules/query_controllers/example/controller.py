@@ -7,11 +7,8 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_openai.chat_models import ChatOpenAI
-from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
@@ -54,19 +51,7 @@ if settings.RERANKER_SVC_URL:
 
     EXAMPLES.update(
         {
-            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
             "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
-            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
         }
     )
 
@@ -80,21 +65,22 @@ class BasicRAGQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        final_list = list()
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            final_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
-        return "\n\n".join([f"{doc['page_content']}" for doc in final_list])
+        return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
-        metadata_list = []
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            metadata_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
+        return formatted_docs
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False):
         """
@@ -224,19 +210,13 @@ class BasicRAGQueryController:
 
         else:
             raise HTTPException(status_code=404, detail="Retriever not found")
-
         return retriever
 
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
-                    if "question " in chunk:
-                        # print("Question: ", chunk['question'])
-                        yield json.dumps({"question": chunk["question"]})
-                        await asyncio.sleep(0.1)
-                    elif "context" in chunk:
-                        # print("Context: ", self._format_docs_for_stream(chunk['context']))
+                    if "context" in chunk:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
