@@ -5,7 +5,7 @@ from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import ModelConfig
 
-GENERATION_TIMEOUT_SEC = 60.0 * 5
+GENERATION_TIMEOUT_SEC = 60.0 * 10
 
 
 class VectorStoreRetrieverConfig(BaseModel):
