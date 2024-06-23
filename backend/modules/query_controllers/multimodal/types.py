@@ -1,8 +1,9 @@
 from typing import Any, ClassVar, Collection, Dict, Literal, Optional
 
-from backend.types import ModelConfig
 from pydantic import BaseModel, Field, root_validator, validator
 from qdrant_client.models import Filter as QdrantFilter
+
+from backend.types import ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 5
 
@@ -84,7 +85,7 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
         title="Top K docs to collect post compression",
     )
 
-    allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixbread-ai",)
+    allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixedbread-ai",)
 
     @validator("compressor_model_provider")
     def validate_retriever_type(cls, value) -> Dict:

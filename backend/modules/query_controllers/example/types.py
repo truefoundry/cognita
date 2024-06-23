@@ -85,7 +85,7 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
         title="Top K docs to collect post compression",
     )
 
-    allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixbread-ai",)
+    allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixedbread-ai",)
 
     @validator("compressor_model_provider")
     def validate_retriever_type(cls, value) -> Dict:
