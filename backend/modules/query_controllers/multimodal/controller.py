@@ -9,26 +9,15 @@ from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetri
 from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from openai import OpenAI
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
-from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 )
 from backend.modules.query_controllers.multimodal.types import (
     GENERATION_TIMEOUT_SEC,
@@ -106,14 +95,7 @@ class MultiModalRAGQueryController:
         Get the vector store for the collection
         """
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None, client.get_collection_by_name, collection_name
-            )
-        else:
-            collection = await client.get_collection_by_name(collection_name)
-
+        collection = await client.aget_collection_by_name(collection_name)
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
 
@@ -163,7 +145,6 @@ class MultiModalRAGQueryController:
                     detail="Reranker service is not available",
                 )
 
-            return compression_retriever
         except Exception as e:
             logger.error(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(
@@ -181,7 +162,7 @@ class MultiModalRAGQueryController:
             base_retriever = self._get_vector_store_retriever(
                 vector_store, retriever_config
             )
-        elif retriever_type == "contexual-compression":
+        elif retriever_type == "contextual-compression":
             base_retriever = self._get_contextual_compression_retriever(
                 vector_store, retriever_config
             )
@@ -201,7 +182,7 @@ class MultiModalRAGQueryController:
             )
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression":
+        elif retriever_name == "contextual-compression":
             logger.debug(
                 f"Using ContextualCompressionRetriever with {retriever_config.search_type} search"
             )
@@ -215,12 +196,13 @@ class MultiModalRAGQueryController:
             )
             retriever = self._get_multi_query_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression-multi-query":
+        elif retriever_name == "contextual-compression-multi-query":
             logger.debug(
-                f"Using MultiQueryRetriever with {retriever_config.search_type} search and retriever type as contexual-compression"
+                f"Using MultiQueryRetriever with {retriever_config.search_type} search and "
+                f"retriever type as {retriever_name}"
             )
             retriever = self._get_multi_query_retriever(
-                vector_store, retriever_config, retriever_type="contexual-compression"
+                vector_store, retriever_config, retriever_type="contextual-compression"
             )
 
         else:

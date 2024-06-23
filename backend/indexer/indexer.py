@@ -66,20 +66,10 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         None
     """
     client = await get_client()
-
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            client.update_data_ingestion_run_status,
-            inputs.data_ingestion_run_name,
-            DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
-        )
-    else:
-        await client.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
-        )
+    await client.aupdate_data_ingestion_run_status(
+        data_ingestion_run_name=inputs.data_ingestion_run_name,
+        status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
+    )
     try:
         existing_data_point_vectors = VECTOR_STORE_CLIENT.list_data_point_vectors(
             collection_name=inputs.collection_name,
@@ -94,33 +84,16 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                None,
-                client.update_data_ingestion_run_status,
-                inputs.data_ingestion_run_name,
-                DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
-            )
-        else:
-            await client.update_data_ingestion_run_status(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
-            )
-        raise e
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            client.update_data_ingestion_run_status,
-            inputs.data_ingestion_run_name,
-            DataIngestionRunStatus.DATA_INGESTION_STARTED,
-        )
-    else:
-        await client.update_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
+            status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
         )
+        raise e
+
+    await client.aupdate_data_ingestion_run_status(
+        data_ingestion_run_name=inputs.data_ingestion_run_name,
+        status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
+    )
     try:
         await _sync_data_source_to_collection(
             inputs=inputs,
@@ -128,48 +101,21 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                None,
-                client.update_data_ingestion_run_status,
-                inputs.data_ingestion_run_name,
-                DataIngestionRunStatus.DATA_INGESTION_FAILED,
-            )
-        else:
-            await client.update_data_ingestion_run_status(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
-            )
-        raise e
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            client.update_data_ingestion_run_status,
-            inputs.data_ingestion_run_name,
-            DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
-        )
-    else:
-        await client.update_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
+            status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
         )
+        raise e
+    await client.aupdate_data_ingestion_run_status(
+        data_ingestion_run_name=inputs.data_ingestion_run_name,
+        status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
+    )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                None,
-                client.update_data_ingestion_run_status,
-                inputs.data_ingestion_run_name,
-                DataIngestionRunStatus.DATA_CLEANUP_STARTED,
-            )
-        else:
-            await client.update_data_ingestion_run_status(
-                data_ingestion_run_name=inputs.data_ingestion_run_name,
-                status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
-            )
+        await client.aupdate_data_ingestion_run_status(
+            data_ingestion_run_name=inputs.data_ingestion_run_name,
+            status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
+        )
         try:
             VECTOR_STORE_CLIENT.delete_data_point_vectors(
                 collection_name=inputs.collection_name,
@@ -177,33 +123,15 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            if isinstance(client, TrueFoundry):
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None,
-                    client.update_data_ingestion_run_status,
-                    inputs.data_ingestion_run_name,
-                    DataIngestionRunStatus.DATA_CLEANUP_FAILED,
-                )
-            else:
-                await client.update_data_ingestion_run_status(
-                    data_ingestion_run_name=inputs.data_ingestion_run_name,
-                    status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
-                )
+            await client.aupdate_data_ingestion_run_status(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
+            )
             raise e
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(
-            None,
-            client.update_data_ingestion_run_status,
-            inputs.data_ingestion_run_name,
-            DataIngestionRunStatus.COMPLETED,
-        )
-    else:
-        await client.update_data_ingestion_run_status(
-            data_ingestion_run_name=inputs.data_ingestion_run_name,
-            status=DataIngestionRunStatus.COMPLETED,
-        )
+    await client.aupdate_data_ingestion_run_status(
+        data_ingestion_run_name=inputs.data_ingestion_run_name,
+        status=DataIngestionRunStatus.COMPLETED,
+    )
 
 
 async def _sync_data_source_to_collection(
@@ -228,13 +156,13 @@ async def _sync_data_source_to_collection(
     failed_data_point_fqns = []
     documents_ingested_count = 0
     # Create a temp dir to store the data
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory() as tmp_dirname:
         # Load the data from the source to the dest dir
         logger.info("Loading data from data source")
         data_source_loader = get_loader_for_data_source(inputs.data_source.type)
         loaded_data_points_batch_iterator = data_source_loader.load_filtered_data(
             data_source=inputs.data_source,
-            dest_dir=tmpdirname,
+            dest_dir=tmp_dirname,
             previous_snapshot=previous_snapshot,
             batch_size=inputs.batch_size,
             data_ingestion_mode=inputs.data_ingestion_mode,
@@ -263,19 +191,10 @@ async def _sync_data_source_to_collection(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
             logger.error(failed_data_point_fqns)
-            if isinstance(client, TrueFoundry):
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None,
-                    client.log_errors_for_data_ingestion_run,
-                    inputs.data_ingestion_run_name,
-                    {"failed_data_point_fqns": failed_data_point_fqns},
-                )
-            else:
-                await client.log_errors_for_data_ingestion_run(
-                    data_ingestion_run_name=inputs.data_ingestion_run_name,
-                    errors={"failed_data_point_fqns": failed_data_point_fqns},
-                )
+            await client.alog_errors_for_data_ingestion_run(
+                data_ingestion_run_name=inputs.data_ingestion_run_name,
+                errors={"failed_data_point_fqns": failed_data_point_fqns},
+            )
             raise Exception(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points"
             )
@@ -389,13 +308,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None, client.get_collection_by_name, request.collection_name
-            )
-        else:
-            collection = await client.get_collection_by_name(request.collection_name)
+        collection = await client.aget_collection_by_name(request.collection_name)
 
         # convert to pydantic model if not already -> For prisma models
         if not isinstance(collection, Collection):
@@ -442,15 +355,9 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                if isinstance(client, TrueFoundry):
-                    loop = asyncio.get_event_loop()
-                    created_data_ingestion_run = await loop.run_in_executor(
-                        None, client.create_data_ingestion_run, data_ingestion_run
-                    )
-                else:
-                    created_data_ingestion_run = await client.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
+                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
                 await sync_data_source_to_collection(
                     inputs=DataIngestionConfig(
                         collection_name=created_data_ingestion_run.collection_name,
@@ -481,15 +388,9 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                if isinstance(client, TrueFoundry):
-                    loop = asyncio.get_event_loop()
-                    created_data_ingestion_run = await loop.run_in_executor(
-                        None, client.create_data_ingestion_run, data_ingestion_run
-                    )
-                else:
-                    created_data_ingestion_run = await client.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
+                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
                 trigger_job(
                     application_fqn=settings.JOB_FQN,
                     component_name=settings.JOB_COMPONENT_NAME,

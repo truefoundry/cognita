@@ -181,7 +181,7 @@ class MetadataStoreConfig(BaseModel):
     """
 
     provider: str
-    config: Optional[dict] = None
+    config: Optional[dict] = Field(default_factory=dict)
 
 
 class RetrieverConfig(BaseModel):
@@ -439,7 +439,7 @@ class CreateCollectionDto(CreateCollection):
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
-    # allow only small case alphanumeric and hyphen, should contain atleast one alphabet and begin with alphabet
+    # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     upload_name: str = Field(
         title="Name of the upload",
         regex=r"^[a-z][a-z0-9-]*$",
