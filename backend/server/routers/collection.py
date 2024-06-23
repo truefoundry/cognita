@@ -28,11 +28,7 @@ async def get_collections():
     try:
         logger.debug("Listing all the collections...")
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collections = await loop.run_in_executor(None, client.get_collections)
-        else:
-            collections = await client.get_collections()
+        collections = await client.aget_collections()
         if collections is None:
             return JSONResponse(content={"collections": []})
         return JSONResponse(
@@ -47,11 +43,7 @@ async def get_collections():
 async def list_collections():
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collections = await loop.run_in_executor(None, client.list_collections)
-        else:
-            collections = await client.list_collections()
+        collections = await client.alist_collections()
         return JSONResponse(content={"collections": collections})
     except Exception as exp:
         logger.exception(exp)
@@ -60,16 +52,10 @@ async def list_collections():
 
 @router.get("/{collection_name}")
 async def get_collection_by_name(collection_name: str = Path(title="Collection name")):
-    """Get the collection config given it's name"""
+    """Get the collection config given its name"""
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None, client.get_collection_by_name, collection_name
-            )
-        else:
-            collection = await client.get_collection_by_name(collection_name)
+        collection = await client.aget_collection_by_name(collection_name)
         if collection is None:
             return JSONResponse(content={"collection": []})
         return JSONResponse(content={"collection": collection.dict()})
@@ -86,25 +72,13 @@ async def create_collection(collection: CreateCollectionDto):
     try:
         logger.debug(f"Creating collection {collection.name}...")
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            created_collection = await loop.run_in_executor(
-                None,
-                client.create_collection,
-                CreateCollection(
-                    name=collection.name,
-                    description=collection.description,
-                    embedder_config=collection.embedder_config,
-                ),
+        created_collection = await client.acreate_collection(
+            collection=CreateCollection(
+                name=collection.name,
+                description=collection.description,
+                embedder_config=collection.embedder_config,
             )
-        else:
-            created_collection = await client.create_collection(
-                collection=CreateCollection(
-                    name=collection.name,
-                    description=collection.description,
-                    embedder_config=collection.embedder_config,
-                )
-            )
+        )
 
         VECTOR_STORE_CLIENT.create_collection(
             collection_name=collection.name,
@@ -115,33 +89,17 @@ async def create_collection(collection: CreateCollectionDto):
         logger.info(f"Created collection... {created_collection}")
 
         if collection.associated_data_sources:
-            if isinstance(client, TrueFoundry):
-                loop = asyncio.get_event_loop()
-                for data_source in collection.associated_data_sources:
-                    await loop.run_in_executor(
-                        None,
-                        client.associate_data_source_with_collection,
-                        created_collection.name,
-                        AssociateDataSourceWithCollection(
-                            data_source_fqn=data_source.data_source_fqn,
-                            parser_config=data_source.parser_config,
-                        ),
-                    )
-                created_collection = await loop.run_in_executor(
-                    None, client.get_collection_by_name, created_collection.name
+            for data_source in collection.associated_data_sources:
+                await client.aassociate_data_source_with_collection(
+                    collection_name=created_collection.name,
+                    data_source_association=AssociateDataSourceWithCollection(
+                        data_source_fqn=data_source.data_source_fqn,
+                        parser_config=data_source.parser_config,
+                    ),
                 )
-            else:
-                for data_source in collection.associated_data_sources:
-                    await client.associate_data_source_with_collection(
-                        collection_name=created_collection.name,
-                        data_source_association=AssociateDataSourceWithCollection(
-                            data_source_fqn=data_source.data_source_fqn,
-                            parser_config=data_source.parser_config,
-                        ),
-                    )
-                created_collection = await client.get_collection_by_name(
-                    collection_name=created_collection.name
-                )
+            created_collection = await client.aget_collection_by_name(
+                collection_name=created_collection.name
+            )
         return JSONResponse(
             content={"collection": created_collection.dict()}, status_code=201
         )
@@ -158,25 +116,13 @@ async def associate_data_source_to_collection(
     """Add a data source to the collection"""
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None,
-                client.associate_data_source_with_collection,
-                request.collection_name,
-                AssociateDataSourceWithCollection(
-                    data_source_fqn=request.data_source_fqn,
-                    parser_config=request.parser_config,
-                ),
-            )
-        else:
-            collection = await client.associate_data_source_with_collection(
-                collection_name=request.collection_name,
-                data_source_association=AssociateDataSourceWithCollection(
-                    data_source_fqn=request.data_source_fqn,
-                    parser_config=request.parser_config,
-                ),
-            )
+        collection = await client.aassociate_data_source_with_collection(
+            collection_name=request.collection_name,
+            data_source_association=AssociateDataSourceWithCollection(
+                data_source_fqn=request.data_source_fqn,
+                parser_config=request.parser_config,
+            ),
+        )
         return JSONResponse(content={"collection": collection.dict()})
     except HTTPException as exp:
         raise exp
@@ -192,19 +138,10 @@ async def unassociate_data_source_from_collection(
     """Remove a data source to the collection"""
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None,
-                client.unassociate_data_source_with_collection,
-                request.collection_name,
-                request.data_source_fqn,
-            )
-        else:
-            collection = await client.unassociate_data_source_with_collection(
-                collection_name=request.collection_name,
-                data_source_fqn=request.data_source_fqn,
-            )
+        collection = await client.aunassociate_data_source_with_collection(
+            collection_name=request.collection_name,
+            data_source_fqn=request.data_source_fqn,
+        )
         return JSONResponse(content={"collection": collection.dict()})
     except HTTPException as exp:
         raise exp
@@ -227,14 +164,10 @@ async def ingest_data(request: IngestDataToCollectionDto):
 
 @router.delete("/{collection_name}")
 async def delete_collection(collection_name: str = Path(title="Collection name")):
-    """Delete collection given it's name"""
+    """Delete collection given its name"""
     try:
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, client.delete_collection, collection_name)
-        else:
-            await client.delete_collection(collection_name, include_runs=True)
+        await client.adelete_collection(collection_name, include_runs=True)
         VECTOR_STORE_CLIENT.delete_collection(collection_name=collection_name)
         return JSONResponse(content={"deleted": True})
     except HTTPException as exp:
@@ -247,18 +180,9 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
 @router.post("/data_ingestion_runs/list")
 async def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
     client = await get_client()
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        data_ingestion_runs = await loop.run_in_executor(
-            None,
-            client.get_data_ingestion_runs,
-            request.collection_name,
-            request.data_source_fqn,
-        )
-    else:
-        data_ingestion_runs = await client.get_data_ingestion_runs(
-            request.collection_name, request.data_source_fqn
-        )
+    data_ingestion_runs = await client.aget_data_ingestion_runs(
+        request.collection_name, request.data_source_fqn
+    )
     return JSONResponse(
         content={"data_ingestion_runs": [obj.dict() for obj in data_ingestion_runs]}
     )
@@ -270,16 +194,9 @@ async def get_collection_status(
 ):
     """Get status for given data ingestion run"""
     client = await get_client()
-    if isinstance(client, TrueFoundry):
-        loop = asyncio.get_event_loop()
-        data_ingestion_run = await loop.run_in_executor(
-            None, client.get_data_ingestion_run, data_ingestion_run_name
-        )
-    else:
-        data_ingestion_run = await client.get_data_ingestion_run(
-            data_ingestion_run_name=data_ingestion_run_name, no_cache=True
-        )
-
+    data_ingestion_run = await client.aget_data_ingestion_run(
+        data_ingestion_run_name=data_ingestion_run_name, no_cache=True
+    )
     if data_ingestion_run is None:
         raise HTTPException(
             status_code=404,

@@ -48,25 +48,25 @@ EXAMPLES = {
 if settings.RERANKER_SVC_URL:
     EXAMPLES.update(
         {
-            "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+            "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
         }
     )
 
     EXAMPLES.update(
         {
-            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
+            "contextual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
         }
     )
 
     EXAMPLES.update(
         {
-            "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
+            "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
         }
     )
 
     EXAMPLES.update(
         {
-            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+            "contextual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
         }
     )
 
@@ -107,14 +107,7 @@ class BasicRAGQueryController:
         Get the vector store for the collection
         """
         client = await get_client()
-        if isinstance(client, TrueFoundry):
-            loop = asyncio.get_event_loop()
-            collection = await loop.run_in_executor(
-                None, client.get_collection_by_name, collection_name
-            )
-        else:
-            collection = await client.get_collection_by_name(collection_name)
-
+        collection = await client.aget_collection_by_name(collection_name)
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
 
@@ -180,7 +173,7 @@ class BasicRAGQueryController:
             base_retriever = self._get_vector_store_retriever(
                 vector_store, retriever_config
             )
-        elif retriever_type == "contexual-compression":
+        elif retriever_type == "contextual-compression":
             base_retriever = self._get_contextual_compression_retriever(
                 vector_store, retriever_config
             )
@@ -200,7 +193,7 @@ class BasicRAGQueryController:
             )
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression":
+        elif retriever_name == "contextual-compression":
             logger.debug(
                 f"Using ContextualCompressionRetriever with {retriever_config.search_type} search"
             )
@@ -214,12 +207,13 @@ class BasicRAGQueryController:
             )
             retriever = self._get_multi_query_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression-multi-query":
+        elif retriever_name == "contextual-compression-multi-query":
             logger.debug(
-                f"Using MultiQueryRetriever with {retriever_config.search_type} search and retriever type as contexual-compression"
+                f"Using MultiQueryRetriever with {retriever_config.search_type} search and "
+                f"retriever type as {retriever_name}"
             )
             retriever = self._get_multi_query_retriever(
-                vector_store, retriever_config, retriever_type="contexual-compression"
+                vector_store, retriever_config, retriever_type="contextual-compression"
             )
 
         else:
@@ -309,11 +303,11 @@ class BasicRAGQueryController:
                 # outputs = await setup_and_retrieval.ainvoke(request.query)
                 # print(outputs)
 
-                # Retriver and QA
+                # Retriever and QA
                 # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
                 # print(outputs)
 
-                # Retriver, QA and LLM
+                # Retriever, QA and LLM
                 # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
                 # print(outputs)
 
