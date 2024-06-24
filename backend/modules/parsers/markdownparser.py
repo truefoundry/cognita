@@ -21,6 +21,7 @@ class MarkdownParser(BaseParser):
         Initializes the MarkdownParser object.
         """
         self.max_chunk_size = max_chunk_size
+        super().__init__(*args, **kwargs)
 
     async def get_chunks(
         self,

@@ -215,12 +215,12 @@ class RetrieverConfig(BaseModel):
 
     @property
     def get_search_type(self) -> str:
-        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        # Check at langchain.schema.vectorstore.VectorStore.as_retriever
         return self.search_type
 
     @property
     def get_search_kwargs(self) -> dict:
-        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        # Check at langchain.schema.vectorstore.VectorStore.as_retriever
         match self.search_type:
             case "similarity":
                 return {"k": self.k, "filter": self.filter}

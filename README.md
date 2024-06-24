@@ -404,7 +404,7 @@ The following steps will showcase how to use the cognita UI to query documents:
 
 # :sparkling_heart: Open Source Contribution
 
-Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTIONGUIDE.md).
+Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTING.md).
 
 # :crystal_ball: Future developments
 

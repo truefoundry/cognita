@@ -88,6 +88,8 @@ Data Points: Identify specific data points or values represented in the charts, 
 Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
 Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
 
+            super().__init__(*args, **kwargs)
+
     async def call_vlm_agent(
         self,
         base64_image: str,
