@@ -19,12 +19,14 @@ class Settings(BaseSettings):
 
     TFY_HOST: str = ""
     TFY_API_KEY: str = ""
-    TFY_LLM_GATEWAY_URL: str = ""
     JOB_FQN: str = ""
     JOB_COMPONENT_NAME: str = ""
 
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
+
+    # TODO: This will be removed in future releases
+    TFY_LLM_GATEWAY_URL: str = ""
 
     @root_validator(pre=True)
     def _validate_values(cls, values):
