@@ -11,12 +11,12 @@ services:
         environment:
             POSTGRES_USER: ${POSTGRES_USER}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_DB: cognita-config
         healthcheck:
             test:
                 [
                     "CMD-SHELL",
-                    "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+                    "sh -c 'pg_isready -U ${POSTGRES_USER} -d cognita-config'",
                 ]
             interval: 30s
             timeout: 60s
@@ -128,9 +128,9 @@ services:
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DOCKER_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/cognita-config
         entrypoint: /bin/bash
-        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host ${COGNITA_BACKEND_HOST} --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
+        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
         networks:
             - cognita-docker
 
