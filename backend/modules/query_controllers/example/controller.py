@@ -87,7 +87,7 @@ class BasicRAGQueryController:
             raise HTTPException(status_code=404, detail="Collection not found")
 
         if not isinstance(collection, Collection):
-            collection = Collection(**collection.dict())
+            collection = Collection(**collection.model_dump())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
@@ -324,7 +324,7 @@ class BasicRAGQueryController:
 #   "stream": True
 # }
 
-# data = ExampleQueryInput(**payload).dict()
+# data = ExampleQueryInput(**payload).model_dump()
 # ENDPOINT_URL = 'http://localhost:8000/retrievers/example-app/answer'
 
 

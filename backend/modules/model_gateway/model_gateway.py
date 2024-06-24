@@ -24,7 +24,7 @@ class ModelGateway:
         _providers = data.get("model_providers") or []
         # parse the json data into a list of ModelProviderConfig objects
         self.provider_configs = [
-            ModelProviderConfig.parse_obj(item) for item in _providers
+            ModelProviderConfig.model_validate(item) for item in _providers
         ]
 
         # load llm models

@@ -61,8 +61,8 @@ class PrismaStore(BaseMetadataStore):
             )
 
         try:
-            logger.info(f"Creating collection: {collection.dict()}")
-            collection_data = collection.dict()
+            logger.info(f"Creating collection: {collection.model_dump()}")
+            collection_data = collection.model_dump()
             collection_data["embedder_config"] = json.dumps(
                 collection_data["embedder_config"]
             )
@@ -143,7 +143,7 @@ class PrismaStore(BaseMetadataStore):
             )
 
         try:
-            data = data_source.dict()
+            data = data_source.model_dump()
             data["metadata"] = json.dumps(data["metadata"])
             data_source = await self.db.datasource.create(data)
             logger.info(f"Created data source: {data_source}")
@@ -235,7 +235,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.dict()
+                associated_data_sources[data_source_fqn] = data_source.model_dump()
 
             updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
@@ -316,7 +316,7 @@ class PrismaStore(BaseMetadataStore):
     ) -> List[dict[str, str]]:
         try:
             data_sources = await self.aget_data_sources()
-            return [data_source.dict() for data_source in data_sources]
+            return [data_source.model_dump() for data_source in data_sources]
         except Exception as e:
             logger.error(f"Failed to list data sources: {e}")
             raise HTTPException(status_code=500, detail="Failed to list data sources")
@@ -409,10 +409,10 @@ class PrismaStore(BaseMetadataStore):
         )
 
         try:
-            run_data = created_data_ingestion_run.dict()
+            run_data = created_data_ingestion_run.model_dump()
             run_data["parser_config"] = json.dumps(run_data["parser_config"])
             data_ingestion_run = await self.db.ingestionruns.create(data=run_data)
-            return DataIngestionRun(**data_ingestion_run.dict())
+            return DataIngestionRun(**data_ingestion_run.model_dump())
         except Exception as e:
             logger.error(f"Failed to create data ingestion run: {e}")
             raise HTTPException(
@@ -428,7 +428,7 @@ class PrismaStore(BaseMetadataStore):
             )
             logger.info(f"Data ingestion run: {data_ingestion_run}")
             if data_ingestion_run:
-                return DataIngestionRun(**data_ingestion_run.dict())
+                return DataIngestionRun(**data_ingestion_run.model_dump())
             return None
         except Exception as e:
             logger.error(f"Failed to get data ingestion run: {e}")

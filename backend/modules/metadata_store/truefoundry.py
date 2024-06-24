@@ -110,7 +110,7 @@ class TrueFoundry(BaseMetadataStore):
             embedder_config=collection.embedder_config,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_collection.dict(), params=params
+            run=run, metadata=created_collection.model_dump(), params=params
         )
         run.end()
         logger.debug(f"[Metadata Store] Collection Saved")
@@ -184,7 +184,7 @@ class TrueFoundry(BaseMetadataStore):
             )
             return None
         collection = self._populate_collection(
-            Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            Collection.model_validate(self._get_entity_from_run(run=ml_run))
         )
         logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
         return collection
@@ -198,7 +198,9 @@ class TrueFoundry(BaseMetadataStore):
         )
         collections = []
         for ml_run in ml_runs:
-            collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            collection = Collection.model_validate(
+                self._get_entity_from_run(run=ml_run)
+            )
             collections.append(self._populate_collection(collection))
         logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
         return collections
@@ -244,7 +246,9 @@ class TrueFoundry(BaseMetadataStore):
                 f"data source with fqn {data_source_association.data_source_fqn} not found",
             )
         # Always do this to avoid race conditions
-        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        collection = Collection.model_validate(
+            self._get_entity_from_run(run=collection_run)
+        )
         associated_data_source = AssociatedDataSources(
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
@@ -253,7 +257,7 @@ class TrueFoundry(BaseMetadataStore):
             data_source_association.data_source_fqn
         ] = associated_data_source
 
-        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        self._update_entity_in_run(run=collection_run, metadata=collection.model_dump())
         logger.debug(
             f"[Metadata Store] Associated data_source {data_source_association.data_source_fqn} "
             f"to collection {collection_name}"
@@ -278,9 +282,11 @@ class TrueFoundry(BaseMetadataStore):
                 f"Collection {collection_name} not found.",
             )
         # Always do this to avoid run conditions
-        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        collection = Collection.model_validate(
+            self._get_entity_from_run(run=collection_run)
+        )
         collection.associated_data_sources.pop(data_source_fqn)
-        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        self._update_entity_in_run(run=collection_run, metadata=collection.model_dump())
         logger.debug(
             f"[Metadata Store] Unassociated data_source {data_source_fqn} to collection {collection_name}"
         )
@@ -313,7 +319,7 @@ class TrueFoundry(BaseMetadataStore):
             metadata=data_source.metadata,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_data_source.dict(), params=params
+            run=run, metadata=created_data_source.model_dump(), params=params
         )
         run.end()
         logger.debug(
@@ -328,7 +334,7 @@ class TrueFoundry(BaseMetadataStore):
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}' and params.data_source_fqn = '{fqn}'",
         )
         for run in runs:
-            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            data_source = DataSource.model_validate(self._get_entity_from_run(run=run))
             logger.debug(f"[Metadata Store] Fetched Data Source with fqn {fqn}")
             return data_source
         logger.debug(f"[Metadata Store] Data Source with fqn {fqn} not found")
@@ -342,7 +348,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         data_sources: List[DataSource] = []
         for run in runs:
-            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            data_source = DataSource.model_validate(self._get_entity_from_run(run=run))
             data_sources.append(data_source)
         logger.debug(f"[Metadata Store] Listed {len(data_sources)} data sources")
         return data_sources
@@ -377,7 +383,7 @@ class TrueFoundry(BaseMetadataStore):
             status=DataIngestionRunStatus.INITIALIZED,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_data_ingestion_run.dict(), params=params
+            run=run, metadata=created_data_ingestion_run.model_dump(), params=params
         )
         run.end()
         logger.debug(
@@ -398,7 +404,7 @@ class TrueFoundry(BaseMetadataStore):
                 f"[Metadata Store] Ingestion run with name {data_ingestion_run_name} not found"
             )
             return None
-        data_ingestion_run = DataIngestionRun.parse_obj(
+        data_ingestion_run = DataIngestionRun.model_validate(
             self._get_entity_from_run(run=run)
         )
         run_tags = run.get_tags()
@@ -429,7 +435,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         data_ingestion_runs: List[DataIngestionRun] = []
         for run in runs:
-            data_ingestion_run = DataIngestionRun.parse_obj(
+            data_ingestion_run = DataIngestionRun.model_validate(
                 self._get_entity_from_run(run=run)
             )
             run_tags = run.get_tags()
