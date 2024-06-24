@@ -1,31 +1,32 @@
 model_providers:
+    ############################ Local ############################################
+    #   Uncomment this provider if you want to use local models providers         #
+    #   using ollama and infinity model server                                    #
+    ###############################################################################
 
-  ############################ Local ############################################
-  #   Uncomment this provider if you want to use local models providers         #
-  #   using ollama and infinity model server                                    #
-  ###############################################################################
+    - provider_name: local-ollama
+      api_format: openai
+      base_url: http://ollama-server:11434/v1/
+      api_key_env_var: ""
+      llm_model_ids:
+          - "qwen2:1.5b"
+      embedding_model_ids: []
+      reranking_model_ids: []
 
-  - provider_name: local-ollama
-    api_format: openai
-    base_url: http://ollama-server:11434/v1/
-    api_key_env_var: ""
-    llm_model_ids:
-      - "qwen2:1.5b"
-    embedding_model_ids: []
+    - provider_name: local-infinity
+      api_format: openai
+      base_url: http://infinity-server:7997/
+      api_key_env_var: ""
+      llm_model_ids: []
+      embedding_model_ids:
+          - "mixedbread-ai/mxbai-embed-large-v1"
+      reranking_model_ids:
+          - "mixedbread-ai/mxbai-rerank-xsmall-v1"
 
-  - provider_name: local-infinity
-    api_format: openai
-    base_url: http://infinity-server:7997/
-    api_key_env_var: ""
-    llm_model_ids: []
-    embedding_model_ids:
-      - "mixedbread-ai/mxbai-embed-large-v1"
-
-  ############################ OpenAI ###########################################
-  #   Uncomment this provider if you want to use OpenAI as a models provider    #
-  #   Remember to set `OPENAI_API_KEY` in container environment                 #
-  ###############################################################################
-
+    ############################ OpenAI ###########################################
+    #   Uncomment this provider if you want to use OpenAI as a models provider    #
+    #   Remember to set `OPENAI_API_KEY` in container environment                 #
+    ###############################################################################
 #  - provider_name: openai
 #    api_format: openai
 #    api_key_env_var: OPENAI_API_KEY
@@ -35,12 +36,12 @@ model_providers:
 #    embedding_model_ids:
 #      - "text-embedding-3-small"
 #      - "text-embedding-ada-002"
+#    reranking_model_ids: []
 
-
-  ############################ TrueFoundry ###########################################
-  #   Uncomment this provider if you want to use TrueFoundry as a models provider    #
-  #   Remember to set `TFY_API_KEY` in container environment                         #
-  ####################################################################################
+############################ TrueFoundry ###########################################
+#   Uncomment this provider if you want to use TrueFoundry as a models provider    #
+#   Remember to set `TFY_API_KEY` in container environment                         #
+####################################################################################
 
 #  - provider_name: truefoundry
 #    api_format: openai
@@ -51,3 +52,4 @@ model_providers:
 #      - "openai-main/gpt-3-5-turbo"
 #    embedding_model_ids:
 #      - "openai-main/text-embedding-ada-002"
+#    reranking_model_ids: []

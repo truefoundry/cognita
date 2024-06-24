@@ -22,27 +22,17 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
-from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
+
+# from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
-from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
 }
-
-if settings.RERANKER_SVC_URL:
-    EXAMPLES.update(
-        {
-            "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-        }
-    )
-    EXAMPLES.update(
-        {
-            "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
 
 
 @query_controller("/basic-rag")
@@ -111,26 +101,18 @@ class BasicRAGQueryController:
         Get the contextual compression retriever
         """
         try:
-            if settings.RERANKER_SVC_URL:
-                retriever = self._get_vector_store_retriever(
-                    vector_store, retriever_config
-                )
-                logger.info("Using MxBaiRerankerSmall th' service...")
-                compressor = InfinityRerankerSvc(
-                    top_k=retriever_config.top_k,
-                    model=retriever_config.compressor_model_name,
-                )
+            retriever = self._get_vector_store_retriever(vector_store, retriever_config)
+            logger.info("Using MxBaiRerankerSmall th' service...")
 
-                compression_retriever = ContextualCompressionRetriever(
-                    base_compressor=compressor, base_retriever=retriever
-                )
+            compressor = model_gateway.get_reranker_from_model_config(
+                model_name=retriever_config.compressor_model_name,
+                top_k=retriever_config.top_k,
+            )
+            compression_retriever = ContextualCompressionRetriever(
+                base_compressor=compressor, base_retriever=retriever
+            )
 
-                return compression_retriever
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Reranker service is not available",
-                )
+            return compression_retriever
         except Exception as e:
             logger.error(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(

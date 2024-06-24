@@ -104,6 +104,8 @@ def get_enabled_models(
         enabled_models = model_gateway.get_embedding_models()
     elif model_type == ModelType.chat:
         enabled_models = model_gateway.get_llm_models()
+    elif model_type == ModelType.reranking:
+        enabled_models = model_gateway.get_reranker_models()
     else:
         raise HTTPException(
             status_code=400,
