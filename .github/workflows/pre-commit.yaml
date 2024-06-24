@@ -1,0 +1,42 @@
+name: pre-commit hooks check
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check_pre_commit_hooks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools wheel
+          pip install -r backend/requirements.txt
+          pip check
+
+      - name: Install pre-commit
+        run: |
+          pip install -U pre-commit
+
+      - name: Check files with pre-commit
+        run: |
+          pre-commit run --all-files --show-diff-on-failure -v

@@ -22,7 +22,7 @@ async def get_data_source():
             content={"data_sources": [obj.dict() for obj in data_sources]}
         )
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to get data source")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -34,7 +34,7 @@ async def list_data_sources():
         data_sources = await client.alist_data_sources()
         return JSONResponse(content={"data_sources": data_sources})
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to list data sources")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -52,7 +52,7 @@ async def add_data_source(
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to add data source")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -68,5 +68,5 @@ async def delete_data_source(data_source_fqn: str):
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to delete data source")
         raise HTTPException(status_code=500, detail=str(exp))

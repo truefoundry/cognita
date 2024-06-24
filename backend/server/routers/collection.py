@@ -1,12 +1,9 @@
-import asyncio
-
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
-from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.types import (
@@ -35,7 +32,7 @@ async def get_collections():
             content={"collections": [obj.dict() for obj in collections]}
         )
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to get collection")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -46,7 +43,7 @@ async def list_collections():
         collections = await client.alist_collections()
         return JSONResponse(content={"collections": collections})
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to list collections")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -62,7 +59,7 @@ async def get_collection_by_name(collection_name: str = Path(title="Collection n
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to get collection by name")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -70,7 +67,7 @@ async def get_collection_by_name(collection_name: str = Path(title="Collection n
 async def create_collection(collection: CreateCollectionDto):
     """API to create a collection"""
     try:
-        logger.debug(f"Creating collection {collection.name}...")
+        logger.info(f"Creating collection {collection.name}...")
         client = await get_client()
         created_collection = await client.acreate_collection(
             collection=CreateCollection(
@@ -79,7 +76,7 @@ async def create_collection(collection: CreateCollectionDto):
                 embedder_config=collection.embedder_config,
             )
         )
-
+        logger.info(f"Creating collection {collection.name} on vector db...")
         VECTOR_STORE_CLIENT.create_collection(
             collection_name=collection.name,
             embeddings=model_gateway.get_embedder_from_model_config(
@@ -106,6 +103,7 @@ async def create_collection(collection: CreateCollectionDto):
     except HTTPException as exp:
         raise exp
     except Exception as exp:
+        logger.exception(f"Failed to create collection")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -127,7 +125,7 @@ async def associate_data_source_to_collection(
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to associate data source")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -146,7 +144,7 @@ async def unassociate_data_source_from_collection(
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to unassociate data source from collection")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -158,7 +156,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to ingest data")
         raise HTTPException(status_code=500, detail=str(exp))
 
 
@@ -173,7 +171,7 @@ async def delete_collection(collection_name: str = Path(title="Collection name")
     except HTTPException as exp:
         raise exp
     except Exception as exp:
-        logger.exception(exp)
+        logger.exception("Failed to delete collection")
         raise HTTPException(status_code=500, detail=str(exp))
 
 

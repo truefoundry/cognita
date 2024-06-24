@@ -1,10 +1,10 @@
 GitPython==3.1.43
 langchain==0.1.9
 langchain-community==0.0.24
-langchain-openai==0.0.8
-langchain-core==0.1.30
-openai==1.16.2
-tiktoken==0.6.0
+langchain-openai==0.1.7
+langchain-core==0.1.46
+openai==1.35.3
+tiktoken==0.7.0
 uvicorn==0.23.2
 fastapi==0.109.1
 qdrant-client==1.9.0
