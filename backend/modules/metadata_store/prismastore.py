@@ -49,15 +49,16 @@ class PrismaStore(BaseMetadataStore):
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
         try:
             existing_collection = await self.aget_collection_by_name(collection.name)
-            if existing_collection:
-                logger.error(f"Collection with name {collection.name} already exists")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Collection with name {collection.name} already exists",
-                )
         except Exception as e:
-            logger.error(f"Error:{e}")
+            logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=e)
+
+        if existing_collection:
+            logger.error(f"Collection with name {collection.name} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection.name} already exists",
+            )
 
         try:
             logger.info(f"Creating collection: {collection.dict()}")
@@ -130,15 +131,16 @@ class PrismaStore(BaseMetadataStore):
     async def acreate_data_source(self, data_source: CreateDataSource) -> DataSource:
         try:
             existing_data_source = await self.aget_data_source_from_fqn(data_source.fqn)
-            if existing_data_source:
-                logger.error(f"Data source with fqn {data_source.fqn} already exists")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Data source with fqn {data_source.fqn} already exists",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        if existing_data_source:
+            logger.error(f"Data source with fqn {data_source.fqn} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source with fqn {data_source.fqn} already exists",
+            )
 
         try:
             data = data_source.dict()
@@ -175,31 +177,33 @@ class PrismaStore(BaseMetadataStore):
     ) -> Collection:
         try:
             existing_collection = await self.aget_collection_by_name(collection_name)
-            if not existing_collection:
-                logger.error(f"Collection with name {collection_name} does not exist")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Collection with name {collection_name} does not exist",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        if not existing_collection:
+            logger.error(f"Collection with name {collection_name} does not exist")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection_name} does not exist",
+            )
 
         try:
             data_source = await self.aget_data_source_from_fqn(
                 data_source_association.data_source_fqn
             )
-            if not data_source:
-                logger.error(
-                    f"Data source with fqn {data_source_association.data_source_fqn} does not exist"
-                )
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Data source with fqn {data_source_association.data_source_fqn} does not exist",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        if not data_source:
+            logger.error(
+                f"Data source with fqn {data_source_association.data_source_fqn} does not exist"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source with fqn {data_source_association.data_source_fqn} does not exist",
+            )
 
         logger.info(f"Data source to associate: {data_source}")
         try:
@@ -251,48 +255,50 @@ class PrismaStore(BaseMetadataStore):
     ) -> Collection:
         try:
             collection = await self.aget_collection_by_name(collection_name)
-            if not collection:
-                logger.error(f"Collection with name {collection_name} does not exist")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Collection with name {collection_name} does not exist",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        if not collection:
+            logger.error(f"Collection with name {collection_name} does not exist")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection_name} does not exist",
+            )
 
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
-            if not data_source:
-                logger.error(f"Data source with fqn {data_source_fqn} does not exist")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Data source with fqn {data_source_fqn} does not exist",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-        try:
-            associated_data_sources = collection.associated_data_sources
-            if not associated_data_sources:
-                logger.error(
-                    f"No associated data sources found for collection {collection_name}"
-                )
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"No associated data sources found for collection {collection_name}",
-                )
-            if data_source_fqn not in associated_data_sources:
-                logger.error(
-                    f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}"
-                )
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}",
-                )
+        if not data_source:
+            logger.error(f"Data source with fqn {data_source_fqn} does not exist")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source with fqn {data_source_fqn} does not exist",
+            )
 
-            associated_data_sources.pop(data_source_fqn, None)
+        associated_data_sources = collection.associated_data_sources
+        if not associated_data_sources:
+            logger.error(
+                f"No associated data sources found for collection {collection_name}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"No associated data sources found for collection {collection_name}",
+            )
+        if data_source_fqn not in associated_data_sources:
+            logger.error(
+                f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}",
+            )
+
+        associated_data_sources.pop(data_source_fqn, None)
+        try:
             updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
                 data={"associated_data_sources": json.dumps(associated_data_sources)},
@@ -325,38 +331,37 @@ class PrismaStore(BaseMetadataStore):
         # Check if data source exists if not raise an error
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
-            if not data_source:
-                logger.error(f"Data source with fqn {data_source_fqn} does not exist")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Data source with fqn {data_source_fqn} does not exist",
-                )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
+        if not data_source:
+            logger.error(f"Data source with fqn {data_source_fqn} does not exist")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Data source with fqn {data_source_fqn} does not exist",
+            )
+
         # Check if data source is associated with any collection
         try:
             collections = await self.aget_collections()
-            for collection in collections:
-                associated_data_sources = collection.associated_data_sources
-                if (
-                    associated_data_sources
-                    and data_source_fqn in associated_data_sources
-                ):
-                    logger.error(
-                        f"Data source with fqn {data_source_fqn} is already associated with "
-                        f"collection {collection.name}"
-                    )
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Data source with fqn {data_source_fqn} is associated "
-                        f"with collection {collection.name}. Delete the necessary collections "
-                        f"or unassociate them from the collection(s) before deleting the data source",
-                    )
         except Exception as e:
             logger.error(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+        for collection in collections:
+            associated_data_sources = collection.associated_data_sources
+            if associated_data_sources and data_source_fqn in associated_data_sources:
+                logger.error(
+                    f"Data source with fqn {data_source_fqn} is already associated with "
+                    f"collection {collection.name}"
+                )
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Data source with fqn {data_source_fqn} is associated "
+                    f"with collection {collection.name}. Delete the necessary collections "
+                    f"or unassociate them from the collection(s) before deleting the data source",
+                )
 
         # Delete the data source
         try:

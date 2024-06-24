@@ -161,7 +161,7 @@ class VectorDBConfig(BaseModel):
     """
 
     provider: str
-    local: Optional[bool] = None
+    local: bool = False
     url: Optional[str] = None
     api_key: Optional[str] = None
     config: Optional[dict] = None

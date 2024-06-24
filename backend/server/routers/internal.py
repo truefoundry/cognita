@@ -1,11 +1,9 @@
 import os
 import uuid
-from http.client import HTTPException
 from types import SimpleNamespace
 from typing import List, Optional
 
-import requests
-from fastapi import APIRouter, File, Form, Query, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 from truefoundry import ml
 from truefoundry.ml import DataDirectory
@@ -27,7 +25,7 @@ async def upload_to_docker_directory(
     files: List[UploadFile] = File(...),
 ):
     """This function uploads files within `/app/user_data/` given by the name req.upload_name"""
-    if settings.LOCAL == False:
+    if not settings.LOCAL:
         return JSONResponse(
             content={"error": "API only supported for local docker environment"},
             status_code=500,
@@ -102,7 +100,6 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
 def get_enabled_models(
     model_type: Optional[ModelType] = Query(default=None),
 ):
-    enabled_models = []
     if model_type == ModelType.embedding:
         enabled_models = model_gateway.get_embedding_models()
     elif model_type == ModelType.chat:

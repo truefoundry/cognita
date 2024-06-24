@@ -80,7 +80,7 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 ## :whale: Using Docker compose (recommended - version 25+)
 
-Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
+Cognita and all of its services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
 
 You can run the following command to start the services:
 
@@ -90,7 +90,7 @@ docker-compose --env-file compose.env up
 
 -   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
 -   The compose file will start the following services:
-    -   `postgres` - Used to store metadata for collections and data sources.
+    -   `cognita-db` - Postgres instance used to store metadata for collections and data sources.
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.

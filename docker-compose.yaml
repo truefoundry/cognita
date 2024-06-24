@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-    db:
+    cognita-db:
         image: postgres:13
         container_name: cognita-postgres
         restart: unless-stopped
@@ -21,7 +21,7 @@ services:
             interval: 30s
             timeout: 60s
             retries: 5
-            start_period: 80s
+            start_period: 15s
         networks:
             - cognita-docker
 
@@ -39,7 +39,7 @@ services:
         healthcheck:
             test: ["CMD", "ollama", "list"]
             interval: 30s
-            timeout: 10s
+            timeout: 5s
             retries: 3
             start_period: 60s
         environment:
@@ -52,22 +52,22 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.42
+        image: michaelf34/infinity:0.0.49
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
         profiles:
             - infinity
         ports:
-            - "7797:7997"
+            - "7797:7797"
         volumes:
             - ./volumes/infinity:/app/.cache
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:7997/health"]
-            interval: 45s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
+            test: ["CMD", "curl", "-f", "http://localhost:7797/health"]
+            interval: 30s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
         environment:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=8
@@ -87,6 +87,12 @@ services:
             - 6333
             - 6334
             - 6335
+        healthcheck:
+            test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/0.0.0.0/6333'"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
         volumes:
             - ./volumes/qdrant_storage:/qdrant/storage:z
         networks:
@@ -97,6 +103,7 @@ services:
             context: .
             dockerfile: ./backend/Dockerfile
             args:
+                - ADD_PRISMA=1
                 - ADD_PYTORCH=0 # Only for PdfTableParser
                 - ADD_PARSER=0 # Only for PdfTableParser
         restart: unless-stopped
@@ -104,7 +111,10 @@ services:
         ports:
             - "${COGNITA_BACKEND_PORT}:8000"
         depends_on:
-            db:
+            cognita-db:
+                condition: service_healthy
+                restart: true
+            qdrant-server:
                 condition: service_healthy
                 restart: true
         volumes:
@@ -114,8 +124,9 @@ services:
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
             interval: 30s
-            timeout: 10s
+            timeout: 5s
             retries: 3
+            start_period: 10s
         environment:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
@@ -128,9 +139,9 @@ services:
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/cognita-config
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
         entrypoint: /bin/bash
-        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port ${COGNITA_BACKEND_PORT} backend.server.app:app --reload"
+        command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
             - cognita-docker
 

@@ -29,12 +29,9 @@ RUN if [ "${ADD_PARSER}" = "1" ]; then python3 -m pip install --use-pep517 --no-
 ARG ADD_VECTORDB=0
 RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
 
-# Temporary addition until templates have been updated using build args as environment variables
-ARG ADD_RERANKER_SVC_URL=""
-ENV RERANKER_SVC_URL=${ADD_RERANKER_SVC_URL}
-
-ARG ADD_EMBEDDING_SVC_URL=""
-ENV EMBEDDING_SVC_URL=${ADD_EMBEDDING_SVC_URL}
+# Install Prisma CLI
+ARG ADD_PRISMA=0
+RUN if [ "${ADD_PRISMA}" = "1" ]; then prisma version; fi
 
 # Copy the project files
 COPY . /app

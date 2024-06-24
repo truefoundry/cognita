@@ -13,6 +13,7 @@ def get_parsers():
     parsers = list_parsers()
     return parsers
 
+
 @router.get("/dataloaders")
 def get_dataloaders():
     """Get available data loaders from registered data loaders"""
