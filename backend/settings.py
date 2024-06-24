@@ -23,11 +23,8 @@ class Settings(BaseSettings):
     JOB_FQN: str = ""
     JOB_COMPONENT_NAME: str = ""
 
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
+    LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
-
-    if not TFY_LLM_GATEWAY_URL:
-        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
 
     @root_validator(pre=True)
     def _validate_values(cls, values):
