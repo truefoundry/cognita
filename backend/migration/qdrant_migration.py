@@ -72,6 +72,7 @@ def migrate_collection(
     except Exception as e:
         raise e
 
+    dest_collection = None
     try:
         # prepare collection to be created at destination
         dest_collection = CreateCollectionDto(
@@ -130,11 +131,12 @@ def migrate_collection(
         )
 
     except Exception as e:
-        with requests.delete(
-            url=f"{destination_backend_url.rstrip('/')}/v1/collections/{destination_collection_name}",
-            json=dest_collection,
-        ) as r:
-            logger.debug("Destination collection entry deleted: ", r.json())
+        if dest_collection is not None:
+            with requests.delete(
+                url=f"{destination_backend_url.rstrip('/')}/v1/collections/{destination_collection_name}",
+                json=dest_collection,
+            ) as r:
+                logger.debug("Destination collection entry deleted: ", r.json())
         raise e
 
     logger.debug(
