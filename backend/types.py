@@ -119,6 +119,7 @@ class ModelProviderConfig(BaseModel):
     embedding_model_ids: List[str]
     api_key_env_var: str
     base_url: Optional[str] = None
+    parameters: Optional[dict] = None
 
 
 class EmbedderConfig(BaseModel):

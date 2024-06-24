@@ -37,8 +37,9 @@ class ModelGateway:
 
                 for model_id in provider_config.llm_model_ids:
                     model_name = f"{provider_config.provider_name}/{model_id}"
+                    parameters = provider_config.parameters
                     self.model_name_to_provider_config[model_name] = provider_config
-                    self.llm_models.append(ModelConfig(name=model_name, type=ModelType.chat))
+                    self.llm_models.append(ModelConfig(name=model_name, type=ModelType.chat,parameters=parameters))
 
     def get_embedding_models(self) -> List[ModelConfig]:
         return self.embedding_models
