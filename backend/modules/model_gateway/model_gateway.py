@@ -1,13 +1,13 @@
-import json
 import os
 from typing import List
 
+import yaml
 from langchain.embeddings.base import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
 
-from backend.modules.model_gateway import MODELS_CONFIG_PATH
+from backend.modules.model_gateway import MODELS_CONFIG_PATH, MODELS_CONFIG_SAMPLE_PATH
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
 
 
@@ -16,50 +16,56 @@ class ModelGateway:
     model_name_to_provider_config = {}
 
     def __init__(self):
+        if not os.path.exists(MODELS_CONFIG_PATH):
+            raise Exception(
+                f"{MODELS_CONFIG_PATH} does not exist. "
+                f"You can copy {MODELS_CONFIG_SAMPLE_PATH} as {MODELS_CONFIG_PATH} for sample config"
+            )
         with open(MODELS_CONFIG_PATH) as f:
-            data = json.load(f)
-            # parse the json data into a list of ModelProviderConfig objects
-            self.provider_configs = [
-                ModelProviderConfig.parse_obj(item) for item in data
-            ]
+            data = yaml.safe_load(f)
+        _providers = data.get("model_providers") or []
+        # parse the json data into a list of ModelProviderConfig objects
+        self.provider_configs = [
+            ModelProviderConfig.parse_obj(item) for item in _providers
+        ]
 
-            # load llm models
-            self.llm_models: List[ModelConfig] = []
-            # load embedding models
-            self.embedding_models: List[ModelConfig] = []
+        # load llm models
+        self.llm_models: List[ModelConfig] = []
+        # load embedding models
+        self.embedding_models: List[ModelConfig] = []
 
-            for provider_config in self.provider_configs:
-                if provider_config.api_key_env_var and not os.environ.get(
-                    provider_config.api_key_env_var
-                ):
-                    raise ValueError(
-                        f"Environment variable {provider_config.api_key_env_var} not set. "
-                        f"Cannot initialize the model gateway."
+        for provider_config in self.provider_configs:
+            if provider_config.api_key_env_var and not os.environ.get(
+                provider_config.api_key_env_var
+            ):
+                raise ValueError(
+                    f"Environment variable {provider_config.api_key_env_var} not set. "
+                    f"Cannot initialize the model gateway."
+                )
+
+            for model_id in provider_config.embedding_model_ids:
+                model_name = f"{provider_config.provider_name}/{model_id}"
+                self.model_name_to_provider_config[model_name] = provider_config
+
+                # Register the model as an embedding model
+                self.embedding_models.append(
+                    ModelConfig(
+                        name=f"{provider_config.provider_name}/{model_id}",
+                        type=ModelType.embedding,
                     )
+                )
 
-                for model_id in provider_config.embedding_model_ids:
-                    model_name = f"{provider_config.provider_name}/{model_id}"
-                    self.model_name_to_provider_config[model_name] = provider_config
+            for model_id in provider_config.llm_model_ids:
+                model_name = f"{provider_config.provider_name}/{model_id}"
+                self.model_name_to_provider_config[model_name] = provider_config
 
-                    # Register the model as an embedding model
-                    self.embedding_models.append(
-                        ModelConfig(
-                            name=f"{provider_config.provider_name}/{model_id}",
-                            type=ModelType.embedding,
-                        )
+                # Register the model as a llm model
+                self.llm_models.append(
+                    ModelConfig(
+                        name=f"{provider_config.provider_name}/{model_id}",
+                        type=ModelType.chat,
                     )
-
-                for model_id in provider_config.llm_model_ids:
-                    model_name = f"{provider_config.provider_name}/{model_id}"
-                    self.model_name_to_provider_config[model_name] = provider_config
-
-                    # Register the model as a llm model
-                    self.llm_models.append(
-                        ModelConfig(
-                            name=f"{provider_config.provider_name}/{model_id}",
-                            type=ModelType.chat,
-                        )
-                    )
+                )
 
     def get_embedding_models(self) -> List[ModelConfig]:
         return self.embedding_models

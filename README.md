@@ -73,7 +73,7 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 1. Support for multiple document retrievers that use `Similarity Search`, `Query Decompostion`, `Document Reranking`, etc
 1. Support for SOTA OpenSource embeddings and reranking from `mixedbread-ai`
-1. Support for using LLMs using `Ollama`
+1. Support for using LLMs using `ollama`
 1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
 
 # :rocket: Quickstart: Running Cognita Locally
@@ -82,9 +82,23 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 Cognita and all of its services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
 
-You can run the following command to start the services:
+### Configuring Model Providers
 
-```docker
+Before starting the services, we need to configure model providers that we would need for embedding and generating answers.
+
+To start, copy `models_config.sample.yaml` to `models_config.yaml`
+
+```shell
+cp models_config.sample.yaml models_config.yaml
+```
+
+By default, the config has local providers enabled that need infinity and ollama server to run embedding and LLMs locally.
+However, if you have a OpenAI API Key, you can uncomment the `openai` provider in `models_config.yaml` and update `OPENAI_API_KEY` in `compose.env`
+
+
+Now, you can run the following command to start the services:
+
+```shell
 docker-compose --env-file compose.env up
 ```
 
@@ -98,7 +112,7 @@ docker-compose --env-file compose.env up
 
 To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
-```docker
+```shell
 docker-compose --env-file compose.env --profile ollama --profile infinity up
 ```
 
