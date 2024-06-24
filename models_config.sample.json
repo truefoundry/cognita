@@ -13,7 +13,7 @@
         "llm_model_ids": [],
         "embedding_model_ids": ["mixedbread-ai/mxbai-embed-large-v1"],
         "api_key_env_var": "",
-        "base_url": "http://infinity-server:7797/"
+        "base_url": "http://infinity-server:7997/"
     },
     {
         "provider_name": "openai",

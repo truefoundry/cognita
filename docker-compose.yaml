@@ -59,11 +59,11 @@ services:
         profiles:
             - infinity
         ports:
-            - "7797:7797"
+            - "7997:7997"
         volumes:
             - ./volumes/infinity:/app/.cache
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:7797/health"]
+            test: ["CMD", "curl", "-f", "http://localhost:7997/health"]
             interval: 30s
             timeout: 5s
             retries: 10

@@ -82,6 +82,9 @@ class ModelGateway:
             openai_api_key=api_key,
             model=model_id,
             openai_api_base=model_provider_config.base_url,
+            check_embedding_ctx_length=(
+                model_provider_config.provider_name == "openai"
+            ),
         )
 
     def get_llm_from_model_config(
