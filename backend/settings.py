@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     Settings class to hold all the environment variables
     """
 
+    class Config:
+        extra = "allow"
+
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
