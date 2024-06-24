@@ -95,7 +95,7 @@ def _recreate_collection(
     src_config = src_collection_info.config
     src_payload_schema = src_collection_info.payload_schema
 
-    # delete destination collection only from qdrant that was created while creating metadatastore entry
+    # delete destination collection only from qdrant that was created while creating metadata store entry
     dest_client.delete_collection(destination_collection_name, timeout=300)
     dest_client.create_collection(
         destination_collection_name,

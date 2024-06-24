@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Iterator, List
 
-from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+from backend.types import DataIngestionMode, DataSource, LoadedDataPoint
 
 # A global registry to store all available loaders.
 LOADER_REGISTRY = {}
