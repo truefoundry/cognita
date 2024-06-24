@@ -4,16 +4,36 @@ import json
 import os
 
 from backend.logger import logger
+from backend.settings import settings
 
-# Check if models_config.sample.json exists but not models_config.json
-# If models_config.sample.json exists, copy it to models_config.json
-if os.path.exists("./models_config.sample.json") and not os.path.exists(
-    "./models_config.json"
+# Define the paths as constants
+# Current file's directory
+current_dir = os.path.dirname(__file__)
+
+# Navigate up three levels to get to the project root
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+
+MODELS_CONFIG_SAMPLE_PATH = os.path.join(project_root, "models_config.sample.json")
+MODELS_CONFIG_PATH = os.path.join(project_root, "models_config.json")
+
+logger.info(f"MODELS_CONFIG_SAMPLE_PATH: {MODELS_CONFIG_SAMPLE_PATH}")
+logger.info(f"MODELS_CONFIG_PATH: {MODELS_CONFIG_PATH}")
+
+if (
+    settings.TFY_API_KEY
+    and os.path.exists(MODELS_CONFIG_SAMPLE_PATH)
+    and not os.path.exists(MODELS_CONFIG_PATH)
 ):
     logger.info(
         "models_config.json not found. Creating models_config.json from models_config.sample.json"
     )
-    with open("./models_config.sample.json") as f:
-        data = json.load(f)
-        with open("./models_config.json", "w") as f:
-            json.dump(data, f, indent=4)
+    data = {
+        "provider_name": "truefoundry",
+        "api_format": "openai",
+        "llm_model_ids": ["openai-main/gpt-4-turbo", "openai-main/gpt-3-5-turbo"],
+        "embedding_model_ids": ["openai-main/text-embedding-ada-002"],
+        "api_key_env_var": "TFY_API_KEY",
+        "base_url": settings.TFY_LLM_GATEWAY_URL,
+    }
+    with open(MODELS_CONFIG_PATH, "w") as f:
+        json.dump([data], f, indent=4)

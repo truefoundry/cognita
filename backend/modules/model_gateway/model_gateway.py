@@ -8,6 +8,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
 
 from backend.logger import logger
+from backend.modules.model_gateway import MODELS_CONFIG_PATH
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
 
 
@@ -16,62 +17,53 @@ class ModelGateway:
     modelsToProviderMap = {}
 
     def __init__(self):
-        with open("./models_config.json") as f:
+        with open(MODELS_CONFIG_PATH) as f:
             data = json.load(f)
-            self.config = [ModelProviderConfig(**item) for item in data]
-            self.models: List[ModelConfig] = []
-            for list in self.config:
-                for model_id in list.embedding_model_ids:
-                    if list.api_key_env_var and os.environ.get(list.api_key_env_var):
-                        # Register only those models whose API key is set
-                        model_name = f"{list.provider_name}/{model_id}"
-                        logger.info(f"Adding model {model_name} to the model gateway.")
-                        self.modelsToProviderMap[model_name] = list
-                    else:
-                        # Avoid adding the model to the map if the API key is not set
-                        logger.warning(
-                            f"Environment variable {list.api_key_env_var} not set."
-                        )
-                for model_id in list.llm_model_ids:
-                    if list.api_key_env_var and os.environ.get(list.api_key_env_var):
-                        # Register only those models whose API key is set
-                        model_name = f"{list.provider_name}/{model_id}"
-                        logger.info(f"Adding model {model_name} to the model gateway.")
-                        self.modelsToProviderMap[model_name] = list
-                    else:
-                        # Avoid adding the model to the map if the API key is not set
-                        logger.warning(
-                            f"Environment variable {list.api_key_env_var} not set."
-                        )
+            # parse the json data into a list of ModelProviderConfig objects
+            self.config = [ModelProviderConfig.parse_obj(item) for item in data]
 
-    def get_embedding_models(self) -> List[ModelConfig]:
-        models: List[ModelConfig] = []
-        for list in self.config:
-            if list.api_key_env_var and os.environ.get(list.api_key_env_var):
-                # Register only those models whose API key is set
-                for model_id in list.embedding_model_ids:
-                    models.append(
+            # load llm models
+            self.llm_models: List[ModelConfig] = []
+            # load embedding models
+            self.embedding_models: List[ModelConfig] = []
+
+            for config_obj in self.config:
+                if config_obj.api_key_env_var and not os.environ.get(
+                    config_obj.api_key_env_var
+                ):
+                    raise ValueError(
+                        f"Environment variable {config_obj.api_key_env_var} not set. Cannot initialize the model gateway."
+                    )
+
+                for model_id in config_obj.embedding_model_ids:
+                    model_name = f"{config_obj.provider_name}/{model_id}"
+                    self.modelsToProviderMap[model_name] = config_obj
+
+                    # Register the model as an embedding model
+                    self.embedding_models.append(
                         ModelConfig(
-                            name=f"{list.provider_name}/{model_id}",
+                            name=f"{config_obj.provider_name}/{model_id}",
                             type=ModelType.embedding,
                         ).dict()
                     )
 
-        return models
+                for model_id in config_obj.llm_model_ids:
+                    model_name = f"{config_obj.provider_name}/{model_id}"
+                    self.modelsToProviderMap[model_name] = config_obj
 
-    def get_llm_models(self) -> List[ModelConfig]:
-        models: List[ModelConfig] = []
-        for list in self.config:
-            if list.api_key_env_var and os.environ.get(list.api_key_env_var):
-                # Register only those models whose API key is set
-                for model_id in list.llm_model_ids:
-                    models.append(
+                    # Register the model as an llm model
+                    self.llm_models.append(
                         ModelConfig(
-                            name=f"{list.provider_name}/{model_id}", type=ModelType.chat
+                            name=f"{config_obj.provider_name}/{model_id}",
+                            type=ModelType.chat,
                         ).dict()
                     )
 
-        return models
+    def get_embedding_models(self) -> List[ModelConfig]:
+        return self.embedding_models
+
+    def get_llm_models(self) -> List[ModelConfig]:
+        return self.llm_models
 
     def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
         if model_name not in self.modelsToProviderMap:
