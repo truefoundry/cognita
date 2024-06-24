@@ -1,8 +1,8 @@
 GitPython==3.1.43
-langchain==0.1.9
-langchain-community==0.0.24
+langchain==0.2.1
+langchain-community==0.2.1
 langchain-openai==0.1.7
-langchain-core==0.1.46
+langchain-core==0.2.0
 openai==1.35.3
 tiktoken==0.7.0
 uvicorn==0.23.2
@@ -30,5 +30,14 @@ pillow==10.3.0
 ### transformers
 transformers==4.40.2
 
+#SambaStudio
+sseclient-py==1.8.0
+
 ### prisma
 prisma==0.13.1
+
+#Replicate
+replicate==0.26.0
+
+#LoggingTracing
+langsmith==0.1.71
