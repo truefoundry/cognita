@@ -226,6 +226,10 @@ const DataSourcesTable = ({
         const key = collectionName + ':' + params?.row?.fqn
         return (
           <div className="flex gap-1">
+            <DataSourceDeleteButton
+              collectionName={collectionName}
+              fqn={params?.row?.fqn}
+            />
             <DataSourceSyncButton
               collectionName={collectionName}
               fqn={params?.row?.fqn}

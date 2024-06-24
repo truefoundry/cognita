@@ -7,28 +7,16 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
-from langchain_community.chat_models.ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-from langchain_openai.chat_models import ChatOpenAI
-from truefoundry.langchain import TrueFoundryChat
 
 from backend.logger import logger
-from backend.modules.embedder.embedder import get_embedder
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.example.payload import (
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD,
-    QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-    QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD,
     QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
-    QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD,
 )
 from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
@@ -38,6 +26,7 @@ from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.settings import settings
+from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
@@ -46,25 +35,12 @@ EXAMPLES = {
 if settings.RERANKER_SVC_URL:
     EXAMPLES.update(
         {
-            "contexual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+            "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
         }
     )
-
     EXAMPLES.update(
         {
-            "contexual-compression-similarity-threshold": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
-            "contexual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
-
-    EXAMPLES.update(
-        {
-            "contexual-compression-multi-query-mmr": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD,
+            "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
         }
     )
 
@@ -78,74 +54,46 @@ class BasicRAGQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        final_list = list()
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            final_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
-        return "\n\n".join([f"{doc['page_content']}" for doc in final_list])
+        return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
-        metadata_list = []
+        formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
-            metadata_list.append(
+            formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
+        return formatted_docs
 
-    def _get_llm(self, model_configuration, stream=False):
+    def _get_llm(self, model_configuration: ModelConfig, stream=False):
         """
         Get the LLM
         """
-        system = "You are a helpful assistant."
-        if model_configuration.provider == "openai":
-            logger.debug(f"Using OpenAI model {model_configuration.name}")
-            llm = ChatOpenAI(
-                model=model_configuration.name,
-                temperature=model_configuration.parameters.get("temperature", 0.1),
-                streaming=stream,
-            )
-        elif model_configuration.provider == "ollama":
-            logger.debug(f"Using Ollama model {model_configuration.name}")
-            llm = ChatOllama(
-                base_url=settings.OLLAMA_URL,
-                model=(
-                    model_configuration.name.split("/")[1]
-                    if "/" in model_configuration.name
-                    else model_configuration.name
-                ),
-                temperature=model_configuration.parameters.get("temperature", 0.1),
-                system=system,
-            )
-        elif model_configuration.provider == "truefoundry":
-            logger.debug(f"Using TrueFoundry model {model_configuration.name}")
-            llm = TrueFoundryChat(
-                model=model_configuration.name,
-                model_parameters=model_configuration.parameters,
-                system_prompt=system,
-            )
-        else:
-            logger.debug(f"Using TrueFoundry model {model_configuration.name}")
-            llm = TrueFoundryChat(
-                model=model_configuration.name,
-                model_parameters=model_configuration.parameters,
-                system_prompt=system,
-            )
-        return llm
+        return model_gateway.get_llm_from_model_config(model_configuration, stream)
 
     async def _get_vector_store(self, collection_name: str):
         """
         Get the vector store for the collection
         """
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(collection_name)
-
+        client = await get_client()
+        collection = await client.aget_collection_by_name(collection_name)
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
 
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
+
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
-            embeddings=get_embedder(collection.embedder_config),
+            embeddings=model_gateway.get_embedder_from_model_config(
+                model_name=collection.embedder_config.model_config.name
+            ),
         )
 
     def _get_vector_store_retriever(self, vector_store, retriever_config):
@@ -200,10 +148,12 @@ class BasicRAGQueryController:
             base_retriever = self._get_vector_store_retriever(
                 vector_store, retriever_config
             )
-        elif retriever_type == "contexual-compression":
+        elif retriever_type == "contextual-compression":
             base_retriever = self._get_contextual_compression_retriever(
                 vector_store, retriever_config
             )
+        else:
+            raise ValueError(f"Unknown retriever type `{retriever_type}`")
 
         return MultiQueryRetriever.from_llm(
             retriever=base_retriever,
@@ -220,7 +170,7 @@ class BasicRAGQueryController:
             )
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression":
+        elif retriever_name == "contextual-compression":
             logger.debug(
                 f"Using ContextualCompressionRetriever with {retriever_config.search_type} search"
             )
@@ -234,29 +184,24 @@ class BasicRAGQueryController:
             )
             retriever = self._get_multi_query_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contexual-compression-multi-query":
+        elif retriever_name == "contextual-compression-multi-query":
             logger.debug(
-                f"Using MultiQueryRetriever with {retriever_config.search_type} search and retriever type as contexual-compression"
+                f"Using MultiQueryRetriever with {retriever_config.search_type} search and "
+                f"retriever type as {retriever_name}"
             )
             retriever = self._get_multi_query_retriever(
-                vector_store, retriever_config, retriever_type="contexual-compression"
+                vector_store, retriever_config, retriever_type="contextual-compression"
             )
 
         else:
             raise HTTPException(status_code=404, detail="Retriever not found")
-
         return retriever
 
     async def _stream_answer(self, rag_chain, query):
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
-                    if "question " in chunk:
-                        # print("Question: ", chunk['question'])
-                        yield json.dumps({"question": chunk["question"]})
-                        await asyncio.sleep(0.1)
-                    elif "context" in chunk:
-                        # print("Context: ", self._format_docs_for_stream(chunk['context']))
+                    if "context" in chunk:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
@@ -329,11 +274,11 @@ class BasicRAGQueryController:
                 # outputs = await setup_and_retrieval.ainvoke(request.query)
                 # print(outputs)
 
-                # Retriver and QA
+                # Retriever and QA
                 # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
                 # print(outputs)
 
-                # Retriver, QA and LLM
+                # Retriever, QA and LLM
                 # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
                 # print(outputs)
 

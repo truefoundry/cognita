@@ -3,15 +3,13 @@ import base64
 import io
 import json
 import os
-import pathlib
 from itertools import islice
-from typing import Any, Optional
+from typing import Optional
 
 import aiohttp
 import cv2
 import fitz
 import numpy as np
-import requests
 from langchain.docstore.document import Document
 from PIL import Image
 
@@ -50,13 +48,14 @@ class MultiModalParser(BaseParser):
         self,
         max_chunk_size: int = 1000,
         chunk_overlap: int = 20,
-        additional_config: dict = {},
+        additional_config: dict = None,
         *args,
         **kwargs,
     ):
         """
         Initializes the MultiModalParser object.
         """
+        additional_config = additional_config or {}
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
 
@@ -88,6 +87,8 @@ Key Insights: Extract key insights or observations from the charts. What do the 
 Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
 Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
 Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
+
+            super().__init__(*args, **kwargs)
 
     async def call_vlm_agent(
         self,
@@ -144,7 +145,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
-
+        final_texts = []
         try:
             if not filepath.endswith(".pdf"):
                 logger.error(
@@ -152,7 +153,6 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 )
                 return []
 
-            final_texts = list()
             # Open the PDF file using pdfplumber
             doc = fitz.open(filepath)
 
@@ -163,12 +163,12 @@ Conclude with a summary of the key findings from your analysis and any recommend
             # Iterate over each page in the PDF
             logger.info(f"\n\nLoading all pages...")
             for page in doc:
+                page_number = page.number + 1
                 try:
-                    page_number = page.number + 1
                     # Convert the page to an image (RGB mode)
                     pix = page.get_pixmap(alpha=False)
                     img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                        pix.h, pix.w, pix.n
+                        (pix.h, pix.w, pix.n)
                     )
 
                     # Convert the image to base64

@@ -25,3 +25,4 @@ qdrant_db/
 *.pth
 .truefoundry
 volumes/
+pgdata/

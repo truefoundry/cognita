@@ -124,7 +124,7 @@ export const qafoundryApi = createApi({
     // * Queries
     getCollections: builder.query<Collection[], void>({
       query: () => ({
-        url: '/v1/collections/',
+        url: '/v1/collections',
         responseHandler: (response) =>
           response
             .json()
@@ -186,12 +186,12 @@ export const qafoundryApi = createApi({
       query: () => ({
         url: '/v1/data_source/list',
         method: 'GET',
-        providesTags: ['DataSources'],
         responseHandler: (response) =>
           response
             .json()
             .then((data: { data_sources: DataSource[] }) => data.data_sources),
       }),
+      providesTags: ['DataSources'],
     }),
     getDataIngestionRuns: builder.query<DataIngestionRun[], any>({
       query: (payload: {
@@ -219,19 +219,30 @@ export const qafoundryApi = createApi({
 
     // * Mutations
     uploadDataToDataDirectory: builder.mutation({
-      query: (payload: {
-        collection_name: string
-        filepaths: string[]
-        upload_name: string
-      }) => ({
+      query: (payload: { filepaths: string[]; upload_name: string }) => ({
         url: '/v1/internal/upload-to-data-directory',
         body: payload,
         method: 'POST',
       }),
     }),
+    uploadDataToLocalDirectory: builder.mutation({
+      query: (payload: { files: File[]; upload_name: string }) => {
+        var bodyFormData = new FormData()
+        bodyFormData.append('upload_name', payload.upload_name)
+        payload.files.forEach((file) => {
+          bodyFormData.append('files', file)
+        })
+        return {
+          url: '/v1/internal/upload-to-local-directory',
+          body: bodyFormData,
+          method: 'POST',
+          formData: true,
+        }
+      },
+    }),
     createCollection: builder.mutation({
       query: (payload: object) => ({
-        url: '/v1/collections/',
+        url: '/v1/collections',
         body: payload,
         method: 'POST',
       }),
@@ -261,6 +272,15 @@ export const qafoundryApi = createApi({
       }),
       invalidatesTags: ['Collections', 'CollectionNames', 'CollectionDetails'],
     }),
+    deleteDataSource: builder.mutation({
+      query: (payload: { data_source_fqn: string }) => ({
+        url: `/v1/data_source/delete?data_source_fqn=${encodeURIComponent(
+          payload.data_source_fqn
+        )}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DataSources'],
+    }),
     queryCollection: builder.mutation<
       QueryAnswer,
       CollectionQueryDto & { queryController: string }
@@ -273,7 +293,7 @@ export const qafoundryApi = createApi({
     }),
     addDataSource: builder.mutation({
       query: (payload: AddDataSourcePayload) => ({
-        url: '/v1/data_source/',
+        url: '/v1/data_source',
         body: payload,
         method: 'POST',
       }),
@@ -311,10 +331,12 @@ export const {
 
   // mutations
   useUploadDataToDataDirectoryMutation,
+  useUploadDataToLocalDirectoryMutation,
   useCreateCollectionMutation,
   useAddDocsToCollectionMutation,
   useUnassociateDataSourceMutation,
   useDeleteCollectionMutation,
+  useDeleteDataSourceMutation,
   useQueryCollectionMutation,
   useAddDataSourceMutation,
   useIngestDataSourceMutation,

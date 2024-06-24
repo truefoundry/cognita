@@ -8,4 +8,5 @@ from backend.settings import settings
 register_dataloader("localdir", LocalDirLoader)
 register_dataloader("web", WebLoader)
 register_dataloader("github", GithubLoader)
-register_dataloader("truefoundry", TrueFoundryLoader)
+if settings.TFY_API_KEY:
+    register_dataloader("truefoundry", TrueFoundryLoader)

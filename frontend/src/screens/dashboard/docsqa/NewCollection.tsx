@@ -35,19 +35,19 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const [createCollection] = useCreateCollectionMutation()
   const [ingestDataSource] = useIngestDataSourceMutation()
 
-  const pattern = /^[a-z][a-z0-9]*$/
+  const pattern = /^[a-z][a-z0-9-]*$/
   const isValidCollectionName = pattern.test(collectionName)
 
   useEffect(() => {
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].name)
     }
   }, [allEmbeddingModels])
 
   const resetForm = () => {
     setCollectionName('')
     if (allEmbeddingModels && allEmbeddingModels.length) {
-      setSelectedEmbeddingModel(allEmbeddingModels[0].config.model)
+      setSelectedEmbeddingModel(allEmbeddingModels[0].name)
     }
     setChunkSize(1000)
     setSelectedDataSource('none')
@@ -66,15 +66,14 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         )
       }
       const embeddingModel = allEmbeddingModels.find(
-        (model: any) => model.config.model == selectedEmbeddingModel
+        (model: any) => model.name == selectedEmbeddingModel
       )
 
       const params = {
         name: collectionName,
         embedder_config: {
-          provider: embeddingModel.provider,
-          config: {
-            model: embeddingModel.config.model,
+          model_config: {
+            name: embeddingModel.name,
           },
         },
         chunk_size: chunkSize,
@@ -210,8 +209,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                 }}
               >
                 {allEmbeddingModels?.map((model: any) => (
-                  <MenuItem value={model.config.model} key={model.config.model}>
-                    {model.config.model}
+                  <MenuItem value={model.name} key={model.name}>
+                    {model.name}
                   </MenuItem>
                 ))}
               </Select>

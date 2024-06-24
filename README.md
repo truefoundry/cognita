@@ -13,6 +13,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
+-   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
 -   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
 -   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
 -   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
@@ -72,130 +73,57 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 1. Support for multiple document retrievers that use `Similarity Search`, `Query Decompostion`, `Document Reranking`, etc
 1. Support for SOTA OpenSource embeddings and reranking from `mixedbread-ai`
-1. Support for using LLMs using `Ollama`
+1. Support for using LLMs using `ollama`
 1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
 
 # :rocket: Quickstart: Running Cognita Locally
 
-## :whale: Using Docker compose (recommended)
+## :whale: Using Docker compose (recommended - version 25+)
 
-Cognita and all of it's services can be run using docker-compose. This is the recommended way to run Cognita locally. You can run the following command to start the services:
+Cognita and all of its services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
 
-```docker
-docker-compose --env-file compose.env up --build
+### Configuring Model Providers
+
+Before starting the services, we need to configure model providers that we would need for embedding and generating answers.
+
+To start, copy `models_config.sample.yaml` to `models_config.yaml`
+
+```shell
+cp models_config.sample.yaml models_config.yaml
+```
+
+By default, the config has local providers enabled that need infinity and ollama server to run embedding and LLMs locally.
+However, if you have a OpenAI API Key, you can uncomment the `openai` provider in `models_config.yaml` and update `OPENAI_API_KEY` in `compose.env`
+
+
+Now, you can run the following command to start the services:
+
+```shell
+docker-compose --env-file compose.env up
 ```
 
 -   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
 -   The compose file will start the following services:
-    -   `ollama-server` - Used to start local LLM server. `compose.env` has `OLLAMA_MODEL` as the environment variable to specify the model.
-    -   `infinity-server` - Used to start local embeddings and rerankers server. `compose.env` has `INFINITY_EMBEDDING_MODEL` and `INFINITY_RERANKING_MODEL` as environment variables to specify the embedding and reranker from HuggingFace Hub.
+    -   `cognita-db` - Postgres instance used to store metadata for collections and data sources.
     -   `qdrant-server` - Used to start local vector db server.
     -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
     -   `cognita-frontend` - Used to start the frontend for Cognita.
--   Once the services are up, you can access the infinity server at `http://localhost:7997`, qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
--   Backend uses `local.metadata.yaml` file for configuration. You can modify it as per your needs. The file is used to setup collection name, different data source path, and embedder configurations. Before starting of backend an indexer job is run to index the data sources mentioned in `local.metadata.yaml` file.
+-   Once the services are up, you can access the qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 
-:warning: **Note**: Currently UI supports only QnA and not the data source and collection creation. These have to be done via `local.metadata.yaml` only. Post that restart the docker-compose services. The work is in progress to bring that facility via UI as well and make the experience seamless.
+To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
-## Cognita from source
-
-You can play around with the code locally using the python [script](#rocket-quickstart-running-cognita-locally) or using the UI component that ships with the code.
-
-### :snake: Installing Python and Setting Up a Virtual Environment
-
-Before you can use Cognita, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
-
-#### Setting Up a Virtual Environment
-
-It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
-
-#### Create a Virtual Environment:
-
-Navigate to your project's directory in the terminal.
-Run the following command to create a virtual environment named venv (you can name it anything you like):
-
-```
-python3 -m venv ./venv
+```shell
+docker-compose --env-file compose.env --profile ollama --profile infinity up
 ```
 
-#### Activate the Virtual Environment:
+-   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
 
--   On Windows, activate the virtual environment by running:
 
-```
-venv\Scripts\activate.bat
-```
+## Developing in Cognita
 
--   On macOS and Linux, activate it with:
+Docker compose is a great way to run the entire Cognita system locally. Any changes that you make in the `backend` folder will be automatically reflected in the running backend server. You can test out different APIs and endpoints by making changes in the backend code.
 
-```
-source venv/bin/activate
-```
-
-Once your virtual environment is activated, you'll see its name in the terminal prompt. Now you're ready to install Cognita using the steps provided in the Quickstart sections.
-
-> Remember to deactivate the virtual environment when you're done working with Cognita by simply running deactivate in the terminal.
-
-Following are the instructions for running Cognita locally without any additional Truefoundry dependencies
-
-### Install necessary packages:
-
-In the project root execute the following command:
-
-```
-pip install -r backend/requirements.txt
-```
-
-### Install Additional packages:
-
--   Install packages for additional parsers like `PDFTableParser` that uses deep doctection for table extraction from PDFs. This is optional and can be skipped if you don't need to extract tables from PDFs.
-
-    ```
-    pip install -r backend/parsers.requirements.txt
-    ```
-
--   Install packages for `vector_db` that uses singlestore for vector db. This is optional and can be skipped if you don't need to use singlestore.
-
-    ```
-    pip install -r backend/vectordb.requirements.txt
-    ```
-
-    > Uncomment the respective vector db in `backend/modules/vector_db/__init__.py` to use it.
-
-### Infinity Service:
-
--   Rerankers and Embedders are to be used via hosted services like [Infinity](https://github.com/michaelfeil/infinity). Respective service files can be found under embedder and reranker directories.
-
--   To install Infinity service, follow the instructions [here](https://michaelfeil.eu/infinity/0.0.42/). You can also run the following command to start a Docker container having `mixedbread` embeddings and rerankers.
-
-```docker
-    docker run -it --gpus all \
-    -v $PWD/infinity/data:/app/.cache \
-    -p 7997:7997 \
-    michaelf34/infinity:latest \
-    v2 \
-    --model-id mixedbread-ai/mxbai-embed-large-v1 \
-    --model-id mixedbread-ai/mxbai-rerank-xsmall-v1 \
-    --port 7997
-```
-
-### Setting up .env file:
-
--   Create a `.env` file by copying copy from `compose.env` set up relavant fields. You will need to provide `EMBEDDING_SVC_URL` and `RERANKER_SVC_URL` in `.env` file respectively which will be `http://localhost:7997"
-
-### Executing the Code:
-
--   Now we index the data (`sample-data/creditcards`) by executing the following command from project root:
-
-    ```
-    python -m local.ingest
-    ```
-
--   You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
-
--   To use frontend UI for quering you can go to : `cd frontend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md). You can then query the documents using the UI hosted at `http://localhost:5000/`
-
-> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations. You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`. To run the query execute the query script from project root: `python -m local.run`
+If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can run `docker-compose build` before running `docker-compose up`
 
 # :hammer_and_pick: Project Architecture
 
@@ -262,68 +190,6 @@ Overall the architecture of Cognita is composed of several entities
 7. The answer and relevant document chunks are returned in response.
 
     **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
-
-## :computer: Code Structure:
-
-Entire codebase lives in `backend/`
-
-```
-.
-|-- Dockerfile
-|-- README.md
-|-- __init__.py
-|-- backend/
-|   |-- indexer/
-|   |   |-- __init__.py
-|   |   |-- indexer.py
-|   |   |-- main.py
-|   |   `-- types.py
-|   |-- modules/
-|   |   |-- __init__.py
-|   |   |-- dataloaders/
-|   |   |   |-- __init__.py
-|   |   |   |-- loader.py
-|   |   |   |-- localdirloader.py
-|   |   |   `-- ...
-|   |   |-- embedder/
-|   |   |   |-- __init__.py
-|   |   |   |-- embedder.py
-|   |   |   -- mixbread_embedder.py
-|   |   |   `-- embedding.requirements.txt
-|   |   |-- metadata_store/
-|   |   |   |-- base.py
-|   |   |   |-- client.py
-|   |   |   `-- truefoundry.py
-|   |   |-- parsers/
-|   |   |   |-- __init__.py
-|   |   |   |-- parser.py
-|   |   |   |-- pdfparser_fast.py
-|   |   |   `-- ...
-|   |   |-- query_controllers/
-|   |   |   |-- default/
-|   |   |   |   |-- controller.py
-|   |   |   |   `-- types.py
-|   |   |   |-- query_controller.py
-|   |   |-- reranker/
-|   |   |   |-- mxbai_reranker.py
-|   |   |   |-- reranker.requirements.txt
-|   |   |   `-- ...
-|   |   `-- vector_db/
-|   |       |-- __init__.py
-|   |       |-- base.py
-|   |       |-- qdrant.py
-|   |       `-- ...
-|   |-- requirements.txt
-|   |-- server/
-|   |   |-- __init__.py
-|   |   |-- app.py
-|   |   |-- decorators.py
-|   |   |-- routers/
-|   |   `-- services/
-|   |-- settings.py
-|   |-- types.py
-|   `-- utils.py
-```
 
 ## Customizing the Code for your usecase
 
@@ -395,11 +261,6 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 -   To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
 
 -   Register the vectordb under `backend/modules/vector_db/__init__.py`
-
-### Rerankers:
-
--   Rerankers are used to sort relavant documents such that top k docs can be used as context effectively reducing the context and prompt in general.
--   Sample reranker is written under `backend/modules/reranker/mxbai_reranker.py`
 
 # :bulb: Writing your Query Controller (QnA):
 
@@ -543,7 +404,7 @@ The following steps will showcase how to use the cognita UI to query documents:
 
 # :sparkling_heart: Open Source Contribution
 
-Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTIONGUIDE.md).
+Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTING.md).
 
 # :crystal_ball: Future developments
 

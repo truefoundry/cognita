@@ -4,7 +4,7 @@ Source: https://github.com/dmontagu/fastapi-utils/blob/master/fastapi_utils/cbv.
 """
 
 import inspect
-from typing import Any, Callable, List, Type, TypeVar, Union, get_type_hints, ClassVar
+from typing import Any, Callable, ClassVar, List, Type, TypeVar, Union, get_type_hints
 
 from fastapi import APIRouter, Depends
 from starlette.routing import Route, WebSocketRoute
@@ -108,7 +108,6 @@ def query_controller(tag: str = None):
 
     Args:
         tag (str, optional): The tag to use for OpenAPI documentation.
-        prefix (str, optional): The prefix to use for all routes.
 
     Returns:
         class: The decorated class.

@@ -1,4 +1,3 @@
-import warnings
 from typing import List
 from urllib.parse import urlparse
 
@@ -18,6 +17,7 @@ BATCH_SIZE = 1000
 
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
+        logger.debug(f"Connecting to qdrant using config: {config.dict()}")
         if config.local is True:
             # TODO: make this path customizable
             self.qdrant_client = QdrantClient(
@@ -35,7 +35,7 @@ class QdrantVectorDB(BaseVectorDB):
                     if parsed_port:
                         qdrant_kwargs.port = parsed_port
                     else:
-                        qdrant_kwargs.port = 443 if url.startswith("https://") else 6443
+                        qdrant_kwargs.port = 443 if url.startswith("https://") else 6333
             self.qdrant_client = QdrantClient(
                 url=url, api_key=api_key, **qdrant_kwargs.dict()
             )
@@ -44,8 +44,10 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size
+        logger.debug(f"[Qdrant] Embedding a dummy doc to get vector dimensions")
         partial_embeddings = embeddings.embed_documents(["Initial document"])
         vector_size = len(partial_embeddings[0])
+        logger.debug(f"Vector size: {vector_size}")
 
         self.qdrant_client.create_collection(
             collection_name=collection_name,

@@ -2,10 +2,11 @@ import enum
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
-from pydantic import StringConstraints, ConfigDict, BaseModel, Field, model_validator
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from typing_extensions import Annotated
 
 from backend.constants import FQN_SEPARATOR
-from typing_extensions import Annotated
 
 
 class DataIngestionMode(str, Enum):
@@ -42,7 +43,8 @@ class DataPoint(BaseModel):
     )
 
     metadata: Optional[Dict[str, str]] = Field(
-        None, title="Additional metadata for the data point",
+        None,
+        title="Additional metadata for the data point",
     )
 
     @property
@@ -83,11 +85,37 @@ class LoadedDataPoint(DataPoint):
         title="Local file path of the loaded data point",
     )
     file_extension: Optional[str] = Field(
-        None, title="File extension of the loaded data point",
+        None,
+        title="File extension of the loaded data point",
     )
     local_metadata_file_path: Optional[str] = Field(
-        None, title="Local file path of the metadata file",
+        None,
+        title="Local file path of the metadata file",
     )
+
+
+class ModelType(str, Enum):
+    """
+    Model types available in LLM gateway
+    """
+
+    chat = "chat"
+    embedding = "embedding"
+
+
+class ModelConfig(BaseModel):
+    name: str
+    type: Optional[ModelType]
+    parameters: Optional[Dict[str, Any]] = None
+
+
+class ModelProviderConfig(BaseModel):
+    provider_name: str
+    api_format: str
+    llm_model_ids: List[str]
+    embedding_model_ids: List[str]
+    api_key_env_var: str
+    base_url: Optional[str] = None
 
 
 class EmbedderConfig(BaseModel):
@@ -95,11 +123,9 @@ class EmbedderConfig(BaseModel):
     Embedder configuration
     """
 
-    provider: str = Field(
-        title="Provider of the embedder",
-    )
+    model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
-        title="Configuration for the embedder", default={"model": "string"}
+        title="Configuration for the embedder", default_factory=dict
     )
 
 
@@ -109,9 +135,7 @@ class ParserConfig(BaseModel):
     """
 
     chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
-
     chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
-
     parser_map: Dict[str, str] = Field(
         title="Mapping of file extensions to parsers",
         default={
@@ -119,10 +143,9 @@ class ParserConfig(BaseModel):
             ".pdf": "PdfParserFast",
         },
     )
-
     additional_config: Optional[Dict[str, Any]] = Field(
         title="Additional optional configuration for the parser",
-        default={"key": "value"},
+        default_factory=dict,
     )
 
 
@@ -132,7 +155,7 @@ class VectorDBConfig(BaseModel):
     """
 
     provider: str
-    local: Optional[bool] = None
+    local: bool = False
     url: Optional[str] = None
     api_key: Optional[str] = None
     config: Optional[dict] = None
@@ -142,6 +165,7 @@ class QdrantClientConfig(BaseModel):
     """
     Qdrant extra configuration
     """
+
     model_config = ConfigDict(extra="allow")
 
     port: Optional[int] = None
@@ -157,30 +181,7 @@ class MetadataStoreConfig(BaseModel):
     """
 
     provider: str
-    config: Optional[dict] = None
-
-
-class EmbeddingCacheConfig(BaseModel):
-    """
-    Embedding cache configuration
-    """
-
-    provider: str
-    url: Optional[str] = None
-    config: Optional[dict] = None
-
-
-class LLMConfig(BaseModel):
-    """
-    LLM configuration
-    """
-
-    name: str = Field(title="Name of the model")
-    parameters: dict = None
-    provider: Literal["openai", "ollama", "truefoundry"] = Field(
-        title="Model provider any one between openai, ollama, truefoundry",
-        default="truefoundry",
-    )
+    config: Optional[dict] = Field(default_factory=dict)
 
 
 class RetrieverConfig(BaseModel):
@@ -207,12 +208,12 @@ class RetrieverConfig(BaseModel):
 
     @property
     def get_search_type(self) -> str:
-        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        # Check at langchain.schema.vectorstore.VectorStore.as_retriever
         return self.search_type
 
     @property
     def get_search_kwargs(self) -> dict:
-        ## Check at langchain.schema.vectorstore.VectorStore.as_retriever
+        # Check at langchain.schema.vectorstore.VectorStore.as_retriever
         match self.search_type:
             case "similarity":
                 return {"k": self.k, "filter": self.filter}
@@ -274,7 +275,8 @@ class DataIngestionRun(BaseDataIngestionRun):
         title="Name of the data ingestion run",
     )
     status: Optional[DataIngestionRunStatus] = Field(
-        None, title="Status of the data ingestion run",
+        None,
+        title="Status of the data ingestion run",
     )
 
 
@@ -338,7 +340,8 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
     data_source_fqn: Optional[str] = Field(
-        None, title="Fully qualified name of the data source",
+        None,
+        title="Fully qualified name of the data source",
     )
 
     data_ingestion_mode: DataIngestionMode = Field(
@@ -409,12 +412,13 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9]*$")] = Field(  # type: ignore
+    name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")] = Field(  # type: ignore
         title="a unique name to your collection",
-        description="Should only contain lowercase alphanumeric character",
+        description="Should only contain lowercase alphanumeric character and hypen, should start with alphabet",
     )
     description: Optional[str] = Field(
-        None, title="a description for your collection",
+        None,
+        title="a description for your collection",
     )
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration", default_factory=dict
@@ -439,22 +443,12 @@ class CreateCollectionDto(CreateCollection):
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
-    # allow only small case alphanumeric and hyphen, should contain atleast one alphabet and begin with alphabet
+    # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     upload_name: str = Field(
         title="Name of the upload",
         pattern=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
-
-
-class ModelType(str, Enum):
-    """
-    Model types available in LLM gateway
-    """
-
-    completion = "completion"
-    chat = "chat"
-    embedding = "embedding"
 
 
 class ListDataIngestionRunsDto(BaseModel):

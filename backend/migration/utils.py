@@ -47,9 +47,8 @@ def migrate(
         dest_client (QdrantBase): Destination client
         source_collection_name (str): source collection names to migrate.
         destination_collection_name (str): destination collection name.
-        recreate_on_collision (bool, optional): If True - recreate collection if it exists, otherwise
-            raise ValueError.
         batch_size (int, optional): Batch size for scrolling and uploading vectors. Defaults to 100.
+        same_qdrant (bool, optional): If both source and dest client point to same qdrant
     """
     if _has_custom_shards(source_client, source_collection_name):
         raise ValueError(
@@ -95,7 +94,7 @@ def _recreate_collection(
     src_config = src_collection_info.config
     src_payload_schema = src_collection_info.payload_schema
 
-    # delete destination collection only from qdrant that was created while creating metadatastore entry
+    # delete destination collection only from qdrant that was created while creating metadata store entry
     dest_client.delete_collection(destination_collection_name, timeout=300)
     dest_client.create_collection(
         destination_collection_name,
