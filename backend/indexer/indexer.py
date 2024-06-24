@@ -37,9 +37,9 @@ def get_data_point_fqn_to_hash_map(
     data_point_fqn_to_hash: Dict[str, str] = {}
     for data_point_vector in data_point_vectors:
         if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[
-                data_point_vector.data_point_fqn
-            ] = data_point_vector.data_point_hash
+            data_point_fqn_to_hash[data_point_vector.data_point_fqn] = (
+                data_point_vector.data_point_hash
+            )
 
     return data_point_fqn_to_hash
 

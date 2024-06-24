@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str]
     TFY_HOST: Optional[str]
     TFY_LLM_GATEWAY_URL: str
-    
+
     # Additional Reqs For SambaStudio
     SAMBASTUDIO_BASE_URL: Optional[str]
     SAMBASTUDIO_PROJECT_ID: Optional[str]
@@ -53,26 +53,29 @@ class Settings(BaseSettings):
     EMBEDDING_SVC_URL: str = os.getenv("EMBEDDING_SVC_URL", "")
     RERANKER_SVC_URL: str = os.getenv("RERANKER_SVC_URL", "")
 
-    #SambaStudio Envs
+    # SambaStudio Envs
     SAMBASTUDIO_BASE_URL = os.getenv("SAMBASTUDIO_BASE_URL", "")
     SAMBASTUDIO_PROJECT_ID = os.getenv("SAMBASTUDIO_PROJECT_ID", "")
     SAMBASTUDIO_ENDPOINT_ID = os.getenv("SAMBASTUDIO_ENDPOINT_ID", "")
     SAMBASTUDIO_API_KEY = os.getenv("SAMBASTUDIO_API_KEY", "")
 
-    #SambaStudioEmbeddingSettings
+    # SambaStudioEmbeddingSettings
     SAMBASTUDIO_EMBEDDINGS_BASE_URL = os.getenv("SAMBASTUDIO_EMBEDDINGS_BASE_URL", "")
-    SAMBASTUDIO_EMBEDDINGS_PROJECT_ID = os.getenv("SAMBASTUDIO_EMBEDDINGS_PROJECT_ID", "")
-    SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID = os.getenv("SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID", "")
+    SAMBASTUDIO_EMBEDDINGS_PROJECT_ID = os.getenv(
+        "SAMBASTUDIO_EMBEDDINGS_PROJECT_ID", ""
+    )
+    SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID = os.getenv(
+        "SAMBASTUDIO_EMBEDDINGS_ENDPOINT_ID", ""
+    )
     SAMBASTUDIO_EMBEDDINGS_API_KEY = os.getenv("SAMBASTUDIO_EMBEDDINGS_API_KEY", "")
 
     # Replicate LLMs
     REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN", "")
 
-    #WeightsAndBiases
+    # WeightsAndBiases
     WB_PROJECT = "traces"
     WB_STREAM = "lc_traces_stream"
-    WB_ENTITY= ""
-
+    WB_ENTITY = ""
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")
@@ -93,8 +96,6 @@ class Settings(BaseSettings):
         )
     except Exception as e:
         raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
-
-
 
 
 settings = Settings()

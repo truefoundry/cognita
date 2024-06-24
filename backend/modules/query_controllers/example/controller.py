@@ -236,7 +236,6 @@ class BasicRAGQueryController:
             )
 
             # Get the LLM
-            print(f'This is the request: {request}')
             llm = self._get_llm(request.model_configuration, request.stream)
 
             # get retriever
