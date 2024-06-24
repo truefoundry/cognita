@@ -145,7 +145,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
         """
-
+        final_texts = []
         try:
             if not filepath.endswith(".pdf"):
                 logger.error(
@@ -153,7 +153,6 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 )
                 return []
 
-            final_texts = list()
             # Open the PDF file using pdfplumber
             doc = fitz.open(filepath)
 
@@ -164,12 +163,12 @@ Conclude with a summary of the key findings from your analysis and any recommend
             # Iterate over each page in the PDF
             logger.info(f"\n\nLoading all pages...")
             for page in doc:
+                page_number = page.number + 1
                 try:
-                    page_number = page.number + 1
                     # Convert the page to an image (RGB mode)
                     pix = page.get_pixmap(alpha=False)
                     img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                        pix.h, pix.w, pix.n
+                        (pix.h, pix.w, pix.n)
                     )
 
                     # Convert the image to base64
