@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Collection, Dict, Literal, Optional
+from typing import Any, ClassVar, Collection, Dict, Optional
 
 from pydantic import BaseModel, Field, root_validator, validator
 from qdrant_client.models import Filter as QdrantFilter

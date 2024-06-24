@@ -1,6 +1,5 @@
 import os
 import shutil
-from pathlib import Path
 from typing import Dict, Iterator, List
 
 from backend.logger import logger
@@ -43,7 +42,7 @@ class LocalDirLoader(BaseDataLoader):
         logger.info("source_dir: %s", source_dir)
         logger.info("dest_dir: %s", dest_dir)
         if source_dir == dest_dir:
-            # Temrinate the function
+            # Terminate the function
             return
 
         # Copy the entire directory (including subdirectories) from source to destination.

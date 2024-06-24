@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, List, Optional
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
@@ -16,7 +16,7 @@ from backend.types import (
 from backend.utils import run_in_executor
 
 
-# TODO(chiragjn): Ideal would be we make `async def a*` abstractmethods and drop sync ones
+# TODO(chiragjn): Ideal would be we make `async def a*` abstract methods and drop sync ones
 #   Implementations can then opt to call their sync versions using run_in_executor
 class BaseMetadataStore(ABC):
     def __init__(self, *args, **kwargs):

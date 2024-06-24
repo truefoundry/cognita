@@ -1,4 +1,3 @@
-import asyncio
 import os
 import tempfile
 from typing import Dict, List
@@ -12,7 +11,6 @@ from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.metadata_store.client import get_client
-from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT

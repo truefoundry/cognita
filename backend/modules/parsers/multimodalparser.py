@@ -3,15 +3,13 @@ import base64
 import io
 import json
 import os
-import pathlib
 from itertools import islice
-from typing import Any, Optional
+from typing import Optional
 
 import aiohttp
 import cv2
 import fitz
 import numpy as np
-import requests
 from langchain.docstore.document import Document
 from PIL import Image
 
@@ -50,13 +48,14 @@ class MultiModalParser(BaseParser):
         self,
         max_chunk_size: int = 1000,
         chunk_overlap: int = 20,
-        additional_config: dict = {},
+        additional_config: dict = None,
         *args,
         **kwargs,
     ):
         """
         Initializes the MultiModalParser object.
         """
+        additional_config = additional_config or {}
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
 
