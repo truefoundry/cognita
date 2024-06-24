@@ -131,10 +131,11 @@ services:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
-            - RERANKER_SVC_URL=${INFINITY_URL}
+            - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
             - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - RERANKER_SVC_URL=${INFINITY_URL}
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
