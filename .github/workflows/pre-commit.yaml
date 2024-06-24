@@ -21,20 +21,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install poetry
-        run: pipx install "poetry<1.9.0"
-
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
-          poetry env use ${{ matrix.python-version }}
-          poetry install
+          pip install -U pip setuptools wheel
+          pip install -r backend/requirements.txt
+          pip check
+
+      - name: Install pre-commit
+        run: |
+          pip install -U pre-commit
 
       - name: Check files with pre-commit
         run: |
-          poetry run pre-commit run --all-files --show-diff-on-failure -v
+          pre-commit run --all-files --show-diff-on-failure -v
