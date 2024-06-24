@@ -117,7 +117,7 @@ docker-compose --env-file compose.env --profile ollama --profile infinity up
 ```
 
 -   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
--   You can also have these services hosted somewhere else and provide the respective `OLLAMA_URL` and `INFINITY_URL` in the `compose.env` file.
+
 
 ## Developing in Cognita
 

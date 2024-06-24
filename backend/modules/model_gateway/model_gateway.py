@@ -7,7 +7,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
 
-from backend.modules.model_gateway import MODELS_CONFIG_PATH, MODELS_CONFIG_SAMPLE_PATH
+from backend.logger import logger
+from backend.settings import settings
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
 
 
@@ -16,13 +17,10 @@ class ModelGateway:
     model_name_to_provider_config = {}
 
     def __init__(self):
-        if not os.path.exists(MODELS_CONFIG_PATH):
-            raise Exception(
-                f"{MODELS_CONFIG_PATH} does not exist. "
-                f"You can copy {MODELS_CONFIG_SAMPLE_PATH} as {MODELS_CONFIG_PATH} for sample config"
-            )
-        with open(MODELS_CONFIG_PATH) as f:
+        logger.info(f"Loading models config from {settings.MODELS_CONFIG_PATH}")
+        with open(settings.MODELS_CONFIG_PATH) as f:
             data = yaml.safe_load(f)
+        print(data)
         _providers = data.get("model_providers") or []
         # parse the json data into a list of ModelProviderConfig objects
         self.provider_configs = [
@@ -106,7 +104,7 @@ class ModelGateway:
         if not model_config.parameters:
             model_config.parameters = {}
         if not model_provider_config.api_key_env_var:
-            api_key = None
+            api_key = "EMPTY"
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
         model_id = "/".join(model_config.name.split("/")[1:])
