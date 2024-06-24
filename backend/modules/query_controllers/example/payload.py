@@ -82,7 +82,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression",
+    "retriever_name": "contextual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
@@ -111,7 +111,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression",
+    "retriever_name": "contextual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
@@ -145,7 +145,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression",
+    "retriever_name": "contextual-compression",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
@@ -271,7 +271,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression-multi-query",
+    "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
@@ -307,7 +307,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression-multi-query",
+    "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
@@ -341,7 +341,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
-    "retriever_name": "contexual-compression-multi-query",
+    "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
         "compressor_model_provider": "mixedbread-ai",
         "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",

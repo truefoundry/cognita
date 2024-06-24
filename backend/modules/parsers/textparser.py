@@ -6,7 +6,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-from backend.types import LoadedDataPoint
 
 
 class TextParser(BaseParser):
@@ -21,6 +20,7 @@ class TextParser(BaseParser):
         Initializes the TextParser object.
         """
         self.max_chunk_size = max_chunk_size
+        super().__init__(*args, **kwargs)
 
     async def get_chunks(
         self, filepath: str, metadata: Optional[dict], *args, **kwargs

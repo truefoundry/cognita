@@ -25,6 +25,7 @@ class PdfTableParser(BaseParser):
         """
         self.max_chunk_size = max_chunk_size
         self.chunk_overlap = chunk_overlap
+        super().__init__(*args, **kwargs)
 
     async def get_chunks(self, filepath, metadata, *args, **kwargs):
         """

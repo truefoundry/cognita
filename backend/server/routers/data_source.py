@@ -1,12 +1,10 @@
-import asyncio
 from urllib.parse import unquote
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
-from backend.modules.metadata_store.truefoundry import TrueFoundry
 from backend.types import CreateDataSource
 
 router = APIRouter(prefix="/v1/data_source", tags=["data_source"])
