@@ -104,6 +104,13 @@ class ModelConfig(BaseModel):
     type: Optional[ModelType]
     parameters: Optional[Dict[str, Any]] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "parameters": self.parameters,
+        }
+
 
 class ModelProviderConfig(BaseModel):
     provider_name: str

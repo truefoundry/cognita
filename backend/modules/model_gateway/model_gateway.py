@@ -44,7 +44,7 @@ class ModelGateway:
                         ModelConfig(
                             name=f"{config_obj.provider_name}/{model_id}",
                             type=ModelType.embedding,
-                        ).dict()
+                        )
                     )
 
                 for model_id in config_obj.llm_model_ids:
@@ -56,7 +56,7 @@ class ModelGateway:
                         ModelConfig(
                             name=f"{config_obj.provider_name}/{model_id}",
                             type=ModelType.chat,
-                        ).dict()
+                        )
                     )
 
     def get_embedding_models(self) -> List[ModelConfig]:
