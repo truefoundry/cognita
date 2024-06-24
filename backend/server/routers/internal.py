@@ -113,6 +113,8 @@ def get_enabled_models(
             detail=f"Invalid model type: {model_type}",
         )
 
+    # Serialized models
+    serialized_models = [model.dict() for model in enabled_models]
     return JSONResponse(
-        content={"models": enabled_models},
+        content={"models": serialized_models},
     )
