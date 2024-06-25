@@ -52,7 +52,7 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.49
+        image: michaelf34/infinity:0.0.50
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
@@ -72,7 +72,7 @@ services:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=8
             - INFINITY_API_KEY=${INFINITY_API_KEY}
-        command: v2
+        command: v2 --api-key ${INFINITY_API_KEY}
         networks:
             - cognita-docker
 

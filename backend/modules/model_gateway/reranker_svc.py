@@ -6,6 +6,7 @@ from langchain.docstore.document import Document
 from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 
 from backend.logger import logger
+from backend.settings import settings
 
 
 # Reranking Service using Infinity API
@@ -36,8 +37,13 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
             "model": self.model,
         }
 
+        headers = {
+            "Authorization": f"Bearer {settings.INFINITY_API_KEY}",
+            "Content-Type": "application/json",
+        }
+
         reranked_docs = requests.post(
-            self.base_url.rstrip("/") + "/rerank", json=payload
+            self.base_url.rstrip("/") + "/rerank", headers=headers, json=payload
         ).json()
 
         """

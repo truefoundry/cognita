@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
 
-    RERANKER_SVC_URL: str = ""
     LOCAL: bool = False
 
     TFY_HOST: str = ""
@@ -28,7 +27,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
 
-    # TODO: This will be removed in future releases
+    INFINITY_API_KEY: str = ""
+
+    # TODO: This will be removed in future releases - after fixing multimodal parser
     TFY_LLM_GATEWAY_URL: str = ""
 
     @root_validator(pre=True)

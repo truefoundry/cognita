@@ -33,9 +33,12 @@ RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --n
 ARG ADD_PRISMA=0
 RUN if [ "${ADD_PRISMA}" = "1" ]; then prisma version; fi
 
-# TODO: Remove this when templates inject env vars
+# TODO: Remove these when templates inject env vars
 ARG MODELS_CONFIG_PATH
 ENV MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
+
+ARG INFINITY_API_KEY
+ENV INFINITY_API_KEY=${INFINITY_API_KEY}
 
 # Copy the project files
 COPY . /app
