@@ -28,6 +28,9 @@ from backend.server.decorators import post, query_controller
 from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
+#Import LangSmith For Tracing, W&B TODO
+from langsmith import traceable
+
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
 }
@@ -214,7 +217,8 @@ class BasicRAGQueryController:
                 yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
-
+            
+    @traceable()
     @post("/answer")
     async def answer(
         self,
@@ -226,6 +230,8 @@ class BasicRAGQueryController:
         Sample answer method to answer the question using the context from the collection
         """
         try:
+            print(f'This is the request: {request}')
+
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
 
@@ -237,6 +243,8 @@ class BasicRAGQueryController:
 
             # Get the LLM
             llm = self._get_llm(request.model_configuration, request.stream)
+
+            print(f'This is the LLM {llm}')
 
             # get retriever
             retriever = await self._get_retriever(

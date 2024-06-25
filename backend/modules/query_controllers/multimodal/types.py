@@ -135,8 +135,8 @@ class ExampleQueryInput(BaseModel):
     allowed_retriever_types: ClassVar[Collection[str]] = (
         "vectorstore",
         "multi-query",
-        "contexual-compression",
-        "contexual-compression-multi-query",
+        "contextual-compression",
+        "contextual-compression-multi-query",
         "lord-of-the-retrievers",
     )
 
@@ -160,12 +160,12 @@ class ExampleQueryInput(BaseModel):
                 **values.get("retriever_config")
             )
 
-        elif retriever_name == "contexual-compression":
+        elif retriever_name == "contextual-compression":
             values["retriever_config"] = ContextualCompressionRetrieverConfig(
                 **values.get("retriever_config")
             )
 
-        elif retriever_name == "contexual-compression-multi-query":
+        elif retriever_name == "contextual-compression-multi-query":
             values["retriever_config"] = ContextualCompressionMultiQueryRetrieverConfig(
                 **values.get("retriever_config")
             )
