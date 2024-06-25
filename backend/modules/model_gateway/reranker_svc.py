@@ -19,7 +19,7 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
     model: str
     top_k: int
     base_url: str
-    api_key: str
+    api_key: Optional[str] = None
 
     def compress_documents(
         self,
@@ -38,9 +38,11 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
         }
 
         headers = {
-            "Authorization": f"Bearer {settings.INFINITY_API_KEY}",
             "Content-Type": "application/json",
         }
+
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
         reranked_docs = requests.post(
             self.base_url.rstrip("/") + "/rerank", headers=headers, json=payload
