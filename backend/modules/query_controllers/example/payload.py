@@ -84,8 +84,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
@@ -113,8 +112,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
@@ -130,7 +128,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
     "description": """
         Requires k and fetch_k in search kwargs for mmr.
         search_type can either be similarity or mmr or similarity_score_threshold.
-        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added.""",
+        Currently only support for local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added.""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR,
 }
 
@@ -147,8 +145,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
@@ -161,7 +158,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PA
     "description": """
         Requires score_threshold float (0~1) in search kwargs for similarity search.
         search_type can either be similarity or mmr or similarity_score_threshold.
-        Currently only support for mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added""",
+        Currently only support for local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1 reranker is added""",
     "value": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE,
 }
 
@@ -273,8 +270,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
@@ -309,8 +305,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
@@ -343,8 +338,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},

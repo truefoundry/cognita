@@ -33,12 +33,12 @@ RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --n
 ARG ADD_PRISMA=0
 RUN if [ "${ADD_PRISMA}" = "1" ]; then prisma version; fi
 
-# TODO (chiragjn): These should be removed from here and directly added as environment variables
-# Temporary addition until templates have been updated using build args as environment variables
-ARG ADD_RERANKER_SVC_URL=""
-ENV RERANKER_SVC_URL=${ADD_RERANKER_SVC_URL}
-ARG ADD_EMBEDDING_SVC_URL=""
-ENV EMBEDDING_SVC_URL=${ADD_EMBEDDING_SVC_URL}
+# TODO: Remove these when templates inject env vars
+ARG MODELS_CONFIG_PATH
+ENV MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
+
+ARG INFINITY_API_KEY
+ENV INFINITY_API_KEY=${INFINITY_API_KEY}
 
 # Copy the project files
 COPY . /app

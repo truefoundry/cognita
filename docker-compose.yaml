@@ -52,7 +52,7 @@ services:
             - cognita-docker
 
     infinity-server:
-        image: michaelf34/infinity:0.0.49
+        image: michaelf34/infinity:0.0.50
         pull_policy: if_not_present
         restart: unless-stopped
         container_name: infinity
@@ -71,7 +71,8 @@ services:
         environment:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=8
-        command: v2
+            - INFINITY_API_KEY=${INFINITY_API_KEY}
+        command: v2 --api-key ${INFINITY_API_KEY}
         networks:
             - cognita-docker
 
@@ -131,14 +132,13 @@ services:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
-            - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
             - OPENAI_API_KEY=${OPENAI_API_KEY}
-            - RERANKER_SVC_URL=${INFINITY_URL}
+            - INFINITY_API_KEY=${INFINITY_API_KEY}
+            - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
-            - TFY_LLM_GATEWAY_URL=${TFY_LLM_GATEWAY_URL}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"

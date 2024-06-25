@@ -97,6 +97,7 @@ class ModelType(str, Enum):
 
     chat = "chat"
     embedding = "embedding"
+    reranking = "reranking"
 
 
 class ModelConfig(BaseModel):
@@ -117,6 +118,7 @@ class ModelProviderConfig(BaseModel):
     api_format: str
     llm_model_ids: List[str]
     embedding_model_ids: List[str]
+    reranking_model_ids: List[str]
     api_key_env_var: str
     base_url: Optional[str] = None
 

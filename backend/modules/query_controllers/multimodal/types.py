@@ -73,10 +73,6 @@ class MultiQueryRetrieverConfig(VectorStoreRetrieverConfig):
 
 
 class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
-    compressor_model_provider: str = Field(
-        title="provider of the compressor model",
-    )
-
     compressor_model_name: str = Field(
         title="model name of the compressor",
     )
@@ -85,23 +81,12 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
         title="Top K docs to collect post compression",
     )
 
-    allowed_compressor_model_providers: ClassVar[Collection[str]] = ("mixedbread-ai",)
-
-    @validator("compressor_model_provider")
-    def validate_retriever_type(cls, value) -> Dict:
-        assert (
-            value in cls.allowed_compressor_model_providers
-        ), f"Compressor model of {value} not allowed. Valid values are: {cls.allowed_compressor_model_providers}"
-        return value
+    allowed_compressor_model_providers: ClassVar[Collection[str]]
 
 
 class ContextualCompressionMultiQueryRetrieverConfig(
     ContextualCompressionRetrieverConfig, MultiQueryRetrieverConfig
 ):
-    pass
-
-
-class LordOfRetrievers(ContextualCompressionRetrieverConfig, MultiQueryRetrieverConfig):
     pass
 
 
@@ -137,7 +122,6 @@ class ExampleQueryInput(BaseModel):
         "multi-query",
         "contextual-compression",
         "contextual-compression-multi-query",
-        "lord-of-the-retrievers",
     )
 
     stream: Optional[bool] = Field(title="Stream the results", default=False)
@@ -167,11 +151,6 @@ class ExampleQueryInput(BaseModel):
 
         elif retriever_name == "contextual-compression-multi-query":
             values["retriever_config"] = ContextualCompressionMultiQueryRetrieverConfig(
-                **values.get("retriever_config")
-            )
-
-        elif retriever_name == "lord-of-the-retrievers":
-            values["retriever_config"] = LordOfRetrievers(
                 **values.get("retriever_config")
             )
 
