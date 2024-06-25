@@ -133,6 +133,8 @@ class MultiModalRAGQueryController:
             base_retriever = self._get_contextual_compression_retriever(
                 vector_store, retriever_config
             )
+        else:
+            raise ValueError(f"Unknown retriever_type {retriever_type}")
 
         return MultiQueryRetriever.from_llm(
             retriever=base_retriever,

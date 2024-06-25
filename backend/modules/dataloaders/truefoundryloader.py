@@ -50,6 +50,9 @@ class TrueFoundryLoader(BaseDataLoader):
             download_info = dataset.download(path=dest_dir)
             logger.debug(f"Data directory download info: {download_info}")
 
+        else:
+            raise ValueError(f"Unsupported data_source uri type {data_source.uri}")
+
         if download_info:
             if os.path.exists(os.path.join(download_info, "files")):
                 logger.debug("Files directory exists")

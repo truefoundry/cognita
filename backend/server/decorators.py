@@ -109,7 +109,6 @@ def query_controller(tag: str = None):
 
     Args:
         tag (str, optional): The tag to use for OpenAPI documentation.
-        prefix (str, optional): The prefix to use for all routes.
 
     Returns:
         class: The decorated class.
