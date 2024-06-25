@@ -71,8 +71,7 @@ services:
         environment:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=8
-            - INFINITY_API_KEY=${INFINITY_API_KEY}
-        command: v2 --api-key ${INFINITY_API_KEY}
+        command: v2
         networks:
             - cognita-docker
 

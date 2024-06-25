@@ -16,7 +16,7 @@ model_providers:
     - provider_name: local-infinity
       api_format: openai
       base_url: http://infinity-server:7997/
-      api_key_env_var: INFINITY_API_KEY
+      api_key_env_var: ""
       llm_model_ids: []
       embedding_model_ids:
           - "mixedbread-ai/mxbai-embed-large-v1"

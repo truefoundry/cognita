@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from pydantic import BaseSettings, root_validator
 
@@ -26,8 +27,6 @@ class Settings(BaseSettings):
 
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
-
-    INFINITY_API_KEY: str = ""
 
     # TODO: This will be removed in future releases - after fixing multimodal parser
     TFY_LLM_GATEWAY_URL: str = ""
