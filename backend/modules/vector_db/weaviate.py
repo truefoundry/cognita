@@ -1,14 +1,11 @@
-import os
 from typing import List
 
 import weaviate
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.weaviate import Weaviate
+from langchain_core.documents import Document
 
-from backend.constants import (
-    DATA_POINT_FQN_METADATA_KEY,
-    DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
-)
+from backend.constants import DATA_POINT_FQN_METADATA_KEY
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
 
@@ -48,9 +45,9 @@ class WeaviateVectorDB(BaseVectorDB):
     def upsert_documents(
         self,
         collection_name: str,
-        documents: List[str],
+        documents: List[Document],
         embeddings: Embeddings,
-        incremental,
+        incremental: bool = True,
     ):
         """
         Upsert documents to the collection
@@ -109,8 +106,9 @@ class WeaviateVectorDB(BaseVectorDB):
         )
         document_ids = set()
         for group in groups:
-            document_ids.add(group.get("groupedBy", {}).get("value", ""))
-        return document_ids
+            # TODO (chiragjn): Revisit this, we should not be letting `value` be empty
+            document_ids.add(group.get("groupedBy", {}).get("value", "") or "")
+        return list(document_ids)
 
     def delete_documents(self, collection_name: str, document_ids: List[str]):
         """

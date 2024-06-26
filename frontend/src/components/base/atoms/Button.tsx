@@ -7,7 +7,7 @@ import Spinner from './Spinner'
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon?: FontAwesomeIconProps['icon']
+  icon?: FontAwesomeIconProps['icon'] | string
   text?: React.ReactNode | JSX.Element | string
   style?: object
   rounded?: boolean

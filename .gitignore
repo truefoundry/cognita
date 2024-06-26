@@ -4,11 +4,8 @@
 test/.pytest_cache
 dist/
 .serverless
-examples/*/.servicefoundry
 .pytest_cache
-.servicefoundry_templates/
 .DS_Store
-.servicefoundry
 venv
 .vscode/
 repo-data/
@@ -24,3 +21,11 @@ test.py
 tf-docs-crawled/
 truefoundry-docs/
 *.zip
+qdrant_storage/
+*.pth
+.truefoundry
+infinity/
+volumes/
+pgdata/
+*.bak
+models_config.yaml

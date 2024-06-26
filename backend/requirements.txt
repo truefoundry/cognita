@@ -1,33 +1,34 @@
-GitPython==3.1.41
+GitPython==3.1.43
 langchain==0.1.9
 langchain-community==0.0.24
-langchain-openai==0.0.8
-openai==1.14.0
-tiktoken==0.6.0
+langchain-openai==0.1.7
+langchain-core==0.1.46
+openai==1.35.3
+tiktoken==0.7.0
 uvicorn==0.23.2
-fastapi==0.104.1
-qdrant-client==1.7.3
-python-dotenv==1.0.0
-weaviate-client==3.25.3
-pydantic==1.10.12
+fastapi==0.109.1
+qdrant-client==1.9.0
+python-dotenv==1.0.1
+pydantic==1.10.13
 orjson==3.9.15
 PyMuPDF==1.23.6
 redis==5.0.1
 beautifulsoup4==4.12.2
-truefoundry[ml]==0.1.2
+truefoundry[ml]==0.2.4
 markdownify==0.11.6
-gunicorn==21.2.0
+gunicorn==22.0.0
 markdown-crawler==0.0.8
 black==24.3.0
+async-timeout==4.0.3
+pre-commit==3.7.0
+huggingface-hub==0.20.3
+requests==2.32.2
+python-multipart==0.0.9
+opencv-python==4.9.0.80
+pillow==10.3.0
 
-#### Embeddings
-# Install torch for as per your requirements: https://pytorch.org/get-started/locally/
-torch==2.2.1
-torchvision==0.17.1
-torchaudio==2.2.1
-transformers==4.39.0
+### transformers
+transformers==4.40.2
 
-
-#### Reranker
-# For use Mxbread Reranker
-sentence_transformers==2.5.1
+### prisma
+prisma==0.13.1

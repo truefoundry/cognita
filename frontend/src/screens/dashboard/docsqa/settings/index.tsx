@@ -2,7 +2,10 @@ import Badge from '@/components/base/atoms/Badge'
 import Button from '@/components/base/atoms/Button'
 import LinkButton from '@/components/base/atoms/Link'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
-import { Collection, useGetCollectionsQuery } from '@/stores/qafoundry'
+import {
+  useGetCollectionDetailsQuery,
+  useGetCollectionNamesQuery,
+} from '@/stores/qafoundry'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AddDataSourceToCollection from '../AddDataSourceToCollection'
@@ -18,19 +21,27 @@ const DocsQASettings = () => {
     searchParams.get('newCollectionOpen') === 'true'
   )
   const [selectedCollection, setSelectedCollection] = useState<
-    Collection | undefined
+    string | undefined
   >()
   const [openDataSourceLinkForm, setOpenDataSourceLinkForm] = useState(false)
   const [runsHistoryDrawerOpen, setRunsHistoryDrawerOpen] = useState(false)
   const [selectedDataSourceFqn, setSelectedDataSourceFqn] = useState('')
 
-  const { data: collections, isLoading } = useGetCollectionsQuery()
+  const { data: collectionsNames, isLoading: isCollectionsLoading } =
+    useGetCollectionNamesQuery()
+  const {
+    data: collectionDetails,
+    isLoading: isCollectionDetailsLoading,
+    isFetching: isCollectionDetailsFetching,
+  } = useGetCollectionDetailsQuery(selectedCollection ?? '', {
+    skip: !selectedCollection,
+  })
 
   const associatedDataSourcesRows = useMemo(() => {
     const rows = []
-    if (selectedCollection) {
+    if (collectionDetails) {
       for (const [key, value] of Object.entries(
-        selectedCollection.associated_data_sources
+        collectionDetails.associated_data_sources ?? {}
       )) {
         const dataSourceType = key.split(':')[0]
         if (dataSourceType === 'data-dir') {
@@ -59,20 +70,19 @@ const DocsQASettings = () => {
     }
 
     return rows
-  }, [collections, selectedCollection])
+  }, [collectionDetails])
 
   useEffect(() => {
-    if (collections) {
-      if (!selectedCollection) {
-        setSelectedCollection(collections[0])
-      } else {
-        setSelectedCollection(
-          collections.find((c) => c.name === selectedCollection.name)
-        )
+    if (collectionsNames?.length) {
+      if (
+        !selectedCollection ||
+        !collectionsNames.includes(selectedCollection)
+      ) {
+        setSelectedCollection(collectionsNames[0])
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collections])
+  }, [collectionsNames])
 
   const openRunsHistoryDrawer = (fqn: string) => {
     setSelectedDataSourceFqn(fqn)
@@ -101,15 +111,12 @@ const DocsQASettings = () => {
               paddingRight: '0rem',
             }}
           >
-            {isLoading && <Spinner center />}
-            {collections?.map((collection, index) => (
+            {isCollectionsLoading && <Spinner center />}
+            {collectionsNames?.map((collection, index) => (
               <CollectionCard
                 key={index}
-                collectionName={collection.name}
-                embedderConfig={collection.embedder_config}
-                isSelectedCollection={
-                  selectedCollection?.name === collection.name
-                }
+                collectionName={collection}
+                isSelectedCollection={selectedCollection === collection}
                 enableErrorSelection
                 onClick={() => {
                   setSelectedCollection(collection)
@@ -120,40 +127,50 @@ const DocsQASettings = () => {
         </div>
         {selectedCollection ? (
           <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-300px)] bg-white p-4">
-            <div className="flex justify-between mb-3">
-              <div>
-                <div className="text-base font-medium mb-1">
-                  Data Sources for{' '}
-                  <Badge
-                    text={selectedCollection.name}
-                    type="white"
-                    textClasses="text-base"
-                  />{' '}
-                  collection
-                </div>
-                <div className="text-sm">
-                  Embedder Used :{' '}
-                  {selectedCollection?.embedder_config?.config?.model}
-                </div>
+            {isCollectionDetailsFetching || isCollectionDetailsLoading ? (
+              <div className="flex justify-center items-center h-full w-full">
+                <Spinner center medium />
               </div>
-              <Button
-                white
-                icon={'plus'}
-                iconClasses="text-gray-400"
-                text={'Link Data Source'}
-                className="btn-sm text-sm bg-white"
-                onClick={() => setOpenDataSourceLinkForm(true)}
-              />
-            </div>
-            <div className="bg-[#f7fbff] h-[calc(100%-70px)] p-4">
-              <DataSourcesTable
-                collectionName={selectedCollection.name}
-                rows={associatedDataSourcesRows}
-                openRunsHistoryDrawer={openRunsHistoryDrawer}
-              />
-            </div>
+            ) : (
+              <>
+                <div className="flex justify-between mb-3">
+                  <div>
+                    <div className="text-base font-medium mb-1">
+                      Data Sources for{' '}
+                      <Badge
+                        text={selectedCollection}
+                        type="white"
+                        textClasses="text-base"
+                      />{' '}
+                      collection
+                    </div>
+                    {collectionDetails && (
+                      <div className="text-sm">
+                        Embedder Used :{' '}
+                        {collectionDetails?.embedder_config?.config?.model}
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    white
+                    icon={'plus'}
+                    iconClasses="text-gray-400"
+                    text={'Link Data Source'}
+                    className="btn-sm text-sm bg-white"
+                    onClick={() => setOpenDataSourceLinkForm(true)}
+                  />
+                </div>
+                <div className="bg-[#f7fbff] h-[calc(100%-70px)] p-4">
+                  <DataSourcesTable
+                    collectionName={selectedCollection}
+                    rows={associatedDataSourcesRows}
+                    openRunsHistoryDrawer={openRunsHistoryDrawer}
+                  />
+                </div>
+              </>
+            )}
           </div>
-        ) : isLoading ? (
+        ) : isCollectionsLoading ? (
           <Spinner center medium />
         ) : (
           <NoCollections />
@@ -177,14 +194,14 @@ const DocsQASettings = () => {
           onClose={() => {
             setOpenDataSourceLinkForm(false)
           }}
-          collection={selectedCollection}
+          collectionName={selectedCollection}
         />
       )}
       {runsHistoryDrawerOpen && selectedCollection && selectedDataSourceFqn && (
         <RunsHistoryDrawer
           open={runsHistoryDrawerOpen}
           onClose={() => setRunsHistoryDrawerOpen(false)}
-          collectionName={selectedCollection.name}
+          collectionName={selectedCollection}
           selectedDataSource={selectedDataSourceFqn}
         />
       )}

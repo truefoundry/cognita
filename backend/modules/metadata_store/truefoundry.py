@@ -1,17 +1,16 @@
 import enum
 import json
-import logging
 import os
 import tempfile
 import warnings
 from typing import Any, Dict, List
 
 import mlflow
-from truefoundry import ml
 from fastapi import HTTPException
+from truefoundry import ml
 
 from backend.logger import logger
-from backend.modules.metadata_store.base import BaseMetadataStore, get_data_source_fqn
+from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.types import (
     AssociateDataSourceWithCollection,
     AssociatedDataSources,
@@ -39,20 +38,20 @@ class TrueFoundry(BaseMetadataStore):
     ml_runs: dict[str, ml.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
 
-    def __init__(self, config: dict):
-        self.ml_repo_name = config.get("ml_repo_name", None)
+    def __init__(self, *args, ml_repo_name: str, **kwargs):
+        self.ml_repo_name = ml_repo_name
         if not self.ml_repo_name:
-            raise Exception("config.ml_repo_name is not set.")
+            raise Exception("`ml_repo_name` is not set.")
         logger.info(
             f"[Metadata Store] Initializing TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
-        logging.getLogger("truefoundry").setLevel(logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         self.client = ml.get_client()
         self.client.create_ml_repo(self.ml_repo_name)
         logger.info(
             f"[Metadata Store] Initialized TrueFoundry Metadata Store: {self.ml_repo_name}"
         )
+        super().__init__(*args, **kwargs)
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
@@ -61,6 +60,7 @@ class TrueFoundry(BaseMetadataStore):
         Cache the runs to avoid too many requests to the backend.
         """
         try:
+            # TODO: Use a LRU Cache?
             if len(self.ml_runs.keys()) > 50:
                 self.ml_runs = {}
             if no_cache:
@@ -80,7 +80,7 @@ class TrueFoundry(BaseMetadataStore):
     def create_collection(self, collection: CreateCollection) -> Collection:
         """
         Create a collection from given CreateCollection object.
-        It primarly has collection name, collection description and embedder congfiguration
+        It primarily has collection name, collection description and embedder configuration
         """
         logger.debug(f"[Metadata Store] Creating collection {collection.name}")
         existing_collection = self.get_collection_by_name(
@@ -125,7 +125,7 @@ class TrueFoundry(BaseMetadataStore):
         if not metadata:
             raise HTTPException(
                 404,
-                f"Entity {run.run_name} was manupulated: metadata artifact not found.",
+                f"Artifact metadata not found. (Perhaps it was removed from the artifact?)",
             )
         return metadata
 
@@ -137,7 +137,7 @@ class TrueFoundry(BaseMetadataStore):
         if not metadata_artifact_fqn:
             raise HTTPException(
                 404,
-                f"Entity {run.run_name} was manupulated: metadata_artifact_fqn not found.",
+                f"Key metadata_artifact_fqn not found. (Perhaps the run {run.run_name} was modified?)",
             )
         artifacts = run.list_artifact_versions()
         for artifact in artifacts:
@@ -151,8 +151,8 @@ class TrueFoundry(BaseMetadataStore):
         metadata: Dict[str, Any],
         params: Dict[str, str],
     ):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            file_path = os.path.join(tmpdirname, "metadata.json")
+        with tempfile.TemporaryDirectory() as tmp_dirname:
+            file_path = os.path.join(tmp_dirname, "metadata.json")
             with open(file_path, "w") as f:
                 f.write(json.dumps(metadata))
             artifact = run.log_artifact(
@@ -183,7 +183,7 @@ class TrueFoundry(BaseMetadataStore):
                 f"[Metadata Store] Collection with name {collection_name} not found"
             )
             return None
-        collection = self._polulate_collection(
+        collection = self._populate_collection(
             Collection.parse_obj(self._get_entity_from_run(run=ml_run))
         )
         logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
@@ -199,11 +199,11 @@ class TrueFoundry(BaseMetadataStore):
         collections = []
         for ml_run in ml_runs:
             collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
-            collections.append(self._polulate_collection(collection))
+            collections.append(self._populate_collection(collection))
         logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
         return collections
 
-    def _polulate_collection(self, collection: Collection):
+    def _populate_collection(self, collection: Collection):
         for (
             data_source_fqn,
             associated_data_source,
@@ -219,7 +219,8 @@ class TrueFoundry(BaseMetadataStore):
         data_source_association: AssociateDataSourceWithCollection,
     ) -> Collection:
         logger.debug(
-            f"[Metadata Store] Associating data_source {data_source_association.data_source_fqn} to collection {collection_name}"
+            f"[Metadata Store] Associating data_source {data_source_association.data_source_fqn} "
+            f"to collection {collection_name}"
         )
 
         collection_run = self._get_run_by_name(
@@ -248,15 +249,16 @@ class TrueFoundry(BaseMetadataStore):
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
         )
-        collection.associated_data_sources[data_source_association.data_source_fqn] = (
-            associated_data_source
-        )
+        collection.associated_data_sources[
+            data_source_association.data_source_fqn
+        ] = associated_data_source
 
         self._update_entity_in_run(run=collection_run, metadata=collection.dict())
         logger.debug(
-            f"[Metadata Store] Associated data_source {data_source_association.data_source_fqn} to collection {collection_name}"
+            f"[Metadata Store] Associated data_source {data_source_association.data_source_fqn} "
+            f"to collection {collection_name}"
         )
-        return self._polulate_collection(collection)
+        return self._populate_collection(collection)
 
     def unassociate_data_source_with_collection(
         self,
@@ -282,7 +284,7 @@ class TrueFoundry(BaseMetadataStore):
         logger.debug(
             f"[Metadata Store] Unassociated data_source {data_source_fqn} to collection {collection_name}"
         )
-        return self._polulate_collection(collection)
+        return self._populate_collection(collection)
 
     def create_data_source(self, data_source: CreateDataSource) -> DataSource:
         logger.debug(
@@ -349,7 +351,8 @@ class TrueFoundry(BaseMetadataStore):
         self, data_ingestion_run: CreateDataIngestionRun
     ) -> DataIngestionRun:
         logger.debug(
-            f"[Metadata Store] Creating new ingestion run for collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
+            f"[Metadata Store] Creating new ingestion run for "
+            f"collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
         )
         params = {
             "entity_type": MLRunTypes.DATA_INGESTION_RUN.value,
@@ -378,7 +381,8 @@ class TrueFoundry(BaseMetadataStore):
         )
         run.end()
         logger.debug(
-            f"[Metadata Store] Created a ingestion run for collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
+            f"[Metadata Store] Created a ingestion run for "
+            f"collection: {data_ingestion_run.collection_name} data source: {data_ingestion_run.data_source_fqn}"
         )
         return created_data_ingestion_run
 
@@ -386,7 +390,7 @@ class TrueFoundry(BaseMetadataStore):
         self, data_ingestion_run_name: str, no_cache: bool = False
     ) -> DataIngestionRun | None:
         logger.debug(
-            f"[Metadata Store] Getitng ingestion run {data_ingestion_run_name}"
+            f"[Metadata Store] Getting ingestion run {data_ingestion_run_name}"
         )
         run = self._get_run_by_name(run_name=data_ingestion_run_name, no_cache=no_cache)
         if not run:
@@ -408,9 +412,13 @@ class TrueFoundry(BaseMetadataStore):
         self, collection_name: str, data_source_fqn: str = None
     ) -> List[DataIngestionRun]:
         logger.debug(
-            f"[Metadata Store] Listing all data ingestion runs for collection: {collection_name} & data source: {data_source_fqn}"
+            f"[Metadata Store] Listing all data ingestion runs "
+            f"for collection: {collection_name} & data source: {data_source_fqn}"
         )
-        filter_str = f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'"
+        filter_str = (
+            f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' "
+            f"and params.collection_name = '{collection_name}'"
+        )
         if data_source_fqn:
             filter_str = (
                 filter_str + f" and params.data_source_fqn = '{data_source_fqn}'"
@@ -428,12 +436,13 @@ class TrueFoundry(BaseMetadataStore):
             data_ingestion_run.status = DataIngestionRunStatus(run_tags.get("status"))
             data_ingestion_runs.append(data_ingestion_run)
         logger.debug(
-            f"[Metadata Store] Listed {len(data_ingestion_runs)} data ingestion runs for collection: {collection_name} & data source: {data_source_fqn}"
+            f"[Metadata Store] Listed {len(data_ingestion_runs)} data ingestion runs "
+            f"for collection: {collection_name} & data source: {data_source_fqn}"
         )
         return data_ingestion_runs
 
     def delete_collection(self, collection_name: str, include_runs=False):
-        logger.debug(f"[Metadata Store] Deleting colelction {collection_name}")
+        logger.debug(f"[Metadata Store] Deleting collection {collection_name}")
         collection = self._get_run_by_name(run_name=collection_name, no_cache=True)
         if not collection:
             logger.debug(
@@ -446,18 +455,19 @@ class TrueFoundry(BaseMetadataStore):
             )
             data_ingestion_runs = self.client.search_runs(
                 ml_repo=self.ml_repo_name,
-                filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' and params.collection_name = '{collection_name}'",
+                filter_string=f"params.entity_type = '{MLRunTypes.DATA_INGESTION_RUN.value}' "
+                f"and params.collection_name = '{collection_name}'",
             )
             logger.debug(
                 f"[Metadata Store] Found data ingestion runs for {collection_name} to delete"
             )
-            for collection_inderer_job_run in data_ingestion_runs:
-                collection_inderer_job_run.delete()
+            for collection_indexer_job_run in data_ingestion_runs:
+                collection_indexer_job_run.delete()
             logger.debug(
                 f"[Metadata Store] Deleted data ingestion runs for {collection_name}"
             )
         collection.delete()
-        logger.debug(f"[Metadata Store] Deleted colelction {collection_name}")
+        logger.debug(f"[Metadata Store] Deleted collection {collection_name}")
 
     def update_data_ingestion_run_status(
         self,
@@ -515,8 +525,8 @@ class TrueFoundry(BaseMetadataStore):
             if not data_ingestion_run:
                 logger.error(f"Data ingestion run {data_ingestion_run_name} not found")
                 return
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                file_path = os.path.join(tmpdirname, "error.json")
+            with tempfile.TemporaryDirectory() as tmp_dirname:
+                file_path = os.path.join(tmp_dirname, "error.json")
                 with open(file_path, "w") as f:
                     f.write(json.dumps(errors))
                 data_ingestion_run.log_artifact(
@@ -529,3 +539,39 @@ class TrueFoundry(BaseMetadataStore):
             )
         except Exception as e:
             logger.exception(e)
+
+    def list_collections(self) -> List[str]:
+        logger.info(f"[Metadata Store] Listing all collection")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.COLLECTION.value}'",
+        )
+        return [run.run_name for run in ml_runs]
+
+    def list_data_sources(self) -> List[dict[str, str]]:
+        logger.info(f"[Metadata Store] Listing all data sources")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}'",
+        )
+
+        data_sources = []
+        for run in ml_runs:
+            run_params = run.get_params()
+            try:
+                data_sources.append(
+                    {
+                        "type": run_params.get("data_source_fqn").split("::")[0],
+                        "uri": run_params.get("data_source_fqn").split("::")[1],
+                        "fqn": run_params.get("data_source_fqn"),
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Error in listing data sources: {e}")
+                continue
+        return data_sources
+
+    def delete_data_source(self, data_source_fqn: str):
+        raise Exception(
+            "Truefoundry Metadata Store does not support delete data source"
+        )

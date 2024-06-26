@@ -39,16 +39,10 @@ npm install -g yarn@1.22.19
 
 ### Installation
 
-1. Clone the repository:
+1. Navigate into the project directory:
 
 ```bash
-git clone https://github.com/truefoundry/docs-qa-playground.git
-```
-
-2. Navigate into the project directory:
-
-```bash
-cd docs-qa-playground/frontend
+cd cognita/frontend
 ```
 
 3. Install dependencies using Yarn:
@@ -69,7 +63,7 @@ Sample .env file:
 
 ```bash
 VITE_QA_FOUNDRY_URL=http://localhost:8000
-VITE_DOCS_QA_DELETE_COLLECTIONS=false
+VITE_DOCS_QA_DELETE_COLLECTIONS=true
 VITE_DOCS_QA_STANDALONE_PATH=/
 VITE_DOCS_QA_ENABLE_REDIRECT=false
 VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=200

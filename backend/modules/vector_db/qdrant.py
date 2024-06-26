@@ -1,16 +1,15 @@
 from typing import List
+from urllib.parse import urlparse
 
-from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient, models
-from qdrant_client.http.models import VectorParams, Distance
-
+from qdrant_client.http.models import Distance, VectorParams
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, VectorDBConfig
+from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
@@ -18,40 +17,44 @@ BATCH_SIZE = 1000
 
 class QdrantVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
+        logger.debug(f"Connecting to qdrant using config: {config.dict()}")
         if config.local is True:
-            self.local = True
-            self.location = config.url
+            # TODO: make this path customizable
             self.qdrant_client = QdrantClient(
                 path="./qdrant_db",
             )
         else:
-            self.local = False
-            self.url = config.url
-            self.api_key = config.api_key
-            self.port = 443 if self.url.startswith("https://") else 6333
-            self.prefix = config.config.get("prefix", None) if config.config else None
-            self.prefer_grpc = False if self.url.startswith("https://") else True
+            url = config.url
+            api_key = config.api_key
+            if not api_key:
+                api_key = None
+            qdrant_kwargs = QdrantClientConfig.parse_obj(config.config or {})
+            if url.startswith("http://") or url.startswith("https://"):
+                if qdrant_kwargs.port is None:
+                    parsed_port = urlparse(url).port
+                    if parsed_port:
+                        qdrant_kwargs.port = parsed_port
+                    else:
+                        qdrant_kwargs.port = 443 if url.startswith("https://") else 6333
             self.qdrant_client = QdrantClient(
-                url=self.url,
-                **({"api_key": self.api_key} if self.api_key else {}),
-                port=self.port,
-                prefer_grpc=self.prefer_grpc,
-                prefix=self.prefix,
+                url=url, api_key=api_key, **qdrant_kwargs.dict()
             )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
-
-        logger.debug(f"[Vector Store Qdrant] Creating new collection {collection_name}")
+        logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size
+        logger.debug(f"[Qdrant] Embedding a dummy doc to get vector dimensions")
         partial_embeddings = embeddings.embed_documents(["Initial document"])
         vector_size = len(partial_embeddings[0])
+        logger.debug(f"Vector size: {vector_size}")
 
         self.qdrant_client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(
                 size=vector_size,  # embedding dimension
                 distance=Distance.COSINE,
+                on_disk=True,
             ),
             replication_factor=3,
         )
@@ -60,12 +63,7 @@ class QdrantVectorDB(BaseVectorDB):
             field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
-        self.qdrant_client.create_payload_index(
-            collection_name=collection_name,
-            field_name=f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
-            field_schema=models.PayloadSchemaType.KEYWORD,
-        )
-        logger.debug(f"[Vector Store] Created new collection {collection_name}")
+        logger.debug(f"[Qdrant] Created new collection {collection_name}")
 
     def _get_records_to_be_upserted(
         self, collection_name: str, data_point_fqns: List[str], incremental: bool
@@ -74,7 +72,7 @@ class QdrantVectorDB(BaseVectorDB):
             return []
         # For incremental deletion, we delete the documents with the same document_id
         logger.debug(
-            f"[Vector Store] Incremental Ingestion: Fetching documents for {len(data_point_fqns)} data point fqns for collection {collection_name}"
+            f"[Qdrant] Incremental Ingestion: Fetching documents for {len(data_point_fqns)} data point fqns for collection {collection_name}"
         )
         stop = False
         offset = None
@@ -108,7 +106,7 @@ class QdrantVectorDB(BaseVectorDB):
                 offset = next_offset
 
         logger.debug(
-            f"[Vector Store] Incremental Ingestion: collection={collection_name} Addition={len(data_point_fqns)}, Updates={len(record_ids_to_be_upserted)}"
+            f"[Qdrant] Incremental Ingestion: collection={collection_name} Addition={len(data_point_fqns)}, Updates={len(record_ids_to_be_upserted)}"
         )
         return record_ids_to_be_upserted
 
@@ -124,7 +122,7 @@ class QdrantVectorDB(BaseVectorDB):
             return
         # get record IDs to be upserted
         logger.debug(
-            f"[Vector Store] Adding {len(documents)} documents to collection {collection_name}"
+            f"[Qdrant] Adding {len(documents)} documents to collection {collection_name}"
         )
         data_point_fqns = []
         for document in documents:
@@ -145,13 +143,13 @@ class QdrantVectorDB(BaseVectorDB):
             embeddings=embeddings,
         ).add_documents(documents=documents)
         logger.debug(
-            f"[Vector Store] Added {len(documents)} documents to collection {collection_name}"
+            f"[Qdrant] Added {len(documents)} documents to collection {collection_name}"
         )
 
         # Delete Documents
         if len(record_ids_to_be_upserted):
             logger.debug(
-                f"[Vector Store] Deleting {len(documents)} outdated documents from collection {collection_name}"
+                f"[Qdrant] Deleting {len(documents)} outdated documents from collection {collection_name}"
             )
             for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
                 record_ids_to_be_processed = record_ids_to_be_upserted[
@@ -164,24 +162,22 @@ class QdrantVectorDB(BaseVectorDB):
                     ),
                 )
             logger.debug(
-                f"[Vector Store] Deleted {len(documents)} outdated documents from collection {collection_name}"
+                f"[Qdrant] Deleted {len(documents)} outdated documents from collection {collection_name}"
             )
 
     def get_collections(self) -> List[str]:
-        logger.debug(f"[Vector Store] Fetching collections")
+        logger.debug(f"[Qdrant] Fetching collections")
         collections = self.qdrant_client.get_collections().collections
-        logger.debug(f"[Vector Store] Fetched {len(collections)} collections")
+        logger.debug(f"[Qdrant] Fetched {len(collections)} collections")
         return [collection.name for collection in collections]
 
     def delete_collection(self, collection_name: str):
-        logger.debug(f"[Vector Store] Deleting {collection_name} collection")
+        logger.debug(f"[Qdrant] Deleting {collection_name} collection")
         self.qdrant_client.delete_collection(collection_name=collection_name)
-        logger.debug(f"[Vector Store] Deleted {collection_name} collection")
+        logger.debug(f"[Qdrant] Deleted {collection_name} collection")
 
     def get_vector_store(self, collection_name: str, embeddings: Embeddings):
-        logger.debug(
-            f"[Vector Store] Getting vector store for collection {collection_name}"
-        )
+        logger.debug(f"[Qdrant] Getting vector store for collection {collection_name}")
         return Qdrant(
             client=self.qdrant_client,
             embeddings=embeddings,
@@ -189,14 +185,14 @@ class QdrantVectorDB(BaseVectorDB):
         )
 
     def get_vector_client(self):
-        logger.debug(f"[Vector Store] Getting Qdrant client")
+        logger.debug(f"[Qdrant] Getting Qdrant client")
         return self.qdrant_client
 
     def list_data_point_vectors(
         self, collection_name: str, data_source_fqn: str, batch_size: int = BATCH_SIZE
     ) -> List[DataPointVector]:
         logger.debug(
-            f"[Vector Store] Listing all data point vectors for collection {collection_name}"
+            f"[Qdrant] Listing all data point vectors for collection {collection_name}"
         )
         stop = False
         offset = None
@@ -244,7 +240,7 @@ class QdrantVectorDB(BaseVectorDB):
             else:
                 offset = next_offset
         logger.debug(
-            f"[Vector Store] Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
+            f"[Qdrant] Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
         )
         return data_point_vectors
 
@@ -257,9 +253,7 @@ class QdrantVectorDB(BaseVectorDB):
         """
         Delete data point vectors from the collection
         """
-        logger.debug(
-            f"[Vector Store] Deleting {len(data_point_vectors)} data point vectors"
-        )
+        logger.debug(f"[Qdrant] Deleting {len(data_point_vectors)} data point vectors")
         vectors_to_be_deleted_count = len(data_point_vectors)
         deleted_vectors_count = 0
         for i in range(0, vectors_to_be_deleted_count, batch_size):
@@ -277,10 +271,10 @@ class QdrantVectorDB(BaseVectorDB):
                 data_point_vectors_to_be_processed
             )
             logger.debug(
-                f"[Vector Store] Deleted [{deleted_vectors_count}/{vectors_to_be_deleted_count}] data point vectors"
+                f"[Qdrant] Deleted [{deleted_vectors_count}/{vectors_to_be_deleted_count}] data point vectors"
             )
         logger.debug(
-            f"[Vector Store] Deleted {vectors_to_be_deleted_count} data point vectors"
+            f"[Qdrant] Deleted {vectors_to_be_deleted_count} data point vectors"
         )
 
     def list_documents_in_collection(
@@ -290,7 +284,7 @@ class QdrantVectorDB(BaseVectorDB):
         List all documents in a collection
         """
         logger.debug(
-            f"[Vector Store] Listing all documents with base document id {base_document_id} for collection {collection_name}"
+            f"[Qdrant] Listing all documents with base document id {base_document_id} for collection {collection_name}"
         )
         stop = False
         offset = None
@@ -332,7 +326,7 @@ class QdrantVectorDB(BaseVectorDB):
             else:
                 offset = next_offset
         logger.debug(
-            f"[Vector Store] Found {len(document_ids_set)} documents with base document id {base_document_id} for collection {collection_name}"
+            f"[Qdrant] Found {len(document_ids_set)} documents with base document id {base_document_id} for collection {collection_name}"
         )
         return list(document_ids_set)
 
@@ -341,7 +335,7 @@ class QdrantVectorDB(BaseVectorDB):
         Delete documents from the collection
         """
         logger.debug(
-            f"[Vector Store] Deleting {len(document_ids)} documents from collection {collection_name}"
+            f"[Qdrant] Deleting {len(document_ids)} documents from collection {collection_name}"
         )
         try:
             self.qdrant_client.get_collection(collection_name=collection_name)
@@ -366,7 +360,7 @@ class QdrantVectorDB(BaseVectorDB):
                 ),
             )
         logger.debug(
-            f"[Vector Store] Deleted {len(document_ids)} documents from collection {collection_name}"
+            f"[Qdrant] Deleted {len(document_ids)} documents from collection {collection_name}"
         )
 
     def list_document_vector_points(
@@ -376,7 +370,7 @@ class QdrantVectorDB(BaseVectorDB):
         List all documents in a collection
         """
         logger.debug(
-            f"[Vector Store] Listing all document vector points for collection {collection_name}"
+            f"[Qdrant] Listing all document vector points for collection {collection_name}"
         )
         stop = False
         offset = None
@@ -414,6 +408,6 @@ class QdrantVectorDB(BaseVectorDB):
             else:
                 offset = next_offset
         logger.debug(
-            f"[Vector Store] Listing {len(document_vector_points)} document vector points for collection {collection_name}"
+            f"[Qdrant] Listing {len(document_vector_points)} document vector points for collection {collection_name}"
         )
         return document_vector_points

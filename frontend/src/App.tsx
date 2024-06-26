@@ -10,12 +10,11 @@ import AppRoutes from '@/router'
 import theme from './materialTheme'
 import Fallback from './components/base/molecules/ScreenFallbackLoader'
 import history from './router/history'
-import { DOCS_QA_STANDALONE_PATH } from './stores/constants'
+import { DOCS_QA_STANDALONE_PATH, GTAG_ID } from './stores/constants'
+import Head from './Head'
 
 const getBaseName = () => {
-  return DOCS_QA_STANDALONE_PATH
-    ? '/' + DOCS_QA_STANDALONE_PATH
-    : undefined
+  return DOCS_QA_STANDALONE_PATH ? '/' + DOCS_QA_STANDALONE_PATH : undefined
 }
 
 function App() {
@@ -35,6 +34,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      {GTAG_ID && <Head />}
       <Suspense fallback={<Fallback />}>
         <HistoryRouter history={history} basename={getBaseName()}>
           <AppRoutes />

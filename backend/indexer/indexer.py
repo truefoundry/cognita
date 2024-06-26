@@ -1,3 +1,4 @@
+import os
 import tempfile
 from typing import Dict, List
 
@@ -9,12 +10,13 @@ from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METAD
 from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
-from backend.modules.embedder.embedder import get_embedder
-from backend.modules.metadata_store.client import METADATA_STORE_CLIENT
+from backend.modules.metadata_store.client import get_client
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import get_parser_for_extension
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
+    Collection,
     CreateDataIngestionRun,
     DataIngestionMode,
     DataIngestionRunStatus,
@@ -33,9 +35,9 @@ def get_data_point_fqn_to_hash_map(
     data_point_fqn_to_hash: Dict[str, str] = {}
     for data_point_vector in data_point_vectors:
         if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[data_point_vector.data_point_fqn] = (
-                data_point_vector.data_point_hash
-            )
+            data_point_fqn_to_hash[
+                data_point_vector.data_point_fqn
+            ] = data_point_vector.data_point_hash
 
     return data_point_fqn_to_hash
 
@@ -61,7 +63,8 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    client = await get_client()
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
     )
@@ -79,12 +82,13 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
         )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
     )
@@ -95,18 +99,18 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
         )
         raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
     )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
         )
@@ -117,12 +121,12 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+            await client.aupdate_data_ingestion_run_status(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
             )
             raise e
-    METADATA_STORE_CLIENT.update_data_ingestion_run_status(
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.COMPLETED,
     )
@@ -145,16 +149,18 @@ async def _sync_data_source_to_collection(
         None
     """
 
+    client = await get_client()
+
     failed_data_point_fqns = []
     documents_ingested_count = 0
     # Create a temp dir to store the data
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory() as tmp_dirname:
         # Load the data from the source to the dest dir
         logger.info("Loading data from data source")
         data_source_loader = get_loader_for_data_source(inputs.data_source.type)
         loaded_data_points_batch_iterator = data_source_loader.load_filtered_data(
             data_source=inputs.data_source,
-            dest_dir=tmpdirname,
+            dest_dir=tmp_dirname,
             previous_snapshot=previous_snapshot,
             batch_size=inputs.batch_size,
             data_ingestion_mode=inputs.data_ingestion_mode,
@@ -183,7 +189,7 @@ async def _sync_data_source_to_collection(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
             logger.error(failed_data_point_fqns)
-            METADATA_STORE_CLIENT.log_errors_for_data_ingestion_run(
+            await client.alog_errors_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 errors={"failed_data_point_fqns": failed_data_point_fqns},
             )
@@ -212,9 +218,8 @@ async def ingest_data_points(
         None
 
     """
-
-    embeddings = get_embedder(
-        embedder_config=inputs.embedder_config,
+    embeddings = model_gateway.get_embedder_from_model_config(
+        model_name=inputs.embedder_config.model_config.name
     )
     documents_to_be_upserted = []
     logger.info(
@@ -229,6 +234,8 @@ async def ingest_data_points(
             file_extension=loaded_data_point.file_extension,
             parsers_map=inputs.parser_config.parser_map,
             max_chunk_size=inputs.parser_config.chunk_size,
+            chunk_overlap=inputs.parser_config.chunk_overlap,
+            additional_config=inputs.parser_config.additional_config,
         )
         if parser is None:
             logger.warning(
@@ -254,6 +261,29 @@ async def ingest_data_points(
             documents_to_be_upserted.append(chunk)
         logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
 
+        # delete the file from temp dir after processing
+        try:
+            if loaded_data_point.local_filepath:
+                os.remove(loaded_data_point.local_filepath)
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_filepath}"
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_filepath} after processing. Error: {e}"
+            )
+        # delete the local_filepath from the loaded_data_point object
+        try:
+            if loaded_data_point.local_metadata_file_path:
+                os.remove(loaded_data_point.local_metadata_file_path)
+                logger.debug(
+                    f"Processing done! Deleting file {loaded_data_point.local_metadata_file_path}"
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to delete file {loaded_data_point.local_metadata_file_path} after processing. Error: {e}"
+            )
+
     docs_to_index_count = len(documents_to_be_upserted)
     if docs_to_index_count == 0:
         logger.warning(
@@ -275,9 +305,13 @@ async def ingest_data_points(
 async def ingest_data(request: IngestDataToCollectionDto):
     """Ingest data into the collection"""
     try:
-        collection = METADATA_STORE_CLIENT.get_collection_by_name(
-            collection_name=request.collection_name, no_cache=True
-        )
+        client = await get_client()
+        collection = await client.aget_collection_by_name(request.collection_name)
+
+        # convert to pydantic model if not already -> For prisma models
+        if not isinstance(collection, Collection):
+            collection = Collection(**collection.dict())
+
         if not collection:
             logger.error(
                 f"Collection with name {request.collection_name} does not exist."
@@ -305,11 +339,12 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 collection.associated_data_sources.values()
             )
 
+        logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
         for associated_data_source in associated_data_sources_to_be_ingested:
             logger.debug(
                 f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
             )
-            if not request.run_as_job:
+            if not request.run_as_job or settings.LOCAL:
                 data_ingestion_run = CreateDataIngestionRun(
                     collection_name=collection.name,
                     data_source_fqn=associated_data_source.data_source_fqn,
@@ -318,10 +353,8 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
+                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
                 )
                 await sync_data_source_to_collection(
                     inputs=DataIngestionConfig(
@@ -332,6 +365,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         parser_config=created_data_ingestion_run.parser_config,
                         data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                        batch_size=request.batch_size,
                     )
                 )
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
@@ -352,10 +386,8 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = (
-                    METADATA_STORE_CLIENT.create_data_ingestion_run(
-                        data_ingestion_run=data_ingestion_run
-                    )
+                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
                 )
                 trigger_job(
                     application_fqn=settings.JOB_FQN,
@@ -374,6 +406,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
             status_code=201,
             content={"message": "triggered"},
         )
+
     except HTTPException as exp:
         raise exp
     except Exception as exp:

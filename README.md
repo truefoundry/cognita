@@ -1,41 +1,61 @@
-# Cognita
+# [Cognita](<(https://cognita.truefoundry.com)>)
+
+![RAG_TF](./docs/images/readme-banner.png)
+
+## Why use Cognita?
+
+Langchain/LlamaIndex provide easy to use abstractions that can be used for quick experimentation and prototyping on jupyter notebooks. But, when things move to production, there are constraints like the components should be modular, easily scalable and extendable. This is where Cognita comes in action.
+Cognita uses Langchain/Llamaindex under the hood and provides an organisation to your codebase, where each of the RAG component is modular, API driven and easily extendible. Cognita can be used easily in a [local](#rocket-quickstart-running-cognita-locally) setup, at the same time, offers you a production ready environment along with no-code [UI](./frontend/README.md) support. Cognita also supports incremental indexing by default.
+
+You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.truefoundry.com)
 
 ![RAG_TF](./docs/images/RAG-TF.gif)
 
+# 🎉 What's new in Cognita
+
+-   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
+-   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
+-   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
+-   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
+-   [May, 2024] Conditional docker builds with arguments for optional package installations
+-   [April, 2024] Support for multi-modal vision parser using GPT-4
+
+# Contents
+
 -   [Cognita](#cognita)
+    -   [Why use Cognita?](#why-use-cognita)
+-   [🎉 What's new in Cognita](#-whats-new-in-cognita)
+-   [Contents](#contents)
     -   [Introduction](#introduction)
         -   [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
--   [✨ Getting Started](#sparkles-getting-started)
--   [🐍 Installing Python and Setting Up a Virtual Environment](#snake-installing-python-and-setting-up-a-virtual-environment)
-    -   [Setting Up a Virtual Environment](#setting-up-a-virtual-environment)
-        -   [Create a Virtual Environment:](#create-a-virtual-environment)
-        -   [Activate the Virtual Environment:](#activate-the-virtual-environment)
--   [🚀 Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
-    -   [Install necessary packages:](#install-necessary-packages)
-    -   [Setting up .env file:](#setting-up-env-file)
-    -   [Executing the Code:](#executing-the-code)
--   [🛠️ Project Architecture](#hammer_and_pick-project-architecture)
+        -   [Features:](#features)
+-   [:rocket: Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
+    -   [:whale: Using Docker compose (recommended)](#whale-using-docker-compose-recommended)
+    -   [Cognita from source](#cognita-from-source)
+-   [:hammer_and_pick: Project Architecture](#hammer_and_pick-project-architecture)
     -   [Cognita Components:](#cognita-components)
     -   [Data Indexing:](#data-indexing)
-    -   [❓Question-Answering using API Server:](#question-question-answering-using-api-server)
-    -   [💻 Code Structure:](#computer-code-structure)
+    -   [:question: Question-Answering using API Server:](#question-question-answering-using-api-server)
+    -   [:computer: Code Structure:](#computer-code-structure)
     -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
         -   [Customizing Dataloaders:](#customizing-dataloaders)
         -   [Customizing Embedder:](#customizing-embedder)
         -   [Customizing Parsers:](#customizing-parsers)
         -   [Adding Custom VectorDB:](#adding-custom-vectordb)
         -   [Rerankers:](#rerankers)
--   [💡 Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
+-   [:bulb: Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
     -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
--   [🐳 Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
--   [💖 Open Source Contribution](#sparkling_heart-open-source-contribution)
--   [🔮 Future developments](#crystal_ball-future-developments)
+-   [:whale: Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
+    -   [Using the **RAG UI**:](#using-the-rag-ui)
+-   [:sparkling_heart: Open Source Contribution](#sparkling_heart-open-source-contribution)
+-   [:crystal_ball: Future developments](#crystal_ball-future-developments)
+-   [Star History](#star-history)
 
 ## Introduction
 
 Cognita is an open-source framework to organize your RAG codebase along with a frontend to play around with different RAG customizations. It provides a simple way to organize your codebase so that it becomes easy to test it locally while also being able to deploy it in a production ready environment. The key issues that arise while productionizing RAG system from a Jupyter Notebook are:
 
-1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be trigerred via an event to keep the data updated.
+1. **Chunking and Embedding Job**: The chunking and embedding code usually needs to be abstracted out and deployed as a job. Sometimes the job will need to run on a schedule or be triggered via an event to keep the data updated.
 2. **Query Service**: The code that generates the answer from the query needs to be wrapped up in a api server like FastAPI and should be deployed as a service. This service should be able to handle multiple queries at the same time and also autoscale with higher traffic.
 3. **LLM / Embedding Model Deployment**: Often times, if we are using open-source models, we load the model in the Jupyter notebook. This will need to be hosted as a separate service in production and model will need to be called as an API.
 4. **Vector DB deployment**: Most testing happens on vector DBs in memory or on disk. However, in production, the DBs need to be deployed in a more scalable and reliable way.
@@ -53,82 +73,57 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 
 1. Support for multiple document retrievers that use `Similarity Search`, `Query Decompostion`, `Document Reranking`, etc
 1. Support for SOTA OpenSource embeddings and reranking from `mixedbread-ai`
-1. Support for using LLMs using `Ollama`
+1. Support for using LLMs using `ollama`
 1. Support for incremental indexing that ingests entire documents in batches (reduces compute burden), keeps track of already indexed documents and prevents re-indexing of those docs.
-
-# :sparkles: Getting Started
-
-You can play around with the code locally using the python [script](#rocket-quickstart-running-cognita-locally) or using the UI component that ships with the code.
-
-# :snake: Installing Python and Setting Up a Virtual Environment
-
-Before you can use Cognita, you'll need to ensure that `Python >=3.10.0` is installed on your system and that you can create a virtual environment for a safer and cleaner project setup.
-
-## Setting Up a Virtual Environment
-
-It's recommended to use a virtual environment to avoid conflicts with other projects or system-wide Python packages.
-
-### Create a Virtual Environment:
-
-Navigate to your project's directory in the terminal.
-Run the following command to create a virtual environment named venv (you can name it anything you like):
-
-```
-python3 -m venv ./venv
-```
-
-### Activate the Virtual Environment:
-
--   On Windows, activate the virtual environment by running:
-
-```
-venv\Scripts\activate.bat
-```
-
--   On macOS and Linux, activate it with:
-
-```
-source venv/bin/activate
-```
-
-Once your virtual environment is activated, you'll see its name in the terminal prompt. Now you're ready to install Cognita using the steps provided in the Quickstart sections.
-
-> Remember to deactivate the virtual environment when you're done working with Cognita by simply running deactivate in the terminal.
 
 # :rocket: Quickstart: Running Cognita Locally
 
-Following are the instructions for running Cognita locally without any additional Truefoundry dependencies
+## :whale: Using Docker compose (recommended - version 25+)
 
-## Install necessary packages:
+Cognita and all of its services can be run using docker-compose. This is the recommended way to run Cognita locally. Install Docker and docker-compose for your system from: [Docker Compose](https://docs.docker.com/compose/install/)
 
-In the project root execute the following command:
+### Configuring Model Providers
 
+Before starting the services, we need to configure model providers that we would need for embedding and generating answers.
+
+To start, copy `models_config.sample.yaml` to `models_config.yaml`
+
+```shell
+cp models_config.sample.yaml models_config.yaml
 ```
-pip install -r backend/requirements.txt
+
+By default, the config has local providers enabled that need infinity and ollama server to run embedding and LLMs locally.
+However, if you have a OpenAI API Key, you can uncomment the `openai` provider in `models_config.yaml` and update `OPENAI_API_KEY` in `compose.env`
+
+
+Now, you can run the following command to start the services:
+
+```shell
+docker-compose --env-file compose.env up
 ```
 
-## Setting up .env file:
+-   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
+-   The compose file will start the following services:
+    -   `cognita-db` - Postgres instance used to store metadata for collections and data sources.
+    -   `qdrant-server` - Used to start local vector db server.
+    -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
+    -   `cognita-frontend` - Used to start the frontend for Cognita.
+-   Once the services are up, you can access the qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 
--   Create a `.env` file by copying copy from `env.local.example` set up relavant fields.
+To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
-## Executing the Code:
+```shell
+docker-compose --env-file compose.env --profile ollama --profile infinity up
+```
 
--   Now we index the data (`sample-data/creditcards`) by executing the following command from project root:
-    ```
-    python -m local.ingest
-    ```
--   To run the query execute the following command from project root:
-    ```
-    python -m local.run
-    ```
+-   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
 
-> These commands make use of `local.metadata.yaml` file where you setup qdrant collection name, different data source path, and embedder configurations.
 
-> You can try out different retrievers and queries by importing them from `from backend.modules.query_controllers.example.payload` in `run.py`
+## Developing in Cognita
 
-> You can also start a FastAPI server: `uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload` Then, Swagger doc will be available at: `http://localhost:8000/` For local version you need not create data sources, collection or index them using API, as it is taken care by `local.metadata.yaml` and `ingest.py` file. You can directly try out retrievers endpoint.
+Docker compose is a great way to run the entire Cognita system locally. Any changes that you make in the `backend` folder will be automatically reflected in the running backend server. You can test out different APIs and endpoints by making changes in the backend code.
 
-> To use frontend UI for quering you can go to : `cd fronend` and execute `yarn dev` to start the UI and play around. Refer more at frontend [README](./frontend/README.md)
+If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can run `docker-compose build` before running `docker-compose up`
 
 # :hammer_and_pick: Project Architecture
 
@@ -150,7 +145,7 @@ Overall the architecture of Cognita is composed of several entities
 
 3. **LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format. This can be OpenAIChat, OllamaChat, or even TruefoundryChat that uses TF LLM Gateway.
 
-4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are currently supporting Qdrant as our choice of vector database.
+4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are currently supporting `Qdrant` and `SingleStore` as our choice of vector database.
 
 5. **Indexing Job** - This is an asynchronous Job responsible for orchestrating the indexing flow. Indexing can be started manually or run regularly on a cron schedule. It will
 
@@ -195,68 +190,6 @@ Overall the architecture of Cognita is composed of several entities
 7. The answer and relevant document chunks are returned in response.
 
     **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
-
-## :computer: Code Structure:
-
-Entire codebase lives in `backend/`
-
-```
-.
-|-- Dockerfile
-|-- README.md
-|-- __init__.py
-|-- backend/
-|   |-- indexer/
-|   |   |-- __init__.py
-|   |   |-- indexer.py
-|   |   |-- main.py
-|   |   `-- types.py
-|   |-- modules/
-|   |   |-- __init__.py
-|   |   |-- dataloaders/
-|   |   |   |-- __init__.py
-|   |   |   |-- loader.py
-|   |   |   |-- localdirloader.py
-|   |   |   `-- ...
-|   |   |-- embedder/
-|   |   |   |-- __init__.py
-|   |   |   |-- embedder.py
-|   |   |   -- mixbread_embedder.py
-|   |   |   `-- embedding.requirements.txt
-|   |   |-- metadata_store/
-|   |   |   |-- base.py
-|   |   |   |-- client.py
-|   |   |   `-- truefoundry.py
-|   |   |-- parsers/
-|   |   |   |-- __init__.py
-|   |   |   |-- parser.py
-|   |   |   |-- pdfparser_fast.py
-|   |   |   `-- ...
-|   |   |-- query_controllers/
-|   |   |   |-- default/
-|   |   |   |   |-- controller.py
-|   |   |   |   `-- types.py
-|   |   |   |-- query_controller.py
-|   |   |-- reranker/
-|   |   |   |-- mxbai_reranker.py
-|   |   |   |-- reranker.requirements.txt
-|   |   |   `-- ...
-|   |   `-- vector_db/
-|   |       |-- __init__.py
-|   |       |-- base.py
-|   |       |-- qdrant.py
-|   |       `-- ...
-|   |-- requirements.txt
-|   |-- server/
-|   |   |-- __init__.py
-|   |   |-- app.py
-|   |   |-- decorators.py
-|   |   |-- routers/
-|   |   `-- services/
-|   |-- settings.py
-|   |-- types.py
-|   `-- utils.py
-```
 
 ## Customizing the Code for your usecase
 
@@ -328,11 +261,6 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 -   To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
 
 -   Register the vectordb under `backend/modules/vector_db/__init__.py`
-
-### Rerankers:
-
--   Rerankers are used to sort relavant documents such that top k docs can be used as context effectively reducing the context and prompt in general.
--   Sample reranker is written under `backend/modules/reranker/mxbai_reranker.py`
 
 # :bulb: Writing your Query Controller (QnA):
 
@@ -437,11 +365,48 @@ To be able to **Query** on your own documents, follow the steps below:
             > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
         -   Click on `Submit` your application will be deployed.
 
-## :sparkling_heart: Open Source Contribution
+## Using the **RAG UI**:
 
-Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTIONGUIDE.md).
+The following steps will showcase how to use the cognita UI to query documents:
 
-## :crystal_ball: Future developments
+1.  Create Data Source
+
+    -   Click on `Data Sources` tab
+        ![Datasource](./docs/images/datasource.png)
+    -   Click `+ New Datasource`
+    -   Data source type can be either files from local directory, web url, github url or providing Truefoundry artifact FQN.
+        -   E.g: If `Localdir` is selected upload files from your machine and click `Submit`.
+    -   Created Data sources list will be available in the Data Sources tab.
+        ![DataSourceList](./docs/images/list-datasources-in-collection.png)
+
+2.  Create Collection
+
+    -   Click on `Collections` tab
+    -   Click `+ New Collection`
+        ![collection](./docs/images/adding-collection.png)
+    -   Enter Collection Name
+    -   Select Embedding Model
+    -   Add earlier created data source and the necessary configuration
+    -   Click `Process` to create the collection and index the data.
+        ![ingestionstarted](./docs/images/dataingestion-started.png)
+
+3.  As soon as you create the collection, data ingestion begins, you can view it's status by selecting your collection in collections tab. You can also add additional data sources later on and index them in the collection.
+    ![ingestioncomplete](./docs/images/dataingestion-complete.png)
+
+4.  Response generation
+    ![responsegen](./docs/images/response-generation.png)
+
+    -   Select the collection
+    -   Select the LLM and it's configuration
+    -   Select the document retriever
+    -   Write the prompt or use the default prompt
+    -   Ask the query
+
+# :sparkling_heart: Open Source Contribution
+
+Your contributions are always welcome! Feel free to contribute ideas, feedback, or create issues and bug reports if you find any! Before contributing, please read the [Contribution Guide](./CONTRIBUTING.md).
+
+# :crystal_ball: Future developments
 
 Contributions are welcomed for the following upcoming developments:
 
@@ -451,9 +416,10 @@ Contributions are welcomed for the following upcoming developments:
 -   Support for `RAG Visualization`.
 -   Support for conversational chatbot with context
 -   Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
+-   Support for `GraphDB`
 
 ---
 
-## Star History
+# Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=truefoundry/cognita&type=Date)](https://star-history.com/#truefoundry/cognita&Date)

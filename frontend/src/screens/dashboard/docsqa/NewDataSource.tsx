@@ -6,11 +6,15 @@ import CustomDrawer from '@/components/base/atoms/CustomDrawer'
 import Spinner from '@/components/base/atoms/Spinner'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
-import { DOCS_QA_MAX_UPLOAD_SIZE_MB } from '@/stores/constants'
+import {
+  DOCS_QA_MAX_UPLOAD_SIZE_MB,
+  IS_LOCAL_DEVELOPMENT,
+} from '@/stores/constants'
 import {
   useAddDataSourceMutation,
   useGetDataLoadersQuery,
   useUploadDataToDataDirectoryMutation,
+  useUploadDataToLocalDirectoryMutation,
 } from '@/stores/qafoundry'
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
@@ -43,11 +47,16 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [selectedDataSourceType, setSelectedDataSourceType] = useState('')
   const [dataSourceUri, setDataSourceUri] = useState('')
   const [uploadedFileIds, setUploadedFileIds] = React.useState<string[]>([])
+  const [uploadName, setUploadName] = useState('')
   const [uploadSizeMb, setUploadSizeMb] = React.useState(0)
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
+  const pattern = /^[a-z][a-z0-9-]*$/
+  const isValidUploadName = pattern.test(uploadName)
+
   const [uploadDataToDataDirectory] = useUploadDataToDataDirectoryMutation()
+  const [uploadDataToLocalDirectory] = useUploadDataToLocalDirectoryMutation()
   const [addDataSource] = useAddDataSourceMutation()
 
   useEffect(() => {
@@ -77,6 +86,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
         const response = await uploadDataToDataDirectory({
           collection_name: '',
           filepaths: paths.slice(i, i + 50),
+          upload_name: uploadName,
         }).unwrap()
         dataDirectoryFqn = response.data_directory_fqn
 
@@ -126,12 +136,20 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
 
       let fqn
       if (selectedDataSourceType === 'localdir') {
-        const ddFqn = await uploadDocs()
-        const res = await addDataSource({
-          type: 'truefoundry',
-          uri: ddFqn,
-          metadata: {},
-        }).unwrap()
+        let res
+        if (IS_LOCAL_DEVELOPMENT) {
+          res = await uploadDataToLocalDirectory({
+            files: files?.map((f) => f.file),
+            upload_name: uploadName,
+          }).unwrap()
+        } else {
+          const ddFqn = await uploadDocs()
+          res = await addDataSource({
+            type: 'truefoundry',
+            uri: ddFqn,
+            metadata: {},
+          }).unwrap()
+        }
         fqn = res.data_source?.fqn
       } else {
         const res = await addDataSource({
@@ -233,53 +251,91 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
               </label>
             </div>
             {selectedDataSourceType === 'localdir' ? (
-              <label
-                onDragOver={
-                  isSaving
-                    ? undefined
-                    : (e) => {
-                        e.stopPropagation()
-                        e.preventDefault()
-                      }
-                }
-                onDrop={isSaving ? undefined : handleDrop}
-              >
-                <span className="label-text font-inter mb-1">
-                  Choose files or a zip to upload
-                </span>
-                <div
-                  className={classNames(
-                    'flex flex-col flex-1 justify-center items-center w-full h-full bg-white p-4 rounded-lg border-1 border-gray-200 border-dashed',
-                    {
-                      'hover:bg-gray-100 cursor-pointer': !isSaving,
-                      'cursor-default': isSaving,
-                    }
-                  )}
-                >
-                  <div className="text-gray-600 flex flex-col justify-center items-center p-3 gap-2">
-                    <IconProvider icon="cloud-arrow-up" size={2} />
-                    <p className="text-sm leading-5 mb-2 text-center">
-                      <span className="font-[500]">
-                        Click or Drag &amp; Drop to upload files
-                      </span>
-                      <span className="block">
-                        Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
-                        txt, md
-                      </span>
-                    </p>
-                  </div>
+              <>
+                <div className="mb-2">
+                  <label htmlFor="collection-name-input">
+                    <span className="label-text font-inter mb-1">
+                      Source Name
+                    </span>
+                    <small>
+                      {' '}
+                      * Should only contain lowercase alphanumeric character
+                      with hyphen (-)
+                    </small>
+                  </label>
                   <input
-                    disabled={isSaving}
-                    className="hidden"
-                    id="dropzone-file"
-                    type="file"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFiles([...files, ...getUniqueFiles(e.target.files)])
-                    }
-                    multiple
+                    className={classNames(
+                      'block w-full border border-gray-250 outline-none text-md p-2 rounded',
+                      {
+                        'field-error': uploadName && !isValidUploadName,
+                      }
+                    )}
+                    id="collection-name-input"
+                    placeholder={'Enter the source name'}
+                    value={uploadName}
+                    onChange={(e) => setUploadName(e.target.value)}
                   />
+                  {uploadName && !isValidUploadName && (
+                    <div className="text-error text-xs mt-1 flex gap-1 items-center">
+                      <IconProvider
+                        icon="exclamation-triangle"
+                        className={'w-4 leading-5'}
+                      />
+                      <div className="font-medium">
+                        Source name should only contain lowercase alphanumeric
+                        character with hyphen!
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </label>
+                <label
+                  onDragOver={
+                    isSaving
+                      ? undefined
+                      : (e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                        }
+                  }
+                  onDrop={isSaving ? undefined : handleDrop}
+                >
+                  <span className="label-text font-inter mb-1">
+                    Choose files or a zip to upload
+                  </span>
+                  <div
+                    className={classNames(
+                      'flex flex-col flex-1 justify-center items-center w-full h-full bg-white p-4 rounded-lg border-1 border-gray-200 border-dashed',
+                      {
+                        'hover:bg-gray-100 cursor-pointer': !isSaving,
+                        'cursor-default': isSaving,
+                      }
+                    )}
+                  >
+                    <div className="text-gray-600 flex flex-col justify-center items-center p-3 gap-2">
+                      <IconProvider icon="cloud-arrow-up" size={2} />
+                      <p className="text-sm leading-5 mb-2 text-center">
+                        <span className="font-[500]">
+                          Click or Drag &amp; Drop to upload files
+                        </span>
+                        <span className="block">
+                          Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
+                          txt, md
+                        </span>
+                      </p>
+                    </div>
+                    <input
+                      disabled={isSaving}
+                      className="hidden"
+                      id="dropzone-file"
+                      type="file"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFiles([...files, ...getUniqueFiles(e.target.files)])
+                      }
+                      multiple
+                    />
+                  </div>
+                </label>
+              </>
             ) : (
               <>
                 <label htmlFor="collection-name-input">
@@ -413,7 +469,9 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
               isSaving ||
               (selectedDataSourceType === 'localdir' &&
                 (files.length === 0 ||
-                  uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB)) ||
+                  uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB ||
+                  !uploadName ||
+                  !isValidUploadName)) ||
               (selectedDataSourceType !== 'localdir' && !dataSourceUri)
             }
           />

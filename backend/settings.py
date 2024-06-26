@@ -1,10 +1,9 @@
 import os
 from typing import Optional
 
-import orjson
-from pydantic import BaseSettings
+from pydantic import BaseSettings, root_validator
 
-from backend.types import EmbeddingCacheConfig, MetadataStoreConfig, VectorDBConfig
+from backend.types import MetadataStoreConfig, VectorDBConfig
 
 
 class Settings(BaseSettings):
@@ -12,56 +11,49 @@ class Settings(BaseSettings):
     Settings class to hold all the environment variables
     """
 
-    LOG_LEVEL: str = "info"
+    class Config:
+        extra = "allow"
+
+    MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
-    TFY_SERVICE_ROOT_PATH: Optional[str] = "/"
-    TFY_API_KEY: str
-    OPENAI_API_KEY: Optional[str]
-    TFY_HOST: Optional[str]
-    TFY_LLM_GATEWAY_URL: str
-    EMBEDDING_CACHE_CONFIG: Optional[EmbeddingCacheConfig] = None
 
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
-    VECTOR_DB_CONFIG = os.getenv("VECTOR_DB_CONFIG", "")
-    METADATA_STORE_CONFIG = os.getenv("METADATA_STORE_CONFIG", "")
-    TFY_SERVICE_ROOT_PATH = os.getenv("TFY_SERVICE_ROOT_PATH", "")
-    JOB_FQN = os.getenv("JOB_FQN", "")
-    JOB_COMPONENT_NAME = os.getenv("JOB_COMPONENT_NAME", "")
-    TFY_API_KEY = os.getenv("TFY_API_KEY", "")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-    TFY_HOST = os.getenv("TFY_HOST", "")
-    TFY_LLM_GATEWAY_URL = os.getenv("TFY_LLM_GATEWAY_URL", "")
-    EMBEDDING_CACHE_CONFIG = (
-        EmbeddingCacheConfig.parse_obj(
-            orjson.loads(os.getenv("EMBEDDING_CACHE_CONFIG"))
-        )
-        if os.getenv("EMBEDDING_CACHE_CONFIG", None)
-        else None
-    )
+    LOCAL: bool = False
 
-    LOCAL: bool = os.getenv("LOCAL", False)
-    OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    TFY_HOST: str = ""
+    TFY_API_KEY: str = ""
+    JOB_FQN: str = ""
+    JOB_COMPONENT_NAME: str = ""
 
-    if not VECTOR_DB_CONFIG:
-        raise ValueError("VECTOR_DB_CONFIG is not set")
+    LOG_LEVEL: str = "info"
+    TFY_SERVICE_ROOT_PATH: str = ""
 
-    if not METADATA_STORE_CONFIG:
-        raise ValueError("METADATA_STORE_CONFIG is not set")
+    # TODO: This will be removed in future releases - after fixing multimodal parser
+    TFY_LLM_GATEWAY_URL: str = ""
 
-    if not TFY_LLM_GATEWAY_URL:
-        TFY_LLM_GATEWAY_URL = f"{TFY_HOST}/api/llm"
+    @root_validator(pre=True)
+    def _validate_values(cls, values):
+        models_config_path = values.get("MODELS_CONFIG_PATH")
+        if not os.path.isabs(models_config_path):
+            this_dir = os.path.abspath(os.path.dirname(__file__))
+            root_dir = os.path.dirname(this_dir)
+            models_config_path = os.path.join(root_dir, models_config_path)
 
-    try:
-        VECTOR_DB_CONFIG = VectorDBConfig.parse_obj(orjson.loads(VECTOR_DB_CONFIG))
-    except Exception as e:
-        raise ValueError(f"VECTOR_DB_CONFIG is invalid: {e}")
-    try:
-        METADATA_STORE_CONFIG = MetadataStoreConfig.parse_obj(
-            orjson.loads(METADATA_STORE_CONFIG)
-        )
-    except Exception as e:
-        raise ValueError(f"METADATA_STORE_CONFIG is invalid: {e}")
+        if not models_config_path:
+            raise Exception(
+                f"{models_config_path} does not exist. "
+                f"You can copy models_config.sample.yaml to {settings.MODELS_CONFIG_PATH} to bootstrap config"
+            )
+
+        values["MODELS_CONFIG_PATH"] = models_config_path
+
+        tfy_host = values.get("TFY_HOST")
+        tfy_llm_gateway_url = values.get("TFY_LLM_GATEWAY_URL")
+        if tfy_host and not tfy_llm_gateway_url:
+            tfy_llm_gateway_url = f"{tfy_host.rstrip('/')}/api/llm"
+            values["TFY_LLM_GATEWAY_URL"] = tfy_llm_gateway_url
+
+        return values
 
 
 settings = Settings()

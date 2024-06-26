@@ -8,7 +8,7 @@ import {
   SourceDocs,
   baseQAFoundryPath,
   useGetAllEnabledChatModelsQuery,
-  useGetCollectionsQuery,
+  useGetCollectionNamesQuery,
   useGetOpenapiSpecsQuery,
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
@@ -85,7 +85,7 @@ const DocsQA = () => {
   const [isStreamEnabled, setIsStreamEnabled] = useState(false)
 
   const { data: collections, isLoading: isCollectionsLoading } =
-    useGetCollectionsQuery()
+    useGetCollectionNamesQuery()
   const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
   const [searchAnswer] = useQueryCollectionMutation()
@@ -112,6 +112,7 @@ const DocsQA = () => {
       name: value.value.retriever_name,
       summary: value.summary,
       config: value.value.retriever_config,
+      promptTemplate: value.value.prompt_template ?? defaultPrompt,
     }))
   }, [selectedQueryController, openapiSpecs])
 
@@ -209,7 +210,7 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (collections && collections.length) {
-      setSelectedCollection(collections[0].name)
+      setSelectedCollection(collections[0])
     }
   }, [collections])
 
@@ -228,6 +229,7 @@ const DocsQA = () => {
   useEffect(() => {
     if (allRetrieverOptions && allRetrieverOptions.length) {
       setSelectedRetriever(allRetrieverOptions[0])
+      setPromptTemplate(allRetrieverOptions[0].promptTemplate)
     }
   }, [allRetrieverOptions])
 
@@ -248,33 +250,6 @@ const DocsQA = () => {
           <>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex justify-between items-center mb-1">
-                <div className="text-sm">Collection:</div>
-                <Select
-                  value={selectedCollection}
-                  onChange={(e) => {
-                    resetQA()
-                    setSelectedCollection(e.target.value)
-                  }}
-                  placeholder="Select Collection..."
-                  sx={{
-                    background: 'white',
-                    height: '2rem',
-                    width: '13.1875rem',
-                    border: '1px solid #CEE0F8 !important',
-                    outline: 'none !important',
-                    '& fieldset': {
-                      border: 'none !important',
-                    },
-                  }}
-                >
-                  {collections?.map((collection: any) => (
-                    <MenuItem value={collection.name} key={collection.name}>
-                      {collection.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex justify-between items-center mb-1 mt-3">
                 <div className="text-sm">Query Controller:</div>
                 <Select
                   value={selectedQueryController}
@@ -296,6 +271,33 @@ const DocsQA = () => {
                   {allQueryControllers?.map((retriever: any) => (
                     <MenuItem value={retriever} key={retriever}>
                       {retriever}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex justify-between items-center mb-1 mt-3">
+                <div className="text-sm">Collection:</div>
+                <Select
+                  value={selectedCollection}
+                  onChange={(e) => {
+                    resetQA()
+                    setSelectedCollection(e.target.value)
+                  }}
+                  placeholder="Select Collection..."
+                  sx={{
+                    background: 'white',
+                    height: '2rem',
+                    width: '13.1875rem',
+                    border: '1px solid #CEE0F8 !important',
+                    outline: 'none !important',
+                    '& fieldset': {
+                      border: 'none !important',
+                    },
+                  }}
+                >
+                  {collections?.map((collection: any) => (
+                    <MenuItem value={collection} key={collection}>
+                      {collection}
                     </MenuItem>
                   ))}
                 </Select>
@@ -335,16 +337,17 @@ const DocsQA = () => {
                   setModelConfig(updatedConfig ?? '')
                 }
               />
-              {allRetrieverOptions && selectedRetriever?.name && (
+              {allRetrieverOptions && selectedRetriever?.key && (
                 <div>
                   <div className="mb-1 mt-3 text-sm">Retriever:</div>
                   <Select
-                    value={selectedRetriever?.name}
+                    value={selectedRetriever?.key}
                     onChange={(e) => {
                       const retriever = allRetrieverOptions.find(
-                        (retriever) => retriever.name === e.target.value
+                        (retriever) => retriever.key === e.target.value
                       )
                       setSelectedRetriever(retriever)
+                      setPromptTemplate(retriever?.promptTemplate)
                     }}
                     placeholder="Select Retriever..."
                     sx={{
@@ -360,7 +363,7 @@ const DocsQA = () => {
                     }}
                   >
                     {allRetrieverOptions?.map((retriever: any) => (
-                      <MenuItem value={retriever.name} key={retriever.name}>
+                      <MenuItem value={retriever.key} key={retriever.key}>
                         {retriever.summary}
                       </MenuItem>
                     ))}
@@ -429,6 +432,8 @@ const DocsQA = () => {
                       {sourceDocs?.map((doc, index) => {
                         const splittedFqn =
                           doc?.metadata?._data_point_fqn.split('::')
+                        const pageNumber =
+                          doc?.metadata?.page_number || doc?.metadata?.page_num
                         return (
                           <div key={index} className="mb-3">
                             <div className="text-sm">
@@ -440,6 +445,7 @@ const DocsQA = () => {
                             </div>
                             <div className="text-sm text-indigo-600 mt-1">
                               Source: {splittedFqn?.[splittedFqn.length - 1]}
+                              {pageNumber && `, Page No.: ${pageNumber}`}
                             </div>
                           </div>
                         )

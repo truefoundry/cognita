@@ -5,7 +5,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from backend.modules.parsers.parser import BaseParser
-from backend.types import LoadedDataPoint
+from backend.modules.parsers.utils import contains_text
 
 
 class TextParser(BaseParser):
@@ -20,6 +20,7 @@ class TextParser(BaseParser):
         Initializes the TextParser object.
         """
         self.max_chunk_size = max_chunk_size
+        super().__init__(*args, **kwargs)
 
     async def get_chunks(
         self, filepath: str, metadata: Optional[dict], *args, **kwargs
@@ -44,6 +45,7 @@ class TextParser(BaseParser):
                 },
             )
             for text in texts
+            if contains_text(text)
         ]
 
         return docs
