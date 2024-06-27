@@ -1,8 +1,9 @@
 import asyncio
 import base64
 import io
-import json
 import os
+import sys
+import traceback
 from itertools import islice
 from typing import Optional
 
@@ -182,7 +183,9 @@ Conclude with a summary of the key findings from your analysis and any recommend
 
                     pages[page_number] = image_base64
                 except Exception as e:
-                    logger.error(f"Error in page: {page_number} - {e}")
+                    exc_info = sys.exc_info()
+                    logger.error("".join(traceback.format_exception(*exc_info)))
+                    logger.error(f"Error in page: {page_number}")
                     continue
 
             # make parallel requests to VLM for all pages
