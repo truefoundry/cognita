@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     WB_STREAM: Optional[str]
     WB_ENTITY: Optional[str]
 
-    #Additional Keys For Confluence
+    # Additional Keys For Confluence
     CONFLUENCE_API_TOKEN: Optional[str]
     CONFLUENCE_USER_EMAIL: Optional[str]
     CONFLUENCE_URL: Optional[str]
@@ -86,7 +86,6 @@ class Settings(BaseSettings):
     CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN", "")
     CONFLUENCE_USER_EMAIL = os.getenv("CONFLUENCE_USER_EMAIL", "")
     CONFLUENCE_URL = os.getenv("CONFLUENCE_URL", "")
-
 
     if not VECTOR_DB_CONFIG:
         raise ValueError("VECTOR_DB_CONFIG is not set")

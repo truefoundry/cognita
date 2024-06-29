@@ -1,13 +1,22 @@
 import os
 from typing import Dict, Iterator, List
-from unstructured.ingest.connector.confluence import ConfluenceAccessConfig, SimpleConfluenceConfig
-from unstructured.ingest.interfaces import PartitionConfig, ProcessorConfig, ReadConfig, ChunkingConfig
+from unstructured.ingest.connector.confluence import (
+    ConfluenceAccessConfig,
+    SimpleConfluenceConfig,
+)
+from unstructured.ingest.interfaces import (
+    PartitionConfig,
+    ProcessorConfig,
+    ReadConfig,
+    ChunkingConfig,
+)
 from unstructured.ingest.runner import ConfluenceRunner
 
 from backend.logger import logger
 from backend.settings import settings
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+
 
 class ConfluenceLoader(BaseDataLoader):
     """
@@ -35,7 +44,11 @@ class ConfluenceLoader(BaseDataLoader):
             ),
             read_config=ReadConfig(),
             partition_config=PartitionConfig(
-                metadata_exclude=["filename", "file_directory", "metadata.data_source.date_processed"],
+                metadata_exclude=[
+                    "filename",
+                    "file_directory",
+                    "metadata.data_source.date_processed",
+                ],
             ),
             chunking_config=ChunkingConfig(
                 chunk_elements=True,
@@ -50,7 +63,7 @@ class ConfluenceLoader(BaseDataLoader):
                 ),
                 user_email=settings.CONFLUENCE_USER_EMAIL,
                 url=confluence_url,
-                max_num_of_docs_from_each_space=5,  # Adjust as needed
+                max_num_of_docs_from_each_space=5000,  # Adjust as needed
             ),
         )
 
@@ -65,7 +78,7 @@ class ConfluenceLoader(BaseDataLoader):
                 full_path = os.path.join(root, file)
                 relative_path = os.path.relpath(full_path, dest_dir)
                 file_size = os.path.getsize(full_path)
-                
+
                 data_point = DataPoint(
                     data_source_fqn=data_source.fqn,
                     data_point_uri=relative_path,
@@ -76,7 +89,8 @@ class ConfluenceLoader(BaseDataLoader):
                 if (
                     data_ingestion_mode == DataIngestionMode.INCREMENTAL
                     and previous_snapshot.get(data_point.data_point_fqn)
-                    and previous_snapshot.get(data_point.data_point_fqn) == data_point.data_point_hash
+                    and previous_snapshot.get(data_point.data_point_fqn)
+                    == data_point.data_point_hash
                 ):
                     continue
 

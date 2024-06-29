@@ -499,7 +499,7 @@ const DocsQA = () => {
               <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
                 <div className="min-h-[23rem]">
                   <DocsQaInformation
-                    header={'Welcome to DocsQA'}
+                    header={'Welcome to SambaQA'}
                     subHeader={
                       <>
                         <p className="text-center max-w-[28.125rem] mt-2">

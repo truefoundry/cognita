@@ -1,4 +1,5 @@
 import Logo from '@/assets/img/logos/CognitaLogo.png'
+import SambaLogo from '@/assets/img/logos/SambaNova-dark-logo-1.png'
 import LightLogo from '@/assets/img/logos/CognitaLightLogo.png'
 import Bars from '@/assets/img/drawer_bars.svg'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
@@ -26,7 +27,7 @@ function getMenuOptions(): {
 }[] {
   return [
     {
-      label: 'DocsQA',
+      label: 'SambaQA',
       route: '/',
       icon: faPlay,
     },
@@ -141,7 +142,7 @@ export default function NavBar({ children }: any) {
         <div className="flex items-center inline-block pl-5 px-5 py-4 gap-x-4 flex-wrap">
           <div className="flex items-center">
             <Link to={'/'} className="mr-6">
-              <img src={Logo} className="h-8" />
+              <img src={SambaLogo} className="h-8" />
             </Link>
             <div className="flex gap-5 items-center">{menu}</div>
           </div>
@@ -164,7 +165,7 @@ export default function NavBar({ children }: any) {
             className="cursor-pointer flex justify-end items-center self-flex-end"
             onClick={() => {
               window.open(
-                'https://github.com/truefoundry/docs-qa-playground',
+                'https://github.com/sambanova/ai-starter-kit',
                 '_blank'
               )
             }}
@@ -179,7 +180,7 @@ export default function NavBar({ children }: any) {
             text="Tweet"
             icon="x-twitter"
             onClick={() => {
-              window.open('https://ctt.ac/XM87B', '_blank')
+              window.open('https://x.com/SambaNovaAI?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor', '_blank')
             }}
           />
           {children}

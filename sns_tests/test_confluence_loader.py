@@ -4,12 +4,11 @@ from backend.modules.dataloaders import ConfluenceLoader
 from backend.types import DataSource, DataIngestionMode
 from backend.settings import settings
 
+
 def main():
     # Create a DataSource object
     data_source = DataSource(
-        type="confluence",
-        uri=settings.CONFLUENCE_URL,
-        fqn="confluence_test_source"
+        type="confluence", uri=settings.CONFLUENCE_URL, fqn="confluence_test_source"
     )
 
     # Initialize the ConfluenceLoader
@@ -42,6 +41,7 @@ def main():
 
     print(f"\nTotal data points loaded: {total_data_points}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     freeze_support()
     main()

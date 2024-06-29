@@ -28,7 +28,7 @@ const DocsQaInformation = ({ header, subHeader }: DocsQaInformationProps) => {
         </div>
         <div className="h-[10rem] w-[10rem] rounded-xl border border-gray-250 flex justify-end items-center flex-col pt-6">
           <img src={SearchIcon} className="h-[70.0625rem]" />
-          <p className="text-center font-[700] font-inter mt-4 mb-4">DocsQA</p>
+          <p className="text-center font-[700] font-inter mt-4 mb-4">SambaQA</p>
         </div>
         <div className="flex items-center">
           <div className="w-[2.5rem] h-[0.0625rem] bg-black"></div>
