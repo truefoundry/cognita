@@ -173,7 +173,7 @@ class BasicRAGQueryController:
             )
             retriever = self._get_vector_store_retriever(vector_store, retriever_config)
 
-        elif retriever_name == "contextual-compression":
+        elif retriever_name == "contexual-compression":
             logger.debug(
                 f"Using ContextualCompressionRetriever with {retriever_config.search_type} search"
             )
@@ -230,8 +230,7 @@ class BasicRAGQueryController:
         Sample answer method to answer the question using the context from the collection
         """
         try:
-            print(f'This is the request: {request}')
-
+            print(f'This is the request {request}')
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
 

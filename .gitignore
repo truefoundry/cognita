@@ -29,3 +29,4 @@ volumes/
 pgdata/
 *.bak
 models_config.json
+test

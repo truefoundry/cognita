@@ -41,3 +41,6 @@ replicate==0.26.0
 
 #LoggingTracing
 langsmith==0.1.71
+
+#unstrutured
+unstructured[confluence]==0.13.6
