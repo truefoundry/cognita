@@ -235,7 +235,10 @@ class PrismaStore(BaseMetadataStore):
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.dict()
+                if hasattr(data_source, "dict"):
+                    associated_data_sources[data_source_fqn] = data_source.dict()
+                else:
+                    associated_data_sources[data_source_fqn] = data_source
 
             updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
