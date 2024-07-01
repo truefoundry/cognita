@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
@@ -61,7 +62,7 @@ class BasicRAGQueryController:
             )
         return formatted_docs
 
-    def _get_llm(self, model_configuration: ModelConfig, stream=False):
+    def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
         Get the LLM
         """
@@ -114,7 +115,7 @@ class BasicRAGQueryController:
 
             return compression_retriever
         except Exception as e:
-            logger.error(f"Error in getting contextual compression retriever: {e}")
+            logger.exception(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(
                 status_code=500,
                 detail="Error in getting contextual compression retriever",
