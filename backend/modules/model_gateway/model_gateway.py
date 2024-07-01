@@ -130,8 +130,9 @@ class ModelGateway:
                 model_kwargs=model_kwargs,
             )
         elif model_provider_config.provider_name == "replicate":
+            replicate_model_name =  "/".join(model_config.name.split("/")[1:])
             return Replicate(
-                model=model_config.name,
+                model=replicate_model_name,
                 streaming=stream,
                 model_kwargs=model_config.parameters,
             )

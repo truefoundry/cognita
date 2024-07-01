@@ -28,6 +28,7 @@ class UniversalParser(BaseParser):
         ".cxx",
         ".c",
         ".cs",
+        ".csv",
         ".php",
         ".rb",
         ".swift",

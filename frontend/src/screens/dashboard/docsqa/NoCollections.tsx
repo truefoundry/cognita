@@ -13,7 +13,7 @@ const NoCollections = ({ fullWidth }: { fullWidth?: boolean }) => {
       } bg-white flex items-center justify-center`}
     >
       <DocsQaInformation
-        header={'Welcome to DocsQA'}
+        header={'Welcome to SambaQA'}
         subHeader={
           <>
             <p className="text-center max-w-[28.125rem] mt-2">

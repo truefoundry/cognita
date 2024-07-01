@@ -98,7 +98,6 @@ const DocsQA = () => {
       const mergedParams = { ...defaultParams, ...modelParams }
       
       if ('select_expert' in mergedParams) {
-        // Extract the part after the '/' for select_expert
         const modelNameParts = model.name.split('/')
         mergedParams.select_expert = modelNameParts[modelNameParts.length - 1]
       }
@@ -135,6 +134,26 @@ const DocsQA = () => {
       promptTemplate: value.value.prompt_template ?? defaultPrompt,
     }))
   }, [selectedQueryController, openapiSpecs])
+
+  const updateRetrieverConfigWithLLM = (config: string, modelName: string) => {
+    try {
+      const parsedConfig = JSON.parse(config)
+      if (parsedConfig.retriever_llm_configuration) {
+        const [provider, name] = modelName.split('/')
+        const modelConfig = JSON.parse(modelConfigurations[modelName] || defaultModelConfig)
+        parsedConfig.retriever_llm_configuration = {
+          name: modelName,
+          provider: provider,
+          parameters: modelConfig.parameters
+        }
+        return JSON.stringify(parsedConfig, null, 2)
+      }
+      return config
+    } catch (error) {
+      console.error("Error updating retriever config:", error)
+      return config
+    }
+  }
 
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
@@ -174,7 +193,8 @@ const DocsQA = () => {
         {}
       )
       if (!isStreamEnabled) {
-        const res: any = await searchAnswer({          ...params,
+        const res: any = await searchAnswer({
+          ...params,
           stream: false,
           queryController: selectedQueryController,
         })
@@ -254,13 +274,17 @@ const DocsQA = () => {
 
   useEffect(() => {
     if (selectedRetriever) {
-      setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
+      const updatedConfig = updateRetrieverConfigWithLLM(JSON.stringify(selectedRetriever.config, null, 2), selectedQueryModel)
+      setRetrieverConfig(updatedConfig)
     }
-  }, [selectedRetriever])
+  }, [selectedRetriever, selectedQueryModel])
 
   useEffect(() => {
     const config = modelConfigurations[selectedQueryModel] || defaultModelConfig
     setModelConfig(config)
+    
+    // Update retriever config if it has LLM configuration
+    setRetrieverConfig(prevConfig => updateRetrieverConfigWithLLM(prevConfig, selectedQueryModel))
   }, [selectedQueryModel, modelConfigurations])
 
   return (
@@ -399,9 +423,10 @@ const DocsQA = () => {
                 language="json"
                 height={140}
                 value={retrieverConfig}
-                onChange={(updatedConfig) =>
-                  setRetrieverConfig(updatedConfig ?? '')
-                }
+                onChange={(updatedConfig) => {
+                  const newConfig = updateRetrieverConfigWithLLM(updatedConfig ?? '', selectedQueryModel)
+                  setRetrieverConfig(newConfig)
+                }}
               />
               <div className="flex justify-between items-center mt-1.5">
                 <div className="text-sm">Stream</div>
@@ -423,105 +448,104 @@ const DocsQA = () => {
               <div className="flex gap-4 items-center">
                 <div className="w-full relative">
                   <Input
-                  className="w-full h-[2.75rem] text-sm pr-14"
-                  placeholder="Ask any question related to this document"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-                <Button
-                  icon="paper-plane-top"
-                  className="btn-sm absolute right-2 top-[0.375rem]"
-                  onClick={handlePromptSubmit}
-                  loading={isRunningPrompt}
-                  disabled={!prompt || !selectedQueryModel}
-                />
-              </div>
-            </div>
-            {answer ? (
-              <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">
-                <div className="max-h-[60%] h-full overflow-y-auto flex gap-4">
-                  <div className="bg-indigo-400 w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
-                    <IconProvider icon="message" className="text-white" />
-                  </div>
-                  <div className="w-full font-inter text-base">
-                    <div className="font-bold text-lg">Answer:</div>
-                    <Markdown>{answer}</Markdown>
-                  </div>
-                </div>
-                {sourceDocs && (
-                  <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
-                    <div className="font-semibold mb-3.5">
-                      Source Documents:
-                    </div>
-                    {sourceDocs?.map((doc, index) => {
-                      const splittedFqn =
-                        doc?.metadata?._data_point_fqn.split('::')
-                      const pageNumber =
-                        doc?.metadata?.page_number || doc?.metadata?.page_num
-                      return (
-                        <div key={index} className="mb-3">
-                          <div className="text-sm">
-                            {index + 1}.{' '}
-                            <ExpandableText
-                              text={doc.page_content}
-                              maxLength={250}
-                            />
-                          </div>
-                          <div className="text-sm text-indigo-600 mt-1">
-                            Source: {splittedFqn?.[splittedFqn.length - 1]}
-                            {pageNumber && `, Page No.: ${pageNumber}`}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : isRunningPrompt ? (
-              <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-4.375rem)]">
-                <div>
-                  <Spinner center medium />
-                </div>
-                <div className="text-center">Fetching Answer...</div>
-              </div>
-            ) : errorMessage ? (
-              <div className="overflow-y-auto flex gap-4 mt-7">
-                <div className="bg-error w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
-                  <IconProvider icon="message" className="text-white" />
-                </div>
-                <div className="w-full font-inter text-base text-error">
-                  <div className="font-bold text-lg">Error</div>
-                  We failed to get answer for your query, please try again by
-                  resending query or try again in some time.
-                </div>
-              </div>
-            ) : (
-              <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
-                <div className="min-h-[23rem]">
-                  <DocsQaInformation
-                    header={'Welcome to SambaQA'}
-                    subHeader={
-                      <>
-                        <p className="text-center max-w-[28.125rem] mt-2">
-                          Select a collection from sidebar,
-                          <br /> review all the settings and start asking
-                          Questions
-                        </p>
-                      </>
-                    }
+                    className="w-full h-[2.75rem] text-sm pr-14"
+                    placeholder="Ask any question related to this document"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                  />
+                  <Button
+                    icon="paper-plane-top"
+                    className="btn-sm absolute right-2 top-[0.375rem]"
+                    onClick={handlePromptSubmit}
+                    loading={isRunningPrompt}
+                    disabled={!prompt || !selectedQueryModel}
                   />
                 </div>
               </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <NoCollections fullWidth />
-      )}
-    </div>
-  </>
-)
+              {answer ? (
+                <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">
+                  <div className="max-h-[60%] h-full overflow-y-auto flex gap-4">
+                    <div className="bg-indigo-400 w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
+                      <IconProvider icon="message" className="text-white" />
+                    </div>
+                    <div className="w-full font-inter text-base">
+                      <div className="font-bold text-lg">Answer:</div>
+                      <Markdown>{answer}</Markdown>
+                    </div>
+                  </div>
+                  {sourceDocs && (
+                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
+                      <div className="font-semibold mb-3.5">
+                        Source Documents:
+                      </div>
+                      {sourceDocs?.map((doc, index) => {
+                        const splittedFqn =
+                          doc?.metadata?._data_point_fqn.split('::')
+                        const pageNumber =
+                          doc?.metadata?.page_number || doc?.metadata?.page_num
+                        return (
+                          <div key={index} className="mb-3">
+                            <div className="text-sm">
+                              {index + 1}.{' '}
+                              <ExpandableText
+                                text={doc.page_content}
+                                maxLength={250}
+                              />
+                            </div>
+                            <div className="text-sm text-indigo-600 mt-1">
+                              Source: {splittedFqn?.[splittedFqn.length - 1]}
+                              {pageNumber && `, Page No.: ${pageNumber}`}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : isRunningPrompt ? (
+                <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-4.375rem)]">
+                  <div>
+                    <Spinner center medium />
+                  </div>
+                  <div className="text-center">Fetching Answer...</div>
+                </div>
+              ) : errorMessage ? (
+                <div className="overflow-y-auto flex gap-4 mt-7">
+                  <div className="bg-error w-6 h-6 rounded-full flex items-center justify-center mt-0.5">
+                    <IconProvider icon="message" className="text-white" />
+                  </div>
+                  <div className="w-full font-inter text-base text-error">
+                    <div className="font-bold text-lg">Error</div>
+                    We failed to get answer for your query, please try again by
+                    resending query or try again in some time.
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
+                  <div className="min-h-[23rem]">
+                    <DocsQaInformation
+                      header={'Welcome to SambaQA'}
+                      subHeader={
+                        <>
+                          <p className="text-center max-w-[28.125rem] mt-2">
+                            Select a collection from sidebar,
+                            <br /> review all the settings and start asking
+                            Questions
+                          </p>
+                        </>
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <NoCollections fullWidth />
+        )}
+      </div>
+    </>
+  )
 }
 
 export default DocsQA
-                    
