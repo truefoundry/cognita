@@ -143,7 +143,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             }
         except Exception as e:
             logger.exception(f"Error in page: {page_number} - {e}")
-            return {"error": e}
+            return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
         self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
@@ -183,9 +183,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
 
                     pages[page_number] = image_base64
                 except Exception as e:
-                    exc_info = sys.exc_info()
-                    logger.error("".join(traceback.format_exception(*exc_info)))
-                    logger.error(f"Error in page: {page_number}")
+                    logger.exception(f"Error in page: {page_number} - {e}")
                     continue
 
             # make parallel requests to VLM for all pages
