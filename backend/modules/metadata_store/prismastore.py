@@ -88,6 +88,11 @@ class PrismaStore(BaseMetadataStore):
                 status_code=500, detail="Failed to get collection by name"
             )
 
+    async def aget_retrieve_collection_by_name(
+        self, collection_name: str, no_cache: bool = True
+    ) -> Collection | None:
+        return await self.aget_collection_by_name(collection_name, no_cache)
+
     async def aget_collections(self) -> List[Collection]:
         try:
             collections = await self.db.collection.find_many()

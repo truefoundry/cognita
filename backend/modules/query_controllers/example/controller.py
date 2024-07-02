@@ -73,7 +73,7 @@ class BasicRAGQueryController:
         Get the vector store for the collection
         """
         client = await get_client()
-        collection = await client.aget_collection_by_name(collection_name)
+        collection = await client.aget_retrieve_collection_by_name(collection_name)
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
 
