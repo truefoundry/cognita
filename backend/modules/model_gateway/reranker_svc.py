@@ -79,7 +79,14 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
 
         # Extract the indices from the sorted results
         sorted_indices = [result["index"] for result in sorted_results][: self.top_k]
+        relevance_scores = [result["relevance_score"] for result in sorted_results][
+            : self.top_k
+        ]
 
         # sort documents based on the sorted indices
-        documents = [documents[index] for index in sorted_indices]
-        return documents
+        ranked_documents = list()
+        for idx, index in enumerate(sorted_indices):
+            # show relevance scores upto 2 decimal places
+            documents[index].metadata["relevance_score"] = relevance_scores[idx]
+            ranked_documents.append(documents[index])
+        return ranked_documents
