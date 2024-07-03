@@ -434,6 +434,7 @@ const DocsQA = () => {
                           doc?.metadata?._data_point_fqn.split('::')
                         const pageNumber =
                           doc?.metadata?.page_number || doc?.metadata?.page_num
+                        const relevanceScore = doc?.metadata?.relevance_score
                         return (
                           <div key={index} className="mb-3">
                             <div className="text-sm">
@@ -443,6 +444,11 @@ const DocsQA = () => {
                                 maxLength={250}
                               />
                             </div>
+                            {relevanceScore && (
+                              <div className="text-sm text-indigo-600 mt-1">
+                                Relevance Score: {relevanceScore}
+                              </div>
+                            )}
                             <div className="text-sm text-indigo-600 mt-1">
                               Source: {splittedFqn?.[splittedFqn.length - 1]}
                               {pageNumber && `, Page No.: ${pageNumber}`}

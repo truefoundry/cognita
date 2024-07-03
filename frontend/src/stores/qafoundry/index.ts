@@ -95,6 +95,7 @@ export interface SourceDocs {
     _data_point_hash: string
     page_num?: number
     page_number?: number
+    relevance_score?: number
     type: string
     _id: string
     _collection_name: string
