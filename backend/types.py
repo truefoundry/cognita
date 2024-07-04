@@ -122,18 +122,7 @@ class ModelProviderConfig(BaseModel):
     reranking_model_ids: List[str]
     api_key_env_var: str
     base_url: Optional[str] = None
-    headers: Optional[List] = None
-
-    @property
-    def get_headers(self) -> Dict[str, str]:
-        formatted_headers = {}
-        for header in self.headers:
-            for key, value in header.items():
-                if isinstance(value, dict):
-                    formatted_headers[key] = json.dumps(value)
-                else:
-                    formatted_headers[key] = value
-        return formatted_headers
+    default_headers: Dict[str, str] = Field(default_factory=dict)
 
 
 class EmbedderConfig(BaseModel):

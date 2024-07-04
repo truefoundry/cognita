@@ -136,7 +136,7 @@ class ModelGateway:
             streaming=stream,
             api_key=api_key,
             base_url=model_provider_config.base_url,
-            default_headers=model_provider_config.get_headers,
+            default_headers=model_provider_config.default_headers,
         )
 
     def get_reranker_from_model_config(self, model_name: str, top_k: int = 3):
