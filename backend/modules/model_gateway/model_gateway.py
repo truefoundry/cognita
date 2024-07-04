@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List
 
@@ -129,12 +130,25 @@ class ModelGateway:
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
         model_id = "/".join(model_config.name.split("/")[1:])
+
+        if model_provider_config.provider_name == "truefoundry":
+            headers = {
+                "X-TFY-METADATA": json.dumps(
+                    {
+                        "tfy_log_request": "true",
+                        "Custom-Metadata": "Cognita-LLM-Request",
+                    }
+                ),
+            }
+        else:
+            headers = {}
         return ChatOpenAI(
             model=model_id,
             temperature=model_config.parameters.get("temperature", 0.1),
             streaming=stream,
             api_key=api_key,
             base_url=model_provider_config.base_url,
+            default_headers=headers,
         )
 
     def get_reranker_from_model_config(self, model_name: str, top_k: int = 3):
