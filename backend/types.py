@@ -1,4 +1,5 @@
 import enum
+import json
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
@@ -121,6 +122,7 @@ class ModelProviderConfig(BaseModel):
     reranking_model_ids: List[str]
     api_key_env_var: str
     base_url: Optional[str] = None
+    default_headers: Dict[str, str] = Field(default_factory=dict)
 
 
 class EmbedderConfig(BaseModel):
