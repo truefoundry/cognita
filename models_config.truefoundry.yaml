@@ -9,6 +9,12 @@ model_providers:
       embedding_model_ids:
           - "openai-main/text-embedding-ada-002"
       reranking_model_ids: []
+      headers:
+          - "X-TFY-METADATA":
+                {
+                    "tfy_log_request": "true",
+                    "Custom-Metadata": "Cognita-LLM-Request",
+                }
 
     - provider_name: local-infinity
       api_format: openai
@@ -19,3 +25,4 @@ model_providers:
           - "mixedbread-ai/mxbai-embed-large-v1"
       reranking_model_ids:
           - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+      headers: []
