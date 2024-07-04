@@ -19,14 +19,18 @@ export interface ModelConfig {
 
 export interface CollectionQueryDto {
   collection_name: string
+  retriever_name?: string
   retriever_config: {
     search_type: string
-    k: number
+    search_kwargs?: any
+    k?: number
     fetch_k?: number
   }
+  prompt_template?: string
   query: string
   model_configuration: ModelConfig
   stream?: boolean
+  queryController?: string
 }
 
 interface DataSource {
