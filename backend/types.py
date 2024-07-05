@@ -465,3 +465,21 @@ class ListDataIngestionRunsDto(BaseModel):
     data_source_fqn: Optional[str] = Field(
         title="Fully qualified name of the data source", default=None
     )
+
+
+class RagApplication(BaseModel):
+    name: str = Field(
+        title="Name of the rag app",
+        regex=r"^[a-z][a-z0-9-]*$",  # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
+    )
+    config: Dict[str, Any] = Field(
+        title="Configuration for the rag app",
+    )
+
+
+class CreateRagApplication(RagApplication):
+    pass
+
+
+class RagApplicationDto(RagApplication):
+    pass

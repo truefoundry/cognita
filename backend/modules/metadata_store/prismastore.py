@@ -22,6 +22,8 @@ from backend.types import (
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
+    RagApplication,
+    RagApplicationDto,
 )
 
 
@@ -487,6 +489,25 @@ class PrismaStore(BaseMetadataStore):
                 f"Failed to log errors data ingestion run {data_ingestion_run_name}: {e}"
             )
             raise HTTPException(status_code=500, detail=f"{e}")
+
+    ######
+    # RAG APPLICATION APIS
+    ######
+    async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """Create a RAG application in the metadata store"""
+        pass
+
+    async def aget_rag_app(self, app_name: str) -> RagApplicationDto | None:
+        """Get a RAG application from the metadata store"""
+        pass
+
+    async def alist_rag_apps(self) -> List[str]:
+        """List all RAG applications from the metadata store"""
+        pass
+
+    async def adelete_rag_app(self, app_name: str):
+        """Delete a RAG application from the metadata store"""
+        pass
 
 
 if __name__ == "__main__":
