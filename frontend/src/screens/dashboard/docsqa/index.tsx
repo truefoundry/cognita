@@ -233,12 +233,12 @@ const DocsQA = () => {
           prompt_template: promptTemplate,
           query_controller: selectedQueryController,
         },
-      })
+      }).unwrap()
       setApplicationName('')
       setIsCreateApplicationModalOpen(false)
       notify('success', 'Application created successfully')
     } catch (err) {
-      notify('error', 'Failed to create application')
+      notify('error', 'Failed to create application', err?.data?.detail)
     }
   }
 
