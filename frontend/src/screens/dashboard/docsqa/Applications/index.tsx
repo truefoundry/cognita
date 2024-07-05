@@ -1,6 +1,5 @@
 import Button from '@/components/base/atoms/Button'
 import CopyField from '@/components/base/atoms/CopyField'
-import Markdown from '@/components/base/atoms/Markdown'
 import Modal from '@/components/base/atoms/Modal'
 import Spinner from '@/components/base/atoms/Spinner'
 import notify from '@/components/base/molecules/Notify'
@@ -59,7 +58,7 @@ const Applications = () => {
     {
       field: 'name',
       headerName: 'Name',
-      flex: 1,
+      flex: 0.5,
       renderCell: (params: GridRenderCellParams) => <div>{params?.value}</div>,
     },
     {
