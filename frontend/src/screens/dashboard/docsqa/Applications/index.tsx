@@ -1,5 +1,6 @@
 import Button from '@/components/base/atoms/Button'
 import CopyField from '@/components/base/atoms/CopyField'
+import Markdown from '@/components/base/atoms/Markdown'
 import Modal from '@/components/base/atoms/Modal'
 import Spinner from '@/components/base/atoms/Spinner'
 import notify from '@/components/base/molecules/Notify'
@@ -112,6 +113,9 @@ const Applications = () => {
         : [],
     [applicationNames]
   )
+
+  const embedCode = `<embed src="${window.location.origin}/embed/${selectedApplication}" style="width: 400px; height: 500px">`
+
   return (
     <div className="h-[calc(100%-50px)] overflow-auto bg-white">
       <Modal
@@ -123,12 +127,25 @@ const Applications = () => {
             <Spinner center medium />
           ) : (
             <>
+              <div className="mb-2">Config:</div>
               <SimpleCodeEditor
                 language="json"
-                height={400}
+                height={350}
                 value={JSON.stringify(applicationData?.config, null, 2)}
                 readOnly
               />
+              <div className="mt-4">
+                <div className="mb-1">
+                  Use the below code to embed this application:
+                </div>
+                <div className="relative text-sm bg-gray-100 p-2 rounded font-medium italic group">
+                  {embedCode}
+                  <CopyField
+                    rawValue={embedCode}
+                    className="hidden group-hover:block absolute top-1 right-1"
+                  />
+                </div>
+              </div>
               <div className="flex justify-end">
                 <Button
                   text="Close"
