@@ -7,6 +7,7 @@ import {
   CollectionQueryDto,
   SourceDocs,
   baseQAFoundryPath,
+  useCreateApplicationMutation,
   useGetAllEnabledChatModelsQuery,
   useGetCollectionNamesQuery,
   useGetOpenapiSpecsQuery,
@@ -17,6 +18,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
+import Modal from '@/components/base/atoms/Modal'
+import notify from '@/components/base/molecules/Notify'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -83,12 +86,20 @@ const DocsQA = () => {
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
   const [isStreamEnabled, setIsStreamEnabled] = useState(false)
+  const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
+    useState(false)
+  const [applicationName, setApplicationName] = useState('')
+
+  const pattern = /^[a-z][a-z0-9-]*$/
+  const isValidApplicationName = pattern.test(applicationName)
 
   const { data: collections, isLoading: isCollectionsLoading } =
     useGetCollectionNamesQuery()
   const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
   const [searchAnswer] = useQueryCollectionMutation()
+  const [createApplication, { isLoading: isCreateApplicationLoading }] =
+    useCreateApplicationMutation()
 
   const allQueryControllers = useMemo(() => {
     if (!openapiSpecs?.paths) return []
@@ -202,6 +213,35 @@ const DocsQA = () => {
     }
   }
 
+  const createChatApplication = async () => {
+    const selectedModel = allEnabledModels.find(
+      (model: any) => model.name == selectedQueryModel
+    )
+
+    try {
+      await createApplication({
+        name: `${applicationName}-rag-app`,
+        config: {
+          collection_name: selectedCollection,
+          model_configuration: {
+            name: selectedModel.name,
+            provider: selectedModel.provider,
+            ...JSON.parse(modelConfig),
+          },
+          retriever_name: selectedRetriever?.name ?? '',
+          retriever_config: JSON.parse(retrieverConfig),
+          prompt_template: promptTemplate,
+          query_controller: selectedQueryController,
+        },
+      })
+      setApplicationName('')
+      setIsCreateApplicationModalOpen(false)
+      notify('success', 'Application created successfully')
+    } catch (err) {
+      notify('error', 'Failed to create application')
+    }
+  }
+
   const resetQA = () => {
     setAnswer('')
     setErrorMessage(false)
@@ -241,6 +281,55 @@ const DocsQA = () => {
 
   return (
     <>
+      {isCreateApplicationModalOpen && (
+        <Modal
+          open={isCreateApplicationModalOpen}
+          onClose={() => setIsCreateApplicationModalOpen(false)}
+        >
+          <div className="modal-box">
+            <div className="text-center font-medium text-xl mb-2">
+              Create Application
+            </div>
+            <div>
+              <div className="text-sm">Enter the name of the application</div>
+              <Input
+                value={applicationName}
+                onChange={(e) => setApplicationName(e.target.value)}
+                className="py-1 input-sm mt-1"
+                placeholder="E.g. query-bot"
+              />
+              {applicationName && !isValidApplicationName ? (
+                <div className="text-sm text-error mt-1">
+                  Application name should start with a lowercase letter and can
+                  only contain lowercase letters, numbers and hyphens
+                </div>
+              ) : applicationName ? (
+                <div className="text-sm mt-1">
+                  The application name will be generated as{' '}
+                  <span className="font-medium">
+                    "{applicationName}-rag-app"
+                  </span>
+                </div>
+              ) : (
+                <></>
+              )}
+            </div>
+            <div className="flex justify-end w-full mt-4 gap-2">
+              <Button
+                text="Create"
+                className="btn-sm"
+                loading={isCreateApplicationLoading}
+                onClick={createChatApplication}
+              />
+              <Button
+                text="Cancel"
+                className="btn-sm bg-red-600 hover:bg-red-700 border-0"
+                onClick={() => setIsCreateApplicationModalOpen(false)}
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
       <div className="flex gap-5 h-[calc(100vh-6.5rem)] w-full">
         {isCollectionsLoading ? (
           <div className="h-full w-full flex items-center">
@@ -393,6 +482,11 @@ const DocsQA = () => {
                 minRows={3}
                 value={promptTemplate}
                 onChange={(e) => setPromptTemplate(e.target.value)}
+              />
+              <Button
+                text="Create Application"
+                className="w-full btn-sm mt-4"
+                onClick={() => setIsCreateApplicationModalOpen(true)}
               />
             </div>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">

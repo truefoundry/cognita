@@ -1,3 +1,5 @@
+import React, { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import IconProvider from '@/components/assets/IconProvider'
 import Button from '@/components/base/atoms/Button'
 import Input from '@/components/base/atoms/Input'
@@ -6,125 +8,37 @@ import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import {
   CollectionQueryDto,
   baseQAFoundryPath,
-  useGetAllEnabledChatModelsQuery,
-  useGetCollectionNamesQuery,
-  useGetOpenapiSpecsQuery,
+  useGetApplicationDetailsByNameQuery,
 } from '@/stores/qafoundry'
-import React, { useEffect, useMemo, useState } from 'react'
-
-const defaultRetrieverConfig = `{
-  "search_type": "similarity",
-  "k": 20,
-  "fetch_k": 20,
-  "filter": {}
-}`
-
-const defaultModelConfig = `{
-  "parameters": {
-    "temperature": 0.1
-  }
-}`
-
-const defaultPrompt =
-  'Answer the question based only on the following context:\nContext: {context} \nQuestion: {question}'
-
-interface SelectedRetrieverType {
-  key: string
-  name: string
-  summary: string
-  config: any
-}
-
-const staticObject = {
-  collection_name: 'test',
-  model_configuration: {
-    name: 'truefoundry/openai-main/gpt-4-turbo',
-    parameters: { temperature: 0.1 },
-  },
-  retriever_name: 'vectorstore',
-  retriever_config: {
-    search_type: 'similarity',
-    search_kwargs: { k: 5 },
-  },
-  queryController: 'basic-rag',
-}
+import { startCase } from 'lodash'
 
 const DocsQAChatbot = () => {
-  const [selectedQueryModel, setSelectedQueryModel] = React.useState('')
-  const [selectedCollection, setSelectedCollection] = useState('')
-  const [selectedQueryController, setSelectedQueryController] = useState('')
-  const [selectedRetriever, setSelectedRetriever] = useState<
-    SelectedRetrieverType | undefined
-  >()
+  const params = useParams()
   const [prompt, setPrompt] = useState('')
   const [isRunningPrompt, setIsRunningPrompt] = useState(false)
   const [answer, setAnswer] = useState('')
   const [errorMessage, setErrorMessage] = useState(false)
-  const [modelConfig, setModelConfig] = useState(defaultModelConfig)
-  const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
-  const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
 
-  const { data: collections, isLoading: isCollectionsLoading } =
-    useGetCollectionNamesQuery()
-  const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
-  const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
-
-  const allQueryControllers = useMemo(() => {
-    if (!openapiSpecs?.paths) return []
-    return Object.keys(openapiSpecs?.paths)
-      .filter((path) => path.includes('/retrievers/'))
-      .map((str) => {
-        var parts = str.split('/')
-        return parts[2]
-      })
-  }, [openapiSpecs])
-
-  const allRetrieverOptions = useMemo(() => {
-    const queryControllerPath = `/retrievers/${selectedQueryController}/answer`
-    const examples =
-      openapiSpecs?.paths[queryControllerPath]?.post?.requestBody?.content?.[
-        'application/json'
-      ]?.examples
-    if (!examples) return []
-    return Object.entries(examples).map(([key, value]: [string, any]) => ({
-      key,
-      name: value.value.retriever_name,
-      summary: value.summary,
-      config: value.value.retriever_config,
-      promptTemplate: value.value.prompt_template ?? defaultPrompt,
-    }))
-  }, [selectedQueryController, openapiSpecs])
+  const {
+    data: applicationsData,
+    isLoading: isApplicationsDataLoading,
+    isFetching: isApplicationsDataFetching,
+  } = useGetApplicationDetailsByNameQuery(params?.id ?? '', {
+    skip: !params?.id,
+  })
 
   const handlePromptSubmit = async () => {
     setIsRunningPrompt(true)
     setAnswer('')
     setErrorMessage(false)
     try {
-      const selectedModel = allEnabledModels.find(
-        (model: any) => model.name == selectedQueryModel
-      )
-      if (!selectedModel) {
-        throw new Error('Model not found')
-      }
-      try {
-        JSON.parse(modelConfig)
-      } catch (err: any) {
-        throw new Error('Invalid Model Configuration')
-      }
-      try {
-        JSON.parse(retrieverConfig)
-      } catch (err: any) {
-        throw new Error('Invalid Retriever Configuration')
-      }
-
       const params: CollectionQueryDto = {
-        ...staticObject,
+        ...applicationsData.config,
         query: prompt,
-        prompt_template: promptTemplate,
         stream: true,
       }
       const response = await fetch(
-        `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
+        `${baseQAFoundryPath}/retrievers/${applicationsData.config.query_controller}/answer`,
         {
           method: 'POST',
           headers: {
@@ -155,47 +69,16 @@ const DocsQAChatbot = () => {
     }
   }
 
-  useEffect(() => {
-    if (collections && collections.length) {
-      setSelectedCollection(collections[0])
-    }
-  }, [collections])
-
-  useEffect(() => {
-    if (allQueryControllers && allQueryControllers.length) {
-      setSelectedQueryController(allQueryControllers[0])
-    }
-  }, [allQueryControllers])
-
-  useEffect(() => {
-    if (allEnabledModels && allEnabledModels.length) {
-      setSelectedQueryModel(allEnabledModels[0].name)
-    }
-  }, [allEnabledModels])
-
-  useEffect(() => {
-    if (allRetrieverOptions && allRetrieverOptions.length) {
-      setSelectedRetriever(allRetrieverOptions[0])
-      setPromptTemplate(allRetrieverOptions[0].promptTemplate)
-    }
-  }, [allRetrieverOptions])
-
-  useEffect(() => {
-    if (selectedRetriever) {
-      setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
-    }
-  }, [selectedRetriever])
-
   return (
     <>
       <div className="flex gap-5 h-full w-full">
-        {isCollectionsLoading ? (
+        {isApplicationsDataLoading || isApplicationsDataFetching ? (
           <div className="h-full w-full flex items-center">
             <Spinner center big />
           </div>
-        ) : selectedCollection ? (
+        ) : (
           <>
-            <div className="h-full border rounded-lg border-[#CEE0F8] w-full bg-white p-3">
+            <div className="h-full border-2 rounded-lg border-[#CEE0F8] w-full bg-white p-3">
               {answer ? (
                 <div className="overflow-y-auto flex flex-col gap-4 h-[calc(100%-3.125rem)]">
                   <div className="h-full overflow-y-auto flex gap-4">
@@ -234,7 +117,7 @@ const DocsQAChatbot = () => {
                 <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
                   <div className="h-full">
                     <div className="font-medium text-lg text-center">
-                      Welcome to DocsQA
+                      Welcome to {startCase(applicationsData.name) ?? 'Cognita'}
                     </div>
                   </div>
                 </div>
@@ -252,16 +135,12 @@ const DocsQAChatbot = () => {
                     className="btn-sm absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
-                    disabled={!prompt || !selectedQueryModel}
+                    disabled={!prompt}
                   />
                 </div>
               </div>
             </div>
           </>
-        ) : (
-          <div className="text-center font-medium">
-            Failed to get collection
-          </div>
         )}
       </div>
     </>

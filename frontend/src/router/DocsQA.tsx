@@ -5,6 +5,7 @@ import type { BreadcrumbsRoute } from 'use-react-router-breadcrumbs'
 import ScreenFallbackLoader from '@/components/base/molecules/ScreenFallbackLoader'
 import DataHub from '@/screens/dashboard/docsqa/DataSources'
 import NavBar from '@/screens/dashboard/docsqa/Navbar'
+import Applications from '@/screens/dashboard/docsqa/Applications'
 const DocsQA = lazy(() => import('@/screens/dashboard/docsqa'))
 const DocsQAChatbot = lazy(() => import('@/screens/dashboard/docsqa/Chatbot'))
 const DocsQASettings = lazy(() => import('@/screens/dashboard/docsqa/settings'))
@@ -16,8 +17,8 @@ const FallBack = () => (
 )
 
 const MainLayout = () => {
-  const location = useLocation();
-  const shouldRenderNavBar = !location.pathname.includes('embed');
+  const location = useLocation()
+  const shouldRenderNavBar = !location.pathname.includes('embed')
 
   return (
     <div className="flex flex-col h-full">
@@ -43,6 +44,10 @@ export const routes = (): BreadcrumbsRoute[] => [
       {
         path: '/data-sources',
         children: [{ index: true, element: <DataHub /> }],
+      },
+      {
+        path: '/applications',
+        children: [{ index: true, element: <Applications /> }],
       },
       {
         path: '/embed/:id',

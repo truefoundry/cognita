@@ -124,6 +124,7 @@ export const qafoundryApi = createApi({
     'CollectionNames',
     'CollectionDetails',
     'DataSources',
+    'Applications',
   ],
   endpoints: (builder) => ({
     // * Queries
@@ -219,6 +220,23 @@ export const qafoundryApi = createApi({
       query: () => ({
         url: '/openapi.json',
         method: 'GET',
+      }),
+    }),
+    getApplications: builder.query<string[], void>({
+      query: () => ({
+        url: '/v1/apps/list',
+        method: 'GET',
+        responseHandler: (response) =>
+          response.json().then((data) => data.rag_apps),
+      }),
+      providesTags: ['Applications'],
+    }),
+    getApplicationDetailsByName: builder.query<any, string>({
+      query: (appName) => ({
+        url: `/v1/apps/${appName}`,
+        method: 'GET',
+        responseHandler: (response) =>
+          response.json().then((data) => data.rag_app),
       }),
     }),
 
@@ -318,6 +336,21 @@ export const qafoundryApi = createApi({
       }),
       invalidatesTags: ['CollectionDetails'],
     }),
+    createApplication: builder.mutation({
+      query: (payload: object) => ({
+        url: '/v1/apps',
+        body: payload,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Applications'],
+    }),
+    deleteApplication: builder.mutation({
+      query: (payload: { app_name: string }) => ({
+        url: `/v1/apps/${payload.app_name}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Applications'],
+    }),
   }),
 })
 
@@ -333,6 +366,8 @@ export const {
   useGetDataSourcesQuery,
   useGetDataIngestionRunsQuery,
   useGetOpenapiSpecsQuery,
+  useGetApplicationsQuery,
+  useGetApplicationDetailsByNameQuery,
 
   // mutations
   useUploadDataToDataDirectoryMutation,
@@ -345,4 +380,6 @@ export const {
   useQueryCollectionMutation,
   useAddDataSourceMutation,
   useIngestDataSourceMutation,
+  useCreateApplicationMutation,
+  useDeleteApplicationMutation,
 } = qafoundryApi
