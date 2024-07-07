@@ -22,6 +22,8 @@ from backend.types import (
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
+    RagApplication,
+    RagApplicationDto,
 )
 
 
@@ -487,6 +489,77 @@ class PrismaStore(BaseMetadataStore):
                 f"Failed to log errors data ingestion run {data_ingestion_run_name}: {e}"
             )
             raise HTTPException(status_code=500, detail=f"{e}")
+
+    ######
+    # RAG APPLICATION APIS
+    ######
+
+    # TODO (prathamesh): Implement these methods
+    async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """Create a RAG application in the metadata store"""
+        try:
+            existing_app = await self.aget_rag_app(app.name)
+        except Exception as e:
+            logger.exception(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=e)
+
+        if existing_app:
+            logger.error(f"RAG application with name {app.name} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"RAG application with name {app.name} already exists",
+            )
+
+        try:
+            logger.info(f"Creating RAG application: {app.dict()}")
+            rag_app_data = app.dict()
+            rag_app_data["config"] = json.dumps(rag_app_data["config"])
+            rag_app = await self.db.ragapps.create(data=rag_app_data)
+            return rag_app
+        except Exception as e:
+            logger.exception(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+    async def aget_rag_app(self, app_name: str) -> RagApplicationDto | None:
+        """Get a RAG application from the metadata store"""
+        try:
+            rag_app = await self.db.ragapps.find_first(where={"name": app_name})
+            if rag_app:
+                return rag_app
+            return None
+        except Exception as e:
+            logger.exception(f"Failed to get RAG application by name: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to get RAG application by name"
+            )
+
+    async def alist_rag_apps(self) -> List[str]:
+        """List all RAG applications from the metadata store"""
+        try:
+            rag_apps = await self.db.ragapps.find_many()
+            return [rag_app.name for rag_app in rag_apps]
+        except Exception as e:
+            logger.exception(f"Failed to list RAG applications: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to list RAG applications"
+            )
+
+    async def adelete_rag_app(self, app_name: str):
+        """Delete a RAG application from the metadata store"""
+        try:
+            rag_app = await self.aget_rag_app(app_name)
+            if not rag_app:
+                logger.debug(f"RAG application with name {app_name} does not exist")
+        except Exception as e:
+            logger.exception(e)
+
+        try:
+            await self.db.ragapps.delete(where={"name": app_name})
+        except Exception as e:
+            logger.exception(f"Failed to delete RAG application: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to delete RAG application"
+            )
 
 
 if __name__ == "__main__":

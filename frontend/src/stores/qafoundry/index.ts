@@ -19,14 +19,18 @@ export interface ModelConfig {
 
 export interface CollectionQueryDto {
   collection_name: string
+  retriever_name?: string
   retriever_config: {
     search_type: string
-    k: number
+    search_kwargs?: any
+    k?: number
     fetch_k?: number
   }
+  prompt_template?: string
   query: string
   model_configuration: ModelConfig
   stream?: boolean
+  queryController?: string
 }
 
 interface DataSource {
@@ -95,6 +99,7 @@ export interface SourceDocs {
     _data_point_hash: string
     page_num?: number
     page_number?: number
+    relevance_score?: number
     type: string
     _id: string
     _collection_name: string
@@ -119,6 +124,7 @@ export const qafoundryApi = createApi({
     'CollectionNames',
     'CollectionDetails',
     'DataSources',
+    'Applications',
   ],
   endpoints: (builder) => ({
     // * Queries
@@ -214,6 +220,23 @@ export const qafoundryApi = createApi({
       query: () => ({
         url: '/openapi.json',
         method: 'GET',
+      }),
+    }),
+    getApplications: builder.query<string[], void>({
+      query: () => ({
+        url: '/v1/apps/list',
+        method: 'GET',
+        responseHandler: (response) =>
+          response.json().then((data) => data.rag_apps),
+      }),
+      providesTags: ['Applications'],
+    }),
+    getApplicationDetailsByName: builder.query<any, string>({
+      query: (appName) => ({
+        url: `/v1/apps/${appName}`,
+        method: 'GET',
+        responseHandler: (response) =>
+          response.json().then((data) => data.rag_app),
       }),
     }),
 
@@ -313,6 +336,21 @@ export const qafoundryApi = createApi({
       }),
       invalidatesTags: ['CollectionDetails'],
     }),
+    createApplication: builder.mutation({
+      query: (payload: object) => ({
+        url: '/v1/apps',
+        body: payload,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Applications'],
+    }),
+    deleteApplication: builder.mutation({
+      query: (payload: { app_name: string }) => ({
+        url: `/v1/apps/${payload.app_name}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Applications'],
+    }),
   }),
 })
 
@@ -328,6 +366,8 @@ export const {
   useGetDataSourcesQuery,
   useGetDataIngestionRunsQuery,
   useGetOpenapiSpecsQuery,
+  useGetApplicationsQuery,
+  useGetApplicationDetailsByNameQuery,
 
   // mutations
   useUploadDataToDataDirectoryMutation,
@@ -340,4 +380,6 @@ export const {
   useQueryCollectionMutation,
   useAddDataSourceMutation,
   useIngestDataSourceMutation,
+  useCreateApplicationMutation,
+  useDeleteApplicationMutation,
 } = qafoundryApi

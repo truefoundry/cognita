@@ -5,6 +5,7 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
   IconDefinition,
   faDatabase,
+  faRocket,
   faGear,
   faPlay,
 } from '@fortawesome/free-solid-svg-icons'
@@ -39,6 +40,11 @@ function getMenuOptions(): {
       label: 'Data Sources',
       route: '/data-sources',
       icon: faDatabase,
+    },
+    {
+      label: 'Applications',
+      route: '/applications',
+      icon: faRocket,
     },
   ]
 }

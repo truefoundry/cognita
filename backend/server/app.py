@@ -7,6 +7,7 @@ from backend.server.routers.collection import router as collection_router
 from backend.server.routers.components import router as components_router
 from backend.server.routers.data_source import router as datasource_router
 from backend.server.routers.internal import router as internal_router
+from backend.server.routers.rag_apps import router as rag_apps_router
 from backend.settings import settings
 
 # FastAPI Initialization
@@ -32,6 +33,7 @@ def status():
 
 app.include_router(components_router)
 app.include_router(datasource_router)
+app.include_router(rag_apps_router)
 app.include_router(collection_router)
 app.include_router(internal_router)
 

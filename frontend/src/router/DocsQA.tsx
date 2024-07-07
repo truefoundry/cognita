@@ -1,11 +1,13 @@
 import React, { Suspense, lazy } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import type { BreadcrumbsRoute } from 'use-react-router-breadcrumbs'
 
 import ScreenFallbackLoader from '@/components/base/molecules/ScreenFallbackLoader'
 import DataHub from '@/screens/dashboard/docsqa/DataSources'
 import NavBar from '@/screens/dashboard/docsqa/Navbar'
+import Applications from '@/screens/dashboard/docsqa/Applications'
 const DocsQA = lazy(() => import('@/screens/dashboard/docsqa'))
+const DocsQAChatbot = lazy(() => import('@/screens/dashboard/docsqa/Chatbot'))
 const DocsQASettings = lazy(() => import('@/screens/dashboard/docsqa/settings'))
 
 const FallBack = () => (
@@ -14,19 +16,26 @@ const FallBack = () => (
   </div>
 )
 
+const MainLayout = () => {
+  const location = useLocation()
+  const shouldRenderNavBar = !location.pathname.includes('embed')
+
+  return (
+    <div className="flex flex-col h-full">
+      {shouldRenderNavBar && <NavBar />}
+      <Suspense fallback={<FallBack />}>
+        <div className="p-4 bg-[#fafcff] h-full">
+          <Outlet />
+        </div>
+      </Suspense>
+    </div>
+  )
+}
+
 export const routes = (): BreadcrumbsRoute[] => [
   {
     path: '/',
-    element: (
-      <div className="flex flex-col h-full">
-        <NavBar />
-        <Suspense fallback={<FallBack />}>
-          <div className="p-4 bg-[#fafcff] h-full">
-            <Outlet />
-          </div>
-        </Suspense>
-      </div>
-    ),
+    element: <MainLayout />,
     children: [
       {
         path: '/collections',
@@ -35,6 +44,14 @@ export const routes = (): BreadcrumbsRoute[] => [
       {
         path: '/data-sources',
         children: [{ index: true, element: <DataHub /> }],
+      },
+      {
+        path: '/applications',
+        children: [{ index: true, element: <Applications /> }],
+      },
+      {
+        path: '/embed/:id',
+        children: [{ index: true, element: <DocsQAChatbot /> }],
       },
       {
         path: '*',
