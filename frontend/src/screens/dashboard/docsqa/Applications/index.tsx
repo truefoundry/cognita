@@ -19,13 +19,13 @@ const DeleteApplication = ({ appName }: { appName: string }) => {
   const handleSubmit = async () => {
     try {
       await deleteApplication({ app_name: appName }).unwrap()
-      notify('success', 'Data Source is successfully deleted!')
+      notify('success', 'RAG Application is successfully deleted!')
     } catch (e) {
       notify(
         'error',
         'Something went wrong!',
         e?.data?.detail ??
-          'The data source deletion failed. Please try again later.'
+          'The RAG Application deletion failed. Please try again later.'
       )
     }
   }
@@ -63,7 +63,7 @@ const Applications = () => {
     },
     {
       field: 'url',
-      headerName: 'Embedding URL',
+      headerName: 'Application URL',
       flex: 1,
       renderCell: (params: GridRenderCellParams) => (
         <div className="flex gap-2 items-center w-full truncate">
