@@ -43,7 +43,7 @@ class CarbonDataLoader(BaseDataLoader):
             },
             order_by="created_at",
             order_dir="desc",
-            filters={"organization_user_data_source_id": [data_source.uri]},
+            filters={"organization_user_data_source_id": [int(data_source.uri)]},
             include_raw_file=True,
             include_parsed_text_file=False,
             include_additional_files=False,  # TODO (chiragjn): Evaluate later

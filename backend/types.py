@@ -4,7 +4,7 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, constr, root_validator
+from pydantic.v1 import BaseModel, Field, constr, root_validator
 
 from backend.constants import FQN_SEPARATOR
 

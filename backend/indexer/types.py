@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 
 from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserConfig
 

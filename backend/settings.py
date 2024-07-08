@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 
-from pydantic import BaseSettings, root_validator
+from pydantic.v1 import BaseSettings, root_validator
 
 from backend.types import MetadataStoreConfig, VectorDBConfig
 
