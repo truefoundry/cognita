@@ -1,13 +1,91 @@
 import os
-from typing import Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Optional
 
 import requests
-from carbon import Carbon
+from pydantic import BaseModel, Field
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.settings import settings
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+
+
+class _FileStatistics(BaseModel):
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+    file_format: Optional[str] = None
+
+
+class _File(BaseModel):
+    id: int
+    name: str
+    presigned_url: Optional[str] = None
+    external_file_id: str
+    source: str
+    source_created_at: str
+    file_statistics: _FileStatistics = Field(default_factory=_FileStatistics)
+
+
+class _UserFilesV2Response(BaseModel):
+    results: List[_File]
+    count: int
+
+
+class _CarbonClient:
+    def __init__(self, api_key: str, customer_id: str):
+        self.api_key = api_key
+        self.customer_id = customer_id
+
+    def _request(self, method: str, endpoint: str, **kwargs):
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "customer-id": self.customer_id,
+        }
+        response = requests.request(method, endpoint, headers=headers, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
+    def query_user_files(
+        self,
+        pagination: Optional[Dict[str, int]] = None,
+        order_by: Optional[str] = None,
+        order_dir: Optional[str] = None,
+        filters: Optional[Dict[str, Any]] = None,
+        include_raw_file: Optional[Optional[bool]] = None,
+        include_parsed_text_file: Optional[Optional[bool]] = None,
+        include_additional_files: Optional[Optional[bool]] = None,
+    ) -> Iterator[_File]:
+        payload = {}
+        if pagination is not None:
+            payload["pagination"] = pagination
+        if order_by is not None:
+            payload["order_by"] = order_by
+        if order_dir is not None:
+            payload["order_dir"] = order_dir
+        if filters is not None:
+            payload["filters"] = filters
+        if include_raw_file is not None:
+            payload["include_raw_file"] = include_raw_file
+        if include_parsed_text_file is not None:
+            payload["include_parsed_text_file"] = include_parsed_text_file
+        if include_additional_files is not None:
+            payload["include_additional_files"] = include_additional_files
+
+        total = -1
+        count = 0
+
+        while total == -1 or count < total:
+            response = self._request(
+                "POST", "https://api.carbon.ai/user_files_v2", json=payload
+            )
+            page = _UserFilesV2Response.parse_obj(response)
+            if total == -1:
+                total = page.count
+            for file in page.results:
+                # TODO (chiragjn): There can be an edge case here where file.file_metadata.is_folder = True
+                yield file
+            count += len(page.results)
+            payload["pagination"]["offset"] = count
 
 
 class CarbonDataLoader(BaseDataLoader):
@@ -32,12 +110,12 @@ class CarbonDataLoader(BaseDataLoader):
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
         carbon_customer_id, carbon_data_source_id = data_source.uri.split("/")
-        carbon = Carbon(
+        carbon = _CarbonClient(
             api_key=settings.CARBON_AI_API_KEY,
             customer_id=carbon_customer_id,
         )
 
-        query_user_files_response = carbon.files.query_user_files(
+        user_files = carbon.query_user_files(
             pagination={
                 "limit": 50,
                 "offset": 0,
@@ -52,7 +130,7 @@ class CarbonDataLoader(BaseDataLoader):
 
         loaded_data_points: List[LoadedDataPoint] = []
 
-        for file in query_user_files_response.results:
+        for file in user_files:
             url = file.presigned_url
             filename = file.name
             file_id = file.external_file_id

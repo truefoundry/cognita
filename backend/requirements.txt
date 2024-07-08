@@ -9,12 +9,12 @@ uvicorn==0.23.2
 fastapi==0.109.1
 qdrant-client==1.9.0
 python-dotenv==1.0.1
-pydantic==2.8.2
+pydantic>=1.0.0,<2.0.0
 orjson==3.9.15
 PyMuPDF==1.23.6
 redis==5.0.1
 beautifulsoup4==4.12.2
-truefoundry[ml]==0.2.4
+truefoundry[ml]==0.2.9
 markdownify==0.11.6
 gunicorn==22.0.0
 markdown-crawler==0.0.8
@@ -32,7 +32,3 @@ transformers==4.40.2
 
 ### prisma
 prisma==0.13.1
-
-
-# carbon
-carbon-python-sdk==0.2.11
