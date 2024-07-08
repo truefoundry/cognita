@@ -1,17 +1,16 @@
+import React, { useMemo } from 'react'
+import axios from 'axios'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import Button from '@/components/base/atoms/Button'
 import Table from '@/components/base/molecules/Table'
 import {
   useDeleteDataSourceMutation,
   useGetDataSourcesQuery,
 } from '@/stores/qafoundry'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import React, { useMemo } from 'react'
-import NewDataSource from '../NewDataSource'
 import CopyField from '@/components/base/atoms/CopyField'
-import { CARBON_API_KEY, IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
 import notify from '@/components/base/molecules/Notify'
-import { CarbonConnect } from 'carbon-connect'
-import axios from 'axios'
+import { CARBON_API_KEY, IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
+import NewDataSource from '../NewDataSource'
 
 const DeleteDataSource = ({ fqn }: { fqn: string }) => {
   const [deleteDataSource, { isLoading }] = useDeleteDataSourceMutation()
@@ -132,74 +131,6 @@ const DataHub = () => {
             onClick={() => setIsNewDataSourceDrawerOpen(true)}
           />
         </div>
-        <CarbonConnect
-          orgName="Cognita"
-          brandIcon="path/to/your/brand/icon"
-          // embeddingModel={EmbeddingGenerators.OPENAI_ADA_LARGE_1024}
-          tokenFetcher={tokenFetcher}
-          tags={{
-            tag1: 'tag1_value',
-            tag2: 'tag2_value',
-            tag3: 'tag3_value',
-          }}
-          maxFileSize={10000000}
-          enabledIntegrations={[
-            {
-              id: 'LOCAL_FILES',
-              chunkSize: 100,
-              overlapSize: 10,
-              maxFileSize: 20000000,
-              allowMultipleFiles: true,
-              maxFilesCount: 5,
-              allowedFileTypes: [
-                {
-                  extension: 'csv',
-                  chunkSize: 1200,
-                  overlapSize: 120,
-                  // embeddingModel: 'OPENAI',
-                },
-                {
-                  extension: 'txt',
-                  chunkSize: 1599,
-                  overlapSize: 210,
-                  // embeddingModel: 'AZURE_OPENAI',
-                },
-                {
-                  extension: 'pdf',
-                },
-              ],
-            },
-            {
-              id: 'NOTION',
-              chunkSize: 1500,
-              overlapSize: 20,
-              embeddingModel: 'OPENAI',
-            },
-            {
-              id: 'WEB_SCRAPER',
-              chunkSize: 1500,
-              overlapSize: 20,
-            },
-            {
-              id: 'GOOGLE_DRIVE',
-              chunkSize: 1000,
-              overlapSize: 20,
-            },
-          ]}
-          onSuccess={(data) => console.log('Data on Success: ', data)}
-          onError={(error) => console.log('Data on Error: ', error)}
-          primaryBackgroundColor="#F2F2F2"
-          primaryTextColor="#555555"
-          secondaryBackgroundColor="#f2f2f2"
-          secondaryTextColor="#000000"
-          allowMultipleFiles={true}
-          open={true}
-          chunkSize={1500}
-          overlapSize={20}
-          // entryPoint="LOCAL_FILES"
-        >
-          hey there
-        </CarbonConnect>
         <div className="h-[calc(100%-50px)] overflow-auto bg-white">
           <Table rows={rows} columns={columns} isLoading={isLoading} />
         </div>

@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from 'react'
+import { MenuItem, Select } from '@mui/material'
+import { startCase } from 'lodash'
 import { uploadArtifactFileWithSignedURI } from '@/api/truefoundry'
 import IconProvider from '@/components/assets/IconProvider'
 import Badge from '@/components/base/atoms/Badge'
@@ -7,6 +10,7 @@ import Spinner from '@/components/base/atoms/Spinner'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
 import {
+  CARBON_API_KEY,
   DOCS_QA_MAX_UPLOAD_SIZE_MB,
   IS_LOCAL_DEVELOPMENT,
 } from '@/stores/constants'
@@ -18,8 +22,10 @@ import {
 } from '@/stores/qafoundry'
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
-import { MenuItem, Select } from '@mui/material'
-import React, { useEffect, useState } from 'react'
+import { CarbonConnect, EmbeddingGenerators } from 'carbon-connect'
+import axios from 'axios'
+
+const CUSTOMER_ID = 'test_cognita'
 
 const parseFileSize = (size: number) => {
   const units = ['B', 'Ki', 'Mi', 'Gi']
@@ -52,6 +58,11 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
+  const [localDataLoaders, setLocalDataLoaders] = useState<any[]>([])
+  const [isCarbonConnectOpen, setIsCarbonConnectOpen] = useState(false)
+  const [dataSourceId, setDataSourceId] = useState('')
+  const dataSourceExternalId = React.useRef('')
+
   const pattern = /^[a-z][a-z0-9-]*$/
   const isValidUploadName = pattern.test(uploadName)
 
@@ -67,6 +78,14 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   }, [files])
 
   useEffect(() => {
+    if (dataLoaders)
+      setLocalDataLoaders([
+        ...dataLoaders,
+        {
+          type: 'carbon',
+          description: 'Load Data from various types of sources',
+        },
+      ])
     if (dataLoaders && !selectedDataSourceType)
       setSelectedDataSourceType(dataLoaders[0]?.type)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,7 +173,10 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
       } else {
         const res = await addDataSource({
           type: selectedDataSourceType,
-          uri: dataSourceUri,
+          uri:
+            selectedDataSourceType === 'carbon'
+              ? `${CUSTOMER_ID}/${dataSourceId}`
+              : dataSourceUri,
           metadata: {},
         }).unwrap()
         fqn = res.data_source?.fqn
@@ -180,304 +202,429 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
     setIsSaving(false)
   }
 
+  const tokenFetcher = async () => {
+    const response = await axios.get(
+      'https://api.carbon.ai/auth/v1/access_token',
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'customer-id': CUSTOMER_ID,
+          authorization: `Bearer ${CARBON_API_KEY}`,
+        },
+      }
+    )
+    return response.data
+  }
+
+  const getDataSources = async () => {
+    const carbonAccessToken = window.sessionStorage.getItem(
+      'carbon_access_token'
+    )
+    const response = await axios.post(
+      'https://api.carbon.ai/user_data_sources',
+      {
+        filters: {
+          source: 'GOOGLE_DRIVE',
+        },
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `token ${carbonAccessToken}`,
+        },
+      }
+    )
+    const filteredData = response.data.results.filter(
+      (res) => res.data_source_external_id === dataSourceExternalId.current
+    )
+    if (filteredData.length === 0) return
+    setDataSourceId(filteredData[0].id)
+    return filteredData
+  }
+
+  useEffect(() => {
+    const carbonAccessToken = window.sessionStorage.getItem(
+      'carbon_access_token'
+    )
+    if (carbonAccessToken) return
+    tokenFetcher()
+      .then((data) => {
+        window.sessionStorage.setItem('carbon_access_token', data.access_token)
+      })
+      .catch((err) => {})
+  }, [])
+
   return (
-    <CustomDrawer
-      anchor={'right'}
-      open={open}
-      onClose={() => {
-        onClose()
-        resetForm()
-      }}
-      bodyClassName="p-0"
-      width="w-[65vw]"
-    >
-      <div className="relative w-full">
-        {isSaving && (
-          <div className="absolute w-full h-full bg-gray-50 z-10 flex flex-col justify-center items-center">
+    <>
+      <CarbonConnect
+        orgName="Cognita"
+        brandIcon="path/to/your/brand/icon"
+        embeddingModel={EmbeddingGenerators.OPENAI_ADA_LARGE_1024}
+        tokenFetcher={tokenFetcher}
+        tags={{
+          tag1: 'text_cognita',
+          tag2: 'gdrive',
+        }}
+        maxFileSize={10000000}
+        enabledIntegrations={[
+          {
+            id: 'GOOGLE_DRIVE',
+            chunkSize: 1000,
+            overlapSize: 20,
+          },
+          {
+            id: 'NOTION',
+            chunkSize: 1500,
+            overlapSize: 20,
+            embeddingModel: 'OPENAI',
+          },
+          {
+            id: 'DROPBOX',
+            chunkSize: 1500,
+            overlapSize: 20,
+            embeddingModel: 'OPENAI',
+          },
+          {
+            id: 'ONEDRIVE',
+            chunkSize: 1500,
+            overlapSize: 20,
+            embeddingModel: 'OPENAI',
+          },
+          {
+            id: 'CONFLUENCE',
+            chunkSize: 1500,
+            overlapSize: 20,
+            embeddingModel: 'OPENAI',
+          },
+        ]}
+        onSuccess={(data) => {
+          if (data?.action === 'UPDATE') {
+            const externalId = data?.data?.data_source_external_id
+            dataSourceExternalId.current = externalId ?? ''
+            getDataSources()
+          }
+        }}
+        primaryBackgroundColor="#F2F2F2"
+        primaryTextColor="#555555"
+        secondaryBackgroundColor="#f2f2f2"
+        secondaryTextColor="#000000"
+        allowMultipleFiles={true}
+        open={isCarbonConnectOpen}
+        setOpen={setIsCarbonConnectOpen}
+        chunkSize={1500}
+        zIndex={1500}
+      ></CarbonConnect>
+      <CustomDrawer
+        anchor={'right'}
+        open={open}
+        onClose={() => {
+          onClose()
+          resetForm()
+        }}
+        bodyClassName="z-2"
+        width="w-[65vw]"
+      >
+        <div className="relative w-full">
+          {isSaving && (
+            <div className="absolute w-full h-full bg-gray-50 z-10 flex flex-col justify-center items-center">
+              <div>
+                <Spinner center big />
+              </div>
+              <p className="mt-4">Data Source is being created...</p>
+            </div>
+          )}
+          <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
+            Create New Data Source
+          </div>
+          <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
+            <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
+              Documents that are uploaded will be accessible to the public.
+              Please do not upload any confidential or sensitive data.
+            </div>
+            <div className="mb-4 w-full"></div>
             <div>
-              <Spinner center big />
-            </div>
-            <p className="mt-4">Data Source is being created...</p>
-          </div>
-        )}
-        <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
-          Create New Data Source
-        </div>
-        <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
-          <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
-            Documents that are uploaded will be accessible to the public. Please
-            do not upload any confidential or sensitive data.
-          </div>
-          <div className="mb-4 w-full"></div>
-          <div>
-            <div className="mb-2">
-              <label>
-                <div className="label-text font-inter mb-1">
-                  Data Source Type
-                </div>
-                <Select
-                  id="data_sources"
-                  value={selectedDataSourceType}
-                  onChange={(e) => {
-                    setDataSourceUri('')
-                    setFiles([])
-                    setSelectedDataSourceType(e.target.value)
-                  }}
-                  placeholder="Select Data Source FQN"
-                  sx={{
-                    background: 'white',
-                    height: '42px',
-                    width: '100%',
-                    border: '1px solid #CEE0F8 !important',
-                    outline: 'none !important',
-                    '& fieldset': {
-                      border: 'none !important',
-                    },
-                  }}
-                >
-                  {dataLoaders?.map((source: any) => (
-                    <MenuItem value={source.type} key={source.type}>
-                      <div className="capitalize flex items-center gap-1.5">
-                        {source.type}
-                        {source.description && (
-                          <div className="text-sm text-gray-500">
-                            ({source.description})
-                          </div>
-                        )}
+              <div className="mb-2">
+                <label>
+                  <div className="label-text font-inter mb-1">
+                    Data Source Type
+                  </div>
+                  <Select
+                    id="data_sources"
+                    value={selectedDataSourceType}
+                    onChange={(e) => {
+                      setDataSourceUri('')
+                      setFiles([])
+                      setSelectedDataSourceType(e.target.value)
+                    }}
+                    placeholder="Select Data Source FQN"
+                    sx={{
+                      background: 'white',
+                      height: '42px',
+                      width: '100%',
+                      border: '1px solid #CEE0F8 !important',
+                      outline: 'none !important',
+                      '& fieldset': {
+                        border: 'none !important',
+                      },
+                    }}
+                  >
+                    {localDataLoaders?.map((source: any) => (
+                      <MenuItem value={source.type} key={source.type}>
+                        <div className="capitalize flex items-center gap-1.5">
+                          {startCase(source.type)}
+                          {source.description && (
+                            <div className="text-sm text-gray-500">
+                              ({source.description})
+                            </div>
+                          )}
+                        </div>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </label>
+              </div>
+              {selectedDataSourceType === 'localdir' ? (
+                <>
+                  <div className="mb-2">
+                    <label htmlFor="collection-name-input">
+                      <span className="label-text font-inter mb-1">
+                        Source Name
+                      </span>
+                      <small>
+                        {' '}
+                        * Should only contain lowercase alphanumeric character
+                        with hyphen (-)
+                      </small>
+                    </label>
+                    <input
+                      className={classNames(
+                        'block w-full border border-gray-250 outline-none text-md p-2 rounded',
+                        {
+                          'field-error': uploadName && !isValidUploadName,
+                        }
+                      )}
+                      id="collection-name-input"
+                      placeholder={'Enter the source name'}
+                      value={uploadName}
+                      onChange={(e) => setUploadName(e.target.value)}
+                    />
+                    {uploadName && !isValidUploadName && (
+                      <div className="text-error text-xs mt-1 flex gap-1 items-center">
+                        <IconProvider
+                          icon="exclamation-triangle"
+                          className={'w-4 leading-5'}
+                        />
+                        <div className="font-medium">
+                          Source name should only contain lowercase alphanumeric
+                          character with hyphen!
+                        </div>
                       </div>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </label>
-            </div>
-            {selectedDataSourceType === 'localdir' ? (
-              <>
-                <div className="mb-2">
+                    )}
+                  </div>
+                  <label
+                    onDragOver={
+                      isSaving
+                        ? undefined
+                        : (e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                          }
+                    }
+                    onDrop={isSaving ? undefined : handleDrop}
+                  >
+                    <span className="label-text font-inter mb-1">
+                      Choose files or a zip to upload
+                    </span>
+                    <div
+                      className={classNames(
+                        'flex flex-col flex-1 justify-center items-center w-full h-full bg-white p-4 rounded-lg border-1 border-gray-200 border-dashed',
+                        {
+                          'hover:bg-gray-100 cursor-pointer': !isSaving,
+                          'cursor-default': isSaving,
+                        }
+                      )}
+                    >
+                      <div className="text-gray-600 flex flex-col justify-center items-center p-3 gap-2">
+                        <IconProvider icon="cloud-arrow-up" size={2} />
+                        <p className="text-sm leading-5 mb-2 text-center">
+                          <span className="font-[500]">
+                            Click or Drag &amp; Drop to upload files
+                          </span>
+                          <span className="block">
+                            Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
+                            txt, md
+                          </span>
+                        </p>
+                      </div>
+                      <input
+                        disabled={isSaving}
+                        className="hidden"
+                        id="dropzone-file"
+                        type="file"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setFiles([
+                            ...files,
+                            ...getUniqueFiles(e.target.files),
+                          ])
+                        }
+                        multiple
+                      />
+                    </div>
+                  </label>
+                </>
+              ) : selectedDataSourceType === 'carbon' ? (
+                <div className="flex justify-center mt-4">
+                  <Button
+                    text="Connect Carbon"
+                    className="btn-sm text-base p-2 mx-auto"
+                    onClick={() => setIsCarbonConnectOpen(true)}
+                  />
+                </div>
+              ) : (
+                <>
                   <label htmlFor="collection-name-input">
                     <span className="label-text font-inter mb-1">
-                      Source Name
+                      {selectedDataSourceType === 'github'
+                        ? 'GitHub Repo URL'
+                        : selectedDataSourceType === 'truefoundry'
+                        ? 'Data Source FQN'
+                        : selectedDataSourceType === 'artifact'
+                        ? 'Artifact Version FQN'
+                        : 'URL'}
                     </span>
-                    <small>
-                      {' '}
-                      * Should only contain lowercase alphanumeric character
-                      with hyphen (-)
-                    </small>
                   </label>
                   <input
-                    className={classNames(
-                      'block w-full border border-gray-250 outline-none text-md p-2 rounded',
-                      {
-                        'field-error': uploadName && !isValidUploadName,
-                      }
-                    )}
+                    className="block w-full border border-gray-250 outline-none text-md p-2 rounded"
                     id="collection-name-input"
-                    placeholder={'Enter the source name'}
-                    value={uploadName}
-                    onChange={(e) => setUploadName(e.target.value)}
+                    placeholder={`${
+                      selectedDataSourceType === 'github'
+                        ? 'Enter GitHub Repo URL'
+                        : selectedDataSourceType === 'truefoundry'
+                        ? 'Enter Data Source FQN'
+                        : selectedDataSourceType === 'artifact'
+                        ? 'Enter Artifact Version FQN'
+                        : 'Enter Web URL'
+                    }`}
+                    value={dataSourceUri}
+                    onChange={(e) => setDataSourceUri(e.target.value)}
                   />
-                  {uploadName && !isValidUploadName && (
-                    <div className="text-error text-xs mt-1 flex gap-1 items-center">
-                      <IconProvider
-                        icon="exclamation-triangle"
-                        className={'w-4 leading-5'}
-                      />
-                      <div className="font-medium">
-                        Source name should only contain lowercase alphanumeric
-                        character with hyphen!
-                      </div>
-                    </div>
+                </>
+              )}
+              {!!files.length && selectedDataSourceType === 'localdir' && (
+                <div
+                  className={classNames(
+                    'flex flex-col gap-2 p-2 bg-white border rounded-md mt-2',
+                    'max-h-[calc(100vh-30.625rem)]'
                   )}
-                </div>
-                <label
-                  onDragOver={
-                    isSaving
-                      ? undefined
-                      : (e) => {
-                          e.stopPropagation()
-                          e.preventDefault()
-                        }
-                  }
-                  onDrop={isSaving ? undefined : handleDrop}
                 >
-                  <span className="label-text font-inter mb-1">
-                    Choose files or a zip to upload
+                  <span className="text-sm flex justify-between">
+                    Selected Files ({files.length}){' '}
+                    {uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB && (
+                      <span className="text-xs text-red-700">
+                        Selected files total size cannot be more than{' '}
+                        {DOCS_QA_MAX_UPLOAD_SIZE_MB}
+                        MB
+                      </span>
+                    )}
                   </span>
-                  <div
+
+                  <ul
                     className={classNames(
-                      'flex flex-col flex-1 justify-center items-center w-full h-full bg-white p-4 rounded-lg border-1 border-gray-200 border-dashed',
-                      {
-                        'hover:bg-gray-100 cursor-pointer': !isSaving,
-                        'cursor-default': isSaving,
-                      }
+                      'overflow-y-auto',
+                      'max-h-[calc(100vh-33.5rem)]'
                     )}
                   >
-                    <div className="text-gray-600 flex flex-col justify-center items-center p-3 gap-2">
-                      <IconProvider icon="cloud-arrow-up" size={2} />
-                      <p className="text-sm leading-5 mb-2 text-center">
-                        <span className="font-[500]">
-                          Click or Drag &amp; Drop to upload files
-                        </span>
-                        <span className="block">
-                          Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
-                          txt, md
-                        </span>
-                      </p>
-                    </div>
-                    <input
-                      disabled={isSaving}
-                      className="hidden"
-                      id="dropzone-file"
-                      type="file"
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFiles([...files, ...getUniqueFiles(e.target.files)])
-                      }
-                      multiple
-                    />
-                  </div>
-                </label>
-              </>
-            ) : (
-              <>
-                <label htmlFor="collection-name-input">
-                  <span className="label-text font-inter mb-1">
-                    {selectedDataSourceType === 'github'
-                      ? 'GitHub Repo URL'
-                      : selectedDataSourceType === 'truefoundry'
-                      ? 'Data Source FQN'
-                      : selectedDataSourceType === 'artifact'
-                      ? 'Artifact Version FQN'
-                      : 'URL'}
-                  </span>
-                </label>
-                <input
-                  className="block w-full border border-gray-250 outline-none text-md p-2 rounded"
-                  id="collection-name-input"
-                  placeholder={`${
-                    selectedDataSourceType === 'github'
-                      ? 'Enter GitHub Repo URL'
-                      : selectedDataSourceType === 'truefoundry'
-                      ? 'Enter Data Source FQN'
-                      : selectedDataSourceType === 'artifact'
-                      ? 'Enter Artifact Version FQN'
-                      : 'Enter Web URL'
-                  }`}
-                  value={dataSourceUri}
-                  onChange={(e) => setDataSourceUri(e.target.value)}
-                />
-              </>
-            )}
-            {!!files.length && selectedDataSourceType === 'localdir' && (
-              <div
-                className={classNames(
-                  'flex flex-col gap-2 p-2 bg-white border rounded-md mt-2',
-                  'max-h-[calc(100vh-30.625rem)]'
-                )}
-              >
-                <span className="text-sm flex justify-between">
-                  Selected Files ({files.length}){' '}
-                  {uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB && (
-                    <span className="text-xs text-red-700">
-                      Selected files total size cannot be more than{' '}
-                      {DOCS_QA_MAX_UPLOAD_SIZE_MB}
-                      MB
-                    </span>
-                  )}
-                </span>
-
-                <ul
-                  className={classNames(
-                    'overflow-y-auto',
-                    'max-h-[calc(100vh-33.5rem)]'
-                  )}
-                >
-                  {files.map(({ id, file }, idx) => (
-                    <li
-                      key={id}
-                      className="flex flex-row gap-2 p-2 bg-white shadow rounded-lg border mb-2 justify-between items-center"
-                    >
-                      <div className="flex items-center gap-2">
-                        {idx + 1}.
-                        <div className="flex flex-col gap-1">
-                          <div className="font-inter text-sm leading-4">
-                            {file.name}
+                    {files.map(({ id, file }, idx) => (
+                      <li
+                        key={id}
+                        className="flex flex-row gap-2 p-2 bg-white shadow rounded-lg border mb-2 justify-between items-center"
+                      >
+                        <div className="flex items-center gap-2">
+                          {idx + 1}.
+                          <div className="flex flex-col gap-1">
+                            <div className="font-inter text-sm leading-4">
+                              {file.name}
+                            </div>
+                            <DarkTooltip title={`${file.size} bytes`}>
+                              <Badge
+                                text={parseFileSize(file.size)}
+                                type="gray"
+                                className="cursor-default"
+                              />
+                            </DarkTooltip>
                           </div>
-                          <DarkTooltip title={`${file.size} bytes`}>
-                            <Badge
-                              text={parseFileSize(file.size)}
-                              type="gray"
-                              className="cursor-default"
-                            />
-                          </DarkTooltip>
                         </div>
-                      </div>
 
-                      {isSaving ? (
-                        <div
-                          className={classNames(
-                            'w-5 h-5 rounded-full flex items-center justify-center',
-                            {
-                              'bg-emerald-100 text-emerald-800':
-                                uploadedFileIds.includes(id),
+                        {isSaving ? (
+                          <div
+                            className={classNames(
+                              'w-5 h-5 rounded-full flex items-center justify-center',
+                              {
+                                'bg-emerald-100 text-emerald-800':
+                                  uploadedFileIds.includes(id),
+                              }
+                            )}
+                          >
+                            {uploadedFileIds.includes(id) ? (
+                              <IconProvider
+                                icon={'fa-check'}
+                                className="text-emerald-800"
+                              />
+                            ) : (
+                              <Spinner small />
+                            )}
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            icon="trash-alt"
+                            iconClasses="text-xs text-gray-400"
+                            className="btn-sm bg-white hover:bg-white hover:border-gray-500"
+                            onClick={() =>
+                              setFiles(files.filter((f) => f.id !== id))
                             }
-                          )}
-                        >
-                          {uploadedFileIds.includes(id) ? (
-                            <IconProvider
-                              icon={'fa-check'}
-                              className="text-emerald-800"
-                            />
-                          ) : (
-                            <Spinner small />
-                          )}
-                        </div>
-                      ) : (
-                        <Button
-                          type="button"
-                          icon="trash-alt"
-                          iconClasses="text-xs text-gray-400"
-                          className="btn-sm bg-white hover:bg-white hover:border-gray-500"
-                          onClick={() =>
-                            setFiles(files.filter((f) => f.id !== id))
-                          }
-                          white
-                        />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                            white
+                          />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
+            <Button
+              outline
+              text="Cancel"
+              onClick={() => {
+                onClose()
+                resetForm()
+              }}
+              className="border-gray-500 gap-1 btn-sm font-normal"
+              type="button"
+            />
+            <Button
+              text="Submit"
+              onClick={handleSubmit}
+              className="gap-1 btn-sm font-normal"
+              type="button"
+              disabled={
+                isSaving ||
+                (selectedDataSourceType === 'localdir' &&
+                  (files.length === 0 ||
+                    uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB ||
+                    !uploadName ||
+                    !isValidUploadName)) ||
+                (selectedDataSourceType === 'carbon'
+                  ? !dataSourceId
+                  : selectedDataSourceType !== 'localdir' && !dataSourceUri)
+              }
+            />
           </div>
         </div>
-        <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
-          <Button
-            outline
-            text="Cancel"
-            onClick={() => {
-              onClose()
-              resetForm()
-            }}
-            className="border-gray-500 gap-1 btn-sm font-normal"
-            type="button"
-          />
-          <Button
-            text="Submit"
-            onClick={handleSubmit}
-            className="gap-1 btn-sm font-normal"
-            type="button"
-            disabled={
-              isSaving ||
-              (selectedDataSourceType === 'localdir' &&
-                (files.length === 0 ||
-                  uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB ||
-                  !uploadName ||
-                  !isValidUploadName)) ||
-              (selectedDataSourceType !== 'localdir' && !dataSourceUri)
-            }
-          />
-        </div>
-      </div>
-    </CustomDrawer>
+      </CustomDrawer>
+    </>
   )
 }
 
