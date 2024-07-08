@@ -32,7 +32,6 @@ class Settings(BaseSettings):
     TFY_LLM_GATEWAY_URL: str = ""
 
     CARBON_AI_API_KEY: str = ""
-    CARBON_AI_DEFAULT_CUSTOMER_ID: str = ""
 
     @root_validator(pre=True)
     def _validate_values(cls, values):

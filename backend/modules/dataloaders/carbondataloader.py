@@ -12,7 +12,7 @@ from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPo
 
 class CarbonDataLoader(BaseDataLoader):
     """
-    Load data from any  source that carbon ai supports
+    Load data from variety of sources like Google Drive, Confluence, Notion and more
     """
 
     def _download_file(self, url: str, local_filepath: str, chunk_size: int = 8192):
@@ -31,9 +31,10 @@ class CarbonDataLoader(BaseDataLoader):
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
+        carbon_customer_id, carbon_data_source_id = data_source.uri.split("/")
         carbon = Carbon(
             api_key=settings.CARBON_AI_API_KEY,
-            customer_id=settings.CARBON_AI_DEFAULT_CUSTOMER_ID,
+            customer_id=carbon_customer_id,
         )
 
         query_user_files_response = carbon.files.query_user_files(
@@ -43,7 +44,7 @@ class CarbonDataLoader(BaseDataLoader):
             },
             order_by="created_at",
             order_dir="desc",
-            filters={"organization_user_data_source_id": [int(data_source.uri)]},
+            filters={"organization_user_data_source_id": [int(carbon_data_source_id)]},
             include_raw_file=True,
             include_parsed_text_file=False,
             include_additional_files=False,  # TODO (chiragjn): Evaluate later
@@ -57,7 +58,7 @@ class CarbonDataLoader(BaseDataLoader):
             file_id = file.external_file_id
             _, file_extension = os.path.splitext(filename)
             local_filepath = os.path.join(dest_dir, f"{file_id}-{filename}")
-            logger.debug(
+            logger.info(
                 f"Downloading file {filename} from {file.source} data source type to {local_filepath}"
             )
             self._download_file(url=url, local_filepath=local_filepath)
@@ -91,6 +92,15 @@ class CarbonDataLoader(BaseDataLoader):
                     data_source_fqn=data_point.data_source_fqn,
                     local_filepath=local_filepath,
                     file_extension=file_extension,
+                    metadata={
+                        "data_source_type": file.source,
+                        "id": file.id,
+                        "external_file_id": file.external_file_id,
+                        "filename": filename,
+                        "file_format": file.file_statistics.file_format,
+                        "mime_type": file.file_statistics.mime_type,
+                        "created_at": file.source_created_at,
+                    },
                 )
             )
             if len(loaded_data_points) >= batch_size:
