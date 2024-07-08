@@ -14,6 +14,10 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
+from backend.modules.query_controllers.common import (
+    intent_summary_search,
+    internet_search,
+)
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
@@ -254,6 +258,12 @@ class MultiModalRAGQueryController:
         Sample answer method to answer the question using the context from the collection
         """
         try:
+            if request.internet_search_enabled is True:
+                return {
+                    "answer": "Internet search is not available for multimodal RAG yet",
+                    "docs": [],
+                }
+
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
 

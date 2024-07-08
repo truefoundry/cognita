@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # TODO: This will be removed in future releases - after fixing multimodal parser
     TFY_LLM_GATEWAY_URL: str = ""
 
+    BRAVE_API_KEY: str = ""
+
     @root_validator(pre=True)
     def _validate_values(cls, values):
         models_config_path = values.get("MODELS_CONFIG_PATH")

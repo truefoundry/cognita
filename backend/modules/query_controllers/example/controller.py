@@ -14,6 +14,10 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
+from backend.modules.query_controllers.common import (
+    intent_summary_search,
+    internet_search,
+)
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
@@ -44,13 +48,24 @@ class BasicRAGQueryController:
         """
         return PromptTemplate(input_variables=input_variables, template=template)
 
-    def _format_docs(self, docs):
+    def _format_docs(self, docs, query, internet_search_enabled=False):
         formatted_docs = list()
         for doc in docs:
             doc.metadata.pop("image_b64", None)
             formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
+
+        if internet_search_enabled:
+            # internet_search_results = internet_search(query)
+            intent_summary_results = intent_summary_search(query)
+            formatted_docs.append(
+                {
+                    "page_content": f"{intent_summary_results}",
+                    "metadata": {"source": "Intent Summary Search"},
+                }
+            )
+
         return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
@@ -208,6 +223,7 @@ class BasicRAGQueryController:
         """
         Sample answer method to answer the question using the context from the collection
         """
+        logger.info(f"Request: {request.dict()}")
         try:
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
@@ -231,7 +247,12 @@ class BasicRAGQueryController:
             # Using LCEL
             rag_chain_from_docs = (
                 RunnablePassthrough.assign(
-                    context=(lambda x: self._format_docs(x["context"]))
+                    # add internet search results to context
+                    context=(
+                        lambda x: self._format_docs(
+                            x["context"], request.query, request.internet_search_enabled
+                        )
+                    )
                 )
                 | QA_PROMPT
                 | llm

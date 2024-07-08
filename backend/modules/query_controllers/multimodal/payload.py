@@ -10,6 +10,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "retriever_name": "vectorstore",
     "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
@@ -38,6 +39,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
@@ -63,6 +65,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
         "search_kwargs": {"score_threshold": 0.7},
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -90,6 +93,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
         "search_kwargs": {"k": 10},
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
@@ -121,6 +125,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
@@ -151,6 +156,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
         "search_kwargs": {"score_threshold": 0.7},
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD = {
@@ -182,6 +188,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -215,6 +222,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -244,6 +252,7 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -280,6 +289,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -312,6 +322,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -344,6 +355,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         },
     },
     "stream": False,
+    "internet_search_enabled": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
