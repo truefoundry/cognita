@@ -32,3 +32,7 @@ transformers==4.40.2
 
 ### prisma
 prisma==0.13.1
+
+
+# carbon
+carbon-python-sdk==0.2.11
