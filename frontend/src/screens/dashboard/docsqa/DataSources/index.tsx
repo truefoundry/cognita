@@ -1,16 +1,15 @@
-import React, { useMemo } from 'react'
-import axios from 'axios'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import Button from '@/components/base/atoms/Button'
 import Table from '@/components/base/molecules/Table'
 import {
   useDeleteDataSourceMutation,
   useGetDataSourcesQuery,
 } from '@/stores/qafoundry'
-import CopyField from '@/components/base/atoms/CopyField'
-import notify from '@/components/base/molecules/Notify'
-import { CARBON_API_KEY, IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import React, { useMemo } from 'react'
 import NewDataSource from '../NewDataSource'
+import CopyField from '@/components/base/atoms/CopyField'
+import { IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
+import notify from '@/components/base/molecules/Notify'
 
 const DeleteDataSource = ({ fqn }: { fqn: string }) => {
   const [deleteDataSource, { isLoading }] = useDeleteDataSourceMutation()
@@ -104,20 +103,6 @@ const DataHub = () => {
         : [],
     [dataSources]
   )
-
-  const tokenFetcher = async () => {
-    const response = await axios.get(
-      'https://api.carbon.ai/auth/v1/access_token',
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'customer-id': 'test_cognita',
-          authorization: `Bearer ${CARBON_API_KEY}`,
-        },
-      }
-    )
-    return response.data
-  }
 
   return (
     <>
