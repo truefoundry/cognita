@@ -58,7 +58,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
-  const [localDataLoaders, setLocalDataLoaders] = useState<any[]>([])
   const [isCarbonConnectOpen, setIsCarbonConnectOpen] = useState(false)
   const [dataSourceId, setDataSourceId] = useState('')
   const dataSourceExternalId = React.useRef('')
@@ -78,14 +77,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   }, [files])
 
   useEffect(() => {
-    if (dataLoaders)
-      setLocalDataLoaders([
-        ...dataLoaders,
-        {
-          type: 'carbon',
-          description: 'Load Data from various types of sources',
-        },
-      ])
     if (dataLoaders && !selectedDataSourceType)
       setSelectedDataSourceType(dataLoaders[0]?.type)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -368,7 +359,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                       },
                     }}
                   >
-                    {localDataLoaders?.map((source: any) => (
+                    {dataLoaders?.map((source: any) => (
                       <MenuItem value={source.type} key={source.type}>
                         <div className="capitalize flex items-center gap-1.5">
                           {startCase(source.type)}
