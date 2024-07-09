@@ -137,6 +137,7 @@ services:
             - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
+            - BRAVE_API_KEY=${BRAVE_API_KEY}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
             - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
         entrypoint: /bin/bash

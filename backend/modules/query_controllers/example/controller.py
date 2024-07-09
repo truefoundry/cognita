@@ -6,14 +6,20 @@ from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
+from langchain.schema.document import Document
 from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnableParallel,
+    RunnablePassthrough,
+)
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
+from backend.modules.query_controllers.common import intent_summary_search
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
@@ -23,10 +29,9 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
-
-# from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
+from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
@@ -51,6 +56,7 @@ class BasicRAGQueryController:
             formatted_docs.append(
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
+
         return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
@@ -61,6 +67,22 @@ class BasicRAGQueryController:
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
         return formatted_docs
+
+    def _internet_search(self, context):
+        logger.info("Using Internet search...")
+        if settings.BRAVE_API_KEY:
+            data_context, question = context["context"], context["question"]
+            intent_summary_results = intent_summary_search(question)
+            # insert internet search results into context at the beginning
+            data_context.insert(
+                0,
+                Document(
+                    page_content=intent_summary_results,
+                    metadata={"_data_point_fqn": "internet::Internet"},
+                ),
+            )
+            context["context"] = data_context
+        return context
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
@@ -208,6 +230,7 @@ class BasicRAGQueryController:
         """
         Sample answer method to answer the question using the context from the collection
         """
+        logger.info(f"Request: {request.dict()}")
         try:
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
@@ -231,7 +254,12 @@ class BasicRAGQueryController:
             # Using LCEL
             rag_chain_from_docs = (
                 RunnablePassthrough.assign(
-                    context=(lambda x: self._format_docs(x["context"]))
+                    # add internet search results to context
+                    context=(
+                        lambda x: self._format_docs(
+                            x["context"],
+                        )
+                    )
                 )
                 | QA_PROMPT
                 | llm
@@ -240,7 +268,16 @@ class BasicRAGQueryController:
 
             rag_chain_with_source = RunnableParallel(
                 {"context": retriever, "question": RunnablePassthrough()}
-            ).assign(answer=rag_chain_from_docs)
+            )
+
+            if request.internet_search_enabled:
+                rag_chain_with_source = (
+                    rag_chain_with_source | self._internet_search
+                ).assign(answer=rag_chain_from_docs)
+            else:
+                rag_chain_with_source = rag_chain_with_source.assign(
+                    answer=rag_chain_from_docs
+                )
 
             if request.stream:
                 return StreamingResponse(
@@ -255,6 +292,10 @@ class BasicRAGQueryController:
                 # Just the retriever
                 # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
                 # outputs = await setup_and_retrieval.ainvoke(request.query)
+                # print(outputs)
+
+                # Retriever, internet search
+                # outputs = await (setup_and_retrieval | self.internet_search).ainvoke(request.query)
                 # print(outputs)
 
                 # Retriever and QA

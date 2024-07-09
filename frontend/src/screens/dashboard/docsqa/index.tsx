@@ -86,6 +86,7 @@ const DocsQA = () => {
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
   const [isStreamEnabled, setIsStreamEnabled] = useState(false)
+  const [isInternetSearchEnabled, setIsInternetSearchEnabled] = useState(false)
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
   const [applicationName, setApplicationName] = useState('')
@@ -161,6 +162,7 @@ const DocsQA = () => {
           retriever_name: selectedRetriever?.name ?? '',
           retriever_config: JSON.parse(retrieverConfig),
           prompt_template: promptTemplate,
+          internet_search_enabled: isInternetSearchEnabled,
         },
         {}
       )
@@ -473,6 +475,13 @@ const DocsQA = () => {
                 <Switch
                   checked={isStreamEnabled}
                   onChange={(e) => setIsStreamEnabled(e.target.checked)}
+                />
+              </div>
+              <div className="flex justify-between items-center mt-1.5">
+                <div className="text-sm">Internet Search</div>
+                <Switch
+                  checked={isInternetSearchEnabled}
+                  onChange={(e) => setIsInternetSearchEnabled(e.target.checked)}
                 />
               </div>
               <div className="mb-1 mt-2 text-sm">Prompt Template:</div>

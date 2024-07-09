@@ -126,6 +126,10 @@ class ExampleQueryInput(BaseModel):
 
     stream: Optional[bool] = Field(title="Stream the results", default=False)
 
+    internet_search_enabled: Optional[bool] = Field(
+        title="Enable internet search", default=False
+    )
+
     @root_validator()
     def validate_retriever_type(cls, values: Dict) -> Dict:
         retriever_name = values.get("retriever_name")
