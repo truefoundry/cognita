@@ -24,6 +24,7 @@ import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
 import { CarbonConnect, EmbeddingGenerators } from 'carbon-connect'
 import axios from 'axios'
+import Logo from '@/assets/img/logos/logo.svg'
 
 const CUSTOMER_ID = 'cognita'
 
@@ -249,11 +250,11 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
     <>
       <CarbonConnect
         orgName="Cognita"
-        brandIcon="path/to/your/brand/icon"
+        brandIcon={Logo}
         embeddingModel={EmbeddingGenerators.OPENAI_ADA_LARGE_1024}
         tokenFetcher={tokenFetcher}
         tags={{
-          tag1: 'text_cognita',
+          tag1: 'cognita',
           tag2: 'gdrive',
         }}
         maxFileSize={10000000}
