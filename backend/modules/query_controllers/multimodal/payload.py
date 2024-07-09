@@ -1,4 +1,4 @@
-PROMPT = "You are an AI assistant specialising in information retrieval. Answer the following question precisely by extracting the relavant information given in the images.\nQuestion: {question}"
+PROMPT = "You are an AI assistant specialising in information retrieval. Answer the following question precisely by extracting the relevant information given in the images and context.\nQuestion: {question}"
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "collection_name": "finance",
     "query": "Explain key operating metrics of FY20",

@@ -6,6 +6,7 @@ from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
+from langchain.schema.document import Document
 from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
@@ -14,10 +15,7 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
-from backend.modules.query_controllers.common import (
-    intent_summary_search,
-    internet_search,
-)
+from backend.modules.query_controllers.common import intent_summary_search
 from backend.modules.query_controllers.multimodal.payload import (
     PROMPT,
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
@@ -30,6 +28,7 @@ from backend.modules.query_controllers.multimodal.types import (
 )
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
+from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
@@ -64,6 +63,22 @@ class MultiModalRAGQueryController:
                 {"page_content": doc.page_content, "metadata": doc.metadata}
             )
         return formatted_docs
+
+    def _internet_search(self, context):
+        logger.info("Using Internet search...")
+        if settings.BRAVE_API_KEY:
+            data_context, question = context["context"], context["question"]
+            intent_summary_results = intent_summary_search(question)
+            # insert internet search results into context at the beginning
+            data_context.insert(
+                0,
+                Document(
+                    page_content=intent_summary_results,
+                    metadata={"_data_point_fqn": "internet::Internet"},
+                ),
+            )
+            context["context"] = data_context
+        return context
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
@@ -258,12 +273,6 @@ class MultiModalRAGQueryController:
         Sample answer method to answer the question using the context from the collection
         """
         try:
-            if request.internet_search_enabled is True:
-                return {
-                    "answer": "Internet search is not available for multimodal RAG yet",
-                    "docs": [],
-                }
-
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)
 
@@ -282,13 +291,23 @@ class MultiModalRAGQueryController:
                 logger.info(f"Using default prompt")
                 prompt = PROMPT.format(question=request.query)
 
-            # Generate payload for VLM
-            images_set = set()
-
             setup_and_retrieval = RunnableParallel(
                 {"context": retriever, "question": RunnablePassthrough()}
             )
-            outputs = await setup_and_retrieval.ainvoke(request.query)
+
+            # Generate payload for VLM
+            images_set = set()
+            internet_search_result = ""
+            if request.internet_search_enabled:
+                outputs = await (setup_and_retrieval | self._internet_search).ainvoke(
+                    request.query
+                )
+                internet_search_result = outputs["context"][0].page_content
+                if request.internet_search_enabled:
+                    prompt += f"\nContext: {internet_search_result}"
+                    logger.info(f"Prompt: {prompt}")
+            else:
+                outputs = await setup_and_retrieval.ainvoke(request.query)
 
             if "context" in outputs:
                 docs = outputs["context"]
