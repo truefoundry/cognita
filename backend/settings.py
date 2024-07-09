@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     BRAVE_API_KEY: str = ""
 
+    CARBON_AI_API_KEY: str = ""
+
     @root_validator(pre=True)
     def _validate_values(cls, values):
         models_config_path = values.get("MODELS_CONFIG_PATH")

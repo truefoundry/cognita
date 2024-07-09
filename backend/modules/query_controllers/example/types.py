@@ -1,6 +1,6 @@
 from typing import Any, ClassVar, Collection, Dict, Optional
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, root_validator
 from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import ModelConfig
