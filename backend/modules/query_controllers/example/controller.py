@@ -274,6 +274,10 @@ class BasicRAGQueryController:
                 rag_chain_with_source = (
                     rag_chain_with_source | self._internet_search
                 ).assign(answer=rag_chain_from_docs)
+            else:
+                rag_chain_with_source = rag_chain_with_source.assign(
+                    answer=rag_chain_from_docs
+                )
 
             if request.stream:
                 return StreamingResponse(
