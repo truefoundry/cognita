@@ -28,8 +28,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
 
-    # TODO: This will be removed in future releases - after fixing multimodal parser
-    TFY_LLM_GATEWAY_URL: str = ""
+    BRAVE_API_KEY: str = ""
 
     CARBON_AI_API_KEY: str = ""
 
