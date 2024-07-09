@@ -25,7 +25,7 @@ import classNames from '@/utils/classNames'
 import { CarbonConnect, EmbeddingGenerators } from 'carbon-connect'
 import axios from 'axios'
 
-const CUSTOMER_ID = 'test_cognita'
+const CUSTOMER_ID = 'cognita'
 
 const parseFileSize = (size: number) => {
   const units = ['B', 'Ki', 'Mi', 'Gi']
