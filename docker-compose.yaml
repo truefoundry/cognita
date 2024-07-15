@@ -99,6 +99,7 @@ services:
             - cognita-docker
 
     cognita-parser:
+        # Docs: http://localhost:9500/general/docs
         image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
         pull_policy: if_not_present
         restart: unless-stopped
