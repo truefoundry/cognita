@@ -14,12 +14,15 @@ import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
 export const defaultParserConfigs = `{
-  "chunk_size": 500,
-  "chunk_overlap": 0,
+  "chunk_size": 2000,
   "parser_map": {
-    ".md": "MarkdownParser",
-    ".pdf": "PdfParserFast",
-    ".txt": "TextParser"
+    ".pdf": "MultiModalParser"
+  },
+  "additional_config": {
+    "model_configuration": {
+      "name": "truefoundry/openai-main/gpt-4-turbo"
+    },
+    "prompt": "Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents. Specifically, the information should include but not limited to: - Title of the Image: Provide a title from the charts or image if any. - Type of Chart: Determine the type of each chart (e.g., bar chart, line chart, pie chart, scatter plot, etc.) and its key features (e.g., labels, legends, data points). - Data Trends: Describe any notable trends or patterns visible in the data. This may include increasing/decreasing trends, seasonality, outliers, etc. - Key Insights: Extract key insights or observations from the charts. What do the charts reveal about the underlying data? Are there any significant findings that stand out? - Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights. - Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets. - Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."
   }
 }`
 

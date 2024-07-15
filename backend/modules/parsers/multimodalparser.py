@@ -2,12 +2,9 @@ import asyncio
 import base64
 import io
 import os
-import sys
-import traceback
 from itertools import islice
 from typing import Optional
 
-import aiohttp
 import cv2
 import fitz
 import numpy as np
@@ -20,7 +17,6 @@ from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-from backend.settings import settings
 from backend.types import ModelConfig
 
 
@@ -49,7 +45,6 @@ class MultiModalParser(BaseParser):
     Parser Configuration will look like the following while creating the collection:
     {
         "chunk_size": 1000,
-        "chunk_overlap": 20,
         "parser_map": {
             ".pdf": "MultiModalParser",
         },
@@ -62,12 +57,10 @@ class MultiModalParser(BaseParser):
     }
     """
 
-    supported_file_extensions = [".pdf"]
+    supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
     def __init__(
         self,
-        max_chunk_size: int = 1000,
-        chunk_overlap: int = 20,
         additional_config: dict = None,
         *args,
         **kwargs,
@@ -76,8 +69,6 @@ class MultiModalParser(BaseParser):
         Initializes the MultiModalParser object.
         """
         additional_config = additional_config or {}
-        self.max_chunk_size = max_chunk_size
-        self.chunk_overlap = chunk_overlap
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
         if "model_configuration" in additional_config:
@@ -153,38 +144,57 @@ Conclude with a summary of the key findings from your analysis and any recommend
         """
         final_texts = []
         try:
-            if not filepath.endswith(".pdf"):
+            if (
+                not filepath.endswith(".pdf")
+                and not filepath.endswith(".png")
+                and not filepath.endswith(".jpeg")
+                and not filepath.endswith(".jpg")
+            ):
                 logger.error(
-                    "Invalid file extension. MultiModalParser only supports PDF files."
+                    "Invalid file extension. MultiModalParser only supports PDF, PNG, JPEG, JPG files."
                 )
                 return []
 
-            # Open the PDF file using pdfplumber
-            doc = fitz.open(filepath)
-
             # get file path & name
             file_path, file_name = os.path.split(filepath)
-            pages = dict()
 
-            # Iterate over each page in the PDF
-            logger.info(f"\n\nLoading all pages...")
-            for page in doc:
-                page_number = page.number + 1
-                try:
-                    # Convert the page to an image (RGB mode)
-                    pix = page.get_pixmap(alpha=False)
-                    img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                        (pix.h, pix.w, pix.n)
-                    )
+            if filepath.endswith(".pdf"):
+                # Open the PDF file using pdfplumber
+                doc = fitz.open(filepath)
+                pages = dict()
 
-                    # Convert the image to base64
-                    _, buffer = cv2.imencode(".png", img)
-                    image_base64 = base64.b64encode(buffer).decode("utf-8")
+                # Iterate over each page in the PDF
+                logger.info(f"\n\nLoading all pages...")
+                for page in doc:
+                    page_number = page.number + 1
+                    try:
+                        # Convert the page to an image (RGB mode)
+                        pix = page.get_pixmap(alpha=False)
+                        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+                            (pix.h, pix.w, pix.n)
+                        )
 
-                    pages[page_number] = image_base64
-                except Exception as e:
-                    logger.exception(f"Error in page: {page_number} - {e}")
-                    continue
+                        # Convert the image to base64
+                        _, buffer = cv2.imencode(".png", img)
+                        image_base64 = base64.b64encode(buffer).decode("utf-8")
+
+                        pages[page_number] = image_base64
+                    except Exception as e:
+                        logger.exception(f"Error in page: {page_number} - {e}")
+                        continue
+
+                logger.info(f"Total Pages: {len(pages)}")
+
+            elif (
+                filepath.endswith(".png")
+                or filepath.endswith(".jpeg")
+                or filepath.endswith(".jpg")
+            ):
+                # Convert the image to base64
+                with open(filepath, "rb") as f:
+                    image_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+                pages = {0: image_base64}
 
             # make parallel requests to VLM for all pages
             prompt = self.prompt

@@ -28,8 +28,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
 
-    # TODO: This will be removed in future releases - after fixing multimodal parser
-    TFY_LLM_GATEWAY_URL: str = ""
+    UNSTUCTURED_IO_URL: str = ""
+
+    UNSTUCTURED_IO_API_KEY: str = ""
 
     @root_validator(pre=True)
     def _validate_values(cls, values):
@@ -57,3 +58,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+print(settings)
