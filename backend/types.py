@@ -143,19 +143,14 @@ class ParserConfig(BaseModel):
 
     chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
 
-    chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
-
     parser_map: Dict[str, str] = Field(
         title="Mapping of file extensions to parsers",
-        default={
-            ".md": "MarkdownParser",
-            ".pdf": "PdfParserFast",
-        },
+        default_factory=dict,
     )
 
     additional_config: Optional[Dict[str, Any]] = Field(
         title="Additional optional configuration for the parser",
-        default={"key": "value"},
+        default_factory=dict,
     )
 
 
