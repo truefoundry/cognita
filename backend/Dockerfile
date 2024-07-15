@@ -9,7 +9,6 @@ RUN python3 -m venv /virtualenvs/venv/
 # Copy requirements.txt
 COPY backend/requirements.txt /tmp/requirements.txt
 COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
-COPY backend/parsers.requirements.txt /tmp/parsers.requirements.txt
 
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel && \
