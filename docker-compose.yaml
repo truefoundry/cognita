@@ -110,13 +110,21 @@ services:
             - 9500
         environment:
             - PORT=9500
-        # TODO: fix healthcheck
-        # healthcheck:
-        #     test: ["CMD", "curl", "-f", "http://localhost:9500/healthcheck"]
-        #     interval: 30s
-        #     timeout: 5s
-        #     retries: 3
-        #     start_period: 5s
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "-O",
+                    "/dev/null",
+                    "-o",
+                    "/dev/null",
+                    "http://localhost:9500/healthcheck",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 5s
         networks:
             - cognita-docker
 
@@ -137,10 +145,9 @@ services:
             qdrant-server:
                 condition: service_healthy
                 restart: true
-            # TODO: fix healthcheck
-            # cognita-parser:
-            #     condition: service_healthy
-            #     restart: true
+            cognita-parser:
+                condition: service_healthy
+                restart: true
         volumes:
             - .:/app
             - ./volumes/pgdata:/var/lib/postgresql/data
