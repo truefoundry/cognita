@@ -79,6 +79,7 @@ def get_parser_for_extension(
         logger.debug(
             f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {name}"
         )
+        return PARSER_REGISTRY[name](*args, **kwargs)
     else:
         name = parsers_map[file_extension].parser
         logger.debug(

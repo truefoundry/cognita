@@ -82,6 +82,8 @@ class TrueFoundryLoader(BaseDataLoader):
                     if f.startswith("."):
                         continue
                     full_path = os.path.join(root, f)
+                    if ".truefoundry" in full_path:
+                        continue
                     logger.debug(f"Processing file: {full_path}")
                     rel_path = os.path.relpath(full_path, dest_dir)
                     file_ext = os.path.splitext(f)[1]
