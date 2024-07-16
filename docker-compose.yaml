@@ -169,7 +169,7 @@ services:
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
-            - UNSTUCTURED_IO_URL=${UNSTUCTURED_IO_URL}
+            - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
