@@ -72,12 +72,12 @@ class UnstructuredIoParser(BaseParser):
                 headers = {
                     "accept": "application/json",
                 }
-                if settings.UNSTUCTURED_IO_API_KEY:
-                    headers["unstructured-api-key"] = settings.UNSTUCTURED_IO_API_KEY
+                if settings.UNSTRUCTURED_IO_API_KEY:
+                    headers["unstructured-api-key"] = settings.UNSTRUCTURED_IO_API_KEY
 
                 # Send POST request
                 response = self.session.post(
-                    settings.UNSTUCTURED_IO_URL.rstrip("/") + "/general/v0/general",
+                    settings.UNSTRUCTURED_IO_URL.rstrip("/") + "/general/v0/general",
                     headers=headers,
                     files=files,
                     data=data,

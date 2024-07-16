@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
 
-    UNSTUCTURED_IO_URL: str = ""
+    UNSTRUCTURED_IO_URL: str = ""
 
-    UNSTUCTURED_IO_API_KEY: str = ""
+    UNSTRUCTURED_IO_API_KEY: str = ""
 
     @root_validator(pre=True)
     def _validate_values(cls, values):
