@@ -80,7 +80,7 @@ class UnstructuredIoParser(BaseParser):
                     files=files,
                     data=data,
                 )
-
+response.raise_for_status()
             parsed_data = response.json()
             for payload in parsed_data:
                 text = payload["text"]
