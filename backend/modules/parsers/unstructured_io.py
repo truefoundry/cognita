@@ -61,7 +61,7 @@ class UnstructuredIoParser(BaseParser):
         """
         Asynchronously extracts text from unstructured input and returns it in chunks.
         """
-        final_texts = list()
+        final_texts = []
         try:
             with open(filepath, "rb") as f:
                 # Define files payload
