@@ -51,35 +51,38 @@ class UnstructuredIoParser(BaseParser):
         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
         self.session.mount("https://", self.adapter)
         self.session.mount("http://", self.adapter)
-        self.headers = {
-            "accept": "application/json",
-        }
-        if settings.UNSTUCTURED_IO_API_KEY:
-            self.headers["unstructured-api-key"] = settings.UNSTUCTURED_IO_API_KEY
 
     async def get_chunks(self, filepath: str, metadata: dict, *args, **kwargs):
         """
         Asynchronously extracts text from unstructured input and returns it in chunks.
         """
-        final_texts = list()
+        final_texts = []
         try:
             with open(filepath, "rb") as f:
                 # Define files payload
                 files = {"files": f}
                 data = {
                     "strategy": "auto",
+                    # applies language pack for ocr - visit https://github.com/tesseract-ocr/tessdata for more info
                     "languages": ["eng", "hin"],
                     "chunking_strategy": "by_title",
                     "max_characters": self.max_chunk_size,
                 }
 
+                headers = {
+                    "accept": "application/json",
+                }
+                if settings.UNSTUCTURED_IO_API_KEY:
+                    headers["unstructured-api-key"] = settings.UNSTUCTURED_IO_API_KEY
+
                 # Send POST request
                 response = self.session.post(
                     settings.UNSTUCTURED_IO_URL.rstrip("/") + "/general/v0/general",
-                    headers=self.headers,
+                    headers=headers,
                     files=files,
                     data=data,
                 )
+                response.raise_for_status()
 
             parsed_data = response.json()
             for payload in parsed_data:
@@ -89,4 +92,4 @@ class UnstructuredIoParser(BaseParser):
             return final_texts
         except Exception as e:
             logger.exception(f"Final Exception: {e}")
-            return final_texts
+            raise e

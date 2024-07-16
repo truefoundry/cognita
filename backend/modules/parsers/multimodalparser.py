@@ -150,10 +150,9 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 and not filepath.endswith(".jpeg")
                 and not filepath.endswith(".jpg")
             ):
-                logger.error(
+                raise Exception(
                     "Invalid file extension. MultiModalParser only supports PDF, PNG, JPEG, JPG files."
                 )
-                return []
 
             # get file path & name
             file_path, file_name = os.path.split(filepath)
@@ -161,7 +160,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             if filepath.endswith(".pdf"):
                 # Open the PDF file using pdfplumber
                 doc = fitz.open(filepath)
-                pages = dict()
+                pages = {}
 
                 # Iterate over each page in the PDF
                 logger.info(f"\n\nLoading all pages...")
@@ -248,4 +247,4 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return final_texts
         except Exception as e:
             logger.exception(f"Final Exception: {e}")
-            return final_texts
+            raise e

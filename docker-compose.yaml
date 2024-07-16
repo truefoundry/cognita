@@ -98,7 +98,7 @@ services:
         networks:
             - cognita-docker
 
-    cognita-parser:
+    unstructured-io-parsers:
         # Docs: http://localhost:9500/general/docs
         image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
         pull_policy: if_not_present
@@ -145,7 +145,7 @@ services:
             qdrant-server:
                 condition: service_healthy
                 restart: true
-            cognita-parser:
+            unstructured-io-parsers:
                 condition: service_healthy
                 restart: true
         volumes:
@@ -170,8 +170,8 @@ services:
             - TFY_HOST=${TFY_HOST}
             - BRAVE_API_KEY=${BRAVE_API_KEY}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
-            - UNSTUCTURED_IO_URL=${UNSTUCTURED_IO_URL}
             - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
+            - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
