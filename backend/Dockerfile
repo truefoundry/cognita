@@ -17,14 +17,6 @@ RUN python3 -m pip install -U pip setuptools wheel && \
 
 ENV LD_LIBRARY_PATH=/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cublas/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_cupti/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_runtime/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cufft/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/curand/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusolver/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusparse/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nccl/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nvtx/lib:/virtualenvs/venv/lib/python3.11/site-packages/torch/lib/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-ARG ADD_PYTORCH=0
-# Install torch
-RUN if [ "${ADD_PYTORCH}" = "1" ]; then pip install "torch==2.2.2+cu121" --extra-index-url https://download.pytorch.org/whl/cu121; fi
-
-# Install Parser packages
-ARG ADD_PARSER=0
-RUN if [ "${ADD_PARSER}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/parsers.requirements.txt; fi
-
 # Install VectorDB packages
 ARG ADD_VECTORDB=0
 RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
@@ -39,6 +31,12 @@ ENV MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
 
 ARG INFINITY_API_KEY
 ENV INFINITY_API_KEY=${INFINITY_API_KEY}
+
+ARG UNSTRUCTURED_IO_URL
+ENV UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+
+ARG UNSTRUCTURED_IO_API_KEY
+ENV UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
 
 # Copy the project files
 COPY . /app

@@ -98,14 +98,42 @@ services:
         networks:
             - cognita-docker
 
+    unstructured-io-parsers:
+        # Docs: http://localhost:9500/general/docs
+        image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
+        pull_policy: if_not_present
+        restart: unless-stopped
+        container_name: unstructured-api
+        ports:
+            - 9500:9500
+        expose:
+            - 9500
+        environment:
+            - PORT=9500
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "-O",
+                    "/dev/null",
+                    "-o",
+                    "/dev/null",
+                    "http://localhost:9500/healthcheck",
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 5s
+        networks:
+            - cognita-docker
+
     cognita-backend:
         build:
             context: .
             dockerfile: ./backend/Dockerfile
             args:
                 - ADD_PRISMA=1
-                - ADD_PYTORCH=0 # Only for PdfTableParser
-                - ADD_PARSER=0 # Only for PdfTableParser
         restart: unless-stopped
         container_name: cognita-backend
         ports:
@@ -115,6 +143,9 @@ services:
                 condition: service_healthy
                 restart: true
             qdrant-server:
+                condition: service_healthy
+                restart: true
+            unstructured-io-parsers:
                 condition: service_healthy
                 restart: true
         volumes:
@@ -138,6 +169,7 @@ services:
             - TFY_API_KEY=${TFY_API_KEY}
             - TFY_HOST=${TFY_HOST}
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
+            - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
