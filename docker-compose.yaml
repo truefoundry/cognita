@@ -145,7 +145,7 @@ services:
             qdrant-server:
                 condition: service_healthy
                 restart: true
-            cognita-parser:
+            unstructured-io-parsers:
                 condition: service_healthy
                 restart: true
         volumes:
