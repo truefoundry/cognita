@@ -65,6 +65,9 @@ def get_parser_for_extension(
     global PARSER_REGISTRY_EXTENSIONS
     global PARSER_REGISTRY
 
+    logger.debug(
+        f"PARSER REGISTRY: {PARSER_REGISTRY}, file_extension: {file_extension}, parsers_map: {parsers_map}"
+    )
     # We dont have a parser for this extension yet
     if file_extension not in PARSER_REGISTRY_EXTENSIONS:
         logger.error(f"Loaded doc with extension {file_extension} is not supported")
@@ -73,17 +76,11 @@ def get_parser_for_extension(
     if file_extension not in parsers_map:
         # get the first parser name registered with the extension
         name = PARSER_REGISTRY_EXTENSIONS[file_extension][0]
-        print(
-            f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {name}"
-        )
         logger.debug(
             f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {name}"
         )
     else:
-        name = parsers_map[file_extension]
-        print(
-            f"Parser map found in the collection for extension {file_extension}. Hence, using parser {name}"
-        )
+        name = parsers_map[file_extension].parser
         logger.debug(
             f"Parser map found in the collection for extension {file_extension}. Hence, using parser {name}"
         )
@@ -91,7 +88,7 @@ def get_parser_for_extension(
     if name not in PARSER_REGISTRY:
         raise ValueError(f"No parser registered with name {name}")
 
-    return PARSER_REGISTRY[name](*args, **kwargs)
+    return PARSER_REGISTRY[name](*args, **parsers_map[file_extension].kwargs)
 
 
 def list_parsers():

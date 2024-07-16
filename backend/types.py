@@ -2,7 +2,7 @@ import enum
 import json
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, constr, root_validator
 
@@ -125,15 +125,12 @@ class ModelProviderConfig(BaseModel):
     default_headers: Dict[str, str] = Field(default_factory=dict)
 
 
-class EmbedderConfig(BaseModel):
+class EmbedderConfig(ModelConfig):
     """
     Embedder configuration
     """
 
-    model_config: ModelConfig
-    config: Optional[Dict[str, Any]] = Field(
-        title="Configuration for the embedder", default={}
-    )
+    pass
 
 
 class ParserConfig(BaseModel):
@@ -141,16 +138,9 @@ class ParserConfig(BaseModel):
     Parser configuration
     """
 
-    chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
-
-    parser_map: Dict[str, str] = Field(
-        title="Mapping of file extensions to parsers",
-        default_factory=dict,
-    )
-
-    additional_config: Optional[Dict[str, Any]] = Field(
-        title="Additional optional configuration for the parser",
-        default_factory=dict,
+    parser: str = Field(title="Parser Class Name")
+    kwargs: Optional[Dict[str, Any]] = Field(
+        title="Parser Class Arguments", default_factory=dict
     )
 
 
@@ -257,7 +247,7 @@ class BaseDataIngestionRun(BaseModel):
         title="Fully qualified name of the data source",
     )
 
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 
@@ -326,7 +316,7 @@ class AssociatedDataSources(BaseModel):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
@@ -375,9 +365,19 @@ class AssociateDataSourceWithCollection(BaseModel):
 
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
+        example="localdir::/app/user_data/report",
     )
-    parser_config: ParserConfig = Field(
-        title="Parser configuration for the data transformation", default_factory=dict
+    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+        title="Parser configuration for the data transformation",
+        default_factory=dict,
+        example={
+            ".pdf": {
+                "parser": "UnstructuredIoParser",
+                "kwargs": {
+                    "max_chunk_size": 2000,
+                },
+            }
+        },
     )
 
 
@@ -392,7 +392,7 @@ class AssociateDataSourceWithCollectionDto(AssociateDataSourceWithCollection):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 
@@ -418,12 +418,19 @@ class BaseCollection(BaseModel):
     name: constr(regex=r"^[a-z][a-z0-9-]*$") = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character and hypen, should start with alphabet",
+        example="test-collection",
     )
     description: Optional[str] = Field(
         title="a description for your collection",
+        example="This is a test collection",
     )
     embedder_config: EmbedderConfig = Field(
-        title="Embedder configuration", default_factory=dict
+        title="Embedder configuration",
+        default_factory=dict,
+        example={
+            "name": "truefoundry/openai-main/text-embedding-ada-002",
+            "type": "embedding",
+        },
     )
 
 

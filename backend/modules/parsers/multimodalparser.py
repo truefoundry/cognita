@@ -44,14 +44,14 @@ class MultiModalParser(BaseParser):
 
     Parser Configuration will look like the following while creating the collection:
     {
-        "chunk_size": 1000,
-        "parser_map": {
-            ".pdf": "MultiModalParser",
-        },
-        "additional_config": {
-            "model_configuration": {
-                # <provider>/<model_name> from model_config.yaml
-                "name": "truefoundry/openai-main/gpt-4-turbo"
+        ".pdf": {
+            "parser": "MultiModalParser",
+            "kwargs": {
+                "chunk_size": 1000,
+                "model_configuration": {
+                    "name" : "truefoundry/openai-main/gpt-4-turbo"
+                },
+                "prompt": "You are a PDF Parser ....."
             }
         }
     }
@@ -61,19 +61,17 @@ class MultiModalParser(BaseParser):
 
     def __init__(
         self,
-        additional_config: dict = None,
         *args,
         **kwargs,
     ):
         """
         Initializes the MultiModalParser object.
         """
-        additional_config = additional_config or {}
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if "model_configuration" in additional_config:
+        if "model_configuration" in kwargs:
             self.model_configuration = ModelConfig.parse_obj(
-                additional_config["model_configuration"]
+                kwargs["model_configuration"]
             )
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
@@ -82,8 +80,8 @@ class MultiModalParser(BaseParser):
                 name="truefoundry/openai-main/gpt-4-turbo"
             )
 
-        if "prompt" in additional_config:
-            self.prompt = additional_config["prompt"]
+        if "prompt" in kwargs:
+            self.prompt = kwargs["prompt"]
             logger.info(f"Using custom prompt..., {self.prompt}")
         else:
             self.prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.

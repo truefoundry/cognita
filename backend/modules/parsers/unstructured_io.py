@@ -36,11 +36,11 @@ class UnstructuredIoParser(BaseParser):
         ".xlsx",
     ]
 
-    def __init__(self, max_chunk_size: int = 2000, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Initializes the UnstructuredIoParser object.
         """
-        self.max_chunk_size = max_chunk_size
+        self.max_chunk_size = kwargs.get("max_chunk_size", 2000)
         self.session = requests.Session()
         self.retry_strategy = Retry(
             total=3,
