@@ -210,14 +210,14 @@ class BasicRAGQueryController:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(0.7)
                     elif "answer" in chunk:
                         # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(0.1)
 
                 yield json.dumps({"end": "<END>"})
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.2)
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
