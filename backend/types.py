@@ -428,7 +428,7 @@ class BaseCollection(BaseModel):
         title="Embedder configuration",
         default_factory=dict,
         example={
-            "name": "truefoundry/openai-main/text-embedding-ada-002",
+            "name": "truefoundry/openai-main/text-embedding-3-small",
             "type": "embedding",
         },
     )

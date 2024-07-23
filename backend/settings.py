@@ -21,7 +21,6 @@ class Settings(BaseSettings):
     TFY_HOST: str = ""
     TFY_API_KEY: str = ""
     JOB_FQN: str = ""
-    JOB_COMPONENT_NAME: str = ""
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
     UNSTRUCTURED_IO_URL: str = ""

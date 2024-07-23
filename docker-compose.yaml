@@ -171,7 +171,6 @@ services:
             - TFY_HOST=${TFY_HOST}
             - TFY_API_KEY=${TFY_API_KEY}
             - OPENAI_API_KEY=${OPENAI_API_KEY}
-            - INFINITY_API_KEY=${INFINITY_API_KEY}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:

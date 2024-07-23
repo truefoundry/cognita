@@ -49,7 +49,7 @@ class MultiModalParser(BaseParser):
             "kwargs": {
                 "chunk_size": 1000,
                 "model_configuration": {
-                    "name" : "truefoundry/openai-main/gpt-4-turbo"
+                    "name" : "truefoundry/openai-main/gpt-4o-mini"
                 },
                 "prompt": "You are a PDF Parser ....."
             }
@@ -77,7 +77,7 @@ class MultiModalParser(BaseParser):
         else:
             # Truefoundry specific model configuration
             self.model_configuration = ModelConfig(
-                name="truefoundry/openai-main/gpt-4-turbo"
+                name="truefoundry/openai-main/gpt-4o-mini"
             )
 
         if "prompt" in kwargs:
