@@ -162,14 +162,16 @@ services:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
             - LOG_LEVEL=DEBUG
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
-            - OPENAI_API_KEY=${OPENAI_API_KEY}
-            - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
-            - TFY_API_KEY=${TFY_API_KEY}
-            - TFY_HOST=${TFY_HOST}
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
+            - LOCAL_DATA_DIRECTORY=/app/user_data
             - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+            - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
+            - TFY_HOST=${TFY_HOST}
+            - TFY_API_KEY=${TFY_API_KEY}
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - INFINITY_API_KEY=${INFINITY_API_KEY}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
