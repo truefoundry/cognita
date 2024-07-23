@@ -368,9 +368,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
             else:
                 if not settings.JOB_FQN:
-                    logger.error(
-                        "Job FQN and Job Component Name are required to trigger the job"
-                    )
+                    logger.error("Job FQN is required to trigger the job")
                     raise HTTPException(
                         status_code=500,
                         detail="Job FQN and Job Component Name are required to trigger the job",
