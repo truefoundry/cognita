@@ -117,9 +117,9 @@ class ModelConfig(BaseModel):
 class ModelProviderConfig(BaseModel):
     provider_name: str
     api_format: str
-    llm_model_ids: List[str]
-    embedding_model_ids: List[str]
-    reranking_model_ids: List[str]
+    llm_model_ids: List[str] = Field(default_factory=list)
+    embedding_model_ids: List[str] = Field(default_factory=list)
+    reranking_model_ids: List[str] = Field(default_factory=list)
     api_key_env_var: str
     base_url: Optional[str] = None
     default_headers: Dict[str, str] = Field(default_factory=dict)

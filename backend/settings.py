@@ -17,19 +17,19 @@ class Settings(BaseSettings):
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
-
     LOCAL: bool = False
-
     TFY_HOST: str = ""
     TFY_API_KEY: str = ""
     JOB_FQN: str = ""
-
+    JOB_COMPONENT_NAME: str = ""
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
-
     UNSTRUCTURED_IO_URL: str = ""
-
     UNSTRUCTURED_IO_API_KEY: str = ""
+    # default is ../user_data
+    LOCAL_DATA_DIRECTORY: str = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
+    )
 
     @root_validator(pre=True)
     def _validate_values(cls, values):
