@@ -193,13 +193,14 @@ class MultiModalRAGQueryController:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
-                        await asyncio.sleep(0.2)
+                        await asyncio.sleep(0.5)
                     elif "answer" in chunk:
                         # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
                         await asyncio.sleep(0.2)
 
                 yield json.dumps({"end": "<END>"})
+                await asyncio.sleep(0.2)
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
@@ -211,13 +212,12 @@ class MultiModalRAGQueryController:
                         "docs": self._format_docs_for_stream(docs),
                     }
                 )
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.5)
 
                 async for chunk in llm.astream(message_payload):
                     yield json.dumps({"answer": chunk.content})
                     await asyncio.sleep(0.2)
 
-                await asyncio.sleep(0.2)
                 yield json.dumps({"end": "<END>"})
                 await asyncio.sleep(0.2)
         except asyncio.TimeoutError:
