@@ -179,7 +179,7 @@ services:
     cognita-frontend:
         build:
             context: ./frontend
-            dockerfile: ./Dockerfile
+            dockerfile: ./Dockerfile.dev
             args:
                 - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
                 - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
@@ -190,11 +190,15 @@ services:
         restart: unless-stopped
         container_name: cognita-frontend
         ports:
-            - "${COGNITA_FRONTEND_PORT}:5000"
+            - "${COGNITA_FRONTEND_PORT}:5001"
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
         depends_on:
             cognita-backend:
                 condition: service_healthy
                 restart: true
+        command: ["yarn", "dev", "--host", "0.0.0.0"]
         networks:
             - cognita-docker
 
