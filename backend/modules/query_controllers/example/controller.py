@@ -38,6 +38,16 @@ EXAMPLES = {
 
 @query_controller("/basic-rag")
 class BasicRAGQueryController:
+    required_metadata = [
+        "_data_point_fqn",
+        "filename",
+        "_id",
+        "collection_name",
+        "page_number",
+        "pg_no",
+        "source",
+    ]
+
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -47,18 +57,26 @@ class BasicRAGQueryController:
     def _format_docs(self, docs):
         formatted_docs = list()
         for doc in docs:
-            doc.metadata.pop("image_b64", None)
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
             formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
+                {"page_content": doc.page_content, "metadata": metadata}
             )
         return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
         formatted_docs = list()
         for doc in docs:
-            doc.metadata.pop("image_b64", None)
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
             formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
+                {"page_content": doc.page_content, "metadata": metadata}
             )
         return formatted_docs
 
@@ -189,11 +207,8 @@ class BasicRAGQueryController:
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
                     elif "answer" in chunk:
-                        # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
-
                 yield json.dumps({"end": "<END>"})
-                await asyncio.sleep(0.2)
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 

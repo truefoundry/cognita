@@ -37,6 +37,16 @@ EXAMPLES = {
 
 @query_controller("/multimodal-rag")
 class MultiModalRAGQueryController:
+    required_metadata = [
+        "_data_point_fqn",
+        "filename",
+        "_id",
+        "collection_name",
+        "page_number",
+        "pg_no",
+        "source",
+    ]
+
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -46,18 +56,26 @@ class MultiModalRAGQueryController:
     def _format_docs(self, docs):
         formatted_docs = list()
         for doc in docs:
-            doc.metadata.pop("image_b64", None)
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
             formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
+                {"page_content": doc.page_content, "metadata": metadata}
             )
         return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
 
     def _format_docs_for_stream(self, docs):
         formatted_docs = list()
         for doc in docs:
-            doc.metadata.pop("image_b64", None)
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
             formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
+                {"page_content": doc.page_content, "metadata": metadata}
             )
         return formatted_docs
 
@@ -185,17 +203,13 @@ class MultiModalRAGQueryController:
             try:
                 async for chunk in rag_chain.astream(query):
                     if "question " in chunk:
-                        # print("Question: ", chunk['question'])
                         yield json.dumps({"question": chunk["question"]})
                     elif "context" in chunk:
-                        # print("Context: ", self._format_docs_for_stream(chunk['context']))
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
                     elif "answer" in chunk:
-                        # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
-
                 yield json.dumps({"end": "<END>"})
                 await asyncio.sleep(0.2)
             except asyncio.TimeoutError:
