@@ -1,0 +1,31 @@
+# Base image
+FROM node:18.2.0 AS development-stage
+
+# Define build arguments
+ARG VITE_USE_RELATIVE_BASE_URL
+ARG VITE_DOCS_QA_STANDALONE_PATH
+ARG VITE_QA_FOUNDRY_URL
+ARG VITE_USE_LOCAL
+ARG VITE_GTAG_ID
+
+# Set environment variables from build arguments
+ENV VITE_USE_RELATIVE_BASE_URL=${VITE_USE_RELATIVE_BASE_URL} \
+    VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH} \
+    VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL} \
+    VITE_USE_LOCAL=${VITE_USE_LOCAL} \
+    VITE_GTAG_ID=${VITE_GTAG_ID}
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and yarn.lock files
+COPY package.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install
+
+# Copy the rest of your application code
+COPY . .
+
+# Expose port 5001 for the development server
+EXPOSE 5001
