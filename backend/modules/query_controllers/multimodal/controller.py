@@ -4,6 +4,7 @@ import json
 import async_timeout
 from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
+from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -22,6 +23,8 @@ from backend.modules.query_controllers.multimodal.payload import (
 )
 from backend.modules.query_controllers.multimodal.types import (
     GENERATION_TIMEOUT_SEC,
+    Answer,
+    Docs,
     ExampleQueryInput,
 )
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
@@ -198,35 +201,31 @@ class MultiModalRAGQueryController:
 
         return retriever
 
-    async def _stream_answer(self, rag_chain, query):
-        async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
-            try:
-                async for chunk in rag_chain.astream(query):
-                    if "question " in chunk:
-                        yield json.dumps({"question": chunk["question"]})
-                    elif "context" in chunk:
-                        yield json.dumps(
-                            {"docs": self._format_docs_for_stream(chunk["context"])}
-                        )
-                    elif "answer" in chunk:
-                        yield json.dumps({"answer": chunk["answer"]})
-                yield json.dumps({"end": "<END>"})
-                await asyncio.sleep(0.2)
-            except asyncio.TimeoutError:
-                raise HTTPException(status_code=504, detail="Stream timed out")
+    def _cleanup_metadata(self, docs):
+        formatted_docs = list()
+        for doc in docs:
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
+            formatted_docs.append(
+                Document(page_content=doc.page_content, metadata=metadata)
+            )
+        return formatted_docs
+
+    async def _sse_wrap(self, gen):
+        async for data in gen:
+            yield "event: data\n"
+            yield f"data: {json.dumps(data.dict())}\n\n"
+        yield "event: end\n"
 
     async def _stream_vlm_answer(self, llm, message_payload, docs):
         try:
             async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
-                yield json.dumps(
-                    {
-                        "docs": self._format_docs_for_stream(docs),
-                    }
-                )
-
+                yield Docs(content=self._cleanup_metadata(docs))
                 async for chunk in llm.astream(message_payload):
-                    yield json.dumps({"answer": chunk.content})
-                yield json.dumps({"end": "<END>"})
+                    yield Answer(content=chunk.content)
         except asyncio.TimeoutError:
             raise HTTPException(status_code=504, detail="Stream timed out")
 
@@ -302,7 +301,11 @@ class MultiModalRAGQueryController:
 
             if request.stream:
                 return StreamingResponse(
-                    self._stream_vlm_answer(llm, message_payload, outputs["context"]),
+                    self._sse_wrap(
+                        self._stream_vlm_answer(
+                            llm, message_payload, outputs["context"]
+                        ),
+                    ),
                     media_type="text/event-stream",
                 )
 
