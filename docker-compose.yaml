@@ -71,6 +71,7 @@ services:
         environment:
             - INFINITY_MODEL_ID=${INFINITY_EMBEDDING_MODEL};${INFINITY_RERANKING_MODEL}
             - INFINITY_BATCH_SIZE=8
+            - API_KEY=${INFINITY_API_KEY}
         command: v2
         networks:
             - cognita-docker
@@ -167,6 +168,7 @@ services:
             - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
             - LOCAL_DATA_DIRECTORY=/app/user_data
             - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+            - INFINITY_API_KEY=${INFINITY_API_KEY}
             - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
             - TFY_HOST=${TFY_HOST}
             - TFY_API_KEY=${TFY_API_KEY}
