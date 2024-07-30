@@ -379,7 +379,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_uri = data_source.uri
                 # data_source_uri is of the form: `/app/users_data/folder_name`
                 folder_name = data_source_uri.split("/")[-1]
-                folder_path = os.path.join("/app/user_data", folder_name)
+                folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, folder_name)
                 logger.info(
                     f"Deleting folder: {folder_path}, path exists: {os.path.exists(folder_path)}"
                 )

@@ -188,11 +188,9 @@ class BasicRAGQueryController:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
-                        await asyncio.sleep(0.1)
                     elif "answer" in chunk:
                         # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
-                        await asyncio.sleep(0.1)
 
                 yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:

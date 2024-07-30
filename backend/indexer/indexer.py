@@ -234,7 +234,6 @@ async def ingest_data_points(
             file_extension=loaded_data_point.file_extension,
             parsers_map=inputs.parser_config.parser_map,
             max_chunk_size=inputs.parser_config.chunk_size,
-            chunk_overlap=inputs.parser_config.chunk_overlap,
             additional_config=inputs.parser_config.additional_config,
         )
         if parser is None:
@@ -370,10 +369,8 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 )
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
             else:
-                if not settings.JOB_FQN or not settings.JOB_COMPONENT_NAME:
-                    logger.error(
-                        "Job FQN and Job Component Name are required to trigger the job"
-                    )
+                if not settings.JOB_FQN:
+                    logger.error("Job FQN is required to trigger the job")
                     raise HTTPException(
                         status_code=500,
                         detail="Job FQN and Job Component Name are required to trigger the job",
@@ -391,7 +388,6 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 )
                 trigger_job(
                     application_fqn=settings.JOB_FQN,
-                    component_name=settings.JOB_COMPONENT_NAME,
                     params={
                         "collection_name": collection.name,
                         "data_source_fqn": associated_data_source.data_source_fqn,

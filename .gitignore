@@ -26,6 +26,7 @@ qdrant_storage/
 .truefoundry
 infinity/
 volumes/
+user_data/
 pgdata/
 *.bak
 models_config.yaml
