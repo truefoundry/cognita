@@ -24,7 +24,7 @@ class VectorStoreRetrieverConfig(BaseModel):
 
     search_kwargs: dict = Field(default_factory=dict)
 
-    filter: Optional[dict] = Field(
+    filter: Optional[Dict[Any, Any]] = Field(
         default_factory=dict,
         title="""Filter by document metadata""",
     )
@@ -104,6 +104,7 @@ class ExampleQueryInput(BaseModel):
 
     query: str = Field(title="Question to search for")
 
+    # TODO (chiragjn): pydantic v2 does not like fields that start with model_
     model_configuration: ModelConfig
 
     prompt_template: str = Field(

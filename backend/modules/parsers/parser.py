@@ -1,7 +1,6 @@
-import typing
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from langchain.docstore.document import Document
 
@@ -39,10 +38,10 @@ class BaseParser(ABC):
     async def get_chunks(
         self,
         filepath: str,
-        metadata: Optional[dict],
+        metadata: Optional[Dict[Any, Any]],
         *args,
         **kwargs,
-    ) -> typing.List[Document]:
+    ) -> List[Document]:
         """
         Abstract method. This should asynchronously read a file and return its content in chunks.
 
@@ -99,7 +98,7 @@ def list_parsers():
     Returns a list of all the registered parsers.
 
     Returns:
-        List[dict]: A list of all the registered parsers.
+        List[Dict]: A list of all the registered parsers.
     """
     global PARSER_REGISTRY
     return [

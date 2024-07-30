@@ -8,6 +8,8 @@ from typing_extensions import Annotated
 
 from backend.constants import FQN_SEPARATOR
 
+# TODO (chiragjn): Remove Optional from Dict and List type fields. Instead just use a default_factory
+
 
 class DataIngestionMode(str, Enum):
     """
@@ -126,7 +128,7 @@ class EmbedderConfig(BaseModel):
     Embedder configuration
     """
 
-    # TODO (chiragjn): Pydantic v2 does not like fields that begin with model_*
+    # TODO (chiragjn): pydantic v2 does not like fields that start with model_
     model_config: ModelConfig
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default_factory=dict
@@ -159,7 +161,7 @@ class VectorDBConfig(BaseModel):
     local: bool = False
     url: Optional[str] = None
     api_key: Optional[str] = None
-    config: Optional[dict] = Field(default_factory=dict)
+    config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class QdrantClientConfig(BaseModel):
@@ -182,7 +184,7 @@ class MetadataStoreConfig(BaseModel):
     """
 
     provider: str
-    config: Optional[dict] = Field(default_factory=dict)
+    config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class RetrieverConfig(BaseModel):
@@ -203,7 +205,7 @@ class RetrieverConfig(BaseModel):
         default=20,
         title="""Amount of documents to pass to MMR algorithm (Default: 20)""",
     )
-    filter: Optional[dict] = Field(
+    filter: Optional[Dict[Any, Any]] = Field(
         default=None,
         title="""Filter by document metadata""",
     )

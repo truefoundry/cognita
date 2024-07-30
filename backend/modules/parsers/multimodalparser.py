@@ -3,7 +3,7 @@ import base64
 import io
 import os
 from itertools import islice
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import fitz
@@ -137,7 +137,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
+        self, filepath: str, metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.
