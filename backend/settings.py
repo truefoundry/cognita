@@ -4,7 +4,6 @@ from typing import Any, Dict
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
-from backend.logger import logger
 from backend.types import MetadataStoreConfig, VectorDBConfig
 
 

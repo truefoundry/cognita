@@ -128,8 +128,10 @@ class EmbedderConfig(BaseModel):
     Embedder configuration
     """
 
-    # TODO (chiragjn): pydantic v2 does not like fields that start with model_
-    model_config: ModelConfig
+    # This field will probably be removed soon or refactored
+    embedding_model_config: ModelConfig = Field(
+        validation_alias="model_config", serialization_alias="model_config"
+    )
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default_factory=dict
     )
@@ -218,11 +220,12 @@ class RetrieverConfig(BaseModel):
     @property
     def get_search_kwargs(self) -> dict:
         # Check at langchain.schema.vectorstore.VectorStore.as_retriever
-        match self.search_type:
-            case "similarity":
-                return {"k": self.k, "filter": self.filter}
-            case "mmr":
-                return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+        if self.search_type == "similarity":
+            return {"k": self.k, "filter": self.filter}
+        elif self.search_type == "mmr":
+            return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+        else:
+            raise ValueError(f"Search type {self.search_type} is not supported")
 
 
 class DataIngestionRunStatus(str, enum.Enum):
@@ -442,9 +445,10 @@ class CreateCollectionDto(CreateCollection):
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
-    upload_name: str = Field(
+    upload_name: Annotated[
+        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
+    ] = Field(  # type:ignore
         title="Name of the upload",
-        pattern=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
 
@@ -459,9 +463,11 @@ class ListDataIngestionRunsDto(BaseModel):
 
 
 class RagApplication(BaseModel):
-    name: str = Field(
+    # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
+    name: Annotated[
+        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
+    ] = Field(  # type:ignore
         title="Name of the rag app",
-        regex=r"^[a-z][a-z0-9-]*$",  # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     )
     config: Dict[str, Any] = Field(
         title="Configuration for the rag app",

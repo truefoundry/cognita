@@ -219,7 +219,7 @@ async def ingest_data_points(
 
     """
     embeddings = model_gateway.get_embedder_from_model_config(
-        model_name=inputs.embedder_config.model_config.name
+        model_name=inputs.embedder_config.embedding_model_config.name
     )
     documents_to_be_upserted = []
     logger.info(
