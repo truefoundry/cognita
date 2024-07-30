@@ -1,7 +1,7 @@
 import enum
 import uuid
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from typing_extensions import Annotated
@@ -27,7 +27,7 @@ class DataPoint(BaseModel):
         data_point_fqn (str): Fully qualified name for the data point with respect to the data source
         data_point_uri (str): URI for the data point for given data source. It could be url, file path or any other identifier
         data_point_hash (str): Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source
-        metadata (Optional[dict[str, str]]): Additional metadata for the data point
+        metadata (Optional[Dict[str, str]]): Additional metadata for the data point
     """
 
     data_source_fqn: str = Field(
@@ -42,7 +42,7 @@ class DataPoint(BaseModel):
         title="Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source",
     )
 
-    metadata: Optional[dict[str, Any]] = Field(
+    metadata: Optional[Dict[str, Any]] = Field(
         None,
         title="Additional metadata for the data point",
     )
@@ -107,7 +107,7 @@ class ModelType(str, Enum):
 class ModelConfig(BaseModel):
     name: str
     type: ModelType
-    parameters: dict[str, Any] = Field(default_factory=dict)
+    parameters: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ModelProviderConfig(BaseModel):
@@ -115,10 +115,10 @@ class ModelProviderConfig(BaseModel):
     api_format: str
     base_url: Optional[str] = None
     api_key_env_var: str
-    default_headers: dict[str, str] = Field(default_factory=dict)
-    llm_model_ids: list[str] = Field(default_factory=list)
-    embedding_model_ids: list[str] = Field(default_factory=list)
-    reranking_model_ids: list[str] = Field(default_factory=list)
+    default_headers: Dict[str, str] = Field(default_factory=dict)
+    llm_model_ids: List[str] = Field(default_factory=list)
+    embedding_model_ids: List[str] = Field(default_factory=list)
+    reranking_model_ids: List[str] = Field(default_factory=list)
 
 
 class EmbedderConfig(BaseModel):
@@ -128,7 +128,7 @@ class EmbedderConfig(BaseModel):
 
     # TODO (chiragjn): Pydantic v2 does not like fields that begin with model_*
     model_config: ModelConfig
-    config: Optional[dict[str, Any]] = Field(
+    config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default_factory=dict
     )
 
@@ -140,11 +140,11 @@ class ParserConfig(BaseModel):
 
     chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
     chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
-    parser_map: dict[str, str] = Field(
+    parser_map: Dict[str, str] = Field(
         title="Mapping of file extensions to parsers",
         default_factory=dict,
     )
-    additional_config: Optional[dict[str, Any]] = Field(
+    additional_config: Optional[Dict[str, Any]] = Field(
         title="Additional optional configuration for the parser",
         default_factory=dict,
     )
@@ -293,7 +293,7 @@ class BaseDataSource(BaseModel):
     uri: str = Field(
         title="A unique identifier for the data source",
     )
-    metadata: Optional[dict[str, Any]] = Field(
+    metadata: Optional[Dict[str, Any]] = Field(
         None, title="Additional config for your data source"
     )
 
@@ -426,19 +426,19 @@ class CreateCollection(BaseCollection):
 
 
 class Collection(BaseCollection):
-    associated_data_sources: dict[str, AssociatedDataSources] = Field(
+    associated_data_sources: Dict[str, AssociatedDataSources] = Field(
         title="Data sources associated with the collection", default_factory=dict
     )
 
 
 class CreateCollectionDto(CreateCollection):
-    associated_data_sources: Optional[list[AssociateDataSourceWithCollection]] = Field(
+    associated_data_sources: Optional[List[AssociateDataSourceWithCollection]] = Field(
         None, title="Data sources associated with the collection"
     )
 
 
 class UploadToDataDirectoryDto(BaseModel):
-    filepaths: list[str]
+    filepaths: List[str]
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     upload_name: str = Field(
         title="Name of the upload",
@@ -461,7 +461,7 @@ class RagApplication(BaseModel):
         title="Name of the rag app",
         regex=r"^[a-z][a-z0-9-]*$",  # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     )
-    config: dict[str, Any] = Field(
+    config: Dict[str, Any] = Field(
         title="Configuration for the rag app",
     )
 

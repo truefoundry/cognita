@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Collection, Dict, Optional
+from typing import Any, ClassVar, Dict, Optional, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
@@ -29,7 +29,7 @@ class VectorStoreRetrieverConfig(BaseModel):
         title="""Filter by document metadata""",
     )
 
-    allowed_search_types: ClassVar[Collection[str]] = (
+    allowed_search_types: ClassVar[Sequence[str]] = (
         "similarity",
         "similarity_score_threshold",
         "mmr",
@@ -82,7 +82,7 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
         title="Top K docs to collect post compression",
     )
 
-    allowed_compressor_model_providers: ClassVar[Collection[str]]
+    allowed_compressor_model_providers: ClassVar[Sequence[str]]
 
 
 class ContextualCompressionMultiQueryRetrieverConfig(
@@ -94,12 +94,12 @@ class ContextualCompressionMultiQueryRetrieverConfig(
 class ExampleQueryInput(BaseModel):
     """
     Model for Query input.
-    Requires a collection name, retriever configuration, query, LLM configuration and prompt template.
+    Requires a Sequence name, retriever configuration, query, LLM configuration and prompt template.
     """
 
-    collection_name: str = Field(
+    Sequence_name: str = Field(
         default=None,
-        title="Collection name on which to search",
+        title="Sequence name on which to search",
     )
 
     query: str = Field(title="Question to search for")
@@ -118,14 +118,14 @@ class ExampleQueryInput(BaseModel):
         title="Retriever configuration",
     )
 
-    allowed_retriever_types: ClassVar[Collection[str]] = (
+    allowed_retriever_types: ClassVar[Sequence[str]] = (
         "vectorstore",
         "multi-query",
         "contextual-compression",
         "contextual-compression-multi-query",
     )
 
-    stream: Optional[bool] = Field(title="Stream the results", default=False)
+    stream: bool = Field(title="Stream the results", default=False)
 
     @model_validator(mode="before")
     @classmethod

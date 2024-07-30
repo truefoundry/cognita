@@ -3,7 +3,7 @@ import json
 import os
 import tempfile
 import warnings
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import mlflow
 from fastapi import HTTPException
@@ -38,7 +38,7 @@ class MLRunTypes(str, enum.Enum):
 
 
 class TrueFoundry(BaseMetadataStore):
-    ml_runs: dict[str, ml.MlFoundryRun] = {}
+    ml_runs: Dict[str, ml.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
 
     def __init__(self, *args, ml_repo_name: str, **kwargs):
@@ -58,7 +58,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
-    ) -> ml.MlFoundryRun | None:
+    ) -> Optional[ml.MlFoundryRun]:
         """
         Cache the runs to avoid too many requests to the backend.
         """
@@ -134,7 +134,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def _get_artifact_metadata_ml_run(
         self, run: ml.MlFoundryRun
-    ) -> ml.ArtifactVersion | None:
+    ) -> Optional[ml.ArtifactVersion]:
         params = run.get_params()
         metadata_artifact_fqn = params.get("metadata_artifact_fqn")
         if not metadata_artifact_fqn:
@@ -177,7 +177,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         """Get collection from given collection name."""
         logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
@@ -194,7 +194,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_retrieve_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         """Get collection from given collection name. Used during retrieval"""
         logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
@@ -345,7 +345,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         return created_data_source
 
-    def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
+    def get_data_source_from_fqn(self, fqn: str) -> Optional[DataSource]:
         logger.debug(f"[Metadata Store] Getting data_source by fqn {fqn}")
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -412,7 +412,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
-    ) -> DataIngestionRun | None:
+    ) -> Optional[DataIngestionRun]:
         logger.debug(
             f"[Metadata Store] Getting ingestion run {data_ingestion_run_name}"
         )
@@ -518,7 +518,7 @@ class TrueFoundry(BaseMetadataStore):
     def log_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         try:
@@ -572,7 +572,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         return [run.run_name for run in ml_runs]
 
-    def list_data_sources(self) -> List[dict[str, str]]:
+    def list_data_sources(self) -> List[Dict[str, str]]:
         logger.info(f"[Metadata Store] Listing all data sources")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -637,7 +637,7 @@ class TrueFoundry(BaseMetadataStore):
         logger.debug(f"[Metadata Store] RAG Application Saved")
         return created_app
 
-    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+    def get_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """
         Get a RAG application from the metadata store
         """

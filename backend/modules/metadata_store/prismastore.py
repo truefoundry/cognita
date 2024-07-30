@@ -4,7 +4,7 @@ import os
 import random
 import shutil
 import string
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException
 from prisma import Prisma
@@ -27,9 +27,10 @@ from backend.types import (
 )
 
 # TODO (chiragjn):
-#   Either we make everything async or add sync method to this
-#   Some methods are using json.dumps - not sure if this is the right way to send data via prisma client
-#   primsa generates its own DB entity classes - ideally we should be using those instead of call .model_dump() on the pydantic objects
+#   1. Either we make everything async or add sync method to this
+#   2. Some methods are using json.dumps - not sure if this is the right way to send data via prisma client
+#   3. primsa generates its own DB entity classes - ideally we should be using those instead of call
+#       .model_dump() on the pydantic objects
 
 
 # TODO (chiragjn): Either we make everything async or add sync method to this
@@ -81,7 +82,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         try:
             collection = await self.db.collection.find_first(
                 where={"name": collection_name}
@@ -97,7 +98,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_retrieve_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         return await self.aget_collection_by_name(collection_name, no_cache)
 
     async def aget_collections(self) -> List[Collection]:
@@ -164,7 +165,7 @@ class PrismaStore(BaseMetadataStore):
             logger.exception(f"Failed to create data source: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-    async def aget_data_source_from_fqn(self, fqn: str) -> DataSource | None:
+    async def aget_data_source_from_fqn(self, fqn: str) -> Optional[DataSource]:
         try:
             data_source = await self.db.datasource.find_first(where={"fqn": fqn})
             if data_source:
@@ -433,7 +434,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
-    ) -> DataIngestionRun | None:
+    ) -> Optional[DataIngestionRun]:
         try:
             data_ingestion_run = await self.db.ingestionruns.find_first(
                 where={"name": data_ingestion_run_name}
@@ -475,7 +476,7 @@ class PrismaStore(BaseMetadataStore):
     async def alog_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         pass
@@ -524,7 +525,7 @@ class PrismaStore(BaseMetadataStore):
             logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-    async def aget_rag_app(self, app_name: str) -> RagApplicationDto | None:
+    async def aget_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """Get a RAG application from the metadata store"""
         try:
             rag_app = await self.db.ragapps.find_first(where={"name": app_name})

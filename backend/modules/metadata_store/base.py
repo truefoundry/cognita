@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
 from backend.types import (
@@ -300,7 +300,7 @@ class BaseMetadataStore(ABC):
     def log_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         """
@@ -311,7 +311,7 @@ class BaseMetadataStore(ABC):
     async def alog_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         """
@@ -410,7 +410,7 @@ class BaseMetadataStore(ABC):
         """
         return await run_in_executor(None, self.create_rag_app, app=app)
 
-    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+    def get_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """
         Get a RAG application from the metadata store by name
         """
