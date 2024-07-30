@@ -1,5 +1,5 @@
 import os
-from typing import Any
+from typing import Any, Dict
 
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
@@ -33,32 +33,32 @@ class Settings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def _validate_values(cls, values: Any) -> Any:
-        if isinstance(values, dict):
-            models_config_path = values.get("MODELS_CONFIG_PATH")
-            if not os.path.isabs(models_config_path):
-                this_dir = os.path.abspath(os.path.dirname(__file__))
-                root_dir = os.path.dirname(this_dir)
-                models_config_path = os.path.join(root_dir, models_config_path)
-
-            if not models_config_path:
-                raise Exception(
-                    f"{models_config_path} does not exist. "
-                    f"You can copy models_config.sample.yaml to {settings.MODELS_CONFIG_PATH} to bootstrap config"
-                )
-
-            values["MODELS_CONFIG_PATH"] = models_config_path
-
-            tfy_host = values.get("TFY_HOST")
-            tfy_llm_gateway_url = values.get("TFY_LLM_GATEWAY_URL")
-            if tfy_host and not tfy_llm_gateway_url:
-                tfy_llm_gateway_url = f"{tfy_host.rstrip('/')}/api/llm"
-                values["TFY_LLM_GATEWAY_URL"] = tfy_llm_gateway_url
-        else:
-            logger.warning(
-                f"[Validation Skipped] Pydantic v2 validator received "
-                f"non dict values of type {type(values)}"
+    def _validate_values(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate search type."""
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
             )
+
+        models_config_path = values.get("MODELS_CONFIG_PATH")
+        if not os.path.isabs(models_config_path):
+            this_dir = os.path.abspath(os.path.dirname(__file__))
+            root_dir = os.path.dirname(this_dir)
+            models_config_path = os.path.join(root_dir, models_config_path)
+
+        if not models_config_path:
+            raise ValueError(
+                f"{models_config_path} does not exist. "
+                f"You can copy models_config.sample.yaml to {settings.MODELS_CONFIG_PATH} to bootstrap config"
+            )
+
+        values["MODELS_CONFIG_PATH"] = models_config_path
+
+        tfy_host = values.get("TFY_HOST")
+        tfy_llm_gateway_url = values.get("TFY_LLM_GATEWAY_URL")
+        if tfy_host and not tfy_llm_gateway_url:
+            tfy_llm_gateway_url = f"{tfy_host.rstrip('/')}/api/llm"
+            values["TFY_LLM_GATEWAY_URL"] = tfy_llm_gateway_url
 
         return values
 

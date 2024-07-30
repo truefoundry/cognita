@@ -93,7 +93,7 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
             content={"data": data, "data_directory_fqn": dataset.fqn},
         )
     except Exception as ex:
-        raise Exception(f"Error uploading files to data directory: {ex}")
+        raise Exception(f"Error uploading files to data directory: {ex}") from ex
 
 
 @router.get("/models")

@@ -7,6 +7,8 @@ from backend.types import ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 10
 
+# TODO (chiragjn): Remove all asserts and replace them with proper raises
+
 
 class VectorStoreRetrieverConfig(BaseModel):
     """
@@ -37,8 +39,13 @@ class VectorStoreRetrieverConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_search_type(cls, values: Dict) -> Dict:
+    def validate_search_type(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Validate search type."""
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
+            )
+
         search_type = values.get("search_type")
 
         assert (
@@ -130,7 +137,12 @@ class ExampleQueryInput(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_retriever_type(cls, values: Dict) -> Dict:
+    def validate_retriever_type(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
+            )
+
         retriever_name = values.get("retriever_name")
 
         assert (
