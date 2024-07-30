@@ -18,7 +18,7 @@ from backend.types import (
 from backend.utils import run_in_executor
 
 
-# TODO(chiragjn): Ideal would be we make `async def a*` abstract methods and drop sync ones
+# TODO (chiragjn): Ideal would be we make `async def a*` abstract methods and drop sync ones
 #   Implementations can then opt to call their sync versions using run_in_executor
 class BaseMetadataStore(ABC):
     def __init__(self, *args, **kwargs):

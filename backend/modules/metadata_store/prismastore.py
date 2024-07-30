@@ -28,7 +28,7 @@ from backend.types import (
 
 # TODO (chiragjn):
 #   Either we make everything async or add sync method to this
-#   Some methods are using json.dumps - not sure if this is the right way to do it
+#   Some methods are using json.dumps - not sure if this is the right way to send data via prisma client
 #   primsa generates its own DB entity classes - ideally we should be using those instead of call .model_dump() on the pydantic objects
 
 
@@ -499,7 +499,6 @@ class PrismaStore(BaseMetadataStore):
     # RAG APPLICATION APIS
     ######
 
-    # TODO (prathamesh): Implement these methods
     async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
         """Create a RAG application in the metadata store"""
         try:

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
-from backend.types import CreateRagApplication, RagApplicationDto
+from backend.types import CreateRagApplication
 
 router = APIRouter(prefix="/v1/apps", tags=["apps"])
 

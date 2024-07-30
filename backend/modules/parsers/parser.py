@@ -57,7 +57,7 @@ class BaseParser(ABC):
 
 def get_parser_for_extension(
     file_extension, parsers_map, *args, **kwargs
-) -> BaseParser:
+) -> Optional[BaseParser]:
     """
     During the indexing phase, given the file_extension and parsers mapping, return the appropriate mapper.
     If no mapping is given, use the default registry.
