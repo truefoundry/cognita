@@ -12,6 +12,8 @@ from backend.types import (
     DataIngestionRunStatus,
     DataSource,
     MetadataStoreConfig,
+    RagApplication,
+    RagApplicationDto,
 )
 from backend.utils import run_in_executor
 
@@ -61,6 +63,27 @@ class BaseMetadataStore(ABC):
         return await run_in_executor(
             None,
             self.get_collection_by_name,
+            collection_name=collection_name,
+            no_cache=no_cache,
+        )
+
+    def get_retrieve_collection_by_name(
+        self, collection_name: str, no_cache: bool = True
+    ) -> Optional[Collection]:
+        """
+        Get a collection from the metadata store by name used during retrieval phase
+        """
+        raise NotImplementedError()
+
+    async def aget_retrieve_collection_by_name(
+        self, collection_name: str, no_cache: bool = True
+    ) -> Optional[Collection]:
+        """
+        Get a collection from the metadata store by name used during retrieval phase
+        """
+        return await run_in_executor(
+            None,
+            self.get_retrieve_collection_by_name,
             collection_name=collection_name,
             no_cache=no_cache,
         )
@@ -374,6 +397,54 @@ class BaseMetadataStore(ABC):
         return await run_in_executor(
             None, self.delete_data_source, data_source_fqn=data_source_fqn
         )
+
+    def create_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """
+        Create a RAG application in the metadata store
+        """
+        raise NotImplementedError()
+
+    async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """
+        create a RAG application in the metadata store
+        """
+        return await run_in_executor(None, self.create_rag_app, app=app)
+
+    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+        """
+        Get a RAG application from the metadata store by name
+        """
+        raise NotImplementedError()
+
+    async def aget_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
+        """
+        Get a RAG application from the metadata store by name
+        """
+        return await run_in_executor(None, self.get_rag_app, app_name=app_name)
+
+    def list_rag_apps(self) -> List[str]:
+        """
+        List all RAG application names from metadata store
+        """
+        raise NotImplementedError()
+
+    async def alist_rag_apps(self) -> List[str]:
+        """
+        List all RAG application names from metadata store
+        """
+        return await run_in_executor(None, self.list_rag_apps)
+
+    def delete_rag_app(self, app_name: str):
+        """
+        Delete a RAG application from the metadata store
+        """
+        raise NotImplementedError()
+
+    async def adelete_rag_app(self, app_name: str):
+        """
+        Delete a RAG application from the metadata store
+        """
+        return await run_in_executor(None, self.delete_rag_app, app_name=app_name)
 
 
 def get_data_source_fqn(data_source: CreateDataSource) -> str:

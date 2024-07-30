@@ -101,6 +101,7 @@ class ModelType(str, Enum):
 
     chat = "chat"
     embedding = "embedding"
+    reranking = "reranking"
 
 
 class ModelConfig(BaseModel):
@@ -114,8 +115,10 @@ class ModelProviderConfig(BaseModel):
     api_format: str
     base_url: Optional[str] = None
     api_key_env_var: str
+    default_headers: dict[str, str] = Field(default_factory=dict)
     llm_model_ids: list[str] = Field(default_factory=list)
     embedding_model_ids: list[str] = Field(default_factory=list)
+    reranking_model_ids: list[str] = Field(default_factory=list)
 
 
 class EmbedderConfig(BaseModel):
@@ -139,10 +142,7 @@ class ParserConfig(BaseModel):
     chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
     parser_map: dict[str, str] = Field(
         title="Mapping of file extensions to parsers",
-        default={
-            ".md": "MarkdownParser",
-            ".pdf": "PdfParserFast",
-        },
+        default_factory=dict,
     )
     additional_config: Optional[dict[str, Any]] = Field(
         title="Additional optional configuration for the parser",
@@ -454,3 +454,21 @@ class ListDataIngestionRunsDto(BaseModel):
     data_source_fqn: Optional[str] = Field(
         title="Fully qualified name of the data source", default=None
     )
+
+
+class RagApplication(BaseModel):
+    name: str = Field(
+        title="Name of the rag app",
+        regex=r"^[a-z][a-z0-9-]*$",  # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
+    )
+    config: dict[str, Any] = Field(
+        title="Configuration for the rag app",
+    )
+
+
+class CreateRagApplication(RagApplication):
+    pass
+
+
+class RagApplicationDto(RagApplication):
+    pass

@@ -22,7 +22,14 @@ from backend.types import (
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
+    RagApplication,
+    RagApplicationDto,
 )
+
+# TODO (chiragjn):
+#   Either we make everything async or add sync method to this
+#   Some methods are using json.dumps - not sure if this is the right way to do it
+#   primsa generates its own DB entity classes - ideally we should be using those instead of call .model_dump() on the pydantic objects
 
 
 # TODO (chiragjn): Either we make everything async or add sync method to this
@@ -39,7 +46,7 @@ class PrismaStore(BaseMetadataStore):
             logger.info(f"Connected to Prisma....")
             return cls(db=db, **kwargs)
         except Exception as e:
-            logger.error(f"Failed to connect to Prisma: {e}")
+            logger.exception(f"Failed to connect to Prisma: {e}")
             raise HTTPException(status_code=500, detail="Failed to connect to Prisma")
 
     ######
@@ -50,7 +57,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             existing_collection = await self.aget_collection_by_name(collection.name)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=e)
 
         if existing_collection:
@@ -69,7 +76,7 @@ class PrismaStore(BaseMetadataStore):
             collection = await self.db.collection.create(data=collection_data)
             return collection
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def aget_collection_by_name(
@@ -83,17 +90,22 @@ class PrismaStore(BaseMetadataStore):
                 return collection
             return None
         except Exception as e:
-            logger.error(f"Failed to get collection by name: {e}")
+            logger.exception(f"Failed to get collection by name: {e}")
             raise HTTPException(
                 status_code=500, detail="Failed to get collection by name"
             )
+
+    async def aget_retrieve_collection_by_name(
+        self, collection_name: str, no_cache: bool = True
+    ) -> Collection | None:
+        return await self.aget_collection_by_name(collection_name, no_cache)
 
     async def aget_collections(self) -> List[Collection]:
         try:
             collections = await self.db.collection.find_many()
             return collections
         except Exception as e:
-            logger.error(f"Failed to get collections: {e}")
+            logger.exception(f"Failed to get collections: {e}")
             raise HTTPException(status_code=500, detail="Failed to get collections")
 
     async def alist_collections(self) -> List[str]:
@@ -101,7 +113,7 @@ class PrismaStore(BaseMetadataStore):
             collections = await self.aget_collections()
             return [collection.name for collection in collections]
         except Exception as e:
-            logger.error(f"Failed to list collections: {e}")
+            logger.exception(f"Failed to list collections: {e}")
             raise HTTPException(status_code=500, detail="Failed to list collections")
 
     async def adelete_collection(self, collection_name: str, include_runs=False):
@@ -110,7 +122,7 @@ class PrismaStore(BaseMetadataStore):
             if not collection:
                 logger.debug(f"Collection with name {collection_name} does not exist")
         except Exception as e:
-            logger.debug(e)
+            logger.exception(e)
 
         try:
             await self.db.collection.delete(where={"name": collection_name})
@@ -120,9 +132,9 @@ class PrismaStore(BaseMetadataStore):
                         where={"collection_name": collection_name}
                     )
                 except Exception as e:
-                    logger.error(f"Failed to delete data ingestion runs: {e}")
+                    logger.exception(f"Failed to delete data ingestion runs: {e}")
         except Exception as e:
-            logger.error(f"Failed to delete collection: {e}")
+            logger.exception(f"Failed to delete collection: {e}")
             raise HTTPException(status_code=500, detail="Failed to delete collection")
 
     ######
@@ -132,11 +144,11 @@ class PrismaStore(BaseMetadataStore):
         try:
             existing_data_source = await self.aget_data_source_from_fqn(data_source.fqn)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if existing_data_source:
-            logger.error(f"Data source with fqn {data_source.fqn} already exists")
+            logger.exception(f"Data source with fqn {data_source.fqn} already exists")
             raise HTTPException(
                 status_code=400,
                 detail=f"Data source with fqn {data_source.fqn} already exists",
@@ -149,7 +161,7 @@ class PrismaStore(BaseMetadataStore):
             logger.info(f"Created data source: {data_source}")
             return data_source
         except Exception as e:
-            logger.error(f"Failed to create data source: {e}")
+            logger.exception(f"Failed to create data source: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def aget_data_source_from_fqn(self, fqn: str) -> DataSource | None:
@@ -159,7 +171,7 @@ class PrismaStore(BaseMetadataStore):
                 return data_source
             return None
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def aget_data_sources(self) -> List[DataSource]:
@@ -167,7 +179,7 @@ class PrismaStore(BaseMetadataStore):
             data_sources = await self.db.datasource.find_many()
             return data_sources
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def aassociate_data_source_with_collection(
@@ -178,7 +190,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             existing_collection = await self.aget_collection_by_name(collection_name)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if not existing_collection:
@@ -193,7 +205,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_association.data_source_fqn
             )
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if not data_source:
@@ -244,7 +256,7 @@ class PrismaStore(BaseMetadataStore):
             return updated_collection
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(
                 status_code=500,
                 detail=f"Error: {e}",
@@ -256,7 +268,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             collection = await self.aget_collection_by_name(collection_name)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if not collection:
@@ -269,7 +281,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if not data_source:
@@ -305,7 +317,7 @@ class PrismaStore(BaseMetadataStore):
             )
             return updated_collection
         except Exception as e:
-            logger.error(f"Failed to unassociate data source with collection: {e}")
+            logger.exception(f"Failed to unassociate data source with collection: {e}")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to unassociate data source with collection",
@@ -318,7 +330,7 @@ class PrismaStore(BaseMetadataStore):
             data_sources = await self.aget_data_sources()
             return [data_source.model_dump() for data_source in data_sources]
         except Exception as e:
-            logger.error(f"Failed to list data sources: {e}")
+            logger.exception(f"Failed to list data sources: {e}")
             raise HTTPException(status_code=500, detail="Failed to list data sources")
 
     async def adelete_data_source(self, data_source_fqn: str):
@@ -332,7 +344,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         if not data_source:
@@ -346,7 +358,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             collections = await self.aget_collections()
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
         for collection in collections:
@@ -372,7 +384,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_uri = data_source.uri
                 # data_source_uri is of the form: `/app/users_data/folder_name`
                 folder_name = data_source_uri.split("/")[-1]
-                folder_path = os.path.join("/app/user_data", folder_name)
+                folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, folder_name)
                 logger.info(
                     f"Deleting folder: {folder_path}, path exists: {os.path.exists(folder_path)}"
                 )
@@ -382,7 +394,7 @@ class PrismaStore(BaseMetadataStore):
                     logger.error(f"Folder does not exist: {folder_path}")
 
         except Exception as e:
-            logger.error(f"Failed to delete data source: {e}")
+            logger.exception(f"Failed to delete data source: {e}")
             raise HTTPException(status_code=500, detail="Failed to delete data source")
 
     ######
@@ -414,7 +426,7 @@ class PrismaStore(BaseMetadataStore):
             data_ingestion_run = await self.db.ingestionruns.create(data=run_data)
             return DataIngestionRun(**data_ingestion_run.model_dump())
         except Exception as e:
-            logger.error(f"Failed to create data ingestion run: {e}")
+            logger.exception(f"Failed to create data ingestion run: {e}")
             raise HTTPException(
                 status_code=500, detail=f"Failed to create data ingestion run: {e}"
             )
@@ -431,7 +443,7 @@ class PrismaStore(BaseMetadataStore):
                 return DataIngestionRun(**data_ingestion_run.model_dump())
             return None
         except Exception as e:
-            logger.error(f"Failed to get data ingestion run: {e}")
+            logger.exception(f"Failed to get data ingestion run: {e}")
             raise HTTPException(status_code=500, detail=f"{e}")
 
     async def aget_data_ingestion_runs(
@@ -444,7 +456,7 @@ class PrismaStore(BaseMetadataStore):
             )
             return data_ingestion_runs
         except Exception as e:
-            logger.error(f"Failed to get data ingestion runs: {e}")
+            logger.exception(f"Failed to get data ingestion runs: {e}")
             raise HTTPException(status_code=500, detail=f"{e}")
 
     async def aupdate_data_ingestion_run_status(
@@ -457,7 +469,7 @@ class PrismaStore(BaseMetadataStore):
             )
             return updated_data_ingestion_run
         except Exception as e:
-            logger.error(f"Failed to update data ingestion run status: {e}")
+            logger.exception(f"Failed to update data ingestion run status: {e}")
             raise HTTPException(status_code=500, detail=f"{e}")
 
     async def alog_metrics_for_data_ingestion_run(
@@ -478,10 +490,81 @@ class PrismaStore(BaseMetadataStore):
                 data={"errors": json.dumps(errors)},
             )
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"Failed to log errors data ingestion run {data_ingestion_run_name}: {e}"
             )
             raise HTTPException(status_code=500, detail=f"{e}")
+
+    ######
+    # RAG APPLICATION APIS
+    ######
+
+    # TODO (prathamesh): Implement these methods
+    async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """Create a RAG application in the metadata store"""
+        try:
+            existing_app = await self.aget_rag_app(app.name)
+        except Exception as e:
+            logger.exception(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=e)
+
+        if existing_app:
+            logger.error(f"RAG application with name {app.name} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"RAG application with name {app.name} already exists",
+            )
+
+        try:
+            logger.info(f"Creating RAG application: {app.model_dump()}")
+            rag_app_data = app.model_dump()
+            rag_app_data["config"] = json.dumps(rag_app_data["config"])
+            rag_app = await self.db.ragapps.create(data=rag_app_data)
+            return rag_app
+        except Exception as e:
+            logger.exception(f"Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+    async def aget_rag_app(self, app_name: str) -> RagApplicationDto | None:
+        """Get a RAG application from the metadata store"""
+        try:
+            rag_app = await self.db.ragapps.find_first(where={"name": app_name})
+            if rag_app:
+                return rag_app
+            return None
+        except Exception as e:
+            logger.exception(f"Failed to get RAG application by name: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to get RAG application by name"
+            )
+
+    async def alist_rag_apps(self) -> List[str]:
+        """List all RAG applications from the metadata store"""
+        try:
+            rag_apps = await self.db.ragapps.find_many()
+            return [rag_app.name for rag_app in rag_apps]
+        except Exception as e:
+            logger.exception(f"Failed to list RAG applications: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to list RAG applications"
+            )
+
+    async def adelete_rag_app(self, app_name: str):
+        """Delete a RAG application from the metadata store"""
+        try:
+            rag_app = await self.aget_rag_app(app_name)
+            if not rag_app:
+                logger.debug(f"RAG application with name {app_name} does not exist")
+        except Exception as e:
+            logger.exception(e)
+
+        try:
+            await self.db.ragapps.delete(where={"name": app_name})
+        except Exception as e:
+            logger.exception(f"Failed to delete RAG application: {e}")
+            raise HTTPException(
+                status_code=500, detail="Failed to delete RAG application"
+            )
 
 
 if __name__ == "__main__":

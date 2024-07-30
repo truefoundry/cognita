@@ -43,6 +43,14 @@ model IngestionRuns {
     @@map("ingestion_runs")
 }
 
+model RagApps {
+    id     Int    @id @default(autoincrement())
+    name   String @unique
+    config Json
+
+    @@map("rag_apps")
+}
+
 enum Role {
     USER
     ADMIN

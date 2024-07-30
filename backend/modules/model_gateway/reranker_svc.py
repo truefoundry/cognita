@@ -17,8 +17,9 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
     """
 
     model: str
-    top_k: int = 3
-    url = settings.RERANKER_SVC_URL
+    top_k: int
+    base_url: str
+    api_key: Optional[str] = None
 
     def compress_documents(
         self,
@@ -36,8 +37,15 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
             "model": self.model,
         }
 
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         reranked_docs = requests.post(
-            self.url.rstrip("/") + "/rerank", json=payload
+            self.base_url.rstrip("/") + "/rerank", headers=headers, json=payload
         ).json()
 
         """
@@ -71,7 +79,14 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
 
         # Extract the indices from the sorted results
         sorted_indices = [result["index"] for result in sorted_results][: self.top_k]
+        relevance_scores = [result["relevance_score"] for result in sorted_results][
+            : self.top_k
+        ]
 
         # sort documents based on the sorted indices
-        documents = [documents[index] for index in sorted_indices]
-        return documents
+        ranked_documents = list()
+        for idx, index in enumerate(sorted_indices):
+            # show relevance scores upto 2 decimal places
+            documents[index].metadata["relevance_score"] = relevance_scores[idx]
+            ranked_documents.append(documents[index])
+        return ranked_documents

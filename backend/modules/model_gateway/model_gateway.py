@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List
 
@@ -11,6 +12,8 @@ from backend.logger import logger
 from backend.settings import settings
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
 
+from .reranker_svc import InfinityRerankerSvc
+
 
 class ModelGateway:
     provider_configs: List[ModelProviderConfig]
@@ -20,8 +23,9 @@ class ModelGateway:
         logger.info(f"Loading models config from {settings.MODELS_CONFIG_PATH}")
         with open(settings.MODELS_CONFIG_PATH) as f:
             data = yaml.safe_load(f)
-        print(data)
+        logger.info(f"Loaded models config: {data}")
         _providers = data.get("model_providers") or []
+
         # parse the json data into a list of ModelProviderConfig objects
         self.provider_configs = [
             ModelProviderConfig.model_validate(item) for item in _providers
@@ -31,6 +35,9 @@ class ModelGateway:
         self.llm_models: List[ModelConfig] = []
         # load embedding models
         self.embedding_models: List[ModelConfig] = []
+
+        # load reranker models
+        self.reranker_models: List[ModelConfig] = []
 
         for provider_config in self.provider_configs:
             if provider_config.api_key_env_var and not os.environ.get(
@@ -65,11 +72,26 @@ class ModelGateway:
                     )
                 )
 
+            for model_id in provider_config.reranking_model_ids:
+                model_name = f"{provider_config.provider_name}/{model_id}"
+                self.model_name_to_provider_config[model_name] = provider_config
+
+                # Register the model as a reranker model
+                self.reranker_models.append(
+                    ModelConfig(
+                        name=f"{provider_config.provider_name}/{model_id}",
+                        type=ModelType.reranking,
+                    )
+                )
+
     def get_embedding_models(self) -> List[ModelConfig]:
         return self.embedding_models
 
     def get_llm_models(self) -> List[ModelConfig]:
         return self.llm_models
+
+    def get_reranker_models(self) -> List[ModelConfig]:
+        return self.reranker_models
 
     def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
         if model_name not in self.model_name_to_provider_config:
@@ -114,6 +136,27 @@ class ModelGateway:
             streaming=stream,
             api_key=api_key,
             base_url=model_provider_config.base_url,
+            default_headers=model_provider_config.default_headers,
+        )
+
+    def get_reranker_from_model_config(self, model_name: str, top_k: int = 3):
+        if model_name not in self.model_name_to_provider_config:
+            raise ValueError(f"Model {model_name} not registered in the model gateway.")
+
+        model_provider_config: ModelProviderConfig = self.model_name_to_provider_config[
+            model_name
+        ]
+        if not model_provider_config.api_key_env_var:
+            api_key = "EMPTY"
+        else:
+            api_key = os.environ.get(model_provider_config.api_key_env_var, "")
+        model_id = "/".join(model_name.split("/")[1:])
+
+        return InfinityRerankerSvc(
+            model=model_id,
+            api_key=api_key,
+            base_url=model_provider_config.base_url,
+            top_k=top_k,
         )
 
 

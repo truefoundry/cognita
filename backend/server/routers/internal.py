@@ -24,7 +24,7 @@ async def upload_to_docker_directory(
     ),
     files: List[UploadFile] = File(...),
 ):
-    """This function uploads files within `/app/user_data/` given by the name req.upload_name"""
+    """This function uploads files within `settings.LOCAL_DATA_DIRECTORY` given by the name req.upload_name"""
     if not settings.LOCAL:
         return JSONResponse(
             content={"error": "API only supported for local docker environment"},
@@ -34,7 +34,7 @@ async def upload_to_docker_directory(
         logger.info(f"Uploading files to docker directory: {upload_name}")
         # create a folder within `/volumes/user_data/` that maps to `/app/user_data/` in the docker volume
         # this folder will be used to store the uploaded files
-        folder_path = os.path.join("/app/user_data/", upload_name)
+        folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name)
 
         # Create the folder if it does not exist, else raise an exception
         if not os.path.exists(folder_path):
@@ -104,6 +104,8 @@ def get_enabled_models(
         enabled_models = model_gateway.get_embedding_models()
     elif model_type == ModelType.chat:
         enabled_models = model_gateway.get_llm_models()
+    elif model_type == ModelType.reranking:
+        enabled_models = model_gateway.get_reranker_models()
     else:
         raise HTTPException(
             status_code=400,

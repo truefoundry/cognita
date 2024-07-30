@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
@@ -22,27 +23,17 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     ExampleQueryInput,
 )
-from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
+
+# from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
-from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
 EXAMPLES = {
     "vector-store-similarity": QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD,
+    "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
+    "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
 }
-
-if settings.RERANKER_SVC_URL:
-    EXAMPLES.update(
-        {
-            "contextual-compression-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD,
-        }
-    )
-    EXAMPLES.update(
-        {
-            "contextual-compression-multi-query-similarity": QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
-        }
-    )
 
 
 @query_controller("/basic-rag")
@@ -71,7 +62,7 @@ class BasicRAGQueryController:
             )
         return formatted_docs
 
-    def _get_llm(self, model_configuration: ModelConfig, stream=False):
+    def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
         Get the LLM
         """
@@ -82,7 +73,7 @@ class BasicRAGQueryController:
         Get the vector store for the collection
         """
         client = await get_client()
-        collection = await client.aget_collection_by_name(collection_name)
+        collection = await client.aget_retrieve_collection_by_name(collection_name)
         if collection is None:
             raise HTTPException(status_code=404, detail="Collection not found")
 
@@ -111,28 +102,20 @@ class BasicRAGQueryController:
         Get the contextual compression retriever
         """
         try:
-            if settings.RERANKER_SVC_URL:
-                retriever = self._get_vector_store_retriever(
-                    vector_store, retriever_config
-                )
-                logger.info("Using MxBaiRerankerSmall th' service...")
-                compressor = InfinityRerankerSvc(
-                    top_k=retriever_config.top_k,
-                    model=retriever_config.compressor_model_name,
-                )
+            retriever = self._get_vector_store_retriever(vector_store, retriever_config)
+            logger.info("Using MxBaiRerankerSmall th' service...")
 
-                compression_retriever = ContextualCompressionRetriever(
-                    base_compressor=compressor, base_retriever=retriever
-                )
+            compressor = model_gateway.get_reranker_from_model_config(
+                model_name=retriever_config.compressor_model_name,
+                top_k=retriever_config.top_k,
+            )
+            compression_retriever = ContextualCompressionRetriever(
+                base_compressor=compressor, base_retriever=retriever
+            )
 
-                return compression_retriever
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Reranker service is not available",
-                )
+            return compression_retriever
         except Exception as e:
-            logger.error(f"Error in getting contextual compression retriever: {e}")
+            logger.exception(f"Error in getting contextual compression retriever: {e}")
             raise HTTPException(
                 status_code=500,
                 detail="Error in getting contextual compression retriever",
@@ -205,11 +188,9 @@ class BasicRAGQueryController:
                         yield json.dumps(
                             {"docs": self._format_docs_for_stream(chunk["context"])}
                         )
-                        await asyncio.sleep(0.1)
                     elif "answer" in chunk:
                         # print("Answer: ", chunk['answer'])
                         yield json.dumps({"answer": chunk["answer"]})
-                        await asyncio.sleep(0.1)
 
                 yield json.dumps({"end": "<END>"})
             except asyncio.TimeoutError:

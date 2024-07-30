@@ -1,22 +1,23 @@
 import asyncio
 import base64
 import io
-import json
 import os
 from itertools import islice
 from typing import Optional
 
-import aiohttp
 import cv2
 import fitz
 import numpy as np
 from langchain.docstore.document import Document
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import HumanMessage
 from PIL import Image
 
 from backend.logger import logger
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-from backend.settings import settings
+from backend.types import ModelConfig
 
 
 def stringToRGB(base64_string: str):
@@ -39,15 +40,27 @@ def arrayToBase64(image_arr: np.ndarray):
 
 class MultiModalParser(BaseParser):
     """
-    MultiModalParser is a multi-modal parser class for deep extraction of pdf documents
+    MultiModalParser is a multi-modal parser class for deep extraction of pdf documents.
+
+    Parser Configuration will look like the following while creating the collection:
+    {
+        "chunk_size": 1000,
+        "parser_map": {
+            ".pdf": "MultiModalParser",
+        },
+        "additional_config": {
+            "model_configuration": {
+                # <provider>/<model_name> from model_config.yaml
+                "name": "truefoundry/openai-main/gpt-4-turbo"
+            }
+        }
+    }
     """
 
-    supported_file_extensions = [".pdf"]
+    supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
     def __init__(
         self,
-        max_chunk_size: int = 1000,
-        chunk_overlap: int = 20,
         additional_config: dict = None,
         *args,
         **kwargs,
@@ -56,23 +69,18 @@ class MultiModalParser(BaseParser):
         Initializes the MultiModalParser object.
         """
         additional_config = additional_config or {}
-        self.max_chunk_size = max_chunk_size
-        self.chunk_overlap = chunk_overlap
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if "base_url" in additional_config:
-            self.client = additional_config["base_url"]
-            logger.info(f"Using custom base url..., {self.client}")
-        else:
-            self.client = (
-                settings.TFY_LLM_GATEWAY_URL.strip("/") + "/openai/chat/completions"
+        if "model_configuration" in additional_config:
+            self.model_configuration = ModelConfig.model_validate(
+                additional_config["model_configuration"]
             )
-
-        if "vision_model" in additional_config:
-            self.vision_model = additional_config["vision_model"]
-            logger.info(f"Using custom vision model..., {self.vision_model}")
+            logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
-            self.vision_model = "openai-main/gpt-4-turbo"
+            # Truefoundry specific model configuration
+            self.model_configuration = ModelConfig(
+                name="truefoundry/openai-main/gpt-4-turbo"
+            )
 
         if "prompt" in additional_config:
             self.prompt = additional_config["prompt"]
@@ -92,52 +100,41 @@ Conclude with a summary of the key findings from your analysis and any recommend
 
     async def call_vlm_agent(
         self,
+        llm: BaseChatModel,
         base64_image: str,
         page_number: int,
         prompt: str = "Describe the information present in the image in a structured format.",
     ):
-        logger.info(f"Processing Image... {page_number}")
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.TFY_API_KEY}",
-            # Set the tfy_log_request to "true" in X-TFY-METADATA header to log prompt and response for the request
-            "X-TFY-METADATA": json.dumps(
-                {"tfy_log_request": "true", "Custom-Metadata": "Custom-Value"}
-            ),
-        }
-        # Parallel calls to VLM
-        async with aiohttp.ClientSession() as session:
-            payload = {
-                "model": self.vision_model,
-                "messages": [
+        content = [
+            HumanMessage(
+                [
                     {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                },
-                            },
-                        ],
-                    }
-                ],
-                "max_tokens": 2048,
+                        "type": "text",
+                        "text": prompt,
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}",
+                            "detail": "high",
+                        },
+                    },
+                ]
+            )
+        ]
+        logger.info(f"Processing Image... {page_number}")
+
+        try:
+            response = await llm.ainvoke(content)
+            return {
+                "response": [
+                    page_number,
+                    response.content,
+                ]
             }
-            async with session.post(
-                self.client, json=payload, headers=headers
-            ) as response:
-                result = await response.json(content_type=response.content_type)
-                if "choices" in result:
-                    return {
-                        "response": [
-                            page_number,
-                            result["choices"][0]["message"]["content"],
-                        ]
-                    }
-                if "error" in result:
-                    return {"error": result["error"]}
+        except Exception as e:
+            logger.exception(f"Error in page: {page_number} - {e}")
+            return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
         self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
@@ -147,38 +144,56 @@ Conclude with a summary of the key findings from your analysis and any recommend
         """
         final_texts = []
         try:
-            if not filepath.endswith(".pdf"):
-                logger.error(
-                    "Invalid file extension. MultiModalParser only supports PDF files."
+            if (
+                not filepath.endswith(".pdf")
+                and not filepath.endswith(".png")
+                and not filepath.endswith(".jpeg")
+                and not filepath.endswith(".jpg")
+            ):
+                raise Exception(
+                    "Invalid file extension. MultiModalParser only supports PDF, PNG, JPEG, JPG files."
                 )
-                return []
-
-            # Open the PDF file using pdfplumber
-            doc = fitz.open(filepath)
 
             # get file path & name
             file_path, file_name = os.path.split(filepath)
-            pages = dict()
 
-            # Iterate over each page in the PDF
-            logger.info(f"\n\nLoading all pages...")
-            for page in doc:
-                page_number = page.number + 1
-                try:
-                    # Convert the page to an image (RGB mode)
-                    pix = page.get_pixmap(alpha=False)
-                    img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                        (pix.h, pix.w, pix.n)
-                    )
+            if filepath.endswith(".pdf"):
+                # Open the PDF file using pdfplumber
+                doc = fitz.open(filepath)
+                pages = {}
 
-                    # Convert the image to base64
-                    _, buffer = cv2.imencode(".png", img)
-                    image_base64 = base64.b64encode(buffer).decode("utf-8")
+                # Iterate over each page in the PDF
+                logger.info(f"\n\nLoading all pages...")
+                for page in doc:
+                    page_number = page.number + 1
+                    try:
+                        # Convert the page to an image (RGB mode)
+                        pix = page.get_pixmap(alpha=False)
+                        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+                            (pix.h, pix.w, pix.n)
+                        )
 
-                    pages[page_number] = image_base64
-                except Exception as e:
-                    logger.error(f"Error in page: {page_number} - {e}")
-                    continue
+                        # Convert the image to base64
+                        _, buffer = cv2.imencode(".png", img)
+                        image_base64 = base64.b64encode(buffer).decode("utf-8")
+
+                        pages[page_number] = image_base64
+                    except Exception as e:
+                        logger.exception(f"Error in page: {page_number} - {e}")
+                        continue
+
+                logger.info(f"Total Pages: {len(pages)}")
+
+            elif (
+                filepath.endswith(".png")
+                or filepath.endswith(".jpeg")
+                or filepath.endswith(".jpg")
+            ):
+                # Convert the image to base64
+                with open(filepath, "rb") as f:
+                    image_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+                pages = {0: image_base64}
 
             # make parallel requests to VLM for all pages
             prompt = self.prompt
@@ -188,9 +203,11 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 for i in range(0, len(data), size):
                     yield {k: data[k] for k in islice(it, size)}
 
+            llm = model_gateway.get_llm_from_model_config(self.model_configuration)
             for page_items in break_chunks(pages):
                 tasks = [
                     self.call_vlm_agent(
+                        llm=llm,
                         base64_image=image_b64,
                         page_number=page_number,
                         prompt=prompt,
@@ -199,7 +216,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 ]
                 responses = await asyncio.gather(*tasks)
 
-                logger.info("Total Responses:", len(responses))
+                logger.info(f"Total Responses: {len(responses)}")
 
                 if responses is not None:
                     for response in responses:
@@ -229,5 +246,5 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 await asyncio.sleep(5)
             return final_texts
         except Exception as e:
-            logger.error(f"Final Exception: {e}")
-            return final_texts
+            logger.exception(f"Final Exception: {e}")
+            raise e

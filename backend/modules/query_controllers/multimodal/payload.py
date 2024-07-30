@@ -4,13 +4,12 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "vectorstore",
     "retriever_config": {"search_type": "similarity", "search_kwargs": {"k": 5}},
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_PAYLOAD = {
@@ -27,7 +26,6 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -39,7 +37,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR = {
             "fetch_k": 7,
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_MMR_PAYLOAD = {
@@ -56,7 +54,6 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -65,7 +62,7 @@ QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE = {
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_VECTOR_STORE_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -82,19 +79,17 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_PAYLOAD = {
@@ -112,14 +107,12 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
@@ -127,7 +120,7 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR = {
             "fetch_k": 30,
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_MMR_PAYLOAD = {
@@ -147,19 +140,17 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE = 
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_RETRIEVER_SEARCH_TYPE_SIMILARITY_WITH_SCORE_PAYLOAD = {
@@ -178,7 +169,6 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -188,11 +178,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY = {
         "search_kwargs": {"k": 5},
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -210,7 +199,6 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -223,11 +211,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR = {
         },
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -244,7 +231,6 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-3-5-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
@@ -254,11 +240,10 @@ QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
         "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-4-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {
@@ -277,14 +262,12 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "mmr",
         "search_kwargs": {
@@ -293,11 +276,10 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR = {
         },
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.9},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_MMR_PAYLOAD = {
@@ -315,24 +297,21 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity",
         "search_kwargs": {"k": 10},
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.1},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD = {
@@ -350,24 +329,21 @@ QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE = {
     "query": "Explain key operating metrics of FY20",
     "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4-turbo",
-        "provider": "truefoundry",
         "parameters": {"temperature": 0.1},
     },
     "prompt_template": PROMPT,
     "retriever_name": "contextual-compression-multi-query",
     "retriever_config": {
-        "compressor_model_provider": "mixedbread-ai",
-        "compressor_model_name": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+        "compressor_model_name": "local-infinity/mixedbread-ai/mxbai-rerank-xsmall-v1",
         "top_k": 5,
         "search_type": "similarity_score_threshold",
         "search_kwargs": {"score_threshold": 0.7},
         "retriever_llm_configuration": {
             "name": "truefoundry/openai-main/gpt-3-5-turbo",
-            "provider": "truefoundry",
             "parameters": {"temperature": 0.1},
         },
     },
-    "stream": True,
+    "stream": False,
 }
 
 QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_SCORE_PAYLOAD = {

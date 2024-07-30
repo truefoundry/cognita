@@ -21,6 +21,8 @@ from backend.types import (
     DataIngestionRun,
     DataIngestionRunStatus,
     DataSource,
+    RagApplication,
+    RagApplicationDto,
 )
 
 
@@ -32,6 +34,7 @@ class MLRunTypes(str, enum.Enum):
     COLLECTION = "COLLECTION"
     DATA_INGESTION_RUN = "DATA_INGESTION_RUN"
     DATA_SOURCE = "DATA_SOURCE"
+    RAG_APPLICATION = "RAG_APPLICATION"
 
 
 class TrueFoundry(BaseMetadataStore):
@@ -186,6 +189,21 @@ class TrueFoundry(BaseMetadataStore):
         collection = self._populate_collection(
             Collection.model_validate(self._get_entity_from_run(run=ml_run))
         )
+        logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
+        return collection
+
+    def get_retrieve_collection_by_name(
+        self, collection_name: str, no_cache: bool = True
+    ) -> Collection | None:
+        """Get collection from given collection name. Used during retrieval"""
+        logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
+        ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
+        if not ml_run:
+            logger.debug(
+                f"[Metadata Store] Collection with name {collection_name} not found"
+            )
+            return None
+        collection = Collection.model_validate(self._get_entity_from_run(run=ml_run))
         logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
         return collection
 
@@ -581,3 +599,88 @@ class TrueFoundry(BaseMetadataStore):
         raise Exception(
             "Truefoundry Metadata Store does not support delete data source"
         )
+
+    def create_rag_app(self, app: RagApplication) -> RagApplicationDto:
+        """
+        Create a RAG application in the metadata store
+        """
+        logger.debug(f"[Metadata Store] Creating RAG application {app.name}")
+        existing_app = self.get_rag_app(app_name=app.name)
+        if existing_app:
+            logger.error(
+                f"[Metadata Store] Existing RAG application found with name {app.name}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=f"RAG Application with name {app.name} already exists.",
+            )
+
+        params = {
+            "entity_type": MLRunTypes.RAG_APPLICATION.value,
+            "app_name": app.name,
+        }
+
+        run = self.client.create_run(
+            ml_repo=self.ml_repo_name,
+            run_name=app.name,
+            tags=params,
+        )
+
+        created_app = RagApplicationDto(
+            name=app.name,
+            config=app.config,
+        )
+        self._save_entity_to_run(
+            run=run, metadata=created_app.model_dump(), params=params
+        )
+        run.end()
+        logger.debug(f"[Metadata Store] RAG Application Saved")
+        return created_app
+
+    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+        """
+        Get a RAG application from the metadata store
+        """
+        logger.debug(f"[Metadata Store] Getting RAG application with name {app_name}")
+        ml_run = self._get_run_by_name(run_name=app_name, no_cache=True)
+        if not ml_run:
+            logger.debug(
+                f"[Metadata Store] RAG application with name {app_name} not found"
+            )
+            return None
+        try:
+            app = RagApplicationDto.model_validate(
+                self._get_entity_from_run(run=ml_run)
+            )
+            logger.debug(
+                f"[Metadata Store] Fetched RAG application with name {app_name}"
+            )
+            return app
+        except Exception as e:
+            logger.exception(e)
+            return None
+
+    def list_rag_apps(self) -> List[str]:
+        """
+        List all RAG applications in the metadata store
+        """
+        logger.info(f"[Metadata Store] Listing all RAG applications")
+        ml_runs = self.client.search_runs(
+            ml_repo=self.ml_repo_name,
+            filter_string=f"params.entity_type = '{MLRunTypes.RAG_APPLICATION.value}'",
+        )
+        return [run.run_name for run in ml_runs]
+
+    def delete_rag_app(self, app_name: str):
+        """
+        Delete a RAG application from the metadata store
+        """
+        logger.debug(f"[Metadata Store] Deleting RAG application {app_name}")
+        app = self._get_run_by_name(run_name=app_name, no_cache=True)
+        if not app:
+            logger.debug(
+                f"[Metadata Store] RAG application {app_name} not found to delete."
+            )
+            return
+        app.delete()
+        logger.debug(f"[Metadata Store] Deleted RAG application {app_name}")
