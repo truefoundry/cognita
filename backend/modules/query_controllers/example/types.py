@@ -1,5 +1,6 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 
+from langchain.docstore.document import Document
 from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
 
@@ -25,7 +26,7 @@ Can be 'similarity' (default), 'mmr', or 'similarity_score_threshold'.
 """,
     )
 
-    search_kwargs: dict = Field(default_factory=dict)
+    search_kwargs: Dict[str, Any] = Field(default_factory=dict)
 
     filter: Optional[Dict[Any, Any]] = Field(
         default_factory=dict,
@@ -177,3 +178,13 @@ class ExampleQueryInput(BaseModel):
             )
 
         return values
+
+
+class Answer(BaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(BaseModel):
+    type: str = "docs"
+    content: Optional[List[Document]] = None

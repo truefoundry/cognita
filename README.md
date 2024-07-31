@@ -95,7 +95,6 @@ cp models_config.sample.yaml models_config.yaml
 By default, the config has local providers enabled that need infinity and ollama server to run embedding and LLMs locally.
 However, if you have a OpenAI API Key, you can uncomment the `openai` provider in `models_config.yaml` and update `OPENAI_API_KEY` in `compose.env`
 
-
 Now, you can run the following command to start the services:
 
 ```shell
@@ -118,12 +117,21 @@ docker-compose --env-file compose.env --profile ollama --profile infinity up
 
 -   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
 
+-   If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can add `--build` flag to the command.
+
+```shell
+docker-compose --env-file compose.env up --build
+```
+
+OR
+
+```shell
+docker-compose --env-file compose.env --profile ollama --profile infinity up --build
+```
 
 ## Developing in Cognita
 
 Docker compose is a great way to run the entire Cognita system locally. Any changes that you make in the `backend` folder will be automatically reflected in the running backend server. You can test out different APIs and endpoints by making changes in the backend code.
-
-If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can run `docker-compose build` before running `docker-compose up`
 
 # :hammer_and_pick: Project Architecture
 
