@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence
+from typing import Any, ClassVar, Dict, Optional, Sequence, Union
 
 from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
@@ -7,7 +7,7 @@ from backend.types import ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 10
 
-# TODO (chiragjn): Remove all asserts and replace them with proper raises
+# TODO (chiragjn): Remove all asserts and replace them with proper pydantic validations or raises
 
 
 class VectorStoreRetrieverConfig(BaseModel):
@@ -104,7 +104,7 @@ class ExampleQueryInput(BaseModel):
     Requires a Sequence name, retriever configuration, query, LLM configuration and prompt template.
     """
 
-    Sequence_name: str = Field(
+    collection_name: str = Field(
         default=None,
         title="Sequence name on which to search",
     )
@@ -118,11 +118,17 @@ class ExampleQueryInput(BaseModel):
         title="Prompt Template to use for generating answer to the question using the context",
     )
 
+    # TODO (chiragjn): Move retriever name inside configuration to let pydantic disciminate between different retrievers
     retriever_name: str = Field(
         title="Retriever name",
     )
 
-    retriever_config: Dict[str, Any] = Field(
+    retriever_config: Union[
+        VectorStoreRetrieverConfig,
+        MultiQueryRetrieverConfig,
+        ContextualCompressionRetrieverConfig,
+        ContextualCompressionMultiQueryRetrieverConfig,
+    ] = Field(
         title="Retriever configuration",
     )
 
@@ -145,10 +151,6 @@ class ExampleQueryInput(BaseModel):
 
         retriever_name = values.get("retriever_name")
 
-        assert (
-            retriever_name in cls.allowed_retriever_types
-        ), f"retriever of {retriever_name} not allowed. Valid values are: {cls.allowed_retriever_types}"
-
         if retriever_name == "vectorstore":
             values["retriever_config"] = VectorStoreRetrieverConfig(
                 **values.get("retriever_config")
@@ -163,10 +165,14 @@ class ExampleQueryInput(BaseModel):
             values["retriever_config"] = ContextualCompressionRetrieverConfig(
                 **values.get("retriever_config")
             )
-
         elif retriever_name == "contextual-compression-multi-query":
             values["retriever_config"] = ContextualCompressionMultiQueryRetrieverConfig(
                 **values.get("retriever_config")
+            )
+        else:
+            raise ValueError(
+                f"Unexpected retriever name: {retriever_name}. "
+                f"Valid values are: {cls.allowed_retriever_types}"
             )
 
         return values

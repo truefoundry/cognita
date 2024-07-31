@@ -24,6 +24,7 @@ model Collection {
     description             String?
     embedder_config         Json
     // Collection can have multiple data sources
+    // TODO (chiragjn): Why does this have to be Nullable? Default to {}
     associated_data_sources Json?
 
     @@map("collections")

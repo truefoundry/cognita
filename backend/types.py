@@ -3,7 +3,15 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    computed_field,
+    model_serializer,
+    model_validator,
+)
 from typing_extensions import Annotated
 
 from backend.constants import FQN_SEPARATOR
@@ -108,7 +116,9 @@ class ModelType(str, Enum):
 
 class ModelConfig(BaseModel):
     name: str
-    type: ModelType
+    # TODO (chiragjn): This should not be Optional! Changing might break backward compatibility
+    #   Problem is we have shared these entities between DTO layers and Service / DB layers
+    type: Optional[ModelType] = None
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -130,11 +140,18 @@ class EmbedderConfig(BaseModel):
 
     # This field will probably be removed soon or refactored
     embedding_model_config: ModelConfig = Field(
-        validation_alias="model_config", serialization_alias="model_config"
+        alias="model_config",
     )
     config: Optional[Dict[str, Any]] = Field(
         title="Configuration for the embedder", default_factory=dict
     )
+
+    @model_serializer
+    def serialize(self):
+        return {
+            "model_config": self.embedding_model_config,
+            "config": self.config,
+        }
 
 
 class ParserConfig(BaseModel):
@@ -302,8 +319,9 @@ class BaseDataSource(BaseModel):
         None, title="Additional config for your data source"
     )
 
+    @computed_field
     @property
-    def fqn(self):
+    def fqn(self) -> str:
         return f"{FQN_SEPARATOR}".join([self.type, self.uri])
 
 
@@ -434,6 +452,15 @@ class Collection(BaseCollection):
     associated_data_sources: Dict[str, AssociatedDataSources] = Field(
         title="Data sources associated with the collection", default_factory=dict
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_associated_data_sources_not_none(
+        cls, values: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        if values.get("associated_data_sources") is None:
+            values["associated_data_sources"] = {}
+        return values
 
 
 class CreateCollectionDto(CreateCollection):

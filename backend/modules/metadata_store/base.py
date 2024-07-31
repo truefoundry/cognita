@@ -346,6 +346,8 @@ class BaseMetadataStore(ABC):
             errors=errors,
         )
 
+    # TODO (chiragjn): What is the difference between get_collections and this?
+    # TODO (chiragjn): Return complete entities, why return only str?
     def list_collections(
         self,
     ) -> List[str]:
@@ -354,6 +356,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     async def alist_collections(
         self,
     ) -> List[str]:
@@ -365,17 +368,19 @@ class BaseMetadataStore(ABC):
             self.list_collections,
         )
 
+    # TODO (chiragjn): Return complete entities, why return dict?
     def list_data_sources(
         self,
-    ) -> List[str]:
+    ) -> List[Dict[str, str]]:
         """
         List all data source names from metadata store
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return dict?
     async def alist_data_sources(
         self,
-    ) -> List[str]:
+    ) -> List[Dict[str, str]]:
         """
         List all data source names from metadata store
         """
@@ -422,12 +427,14 @@ class BaseMetadataStore(ABC):
         """
         return await run_in_executor(None, self.get_rag_app, app_name=app_name)
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     def list_rag_apps(self) -> List[str]:
         """
         List all RAG application names from metadata store
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     async def alist_rag_apps(self) -> List[str]:
         """
         List all RAG application names from metadata store

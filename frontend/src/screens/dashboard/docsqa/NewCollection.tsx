@@ -74,6 +74,8 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         embedder_config: {
           model_config: {
             name: embeddingModel.name,
+            type: embeddingModel.type,
+            // TODO: pass parameters?
           },
         },
         chunk_size: chunkSize,
