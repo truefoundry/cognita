@@ -15,8 +15,8 @@ import React, { useState } from 'react'
 
 export const defaultParserConfigs = `{
   ".pdf": {
-    "parser": "MultiModalParser",
-    "kwargs": {
+    "name": "MultiModalParser",
+    "parameters": {
       "model_configuration": {
         "name": "truefoundry/openai-main/gpt-4o-mini"
       },

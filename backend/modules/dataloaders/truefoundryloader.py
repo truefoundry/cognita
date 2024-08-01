@@ -26,7 +26,7 @@ class TrueFoundryLoader(BaseDataLoader):
         Loads data from a truefoundry data directory / artifact with FQN specified by the given source URI.
         """
         truefoundry_client = ml.get_client()
-        download_info = None
+        artifact_files_dir = None
         datasource_type = None
 
         if data_source.uri.startswith("artifact"):
@@ -39,51 +39,49 @@ class TrueFoundryLoader(BaseDataLoader):
             # Get the artifact version directly
             dataset = truefoundry_client.get_artifact_version_by_fqn(artifact_fqn)
             # download it to disk
-            # `download_info` points to a directory that has all contents of the artifact
-            download_info = dataset.download(path=dest_dir)
-            logger.debug(f"Artifact download info: {download_info}")
+            # `artifact_files_dir` points to a directory that has all contents of the artifact
+            artifact_files_dir = dataset.download(path=dest_dir)
+            logger.debug(f"Artifact download info: {artifact_files_dir}")
 
         elif data_source.uri.startswith("data-dir"):
             datasource_type = "data-dir"
             # Data source URI is the FQN of the data directory.
             dataset = truefoundry_client.get_data_directory_by_fqn(data_source.uri)
-            download_info = dataset.download(path=dest_dir)
-            logger.debug(f"Data directory download info: {download_info}")
+            artifact_files_dir = dataset.download(path=dest_dir)
+            logger.debug(f"Data directory download info: {artifact_files_dir}")
 
         else:
             raise ValueError(f"Unsupported data_source uri type {data_source.uri}")
 
-        if download_info:
-            if os.path.exists(os.path.join(download_info, "files")):
+        if artifact_files_dir:
+            if os.path.exists(os.path.join(artifact_files_dir, "files")):
                 logger.debug("Files directory exists")
-                download_info = os.path.join(download_info, "files")
+                artifact_files_dir = os.path.join(artifact_files_dir, "files")
                 logger.debug(
-                    f"[Updated] download info: {download_info} for {datasource_type}"
+                    f"[Updated] download info: {artifact_files_dir} for {datasource_type}"
                 )
 
             # If the downloaded data directory is a ZIP file, unzip its contents.
-            for file_name in os.listdir(download_info):
+            for file_name in os.listdir(artifact_files_dir):
                 logger.debug(f"file_name: {file_name}")
                 if file_name.endswith(".zip"):
                     logger.debug(
-                        f"Unzipped file_path: {os.path.join(download_info, file_name)}"
+                        f"Unzipped file_path: {os.path.join(artifact_files_dir, file_name)}"
                     )
                     unzip_file(
-                        file_path=os.path.join(download_info, file_name),
-                        dest_dir=download_info,
+                        file_path=os.path.join(artifact_files_dir, file_name),
+                        dest_dir=artifact_files_dir,
                     )
 
             logger.info("Downloaded data to: {}".format(dest_dir))
 
             loaded_data_points: List[LoadedDataPoint] = []
 
-            for root, d_names, f_names in os.walk(dest_dir):
+            for root, d_names, f_names in os.walk(artifact_files_dir):
                 for f in f_names:
                     if f.startswith("."):
                         continue
                     full_path = os.path.join(root, f)
-                    if ".truefoundry" in full_path:
-                        continue
                     logger.debug(f"Processing file: {full_path}")
                     rel_path = os.path.relpath(full_path, dest_dir)
                     file_ext = os.path.splitext(f)[1]

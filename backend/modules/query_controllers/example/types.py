@@ -1,7 +1,7 @@
 from typing import Any, ClassVar, Collection, Dict, List, Optional
 
 from langchain.docstore.document import Document
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, root_validator
 from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import ModelConfig
@@ -165,4 +165,4 @@ class Answer(BaseModel):
 
 class Docs(BaseModel):
     type: str = "docs"
-    content: Optional[List[Document]] = None
+    content: Optional[List[Document]] = Field(default_factory=list)

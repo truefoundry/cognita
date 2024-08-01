@@ -22,7 +22,7 @@ class DataIngestionConfig(BaseModel):
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration",
     )
-    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration to parse the documents.",
     )
     data_ingestion_mode: DataIngestionMode = Field(title="Data ingestion mode")

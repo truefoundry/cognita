@@ -59,20 +59,14 @@ class MultiModalParser(BaseParser):
 
     supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
-    def __init__(
-        self,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, *, model_configuration: dict = {}, prompt: str = "", **kwargs):
         """
         Initializes the MultiModalParser object.
         """
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if "model_configuration" in kwargs:
-            self.model_configuration = ModelConfig.parse_obj(
-                kwargs["model_configuration"]
-            )
+        if model_configuration:
+            self.model_configuration = ModelConfig.parse_obj(model_configuration)
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
             # Truefoundry specific model configuration
@@ -80,8 +74,8 @@ class MultiModalParser(BaseParser):
                 name="truefoundry/openai-main/gpt-4o-mini"
             )
 
-        if "prompt" in kwargs:
-            self.prompt = kwargs["prompt"]
+        if prompt:
+            self.prompt = prompt
             logger.info(f"Using custom prompt..., {self.prompt}")
         else:
             self.prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
@@ -93,8 +87,6 @@ Key Insights: Extract key insights or observations from the charts. What do the 
 Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
 Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
 Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
-
-            super().__init__(*args, **kwargs)
 
     async def call_vlm_agent(
         self,

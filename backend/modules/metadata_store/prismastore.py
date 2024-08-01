@@ -447,7 +447,7 @@ class PrismaStore(BaseMetadataStore):
         """Get all data ingestion runs for a collection"""
         try:
             data_ingestion_runs = await self.db.ingestionruns.find_many(
-                where={"collection_name": collection_name}
+                where={"collection_name": collection_name}, order={"id": "desc"}
             )
             return data_ingestion_runs
         except Exception as e:

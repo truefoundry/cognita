@@ -99,12 +99,13 @@ class ModelType(str, Enum):
     chat = "chat"
     embedding = "embedding"
     reranking = "reranking"
+    parser = "parser"
 
 
 class ModelConfig(BaseModel):
     name: str
     type: Optional[ModelType]
-    parameters: Optional[Dict[str, Any]] = None
+    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -133,15 +134,13 @@ class EmbedderConfig(ModelConfig):
     pass
 
 
-class ParserConfig(BaseModel):
+class ParserConfig(ModelConfig):
     """
     Parser configuration
     """
 
-    parser: str = Field(title="Parser Class Name")
-    kwargs: Optional[Dict[str, Any]] = Field(
-        title="Parser Class Arguments", default_factory=dict
-    )
+    type: ModelType = ModelType.parser
+    pass
 
 
 class VectorDBConfig(BaseModel):
@@ -247,7 +246,7 @@ class BaseDataIngestionRun(BaseModel):
         title="Fully qualified name of the data source",
     )
 
-    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 
@@ -316,7 +315,7 @@ class AssociatedDataSources(BaseModel):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
@@ -367,13 +366,13 @@ class AssociateDataSourceWithCollection(BaseModel):
         title="Fully qualified name of the data source",
         example="localdir::/app/user_data/report",
     )
-    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation",
         default_factory=dict,
         example={
             ".pdf": {
-                "parser": "UnstructuredIoParser",
-                "kwargs": {
+                "name": "UnstructuredIoParser",
+                "parameters": {
                     "max_chunk_size": 2000,
                 },
             }
@@ -392,7 +391,7 @@ class AssociateDataSourceWithCollectionDto(AssociateDataSourceWithCollection):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: Dict[str, Union[ParserConfig, str]] = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 

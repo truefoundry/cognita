@@ -116,6 +116,7 @@ class ModelGateway:
     def get_llm_from_model_config(
         self, model_config: ModelConfig, stream=False
     ) -> BaseChatModel:
+        print(model_config)
         if model_config.name not in self.model_name_to_provider_config:
             raise ValueError(
                 f"Model {model_config.name} not registered in the model gateway."
