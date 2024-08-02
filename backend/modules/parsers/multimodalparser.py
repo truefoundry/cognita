@@ -59,7 +59,9 @@ class MultiModalParser(BaseParser):
 
     supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
-    def __init__(self, *, model_configuration: ModelConfig = None, prompt: str = "", **kwargs):
+    def __init__(
+        self, *, model_configuration: ModelConfig = None, prompt: str = "", **kwargs
+    ):
         """
         Initializes the MultiModalParser object.
         """
@@ -87,6 +89,8 @@ Key Insights: Extract key insights or observations from the charts. What do the 
 Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
 Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
 Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
+
+        super().__init__(**kwargs)
 
     async def call_vlm_agent(
         self,
@@ -127,7 +131,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
+        self, filepath: str, metadata: Optional[dict] = None, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.

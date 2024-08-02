@@ -52,7 +52,9 @@ class UnstructuredIoParser(BaseParser):
         self.session.mount("https://", self.adapter)
         self.session.mount("http://", self.adapter)
 
-    async def get_chunks(self, filepath: str, metadata: dict, *args, **kwargs):
+        super().__init__(**kwargs)
+
+    async def get_chunks(self, filepath: str, metadata: dict, **kwargs):
         """
         Asynchronously extracts text from unstructured input and returns it in chunks.
         """
