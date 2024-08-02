@@ -200,7 +200,8 @@ services:
             cognita-backend:
                 condition: service_healthy
                 restart: true
-        command: ["yarn", "dev", "--host", "0.0.0.0"]
+        entrypoint: /bin/bash
+        command: -c "set -e; yarn install --frozen-lockfile && yarn dev --host 0.0.0.0"
         networks:
             - cognita-docker
 
