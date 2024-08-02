@@ -97,7 +97,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_collections(self) -> List[Collection]:
         try:
-            collections = await self.db.collection.find_many()
+            collections = await self.db.collection.find_many(order={"id": "desc"})
             return collections
         except Exception as e:
             logger.exception(f"Failed to get collections: {e}")
@@ -171,7 +171,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_data_sources(self) -> List[DataSource]:
         try:
-            data_sources = await self.db.datasource.find_many()
+            data_sources = await self.db.datasource.find_many(order={"id": "desc"})
             return data_sources
         except Exception as e:
             logger.exception(f"Error: {e}")
