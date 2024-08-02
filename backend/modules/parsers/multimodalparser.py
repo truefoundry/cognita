@@ -59,7 +59,7 @@ class MultiModalParser(BaseParser):
 
     supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
-    def __init__(self, *, model_configuration: dict = {}, prompt: str = "", **kwargs):
+    def __init__(self, *, model_configuration: ModelConfig = None, prompt: str = "", **kwargs):
         """
         Initializes the MultiModalParser object.
         """
