@@ -165,4 +165,4 @@ class Answer(BaseModel):
 
 class Docs(BaseModel):
     type: str = "docs"
-    content: Optional[List[Document]] = Field(default_factory=list)
+    content: List[Document] = Field(default_factory=list)
