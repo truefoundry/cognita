@@ -20,6 +20,7 @@ import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
 import Modal from '@/components/base/atoms/Modal'
 import notify from '@/components/base/molecules/Notify'
+import { SSE } from 'sse.js'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -178,35 +179,31 @@ const DocsQA = () => {
         }
         setIsRunningPrompt(false)
       } else {
-        const response = await fetch(
-          `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...params,
-              stream: true,
-            }),
-          }
-        )
-        const reader = response?.body?.getReader()
-        const readChunk = (value: any): any => {
-          const chunkString = new TextDecoder().decode(value.value)
+        const sseRequest = new SSE(`${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`, {
+          payload: JSON.stringify({
+            ...params,
+            stream: true,
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+        })
+
+        sseRequest.addEventListener('data', (event: any) => {
           try {
-            const parsedResponse = JSON.parse(chunkString)
-            if (parsedResponse?.end) return
-            if (parsedResponse?.answer) {
-              setAnswer((prevAnswer) => prevAnswer + parsedResponse.answer)
+            const parsed = JSON.parse(event.data)
+            if (parsed?.type === "answer") {
+              setAnswer((prevAnswer) => prevAnswer + parsed.content)
               setIsRunningPrompt(false)
-            } else if (parsedResponse?.docs) {
-              setSourceDocs((prevDocs) => [...prevDocs, ...parsedResponse.docs])
+            } else if (parsed?.type === "docs") {
+              setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
             }
           } catch (err) {}
-          return reader?.read().then(readChunk)
-        }
-        reader?.read().then(readChunk)
+        })
+
+        sseRequest.addEventListener('end', (event: any) => {
+          sseRequest.close()
+        })
       }
     } catch (err: any) {
       setErrorMessage(true)

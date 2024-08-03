@@ -77,6 +77,7 @@
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.2.2",
     "react-toastify": "^8.2.0",
+    "sse.js": "^2.5.0",
     "tailwind-merge": "^2.2.1",
     "use-react-router-breadcrumbs": "^3.1.0"
   },
