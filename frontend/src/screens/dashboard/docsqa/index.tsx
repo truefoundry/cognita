@@ -336,32 +336,6 @@ const DocsQA = () => {
           <>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex justify-between items-center mb-1">
-                <div className="text-sm">Query Controller:</div>
-                <Select
-                  value={selectedQueryController}
-                  onChange={(e) => {
-                    setSelectedQueryController(e.target.value)
-                  }}
-                  placeholder="Select Query Controller..."
-                  sx={{
-                    background: 'white',
-                    height: '2rem',
-                    width: '13.1875rem',
-                    border: '1px solid #CEE0F8 !important',
-                    outline: 'none !important',
-                    '& fieldset': {
-                      border: 'none !important',
-                    },
-                  }}
-                >
-                  {allQueryControllers?.map((retriever: any) => (
-                    <MenuItem value={retriever} key={retriever}>
-                      {retriever}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex justify-between items-center mb-1 mt-3">
                 <div className="text-sm">Collection:</div>
                 <Select
                   value={selectedCollection}
@@ -384,6 +358,32 @@ const DocsQA = () => {
                   {collections?.map((collection: any) => (
                     <MenuItem value={collection} key={collection}>
                       {collection}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex justify-between items-center mb-1 mt-3">
+                <div className="text-sm">Query Controller:</div>
+                <Select
+                  value={selectedQueryController}
+                  onChange={(e) => {
+                    setSelectedQueryController(e.target.value)
+                  }}
+                  placeholder="Select Query Controller..."
+                  sx={{
+                    background: 'white',
+                    height: '2rem',
+                    width: '13.1875rem',
+                    border: '1px solid #CEE0F8 !important',
+                    outline: 'none !important',
+                    '& fieldset': {
+                      border: 'none !important',
+                    },
+                  }}
+                >
+                  {allQueryControllers?.map((retriever: any) => (
+                    <MenuItem value={retriever} key={retriever}>
+                      {retriever}
                     </MenuItem>
                   ))}
                 </Select>

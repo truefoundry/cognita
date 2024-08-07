@@ -95,16 +95,19 @@ const DocsQASettings = () => {
 
   return (
     <>
+      <div className='flex justify-between'>
+        <div className='text-[24px] font-bold font-inter'>Collections</div>
+        <LinkButton
+          icon="plus"
+          iconClasses="fa-xs text-slate-400"
+          text={<span className="whitespace-nowrap">New Collection</span>}
+          rounded
+          className="bg-black btn-sm flex-nowrap mb-4 px-5"
+          onClick={() => setNewCollectionModalOpen(true)}
+        />
+      </div>
       <div className="flex gap-5 h-full w-full">
         <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250">
-          <LinkButton
-            icon="plus"
-            iconClasses="fa-xs text-slate-400"
-            text={<span className="whitespace-nowrap">New Collection</span>}
-            rounded
-            className="bg-black btn-sm flex-nowrap w-[calc(100%-32px)] mx-4 mb-4"
-            onClick={() => setNewCollectionModalOpen(true)}
-          />
           <div
             className="h-[calc(100vh-202px)] overflow-y-auto custom-scrollbar"
             style={{
