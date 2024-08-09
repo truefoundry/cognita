@@ -229,12 +229,15 @@ class PrismaStore(BaseMetadataStore):
             )
 
             if existing_collection_associated_data_sources:
+                logger.info(
+                    f"OLD: {type(existing_collection_associated_data_sources)}, {type(data_src_to_associate)}"
+                )
                 existing_collection_associated_data_sources[
                     data_src_to_associate.data_source_fqn
-                ] = data_src_to_associate
+                ] = data_src_to_associate.dict()
             else:
                 existing_collection_associated_data_sources = {
-                    data_src_to_associate.data_source_fqn: data_src_to_associate
+                    data_src_to_associate.data_source_fqn: data_src_to_associate.dict()
                 }
 
             associated_data_sources: Dict[str, Dict[str, Any]] = {}
@@ -242,7 +245,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.dict()
+                associated_data_sources[data_source_fqn] = data_source
 
             updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
