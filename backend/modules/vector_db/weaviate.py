@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 import weaviate
 from langchain.embeddings.base import Embeddings
@@ -99,7 +99,7 @@ class WeaviateVectorDB(BaseVectorDB):
             .with_fields("groupedBy { value }")
             .do()
         )
-        groups: List[dict] = (
+        groups: List[Dict[Any, Any]] = (
             response.get("data", {})
             .get("Aggregate", {})
             .get(collection_name.capitalize(), [])

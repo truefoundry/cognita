@@ -128,7 +128,7 @@ def list_dataloaders():
     Returns a list of all the registered loaders.
 
     Returns:
-        List[dict]: A list of all the registered loaders.
+        List[Dict]: A list of all the registered loaders.
     """
     global LOADER_REGISTRY
     return [

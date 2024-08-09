@@ -18,7 +18,7 @@ def list_query_controllers():
     Returns a list of all the registered query controllers.
 
     Returns:
-        List[dict]: A list of all the registered query controllers.
+        List[Dict]: A list of all the registered query controllers.
     """
     global QUERY_CONTROLLER_REGISTRY
     return [

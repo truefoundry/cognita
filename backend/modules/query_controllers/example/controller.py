@@ -5,7 +5,6 @@ from typing import AsyncIterator
 import async_timeout
 from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
-from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -26,6 +25,7 @@ from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
     Answer,
     Docs,
+    Document,
     ExampleQueryInput,
 )
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
@@ -86,7 +86,7 @@ class BasicRAGQueryController:
             raise HTTPException(status_code=404, detail="Collection not found")
 
         if not isinstance(collection, Collection):
-            collection = Collection(**collection.dict())
+            collection = Collection(**collection.model_dump())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
@@ -329,7 +329,7 @@ class BasicRAGQueryController:
 #   "stream": True
 # }
 
-# data = ExampleQueryInput(**payload).dict()
+# data = ExampleQueryInput(**payload).model_dump()
 # ENDPOINT_URL = 'http://localhost:8000/retrievers/example-app/answer'
 
 

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
-from backend.types import CreateRagApplication, RagApplicationDto
+from backend.types import CreateRagApplication
 
 router = APIRouter(prefix="/v1/apps", tags=["apps"])
 
@@ -18,7 +18,7 @@ async def register_rag_app(
         client = await get_client()
         created_rag_app = await client.acreate_rag_app(rag_app)
         return JSONResponse(
-            content={"rag_app": created_rag_app.dict()}, status_code=201
+            content={"rag_app": created_rag_app.model_dump()}, status_code=201
         )
     except HTTPException as exp:
         raise exp
@@ -47,7 +47,7 @@ async def get_rag_app_by_name(app_name: str = Path(title="App name")):
         rag_app = await client.aget_rag_app(app_name)
         if rag_app is None:
             return JSONResponse(content={"rag_app": []})
-        return JSONResponse(content={"rag_app": rag_app.dict()})
+        return JSONResponse(content={"rag_app": rag_app.model_dump()})
     except HTTPException as exp:
         raise exp
 

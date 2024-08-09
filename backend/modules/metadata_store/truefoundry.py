@@ -3,7 +3,7 @@ import json
 import os
 import tempfile
 import warnings
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import mlflow
 from fastapi import HTTPException
@@ -38,7 +38,7 @@ class MLRunTypes(str, enum.Enum):
 
 
 class TrueFoundry(BaseMetadataStore):
-    ml_runs: dict[str, ml.MlFoundryRun] = {}
+    ml_runs: Dict[str, ml.MlFoundryRun] = {}
     CONSTANT_DATA_SOURCE_RUN_NAME = "tfy-datasource"
 
     def __init__(self, *args, ml_repo_name: str, **kwargs):
@@ -58,7 +58,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def _get_run_by_name(
         self, run_name: str, no_cache: bool = False
-    ) -> ml.MlFoundryRun | None:
+    ) -> Optional[ml.MlFoundryRun]:
         """
         Cache the runs to avoid too many requests to the backend.
         """
@@ -113,7 +113,7 @@ class TrueFoundry(BaseMetadataStore):
             embedder_config=collection.embedder_config,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_collection.dict(), params=params
+            run=run, metadata=created_collection.model_dump(), params=params
         )
         run.end()
         logger.debug(f"[Metadata Store] Collection Saved")
@@ -134,7 +134,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def _get_artifact_metadata_ml_run(
         self, run: ml.MlFoundryRun
-    ) -> ml.ArtifactVersion | None:
+    ) -> Optional[ml.ArtifactVersion]:
         params = run.get_params()
         metadata_artifact_fqn = params.get("metadata_artifact_fqn")
         if not metadata_artifact_fqn:
@@ -177,7 +177,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         """Get collection from given collection name."""
         logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
@@ -187,14 +187,14 @@ class TrueFoundry(BaseMetadataStore):
             )
             return None
         collection = self._populate_collection(
-            Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            Collection.model_validate(self._get_entity_from_run(run=ml_run))
         )
         logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
         return collection
 
     def get_retrieve_collection_by_name(
         self, collection_name: str, no_cache: bool = True
-    ) -> Collection | None:
+    ) -> Optional[Collection]:
         """Get collection from given collection name. Used during retrieval"""
         logger.debug(f"[Metadata Store] Getting collection with name {collection_name}")
         ml_run = self._get_run_by_name(run_name=collection_name, no_cache=no_cache)
@@ -203,7 +203,7 @@ class TrueFoundry(BaseMetadataStore):
                 f"[Metadata Store] Collection with name {collection_name} not found"
             )
             return None
-        collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+        collection = Collection.model_validate(self._get_entity_from_run(run=ml_run))
         logger.debug(f"[Metadata Store] Fetched collection with name {collection_name}")
         return collection
 
@@ -216,7 +216,9 @@ class TrueFoundry(BaseMetadataStore):
         )
         collections = []
         for ml_run in ml_runs:
-            collection = Collection.parse_obj(self._get_entity_from_run(run=ml_run))
+            collection = Collection.model_validate(
+                self._get_entity_from_run(run=ml_run)
+            )
             collections.append(self._populate_collection(collection))
         logger.debug(f"[Metadata Store] Listed {len(collections)} collections")
         return collections
@@ -262,7 +264,9 @@ class TrueFoundry(BaseMetadataStore):
                 f"data source with fqn {data_source_association.data_source_fqn} not found",
             )
         # Always do this to avoid race conditions
-        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        collection = Collection.model_validate(
+            self._get_entity_from_run(run=collection_run)
+        )
         associated_data_source = AssociatedDataSources(
             data_source_fqn=data_source_association.data_source_fqn,
             parser_config=data_source_association.parser_config,
@@ -271,7 +275,7 @@ class TrueFoundry(BaseMetadataStore):
             data_source_association.data_source_fqn
         ] = associated_data_source
 
-        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        self._update_entity_in_run(run=collection_run, metadata=collection.model_dump())
         logger.debug(
             f"[Metadata Store] Associated data_source {data_source_association.data_source_fqn} "
             f"to collection {collection_name}"
@@ -296,9 +300,11 @@ class TrueFoundry(BaseMetadataStore):
                 f"Collection {collection_name} not found.",
             )
         # Always do this to avoid run conditions
-        collection = Collection.parse_obj(self._get_entity_from_run(run=collection_run))
+        collection = Collection.model_validate(
+            self._get_entity_from_run(run=collection_run)
+        )
         collection.associated_data_sources.pop(data_source_fqn)
-        self._update_entity_in_run(run=collection_run, metadata=collection.dict())
+        self._update_entity_in_run(run=collection_run, metadata=collection.model_dump())
         logger.debug(
             f"[Metadata Store] Unassociated data_source {data_source_fqn} to collection {collection_name}"
         )
@@ -331,7 +337,7 @@ class TrueFoundry(BaseMetadataStore):
             metadata=data_source.metadata,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_data_source.dict(), params=params
+            run=run, metadata=created_data_source.model_dump(), params=params
         )
         run.end()
         logger.debug(
@@ -339,14 +345,14 @@ class TrueFoundry(BaseMetadataStore):
         )
         return created_data_source
 
-    def get_data_source_from_fqn(self, fqn: str) -> DataSource | None:
+    def get_data_source_from_fqn(self, fqn: str) -> Optional[DataSource]:
         logger.debug(f"[Metadata Store] Getting data_source by fqn {fqn}")
         runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
             filter_string=f"params.entity_type = '{MLRunTypes.DATA_SOURCE.value}' and params.data_source_fqn = '{fqn}'",
         )
         for run in runs:
-            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            data_source = DataSource.model_validate(self._get_entity_from_run(run=run))
             logger.debug(f"[Metadata Store] Fetched Data Source with fqn {fqn}")
             return data_source
         logger.debug(f"[Metadata Store] Data Source with fqn {fqn} not found")
@@ -360,7 +366,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         data_sources: List[DataSource] = []
         for run in runs:
-            data_source = DataSource.parse_obj(self._get_entity_from_run(run=run))
+            data_source = DataSource.model_validate(self._get_entity_from_run(run=run))
             data_sources.append(data_source)
         logger.debug(f"[Metadata Store] Listed {len(data_sources)} data sources")
         return data_sources
@@ -395,7 +401,7 @@ class TrueFoundry(BaseMetadataStore):
             status=DataIngestionRunStatus.INITIALIZED,
         )
         self._save_entity_to_run(
-            run=run, metadata=created_data_ingestion_run.dict(), params=params
+            run=run, metadata=created_data_ingestion_run.model_dump(), params=params
         )
         run.end()
         logger.debug(
@@ -406,7 +412,7 @@ class TrueFoundry(BaseMetadataStore):
 
     def get_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
-    ) -> DataIngestionRun | None:
+    ) -> Optional[DataIngestionRun]:
         logger.debug(
             f"[Metadata Store] Getting ingestion run {data_ingestion_run_name}"
         )
@@ -416,7 +422,7 @@ class TrueFoundry(BaseMetadataStore):
                 f"[Metadata Store] Ingestion run with name {data_ingestion_run_name} not found"
             )
             return None
-        data_ingestion_run = DataIngestionRun.parse_obj(
+        data_ingestion_run = DataIngestionRun.model_validate(
             self._get_entity_from_run(run=run)
         )
         run_tags = run.get_tags()
@@ -447,7 +453,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         data_ingestion_runs: List[DataIngestionRun] = []
         for run in runs:
-            data_ingestion_run = DataIngestionRun.parse_obj(
+            data_ingestion_run = DataIngestionRun.model_validate(
                 self._get_entity_from_run(run=run)
             )
             run_tags = run.get_tags()
@@ -512,7 +518,7 @@ class TrueFoundry(BaseMetadataStore):
     def log_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         try:
@@ -566,7 +572,7 @@ class TrueFoundry(BaseMetadataStore):
         )
         return [run.run_name for run in ml_runs]
 
-    def list_data_sources(self) -> List[dict[str, str]]:
+    def list_data_sources(self) -> List[Dict[str, str]]:
         logger.info(f"[Metadata Store] Listing all data sources")
         ml_runs = self.client.search_runs(
             ml_repo=self.ml_repo_name,
@@ -624,12 +630,14 @@ class TrueFoundry(BaseMetadataStore):
             name=app.name,
             config=app.config,
         )
-        self._save_entity_to_run(run=run, metadata=created_app.dict(), params=params)
+        self._save_entity_to_run(
+            run=run, metadata=created_app.model_dump(), params=params
+        )
         run.end()
         logger.debug(f"[Metadata Store] RAG Application Saved")
         return created_app
 
-    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+    def get_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """
         Get a RAG application from the metadata store
         """
@@ -641,7 +649,9 @@ class TrueFoundry(BaseMetadataStore):
             )
             return None
         try:
-            app = RagApplicationDto.parse_obj(self._get_entity_from_run(run=ml_run))
+            app = RagApplicationDto.model_validate(
+                self._get_entity_from_run(run=ml_run)
+            )
             logger.debug(
                 f"[Metadata Store] Fetched RAG application with name {app_name}"
             )

@@ -2,7 +2,6 @@ import warnings
 from typing import Dict
 
 import requests
-from qdrant_client._pydantic_compat import to_dict
 from qdrant_client.client_base import QdrantBase
 from qdrant_client.http import models
 from tqdm import tqdm
@@ -104,11 +103,11 @@ def _recreate_collection(
         replication_factor=src_config.params.replication_factor,
         write_consistency_factor=src_config.params.write_consistency_factor,
         on_disk_payload=src_config.params.on_disk_payload,
-        hnsw_config=models.HnswConfigDiff(**to_dict(src_config.hnsw_config)),
+        hnsw_config=models.HnswConfigDiff(**src_config.hnsw_config.model_dump()),
         optimizers_config=models.OptimizersConfigDiff(
-            **to_dict(src_config.optimizer_config)
+            **src_config.optimizer_config.model_dump()
         ),
-        wal_config=models.WalConfigDiff(**to_dict(src_config.wal_config)),
+        wal_config=models.WalConfigDiff(**src_config.wal_config.model_dump()),
         quantization_config=src_config.quantization_config,
         timeout=300,
     )

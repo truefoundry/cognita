@@ -51,7 +51,6 @@ class UnstructuredIoParser(BaseParser):
         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
         self.session.mount("https://", self.adapter)
         self.session.mount("http://", self.adapter)
-
         super().__init__(**kwargs)
 
     async def get_chunks(self, filepath: str, metadata: dict, **kwargs):

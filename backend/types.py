@@ -1,12 +1,21 @@
 import enum
-import json
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, constr, root_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    computed_field,
+    model_validator,
+)
+from typing_extensions import Annotated
 
 from backend.constants import FQN_SEPARATOR
+
+# TODO (chiragjn): Remove Optional from Dict and List type fields. Instead just use a default_factory
 
 
 class DataIngestionMode(str, Enum):
@@ -17,6 +26,9 @@ class DataIngestionMode(str, Enum):
     NONE = "NONE"
     INCREMENTAL = "INCREMENTAL"
     FULL = "FULL"
+
+    class Config:
+        use_enum_values = True
 
 
 class DataPoint(BaseModel):
@@ -42,7 +54,8 @@ class DataPoint(BaseModel):
         title="Hash of the data point for the given data source that is guaranteed to be updated for any update in data point at source",
     )
 
-    metadata: Optional[Dict[str, str]] = Field(
+    metadata: Optional[Dict[str, Any]] = Field(
+        None,
         title="Additional metadata for the data point",
     )
 
@@ -84,9 +97,11 @@ class LoadedDataPoint(DataPoint):
         title="Local file path of the loaded data point",
     )
     file_extension: Optional[str] = Field(
+        None,
         title="File extension of the loaded data point",
     )
     local_metadata_file_path: Optional[str] = Field(
+        None,
         title="Local file path of the metadata file",
     )
 
@@ -101,10 +116,15 @@ class ModelType(str, Enum):
     reranking = "reranking"
     parser = "parser"
 
+    class Config:
+        use_enum_values = True
+
 
 class ModelConfig(BaseModel):
     name: str
-    type: Optional[ModelType]
+    # TODO (chiragjn): This should not be Optional! Changing might break backward compatibility
+    #   Problem is we have shared these entities between DTO layers and Service / DB layers
+    type: Optional[ModelType] = None
     parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -118,12 +138,12 @@ class ModelConfig(BaseModel):
 class ModelProviderConfig(BaseModel):
     provider_name: str
     api_format: str
+    base_url: Optional[str] = None
+    api_key_env_var: str
+    default_headers: Dict[str, str] = Field(default_factory=dict)
     llm_model_ids: List[str] = Field(default_factory=list)
     embedding_model_ids: List[str] = Field(default_factory=list)
     reranking_model_ids: List[str] = Field(default_factory=list)
-    api_key_env_var: str
-    base_url: Optional[str] = None
-    default_headers: Dict[str, str] = Field(default_factory=dict)
 
 
 class EmbedderConfig(ModelConfig):
@@ -140,7 +160,6 @@ class ParserConfig(ModelConfig):
     """
 
     type: ModelType = ModelType.parser
-    pass
 
 
 class VectorDBConfig(BaseModel):
@@ -152,7 +171,7 @@ class VectorDBConfig(BaseModel):
     local: bool = False
     url: Optional[str] = None
     api_key: Optional[str] = None
-    config: Optional[dict] = None
+    config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class QdrantClientConfig(BaseModel):
@@ -160,8 +179,7 @@ class QdrantClientConfig(BaseModel):
     Qdrant extra configuration
     """
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     port: Optional[int] = None
     grpc_port: int = 6334
@@ -176,7 +194,7 @@ class MetadataStoreConfig(BaseModel):
     """
 
     provider: str
-    config: Optional[dict] = Field(default_factory=dict)
+    config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
 class RetrieverConfig(BaseModel):
@@ -186,7 +204,8 @@ class RetrieverConfig(BaseModel):
 
     search_type: Literal["mmr", "similarity"] = Field(
         default="similarity",
-        title="""Defines the type of search that the Retriever should perform. Can be "similarity" (default), "mmr", or "similarity_score_threshold".""",
+        title="""Defines the type of search that the Retriever should perform. \
+        Can be "similarity" (default), "mmr", or "similarity_score_threshold".""",
     )
     k: int = Field(
         default=4,
@@ -196,7 +215,7 @@ class RetrieverConfig(BaseModel):
         default=20,
         title="""Amount of documents to pass to MMR algorithm (Default: 20)""",
     )
-    filter: Optional[dict] = Field(
+    filter: Optional[Dict[Any, Any]] = Field(
         default=None,
         title="""Filter by document metadata""",
     )
@@ -209,11 +228,12 @@ class RetrieverConfig(BaseModel):
     @property
     def get_search_kwargs(self) -> dict:
         # Check at langchain.schema.vectorstore.VectorStore.as_retriever
-        match self.search_type:
-            case "similarity":
-                return {"k": self.k, "filter": self.filter}
-            case "mmr":
-                return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+        if self.search_type == "similarity":
+            return {"k": self.k, "filter": self.filter}
+        elif self.search_type == "mmr":
+            return {"k": self.k, "fetch_k": self.fetch_k, "filter": self.filter}
+        else:
+            raise ValueError(f"Search type {self.search_type} is not supported")
 
 
 class DataIngestionRunStatus(str, enum.Enum):
@@ -231,6 +251,9 @@ class DataIngestionRunStatus(str, enum.Enum):
     DATA_CLEANUP_FAILED = "DATA_CLEANUP_FAILED"
     COMPLETED = "COMPLETED"
     ERROR = "ERROR"
+
+    class Config:
+        use_enum_values = True
 
 
 class BaseDataIngestionRun(BaseModel):
@@ -255,7 +278,7 @@ class BaseDataIngestionRun(BaseModel):
         title="Data ingestion mode for the data ingestion",
     )
 
-    raise_error_on_failure: Optional[bool] = Field(
+    raise_error_on_failure: bool = Field(
         title="Flag to configure weather to raise error on failure or not. Default is True",
         default=True,
     )
@@ -270,6 +293,7 @@ class DataIngestionRun(BaseDataIngestionRun):
         title="Name of the data ingestion run",
     )
     status: Optional[DataIngestionRunStatus] = Field(
+        None,
         title="Status of the data ingestion run",
     )
 
@@ -286,17 +310,13 @@ class BaseDataSource(BaseModel):
         title="A unique identifier for the data source",
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        title="Additional config for your data source"
+        None, title="Additional config for your data source"
     )
 
+    @computed_field
     @property
-    def fqn(self):
+    def fqn(self) -> str:
         return f"{FQN_SEPARATOR}".join([self.type, self.uri])
-
-    @root_validator
-    def validate_fqn(cls, values: Dict) -> Dict:
-        values["fqn"] = f"{FQN_SEPARATOR}".join([values["type"], values["uri"]])
-        return values
 
 
 class CreateDataSource(BaseDataSource):
@@ -319,7 +339,7 @@ class AssociatedDataSources(BaseModel):
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
-        title="Data source associated with the collection"
+        None, title="Data source associated with the collection"
     )
 
 
@@ -333,6 +353,7 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
     data_source_fqn: Optional[str] = Field(
+        None,
         title="Fully qualified name of the data source",
     )
 
@@ -341,7 +362,7 @@ class IngestDataToCollectionDto(BaseModel):
         title="Data ingestion mode for the data ingestion",
     )
 
-    raise_error_on_failure: Optional[bool] = Field(
+    raise_error_on_failure: bool = Field(
         title="Flag to configure weather to raise error on failure or not. Default is True",
         default=True,
     )
@@ -414,12 +435,13 @@ class BaseCollection(BaseModel):
     Base collection configuration
     """
 
-    name: constr(regex=r"^[a-z][a-z0-9-]*$") = Field(  # type: ignore
+    name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")] = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character and hypen, should start with alphabet",
         example="test-collection",
     )
     description: Optional[str] = Field(
+        None,
         title="a description for your collection",
         example="This is a test collection",
     )
@@ -442,19 +464,29 @@ class Collection(BaseCollection):
         title="Data sources associated with the collection", default_factory=dict
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_associated_data_sources_not_none(
+        cls, values: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        if values.get("associated_data_sources") is None:
+            values["associated_data_sources"] = {}
+        return values
+
 
 class CreateCollectionDto(CreateCollection):
     associated_data_sources: Optional[List[AssociateDataSourceWithCollection]] = Field(
-        title="Data sources associated with the collection"
+        None, title="Data sources associated with the collection"
     )
 
 
 class UploadToDataDirectoryDto(BaseModel):
     filepaths: List[str]
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
-    upload_name: str = Field(
+    upload_name: Annotated[
+        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
+    ] = Field(  # type:ignore
         title="Name of the upload",
-        regex=r"^[a-z][a-z0-9-]*$",
         default=str(uuid.uuid4()),
     )
 
@@ -469,9 +501,11 @@ class ListDataIngestionRunsDto(BaseModel):
 
 
 class RagApplication(BaseModel):
-    name: str = Field(
+    # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
+    name: Annotated[
+        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
+    ] = Field(  # type:ignore
         title="Name of the rag app",
-        regex=r"^[a-z][a-z0-9-]*$",  # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     )
     config: Dict[str, Any] = Field(
         title="Configuration for the rag app",

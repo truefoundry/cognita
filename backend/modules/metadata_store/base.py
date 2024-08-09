@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
 from backend.types import (
@@ -18,7 +18,7 @@ from backend.types import (
 from backend.utils import run_in_executor
 
 
-# TODO(chiragjn): Ideal would be we make `async def a*` abstract methods and drop sync ones
+# TODO (chiragjn): Ideal would be we make `async def a*` abstract methods and drop sync ones
 #   Implementations can then opt to call their sync versions using run_in_executor
 class BaseMetadataStore(ABC):
     def __init__(self, *args, **kwargs):
@@ -300,7 +300,7 @@ class BaseMetadataStore(ABC):
     def log_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         """
@@ -311,7 +311,7 @@ class BaseMetadataStore(ABC):
     async def alog_metrics_for_data_ingestion_run(
         self,
         data_ingestion_run_name: str,
-        metric_dict: dict[str, int | float],
+        metric_dict: Dict[str, Union[int, float]],
         step: int = 0,
     ):
         """
@@ -346,6 +346,8 @@ class BaseMetadataStore(ABC):
             errors=errors,
         )
 
+    # TODO (chiragjn): What is the difference between get_collections and this?
+    # TODO (chiragjn): Return complete entities, why return only str?
     def list_collections(
         self,
     ) -> List[str]:
@@ -354,6 +356,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     async def alist_collections(
         self,
     ) -> List[str]:
@@ -365,17 +368,19 @@ class BaseMetadataStore(ABC):
             self.list_collections,
         )
 
+    # TODO (chiragjn): Return complete entities, why return dict?
     def list_data_sources(
         self,
-    ) -> List[str]:
+    ) -> List[Dict[str, str]]:
         """
         List all data source names from metadata store
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return dict?
     async def alist_data_sources(
         self,
-    ) -> List[str]:
+    ) -> List[Dict[str, str]]:
         """
         List all data source names from metadata store
         """
@@ -410,7 +415,7 @@ class BaseMetadataStore(ABC):
         """
         return await run_in_executor(None, self.create_rag_app, app=app)
 
-    def get_rag_app(self, app_name: str) -> RagApplicationDto | None:
+    def get_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """
         Get a RAG application from the metadata store by name
         """
@@ -422,12 +427,14 @@ class BaseMetadataStore(ABC):
         """
         return await run_in_executor(None, self.get_rag_app, app_name=app_name)
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     def list_rag_apps(self) -> List[str]:
         """
         List all RAG application names from metadata store
         """
         raise NotImplementedError()
 
+    # TODO (chiragjn): Return complete entities, why return only str?
     async def alist_rag_apps(self) -> List[str]:
         """
         List all RAG application names from metadata store
