@@ -8,7 +8,7 @@ const NoCollections = ({ fullWidth }: { fullWidth?: boolean }) => {
 
   return (
     <div
-      className={`h-full border rounded-lg border-[#CEE0F8] ${
+      className={`flex-1 border rounded-lg border-[#CEE0F8] ${
         fullWidth ? 'w-full' : 'w-[calc(100%-18.75rem)]'
       } bg-white flex items-center justify-center`}
     >
