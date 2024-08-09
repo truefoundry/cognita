@@ -4,7 +4,7 @@ WORKDIR /build
 COPY . .
 
 # Install dependencies
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # Copy environment variables file if it doesn't exist
 RUN test -e .env || cp .env.example .env

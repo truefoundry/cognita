@@ -117,7 +117,9 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_collections(self) -> List[Collection]:
         try:
-            collections: List["PrismaCollection"] = await self.db.collection.find_many()
+            collections: List["PrismaCollection"] = await self.db.collection.find_many(
+                order={"id": "desc"}
+            )
             return [Collection.model_validate(c.model_dump()) for c in collections]
         except Exception as e:
             logger.exception(f"Failed to get collections: {e}")
@@ -193,9 +195,9 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_data_sources(self) -> List[DataSource]:
         try:
-            data_sources: List[
-                "PrismaDataSource"
-            ] = await self.db.datasource.find_many()
+            data_sources: List["PrismaDataSource"] = await self.db.datasource.find_many(
+                order={"id": "desc"}
+            )
             return [DataSource.model_validate(ds.model_dump()) for ds in data_sources]
         except Exception as e:
             logger.exception(f"Error: {e}")
@@ -261,12 +263,13 @@ class PrismaStore(BaseMetadataStore):
                     data_src_to_associate.data_source_fqn: data_src_to_associate
                 }
 
+            logger.info(existing_collection_associated_data_sources)
             associated_data_sources: Dict[str, Dict[str, Any]] = {}
             for (
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.model_dump()
+                associated_data_sources[data_source_fqn] = data_source.serialize()
 
             updated_collection: Optional[
                 "PrismaCollection"
@@ -337,6 +340,11 @@ class PrismaStore(BaseMetadataStore):
             )
 
         associated_data_sources.pop(data_source_fqn, None)
+
+        associated_data_sources = {
+            k: v.serialize() for k, v in associated_data_sources.items()
+        }
+
         try:
             updated_collection: Optional[
                 "PrismaCollection"
@@ -350,6 +358,7 @@ class PrismaStore(BaseMetadataStore):
                     detail=f"Failed to unassociate data source from collection. "
                     f"No collection found with name {collection_name}",
                 )
+            logger.info(f"Updated collection: {updated_collection}")
             return Collection.model_validate(updated_collection.model_dump())
         except Exception as e:
             logger.exception(f"Failed to unassociate data source with collection: {e}")
@@ -500,7 +509,7 @@ class PrismaStore(BaseMetadataStore):
             data_ingestion_runs: List[
                 "PrismaDataIngestionRun"
             ] = await self.db.ingestionruns.find_many(
-                where={"collection_name": collection_name}
+                where={"collection_name": collection_name}, order={"id": "desc"}
             )
             return [
                 DataIngestionRun.model_validate(data_ir.model_dump())

@@ -132,6 +132,7 @@ class ModelGateway:
         return ChatOpenAI(
             model=model_id,
             temperature=model_config.parameters.get("temperature", 0.1),
+            max_tokens=model_config.parameters.get("max_tokens", 1024),
             streaming=stream,
             api_key=api_key,
             base_url=model_provider_config.base_url,

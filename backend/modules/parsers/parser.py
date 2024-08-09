@@ -31,7 +31,7 @@ class BaseParser(ABC):
     It contains the common attributes and methods that each parser should implement.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         pass
 
     @abstractmethod
@@ -64,6 +64,9 @@ def get_parser_for_extension(
     global PARSER_REGISTRY_EXTENSIONS
     global PARSER_REGISTRY
 
+    logger.debug(
+        f"PARSER REGISTRY: {PARSER_REGISTRY}, file_extension: {file_extension}, parsers_map: {parsers_map}"
+    )
     # We dont have a parser for this extension yet
     if file_extension not in PARSER_REGISTRY_EXTENSIONS:
         logger.error(f"Loaded doc with extension {file_extension} is not supported")
@@ -71,26 +74,21 @@ def get_parser_for_extension(
     # Extension not given in parser map use the default registry
     if file_extension not in parsers_map:
         # get the first parser name registered with the extension
-        name = PARSER_REGISTRY_EXTENSIONS[file_extension][0]
-        print(
-            f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {name}"
-        )
+        parser_name = PARSER_REGISTRY_EXTENSIONS[file_extension][0]
         logger.debug(
-            f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {name}"
+            f"Parser map not found in the collection for extension {file_extension}. Hence, using parser {parser_name}"
         )
+        return PARSER_REGISTRY[parser_name](**kwargs)
     else:
-        name = parsers_map[file_extension]
-        print(
-            f"Parser map found in the collection for extension {file_extension}. Hence, using parser {name}"
-        )
+        parser_name = parsers_map[file_extension].name
         logger.debug(
-            f"Parser map found in the collection for extension {file_extension}. Hence, using parser {name}"
+            f"Parser map found in the collection for extension {file_extension}. Hence, using parser {parser_name}"
         )
 
-    if name not in PARSER_REGISTRY:
-        raise ValueError(f"No parser registered with name {name}")
+    if parser_name not in PARSER_REGISTRY:
+        raise ValueError(f"No parser registered with name {parser_name}")
 
-    return PARSER_REGISTRY[name](*args, **kwargs)
+    return PARSER_REGISTRY[parser_name](**parsers_map[file_extension].parameters)
 
 
 def list_parsers():

@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 
 from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
@@ -176,3 +176,28 @@ class ExampleQueryInput(BaseModel):
             )
 
         return values
+
+
+class Document(BaseModel):
+    page_content: str
+    metadata: dict = Field(default_factory=dict)
+
+
+class Answer(BaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(BaseModel):
+    type: str = "docs"
+    content: List[Document] = Field(default_factory=list)
+
+
+class Answer(BaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(BaseModel):
+    type: str = "docs"
+    content: List[Document] = Field(default_factory=list)

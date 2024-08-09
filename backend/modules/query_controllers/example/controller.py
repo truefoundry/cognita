@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import AsyncIterator
 
 import async_timeout
 from fastapi import Body, HTTPException
@@ -10,6 +11,7 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from pydantic import BaseModel
 
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
@@ -21,10 +23,11 @@ from backend.modules.query_controllers.example.payload import (
 )
 from backend.modules.query_controllers.example.types import (
     GENERATION_TIMEOUT_SEC,
+    Answer,
+    Docs,
+    Document,
     ExampleQueryInput,
 )
-
-# from backend.modules.rerankers.reranker_svc import InfinityRerankerSvc
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.server.decorators import post, query_controller
 from backend.types import Collection, ModelConfig
@@ -38,6 +41,16 @@ EXAMPLES = {
 
 @query_controller("/basic-rag")
 class BasicRAGQueryController:
+    required_metadata = [
+        "_data_point_fqn",
+        "filename",
+        "_id",
+        "collection_name",
+        "page_number",
+        "pg_no",
+        "source",
+    ]
+
     def _get_prompt_template(self, input_variables, template):
         """
         Get the prompt template
@@ -47,20 +60,15 @@ class BasicRAGQueryController:
     def _format_docs(self, docs):
         formatted_docs = list()
         for doc in docs:
-            doc.metadata.pop("image_b64", None)
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
             formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
+                {"page_content": doc.page_content, "metadata": metadata}
             )
         return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
-
-    def _format_docs_for_stream(self, docs):
-        formatted_docs = list()
-        for doc in docs:
-            doc.metadata.pop("image_b64", None)
-            formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": doc.metadata}
-            )
-        return formatted_docs
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
@@ -83,7 +91,7 @@ class BasicRAGQueryController:
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
             embeddings=model_gateway.get_embedder_from_model_config(
-                model_name=collection.embedder_config.embedding_model_config.name
+                model_name=collection.embedder_config.name
             ),
         )
 
@@ -180,19 +188,33 @@ class BasicRAGQueryController:
             raise HTTPException(status_code=404, detail="Retriever not found")
         return retriever
 
-    async def _stream_answer(self, rag_chain, query):
+    def _cleanup_metadata(self, docs):
+        formatted_docs = list()
+        for doc in docs:
+            metadata = {
+                key: doc.metadata[key]
+                for key in self.required_metadata
+                if key in doc.metadata
+            }
+            formatted_docs.append(
+                Document(page_content=doc.page_content, metadata=metadata)
+            )
+        return formatted_docs
+
+    async def _sse_wrap(self, gen):
+        async for data in gen:
+            yield "event: data\n"
+            yield f"data: {json.dumps(data.dict())}\n\n"
+        yield "event: end\n"
+
+    async def _stream_answer(self, rag_chain, query) -> AsyncIterator[BaseModel]:
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
                 async for chunk in rag_chain.astream(query):
                     if "context" in chunk:
-                        yield json.dumps(
-                            {"docs": self._format_docs_for_stream(chunk["context"])}
-                        )
+                        yield Docs(content=self._cleanup_metadata(chunk["context"]))
                     elif "answer" in chunk:
-                        # print("Answer: ", chunk['answer'])
-                        yield json.dumps({"answer": chunk["answer"]})
-
-                yield json.dumps({"end": "<END>"})
+                        yield Answer(content=chunk["answer"])
             except asyncio.TimeoutError:
                 raise HTTPException(status_code=504, detail="Stream timed out")
 
@@ -242,7 +264,9 @@ class BasicRAGQueryController:
 
             if request.stream:
                 return StreamingResponse(
-                    self._stream_answer(rag_chain_with_source, request.query),
+                    self._sse_wrap(
+                        self._stream_answer(rag_chain_with_source, request.query),
+                    ),
                     media_type="text/event-stream",
                 )
 

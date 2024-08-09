@@ -1,7 +1,7 @@
 import enum
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import (
     BaseModel,
@@ -112,6 +112,7 @@ class ModelType(str, Enum):
     chat = "chat"
     embedding = "embedding"
     reranking = "reranking"
+    parser = "parser"
 
 
 class ModelConfig(BaseModel):
@@ -119,7 +120,14 @@ class ModelConfig(BaseModel):
     # TODO (chiragjn): This should not be Optional! Changing might break backward compatibility
     #   Problem is we have shared these entities between DTO layers and Service / DB layers
     type: Optional[ModelType] = None
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "parameters": self.parameters,
+        }
 
 
 class ModelProviderConfig(BaseModel):
@@ -133,42 +141,28 @@ class ModelProviderConfig(BaseModel):
     reranking_model_ids: List[str] = Field(default_factory=list)
 
 
-class EmbedderConfig(BaseModel):
+class EmbedderConfig(ModelConfig):
     """
     Embedder configuration
     """
 
-    # This field will probably be removed soon or refactored
-    embedding_model_config: ModelConfig = Field(
-        alias="model_config",
-    )
-    config: Optional[Dict[str, Any]] = Field(
-        title="Configuration for the embedder", default_factory=dict
-    )
-
-    @model_serializer
-    def serialize(self):
-        return {
-            "model_config": self.embedding_model_config,
-            "config": self.config,
-        }
+    pass
 
 
-class ParserConfig(BaseModel):
+class ParserConfig(ModelConfig):
     """
     Parser configuration
     """
 
-    chunk_size: int = Field(title="Chunk Size for data parsing", ge=1, default=1000)
-    chunk_overlap: int = Field(title="Chunk Overlap for indexing", ge=0, default=20)
-    parser_map: Dict[str, str] = Field(
-        title="Mapping of file extensions to parsers",
-        default_factory=dict,
-    )
-    additional_config: Optional[Dict[str, Any]] = Field(
-        title="Additional optional configuration for the parser",
-        default_factory=dict,
-    )
+    type: ModelType = ModelType.parser
+
+    @model_serializer
+    def serialize(self):
+        return {
+            "name": self.name,
+            "parameters": self.parameters,
+            "type": self.type.value,
+        }
 
 
 class VectorDBConfig(BaseModel):
@@ -275,7 +269,7 @@ class BaseDataIngestionRun(BaseModel):
         title="Fully qualified name of the data source",
     )
 
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 
@@ -330,7 +324,14 @@ class CreateDataSource(BaseDataSource):
 
 
 class DataSource(BaseDataSource):
-    pass
+    @model_serializer
+    def serialize(self):
+        return {
+            "type": self.type,
+            "uri": self.uri,
+            "metadata": self.metadata,
+            "fqn": self.fqn,
+        }
 
 
 class AssociatedDataSources(BaseModel):
@@ -341,12 +342,20 @@ class AssociatedDataSources(BaseModel):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
     data_source: Optional[DataSource] = Field(
         None, title="Data source associated with the collection"
     )
+
+    @model_serializer
+    def serialize(self):
+        return {
+            "data_source_fqn": self.data_source_fqn,
+            "parser_config": {k: v.serialize() for k, v in self.parser_config.items()},
+            "data_source": self.data_source.serialize() if self.data_source else None,
+        }
 
 
 class IngestDataToCollectionDto(BaseModel):
@@ -391,9 +400,19 @@ class AssociateDataSourceWithCollection(BaseModel):
 
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
+        example="localdir::/app/user_data/report",
     )
-    parser_config: ParserConfig = Field(
-        title="Parser configuration for the data transformation", default_factory=dict
+    parser_config: Dict[str, ParserConfig] = Field(
+        title="Parser configuration for the data transformation",
+        default_factory=dict,
+        example={
+            ".pdf": {
+                "name": "UnstructuredIoParser",
+                "parameters": {
+                    "max_chunk_size": 2000,
+                },
+            }
+        },
     )
 
 
@@ -408,7 +427,7 @@ class AssociateDataSourceWithCollectionDto(AssociateDataSourceWithCollection):
     data_source_fqn: str = Field(
         title="Fully qualified name of the data source",
     )
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration for the data transformation", default_factory=dict
     )
 
@@ -434,13 +453,20 @@ class BaseCollection(BaseModel):
     name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")] = Field(  # type: ignore
         title="a unique name to your collection",
         description="Should only contain lowercase alphanumeric character and hypen, should start with alphabet",
+        example="test-collection",
     )
     description: Optional[str] = Field(
         None,
         title="a description for your collection",
+        example="This is a test collection",
     )
     embedder_config: EmbedderConfig = Field(
-        title="Embedder configuration", default_factory=dict
+        title="Embedder configuration",
+        default_factory=dict,
+        example={
+            "name": "truefoundry/openai-main/text-embedding-3-small",
+            "type": "embedding",
+        },
     )
 
 

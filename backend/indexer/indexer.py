@@ -219,7 +219,7 @@ async def ingest_data_points(
 
     """
     embeddings = model_gateway.get_embedder_from_model_config(
-        model_name=inputs.embedder_config.embedding_model_config.name
+        model_name=inputs.embedder_config.name
     )
     documents_to_be_upserted = []
     logger.info(
@@ -232,9 +232,7 @@ async def ingest_data_points(
         # Get parser for required file extension
         parser = get_parser_for_extension(
             file_extension=loaded_data_point.file_extension,
-            parsers_map=inputs.parser_config.parser_map,
-            max_chunk_size=inputs.parser_config.chunk_size,
-            additional_config=inputs.parser_config.additional_config,
+            parsers_map=inputs.parser_config,
         )
         if parser is None:
             logger.warning(

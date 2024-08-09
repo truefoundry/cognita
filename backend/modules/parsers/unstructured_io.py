@@ -36,7 +36,7 @@ class UnstructuredIoParser(BaseParser):
         ".xlsx",
     ]
 
-    def __init__(self, max_chunk_size: int = 2000, *args, **kwargs):
+    def __init__(self, *, max_chunk_size: int = 2000, **kwargs):
         """
         Initializes the UnstructuredIoParser object.
         """
@@ -51,9 +51,9 @@ class UnstructuredIoParser(BaseParser):
         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
         self.session.mount("https://", self.adapter)
         self.session.mount("http://", self.adapter)
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
-    async def get_chunks(self, filepath: str, metadata: dict, *args, **kwargs):
+    async def get_chunks(self, filepath: str, metadata: dict, **kwargs):
         """
         Asynchronously extracts text from unstructured input and returns it in chunks.
         """
