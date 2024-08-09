@@ -27,7 +27,7 @@ const CollectionCard = ({
 
   return (
     <div
-      className={`cursor-pointer mb-1 px-5 hover:bg-gray-150 py-[10px] rounded ${
+      className={`cursor-pointer mb-1 px-3 hover:bg-gray-150 py-[10px] rounded ${
         !isReady && !enableErrorSelection && 'cursor-not-allowed'
       } ${isSelectedCollection ? 'bg-gray-200 border border-[#818cf8]' : ''}`}
       onClick={() => {

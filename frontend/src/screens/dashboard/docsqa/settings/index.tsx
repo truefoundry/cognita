@@ -107,11 +107,11 @@ const DocsQASettings = () => {
         />
       </div>
       <div className="flex gap-5 flex-1 w-full">
-        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250">
+        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250 pt-3">
           <div
-            className="h-[calc(100vh-202px)] overflow-y-auto custom-scrollbar"
+            className="h-[calc(100vh-202px)] overflow-y-auto custom-scrollbar px-3"
             style={{
-              paddingRight: '0rem',
+              paddingRight: '0.75rem',
             }}
           >
             {isCollectionsLoading && <Spinner center />}
