@@ -98,7 +98,7 @@ class MultiModalRAGQueryController:
             raise HTTPException(status_code=404, detail="Collection not found")
 
         if not isinstance(collection, Collection):
-            collection = Collection(**collection.dict())
+            collection = Collection(**collection.model_dump())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,

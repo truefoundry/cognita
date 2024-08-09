@@ -3,7 +3,7 @@ import base64
 import io
 import os
 from itertools import islice
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import fitz
@@ -67,8 +67,10 @@ class MultiModalParser(BaseParser):
         """
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if model_configuration:
-            self.model_configuration = ModelConfig.parse_obj(model_configuration)
+        if "model_configuration" in additional_config:
+            self.model_configuration = ModelConfig.model_validate(
+                additional_config["model_configuration"]
+            )
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
             # Truefoundry specific model configuration
@@ -131,7 +133,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[dict] = None, **kwargs
+        self, filepath: str, metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.

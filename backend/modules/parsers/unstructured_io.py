@@ -51,6 +51,7 @@ class UnstructuredIoParser(BaseParser):
         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
         self.session.mount("https://", self.adapter)
         self.session.mount("http://", self.adapter)
+        super().__init__(*args, **kwargs)
 
         super().__init__(**kwargs)
 
