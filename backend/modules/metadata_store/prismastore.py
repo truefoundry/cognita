@@ -229,9 +229,6 @@ class PrismaStore(BaseMetadataStore):
             )
 
             if existing_collection_associated_data_sources:
-                logger.info(
-                    f"OLD: {type(existing_collection_associated_data_sources)}, {type(data_src_to_associate)}"
-                )
                 existing_collection_associated_data_sources[
                     data_src_to_associate.data_source_fqn
                 ] = data_src_to_associate.dict()
