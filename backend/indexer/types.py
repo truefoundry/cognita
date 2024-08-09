@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 from pydantic import BaseModel, Field
 
 from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserConfig
@@ -20,7 +22,7 @@ class DataIngestionConfig(BaseModel):
     embedder_config: EmbedderConfig = Field(
         title="Embedder configuration",
     )
-    parser_config: ParserConfig = Field(
+    parser_config: Dict[str, ParserConfig] = Field(
         title="Parser configuration to parse the documents.",
     )
     data_ingestion_mode: DataIngestionMode = Field(title="Data ingestion mode")

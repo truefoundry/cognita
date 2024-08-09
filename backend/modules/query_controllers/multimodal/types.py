@@ -1,6 +1,7 @@
-from typing import Any, ClassVar, Collection, Dict, Optional
+from typing import Any, ClassVar, Collection, Dict, List, Optional
 
-from pydantic import BaseModel, Field, root_validator, validator
+from langchain.docstore.document import Document
+from pydantic import BaseModel, Field, root_validator
 from qdrant_client.models import Filter as QdrantFilter
 
 from backend.types import ModelConfig
@@ -155,3 +156,13 @@ class ExampleQueryInput(BaseModel):
             )
 
         return values
+
+
+class Answer(BaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(BaseModel):
+    type: str = "docs"
+    content: List[Document] = Field(default_factory=list)

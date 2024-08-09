@@ -97,7 +97,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_collections(self) -> List[Collection]:
         try:
-            collections = await self.db.collection.find_many()
+            collections = await self.db.collection.find_many(order={"id": "desc"})
             return collections
         except Exception as e:
             logger.exception(f"Failed to get collections: {e}")
@@ -171,7 +171,7 @@ class PrismaStore(BaseMetadataStore):
 
     async def aget_data_sources(self) -> List[DataSource]:
         try:
-            data_sources = await self.db.datasource.find_many()
+            data_sources = await self.db.datasource.find_many(order={"id": "desc"})
             return data_sources
         except Exception as e:
             logger.exception(f"Error: {e}")
@@ -231,10 +231,10 @@ class PrismaStore(BaseMetadataStore):
             if existing_collection_associated_data_sources:
                 existing_collection_associated_data_sources[
                     data_src_to_associate.data_source_fqn
-                ] = data_src_to_associate
+                ] = data_src_to_associate.dict()
             else:
                 existing_collection_associated_data_sources = {
-                    data_src_to_associate.data_source_fqn: data_src_to_associate
+                    data_src_to_associate.data_source_fqn: data_src_to_associate.dict()
                 }
 
             associated_data_sources: Dict[str, Dict[str, Any]] = {}
@@ -242,7 +242,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.dict()
+                associated_data_sources[data_source_fqn] = data_source
 
             updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
@@ -447,7 +447,7 @@ class PrismaStore(BaseMetadataStore):
         """Get all data ingestion runs for a collection"""
         try:
             data_ingestion_runs = await self.db.ingestionruns.find_many(
-                where={"collection_name": collection_name}
+                where={"collection_name": collection_name}, order={"id": "desc"}
             )
             return data_ingestion_runs
         except Exception as e:
