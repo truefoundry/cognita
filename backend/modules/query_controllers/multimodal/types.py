@@ -178,6 +178,21 @@ class ExampleQueryInput(BaseModel):
         return values
 
 
+class Document(BaseModel):
+    page_content: str
+    metadata: dict = Field(default_factory=dict)
+
+
+class Answer(BaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(BaseModel):
+    type: str = "docs"
+    content: List[Document] = Field(default_factory=list)
+
+
 class Answer(BaseModel):
     type: str = "answer"
     content: str

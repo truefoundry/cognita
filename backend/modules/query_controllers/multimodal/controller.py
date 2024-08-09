@@ -4,7 +4,6 @@ import json
 import async_timeout
 from fastapi import Body, HTTPException
 from fastapi.responses import StreamingResponse
-from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.schema.vectorstore import VectorStoreRetriever
@@ -25,6 +24,7 @@ from backend.modules.query_controllers.multimodal.types import (
     GENERATION_TIMEOUT_SEC,
     Answer,
     Docs,
+    Document,
     ExampleQueryInput,
 )
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT

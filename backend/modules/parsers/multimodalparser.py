@@ -67,10 +67,8 @@ class MultiModalParser(BaseParser):
         """
 
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if "model_configuration" in additional_config:
-            self.model_configuration = ModelConfig.model_validate(
-                additional_config["model_configuration"]
-            )
+        if model_configuration:
+            self.model_configuration = ModelConfig.model_validate(model_configuration)
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
             # Truefoundry specific model configuration

@@ -117,7 +117,7 @@ class ModelType(str, Enum):
 
 class ModelConfig(BaseModel):
     name: str
-    type: Optional[ModelType]
+    type: Optional[ModelType] = None
     parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
