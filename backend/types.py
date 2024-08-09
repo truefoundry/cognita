@@ -9,7 +9,6 @@ from pydantic import (
     Field,
     StringConstraints,
     computed_field,
-    model_serializer,
     model_validator,
 )
 from typing_extensions import Annotated
@@ -27,6 +26,9 @@ class DataIngestionMode(str, Enum):
     NONE = "NONE"
     INCREMENTAL = "INCREMENTAL"
     FULL = "FULL"
+
+    class Config:
+        use_enum_values = True
 
 
 class DataPoint(BaseModel):
@@ -114,6 +116,9 @@ class ModelType(str, Enum):
     reranking = "reranking"
     parser = "parser"
 
+    class Config:
+        use_enum_values = True
+
 
 class ModelConfig(BaseModel):
     name: str
@@ -155,14 +160,6 @@ class ParserConfig(ModelConfig):
     """
 
     type: ModelType = ModelType.parser
-
-    @model_serializer
-    def serialize(self):
-        return {
-            "name": self.name,
-            "parameters": self.parameters,
-            "type": self.type.value,
-        }
 
 
 class VectorDBConfig(BaseModel):
@@ -255,6 +252,9 @@ class DataIngestionRunStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
     ERROR = "ERROR"
 
+    class Config:
+        use_enum_values = True
+
 
 class BaseDataIngestionRun(BaseModel):
     """
@@ -324,14 +324,7 @@ class CreateDataSource(BaseDataSource):
 
 
 class DataSource(BaseDataSource):
-    @model_serializer
-    def serialize(self):
-        return {
-            "type": self.type,
-            "uri": self.uri,
-            "metadata": self.metadata,
-            "fqn": self.fqn,
-        }
+    pass
 
 
 class AssociatedDataSources(BaseModel):
@@ -348,14 +341,6 @@ class AssociatedDataSources(BaseModel):
     data_source: Optional[DataSource] = Field(
         None, title="Data source associated with the collection"
     )
-
-    @model_serializer
-    def serialize(self):
-        return {
-            "data_source_fqn": self.data_source_fqn,
-            "parser_config": {k: v.serialize() for k, v in self.parser_config.items()},
-            "data_source": self.data_source.serialize() if self.data_source else None,
-        }
 
 
 class IngestDataToCollectionDto(BaseModel):

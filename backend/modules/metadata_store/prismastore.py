@@ -269,7 +269,7 @@ class PrismaStore(BaseMetadataStore):
                 data_source_fqn,
                 data_source,
             ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.serialize()
+                associated_data_sources[data_source_fqn] = data_source.model_dump()
 
             updated_collection: Optional[
                 "PrismaCollection"
@@ -296,7 +296,7 @@ class PrismaStore(BaseMetadataStore):
         self, collection_name: str, data_source_fqn: str
     ) -> Collection:
         try:
-            collection = await self.aget_collection_by_name(collection_name)
+            collection: Collection = await self.aget_collection_by_name(collection_name)
         except Exception as e:
             logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
@@ -321,7 +321,9 @@ class PrismaStore(BaseMetadataStore):
                 detail=f"Data source with fqn {data_source_fqn} does not exist",
             )
 
-        associated_data_sources = collection.associated_data_sources
+        associated_data_sources: AssociatedDataSources = (
+            collection.associated_data_sources
+        )
         if not associated_data_sources:
             logger.error(
                 f"No associated data sources found for collection {collection_name}"
@@ -341,16 +343,16 @@ class PrismaStore(BaseMetadataStore):
 
         associated_data_sources.pop(data_source_fqn, None)
 
-        associated_data_sources = {
-            k: v.serialize() for k, v in associated_data_sources.items()
-        }
-
         try:
             updated_collection: Optional[
                 "PrismaCollection"
             ] = await self.db.collection.update(
                 where={"name": collection_name},
-                data={"associated_data_sources": json.dumps(associated_data_sources)},
+                data={
+                    "associated_data_sources": json.dumps(
+                        associated_data_sources.model_dump()
+                    )
+                },
             )
             if not updated_collection:
                 raise HTTPException(
