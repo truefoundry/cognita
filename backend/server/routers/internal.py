@@ -31,7 +31,7 @@ async def upload_to_docker_directory(
             status_code=500,
         )
     try:
-        logger.info(f"Uploading files to docker directory: {upload_name}")
+        logger.info(f"Uploading files to directory: {upload_name}")
         # create a folder within `/volumes/user_data/` that maps to `/app/user_data/` in the docker volume
         # this folder will be used to store the uploaded files
         folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name)
@@ -60,8 +60,9 @@ async def upload_to_docker_directory(
         # Add the data source to the metadata store.
         return await add_data_source(data_source)
     except Exception as ex:
+        logger.exception(f"Error uploading files to directory: {ex}")
         return JSONResponse(
-            content={"error": f"Error uploading files to docker directory: {ex}"},
+            content={"error": f"Error uploading files to directory: {ex}"},
             status_code=500,
         )
 

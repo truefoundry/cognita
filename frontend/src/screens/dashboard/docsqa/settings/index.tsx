@@ -150,7 +150,7 @@ const DocsQASettings = () => {
                     {collectionDetails && (
                       <div className="text-sm">
                         Embedder Used :{' '}
-                        {collectionDetails?.embedder_config?.config?.model}
+                        {collectionDetails?.embedder_config?.name}
                       </div>
                     )}
                   </div>

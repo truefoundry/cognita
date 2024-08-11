@@ -73,7 +73,6 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         name: collectionName,
         embedder_config: {
           name: embeddingModel.name,
-          type: 'embedding',
         },
         associated_data_sources: [
           {

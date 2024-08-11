@@ -136,38 +136,36 @@ class ModelProviderConfig(ConfiguredBaseModel):
     reranking_model_ids: List[str] = Field(default_factory=list)
 
 
-class ModuleType(str, Enum):
-    embedding = "embedding"
-    parser = "parser"
-
-
-class ModuleConfig(ConfiguredBaseModel):
-    name: str
-    type: ModuleType
-    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
-
-    @model_validator(mode="before")
-    @classmethod
-    def ensure_type_not_none(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if values.get("type") is None:
-            values.pop("type", None)
-        return values
-
-
-class EmbedderConfig(ModuleConfig):
+class EmbedderConfig(ConfiguredBaseModel):
     """
     Embedder configuration
     """
 
-    type: Literal[ModuleType.embedding] = ModuleType.embedding
+    name: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_parameters_not_none(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if values.get("parameters") is None:
+            values.pop("parameters", None)
+        return values
 
 
-class ParserConfig(ModuleConfig):
+class ParserConfig(ConfiguredBaseModel):
     """
     Parser configuration
     """
 
-    type: Literal[ModuleType.parser] = ModuleType.parser
+    name: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_parameters_not_none(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if values.get("parameters") is None:
+            values.pop("parameters", None)
+        return values
 
 
 class VectorDBConfig(ConfiguredBaseModel):
