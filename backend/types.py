@@ -18,6 +18,10 @@ from backend.constants import FQN_SEPARATOR
 # TODO (chiragjn): Remove Optional from Dict and List type fields. Instead just use a default_factory
 
 
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+
 class DataIngestionMode(str, Enum):
     """
     Data Ingestion Modes
@@ -27,11 +31,8 @@ class DataIngestionMode(str, Enum):
     INCREMENTAL = "INCREMENTAL"
     FULL = "FULL"
 
-    class Config:
-        use_enum_values = True
 
-
-class DataPoint(BaseModel):
+class DataPoint(ConfiguredBaseModel):
     """
     Data point describes a single data point in the data source
     Properties:
@@ -64,7 +65,7 @@ class DataPoint(BaseModel):
         return f"{FQN_SEPARATOR}".join([self.data_source_fqn, self.data_point_uri])
 
 
-class DataPointVector(BaseModel):
+class DataPointVector(ConfiguredBaseModel):
     """
     Data point vector describes a single data point in the vector store
     Additional Properties:
@@ -114,28 +115,17 @@ class ModelType(str, Enum):
     chat = "chat"
     embedding = "embedding"
     reranking = "reranking"
-    parser = "parser"
-
-    class Config:
-        use_enum_values = True
 
 
-class ModelConfig(BaseModel):
+class ModelConfig(ConfiguredBaseModel):
     name: str
     # TODO (chiragjn): This should not be Optional! Changing might break backward compatibility
     #   Problem is we have shared these entities between DTO layers and Service / DB layers
     type: Optional[ModelType] = None
     parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "type": self.type,
-            "parameters": self.parameters,
-        }
 
-
-class ModelProviderConfig(BaseModel):
+class ModelProviderConfig(ConfiguredBaseModel):
     provider_name: str
     api_format: str
     base_url: Optional[str] = None
@@ -146,23 +136,41 @@ class ModelProviderConfig(BaseModel):
     reranking_model_ids: List[str] = Field(default_factory=list)
 
 
-class EmbedderConfig(ModelConfig):
+class ModuleType(str, Enum):
+    embedding = "embedding"
+    parser = "parser"
+
+
+class ModuleConfig(ConfiguredBaseModel):
+    name: str
+    type: ModuleType
+    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def ensure_type_not_none(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if values.get("type") is None:
+            values.pop("type", None)
+        return values
+
+
+class EmbedderConfig(ModuleConfig):
     """
     Embedder configuration
     """
 
-    pass
+    type: Literal[ModuleType.embedding] = ModuleType.embedding
 
 
-class ParserConfig(ModelConfig):
+class ParserConfig(ModuleConfig):
     """
     Parser configuration
     """
 
-    type: ModelType = ModelType.parser
+    type: Literal[ModuleType.parser] = ModuleType.parser
 
 
-class VectorDBConfig(BaseModel):
+class VectorDBConfig(ConfiguredBaseModel):
     """
     Vector db configuration
     """
@@ -174,7 +182,7 @@ class VectorDBConfig(BaseModel):
     config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
-class QdrantClientConfig(BaseModel):
+class QdrantClientConfig(ConfiguredBaseModel):
     """
     Qdrant extra configuration
     """
@@ -188,7 +196,7 @@ class QdrantClientConfig(BaseModel):
     timeout: int = 300
 
 
-class MetadataStoreConfig(BaseModel):
+class MetadataStoreConfig(ConfiguredBaseModel):
     """
     Metadata store configuration
     """
@@ -197,7 +205,7 @@ class MetadataStoreConfig(BaseModel):
     config: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
-class RetrieverConfig(BaseModel):
+class RetrieverConfig(ConfiguredBaseModel):
     """
     Retriever configuration
     """
@@ -252,11 +260,8 @@ class DataIngestionRunStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
     ERROR = "ERROR"
 
-    class Config:
-        use_enum_values = True
 
-
-class BaseDataIngestionRun(BaseModel):
+class BaseDataIngestionRun(ConfiguredBaseModel):
     """
     Base data ingestion run configuration
     """
@@ -298,7 +303,7 @@ class DataIngestionRun(BaseDataIngestionRun):
     )
 
 
-class BaseDataSource(BaseModel):
+class BaseDataSource(ConfiguredBaseModel):
     """
     Data source configuration
     """
@@ -327,7 +332,7 @@ class DataSource(BaseDataSource):
     pass
 
 
-class AssociatedDataSources(BaseModel):
+class AssociatedDataSources(ConfiguredBaseModel):
     """
     Associated data source configuration
     """
@@ -343,7 +348,7 @@ class AssociatedDataSources(BaseModel):
     )
 
 
-class IngestDataToCollectionDto(BaseModel):
+class IngestDataToCollectionDto(ConfiguredBaseModel):
     """
     Configuration to ingest data to collection
     """
@@ -378,7 +383,7 @@ class IngestDataToCollectionDto(BaseModel):
     )
 
 
-class AssociateDataSourceWithCollection(BaseModel):
+class AssociateDataSourceWithCollection(ConfiguredBaseModel):
     """
     Configuration to associate data source to collection
     """
@@ -417,7 +422,7 @@ class AssociateDataSourceWithCollectionDto(AssociateDataSourceWithCollection):
     )
 
 
-class UnassociateDataSourceWithCollectionDto(BaseModel):
+class UnassociateDataSourceWithCollectionDto(ConfiguredBaseModel):
     """
     Configuration to unassociate data source to collection
     """
@@ -430,7 +435,7 @@ class UnassociateDataSourceWithCollectionDto(BaseModel):
     )
 
 
-class BaseCollection(BaseModel):
+class BaseCollection(ConfiguredBaseModel):
     """
     Base collection configuration
     """
@@ -480,7 +485,7 @@ class CreateCollectionDto(CreateCollection):
     )
 
 
-class UploadToDataDirectoryDto(BaseModel):
+class UploadToDataDirectoryDto(ConfiguredBaseModel):
     filepaths: List[str]
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     upload_name: Annotated[
@@ -491,7 +496,7 @@ class UploadToDataDirectoryDto(BaseModel):
     )
 
 
-class ListDataIngestionRunsDto(BaseModel):
+class ListDataIngestionRunsDto(ConfiguredBaseModel):
     collection_name: str = Field(
         title="Name of the collection",
     )
@@ -500,7 +505,7 @@ class ListDataIngestionRunsDto(BaseModel):
     )
 
 
-class RagApplication(BaseModel):
+class RagApplication(ConfiguredBaseModel):
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     name: Annotated[
         str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")

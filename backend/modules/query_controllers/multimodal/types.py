@@ -3,14 +3,14 @@ from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
 
-from backend.types import ModelConfig
+from backend.types import ConfiguredBaseModel, ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 10
 
 # TODO (chiragjn): Remove all asserts and replace them with proper pydantic validations or raises
 
 
-class VectorStoreRetrieverConfig(BaseModel):
+class VectorStoreRetrieverConfig(ConfiguredBaseModel):
     """
     Configuration for VectorStore Retriever
     """
@@ -98,7 +98,7 @@ class ContextualCompressionMultiQueryRetrieverConfig(
     pass
 
 
-class ExampleQueryInput(BaseModel):
+class ExampleQueryInput(ConfiguredBaseModel):
     """
     Model for Query input.
     Requires a Sequence name, retriever configuration, query, LLM configuration and prompt template.
@@ -178,26 +178,26 @@ class ExampleQueryInput(BaseModel):
         return values
 
 
-class Document(BaseModel):
+class Document(ConfiguredBaseModel):
     page_content: str
     metadata: dict = Field(default_factory=dict)
 
 
-class Answer(BaseModel):
+class Answer(ConfiguredBaseModel):
     type: str = "answer"
     content: str
 
 
-class Docs(BaseModel):
+class Docs(ConfiguredBaseModel):
     type: str = "docs"
     content: List[Document] = Field(default_factory=list)
 
 
-class Answer(BaseModel):
+class Answer(ConfiguredBaseModel):
     type: str = "answer"
     content: str
 
 
-class Docs(BaseModel):
+class Docs(ConfiguredBaseModel):
     type: str = "docs"
     content: List[Document] = Field(default_factory=list)
