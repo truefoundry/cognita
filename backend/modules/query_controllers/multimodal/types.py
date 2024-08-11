@@ -1,15 +1,16 @@
-from typing import Any, ClassVar, Collection, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 
-from langchain.docstore.document import Document
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator
 from qdrant_client.models import Filter as QdrantFilter
 
-from backend.types import ModelConfig
+from backend.types import ConfiguredBaseModel, ModelConfig
 
 GENERATION_TIMEOUT_SEC = 60.0 * 10
 
+# TODO (chiragjn): Remove all asserts and replace them with proper pydantic validations or raises
 
-class VectorStoreRetrieverConfig(BaseModel):
+
+class VectorStoreRetrieverConfig(ConfiguredBaseModel):
     """
     Configuration for VectorStore Retriever
     """
@@ -25,20 +26,26 @@ class VectorStoreRetrieverConfig(BaseModel):
 
     search_kwargs: dict = Field(default_factory=dict)
 
-    filter: Optional[dict] = Field(
+    filter: Optional[Dict[Any, Any]] = Field(
         default_factory=dict,
         title="""Filter by document metadata""",
     )
 
-    allowed_search_types: ClassVar[Collection[str]] = (
+    allowed_search_types: ClassVar[Sequence[str]] = (
         "similarity",
         "similarity_score_threshold",
         "mmr",
     )
 
-    @root_validator
-    def validate_search_type(cls, values: Dict) -> Dict:
+    @model_validator(mode="before")
+    @classmethod
+    def validate_search_type(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Validate search type."""
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
+            )
+
         search_type = values.get("search_type")
 
         assert (
@@ -63,7 +70,7 @@ class VectorStoreRetrieverConfig(BaseModel):
 
         filters = values.get("filter")
         if filters:
-            search_kwargs["filter"] = QdrantFilter.parse_obj(filters)
+            search_kwargs["filter"] = QdrantFilter.model_validate(filters)
         return values
 
 
@@ -82,7 +89,7 @@ class ContextualCompressionRetrieverConfig(VectorStoreRetrieverConfig):
         title="Top K docs to collect post compression",
     )
 
-    allowed_compressor_model_providers: ClassVar[Collection[str]]
+    allowed_compressor_model_providers: ClassVar[Sequence[str]]
 
 
 class ContextualCompressionMultiQueryRetrieverConfig(
@@ -91,49 +98,58 @@ class ContextualCompressionMultiQueryRetrieverConfig(
     pass
 
 
-class ExampleQueryInput(BaseModel):
+class ExampleQueryInput(ConfiguredBaseModel):
     """
     Model for Query input.
-    Requires a collection name, retriever configuration, query, LLM configuration and prompt template.
+    Requires a Sequence name, retriever configuration, query, LLM configuration and prompt template.
     """
 
     collection_name: str = Field(
         default=None,
-        title="Collection name on which to search",
+        title="Sequence name on which to search",
     )
 
     query: str = Field(title="Question to search for")
 
+    # TODO (chiragjn): pydantic v2 does not like fields that start with model_
     model_configuration: ModelConfig
 
     prompt_template: str = Field(
         title="Prompt Template to use for generating answer to the question using the context",
     )
 
+    # TODO (chiragjn): Move retriever name inside configuration to let pydantic disciminate between different retrievers
     retriever_name: str = Field(
         title="Retriever name",
     )
 
-    retriever_config: Dict[str, Any] = Field(
+    retriever_config: Union[
+        VectorStoreRetrieverConfig,
+        MultiQueryRetrieverConfig,
+        ContextualCompressionRetrieverConfig,
+        ContextualCompressionMultiQueryRetrieverConfig,
+    ] = Field(
         title="Retriever configuration",
     )
 
-    allowed_retriever_types: ClassVar[Collection[str]] = (
+    allowed_retriever_types: ClassVar[Sequence[str]] = (
         "vectorstore",
         "multi-query",
         "contextual-compression",
         "contextual-compression-multi-query",
     )
 
-    stream: Optional[bool] = Field(title="Stream the results", default=False)
+    stream: bool = Field(title="Stream the results", default=False)
 
-    @root_validator()
-    def validate_retriever_type(cls, values: Dict) -> Dict:
+    @model_validator(mode="before")
+    @classmethod
+    def validate_retriever_type(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
+            )
+
         retriever_name = values.get("retriever_name")
-
-        assert (
-            retriever_name in cls.allowed_retriever_types
-        ), f"retriever of {retriever_name} not allowed. Valid values are: {cls.allowed_retriever_types}"
 
         if retriever_name == "vectorstore":
             values["retriever_config"] = VectorStoreRetrieverConfig(
@@ -149,20 +165,39 @@ class ExampleQueryInput(BaseModel):
             values["retriever_config"] = ContextualCompressionRetrieverConfig(
                 **values.get("retriever_config")
             )
-
         elif retriever_name == "contextual-compression-multi-query":
             values["retriever_config"] = ContextualCompressionMultiQueryRetrieverConfig(
                 **values.get("retriever_config")
+            )
+        else:
+            raise ValueError(
+                f"Unexpected retriever name: {retriever_name}. "
+                f"Valid values are: {cls.allowed_retriever_types}"
             )
 
         return values
 
 
-class Answer(BaseModel):
+class Document(ConfiguredBaseModel):
+    page_content: str
+    metadata: dict = Field(default_factory=dict)
+
+
+class Answer(ConfiguredBaseModel):
     type: str = "answer"
     content: str
 
 
-class Docs(BaseModel):
+class Docs(ConfiguredBaseModel):
+    type: str = "docs"
+    content: List[Document] = Field(default_factory=list)
+
+
+class Answer(ConfiguredBaseModel):
+    type: str = "answer"
+    content: str
+
+
+class Docs(ConfiguredBaseModel):
     type: str = "docs"
     content: List[Document] = Field(default_factory=list)

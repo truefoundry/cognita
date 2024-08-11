@@ -3,8 +3,15 @@ import { createApi } from '@reduxjs/toolkit/query/react'
 // import * as T from './types'
 import { createBaseQuery } from '../utils'
 
+export enum ModelType {
+  chat = 'chat',
+  embedding = 'embedding',
+  reranking = 'reranking',
+}
+
 export interface ModelConfig {
   name: string
+  type?: ModelType
   parameters: {
     temperature?: number
     maximum_length?: number
@@ -40,23 +47,25 @@ interface DataSource {
   fqn: string
 }
 
+interface ParserConfig {
+  name: string
+  parameters?: {
+    [key: string]: any
+  }
+}
+
 export interface AssociatedDataSource {
   data_source_fqn: string
   parser_config: {
-    chunk_size: number
-    chunk_overlap: number
-    parser_map: {
-      [key: string]: string
-    }
+      [key: string]: ParserConfig
   }
   data_source: DataSource
 }
 
 interface EmbedderConfig {
-  description?: string
-  provider?: string
-  config?: {
-    model: string
+  name: string
+  parameters?: {
+    [key: string]: any
   }
 }
 
@@ -67,7 +76,6 @@ export interface Collection {
   associated_data_sources: {
     [key: string]: AssociatedDataSource
   }
-  chunk_size?: number
 }
 
 interface AddDataSourcePayload {

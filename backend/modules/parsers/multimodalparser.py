@@ -3,7 +3,7 @@ import base64
 import io
 import os
 from itertools import islice
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import fitz
@@ -17,7 +17,7 @@ from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-from backend.types import ModelConfig
+from backend.types import ModelConfig, ModelType
 
 
 def stringToRGB(base64_string: str):
@@ -45,9 +45,8 @@ class MultiModalParser(BaseParser):
     Parser Configuration will look like the following while creating the collection:
     {
         ".pdf": {
-            "parser": "MultiModalParser",
-            "kwargs": {
-                "chunk_size": 1000,
+            "name": "MultiModalParser",
+            "parameters": {
                 "model_configuration": {
                     "name" : "truefoundry/openai-main/gpt-4o-mini"
                 },
@@ -65,15 +64,15 @@ class MultiModalParser(BaseParser):
         """
         Initializes the MultiModalParser object.
         """
-
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
         if model_configuration:
-            self.model_configuration = ModelConfig.parse_obj(model_configuration)
+            self.model_configuration = ModelConfig.model_validate(model_configuration)
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
             # Truefoundry specific model configuration
             self.model_configuration = ModelConfig(
-                name="truefoundry/openai-main/gpt-4o-mini"
+                name="truefoundry/openai-main/gpt-4o-mini",
+                type=ModelType.chat,
             )
 
         if prompt:
@@ -131,7 +130,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[dict] = None, **kwargs
+        self, filepath: str, metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.

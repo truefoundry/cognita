@@ -1,11 +1,17 @@
-from typing import Dict, Union
+from typing import Dict
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from backend.types import DataIngestionMode, DataSource, EmbedderConfig, ParserConfig
+from backend.types import (
+    ConfiguredBaseModel,
+    DataIngestionMode,
+    DataSource,
+    EmbedderConfig,
+    ParserConfig,
+)
 
 
-class DataIngestionConfig(BaseModel):
+class DataIngestionConfig(ConfiguredBaseModel):
     """
     Configuration to store Data Ingestion Configuration
     """
