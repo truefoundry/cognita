@@ -13,7 +13,6 @@ pydantic==2.7.4
 pydantic-settings==2.3.3
 orjson==3.9.15
 PyMuPDF==1.23.6
-# redis==5.0.1
 beautifulsoup4==4.12.2
 truefoundry[ml]==0.3.0rc7
 markdownify==0.11.6
@@ -22,14 +21,10 @@ markdown-crawler==0.0.8
 black==24.3.0
 async-timeout==4.0.3
 pre-commit==3.7.0
-# huggingface-hub==0.20.3
 requests==2.32.2
 python-multipart==0.0.9
 opencv-python==4.9.0.80
 pillow==10.3.0
-
-### transformers
-# transformers==4.40.2
 
 ### prisma
 prisma==0.13.1
