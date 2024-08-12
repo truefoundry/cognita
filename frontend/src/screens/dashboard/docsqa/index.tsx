@@ -86,7 +86,7 @@ const DocsQA = () => {
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
-  const [isStreamEnabled, setIsStreamEnabled] = useState(false)
+  const [isStreamEnabled, setIsStreamEnabled] = useState(true)
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
   const [applicationName, setApplicationName] = useState('')
@@ -179,23 +179,26 @@ const DocsQA = () => {
         }
         setIsRunningPrompt(false)
       } else {
-        const sseRequest = new SSE(`${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`, {
-          payload: JSON.stringify({
-            ...params,
-            stream: true,
-          }),
-          headers: {
-            'Content-Type': 'application/json'
-          },
-        })
+        const sseRequest = new SSE(
+          `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
+          {
+            payload: JSON.stringify({
+              ...params,
+              stream: true,
+            }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
 
         sseRequest.addEventListener('data', (event: any) => {
           try {
             const parsed = JSON.parse(event.data)
-            if (parsed?.type === "answer") {
+            if (parsed?.type === 'answer') {
               setAnswer((prevAnswer) => prevAnswer + parsed.content)
               setIsRunningPrompt(false)
-            } else if (parsed?.type === "docs") {
+            } else if (parsed?.type === 'docs') {
               setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
             }
           } catch (err) {}
