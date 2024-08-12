@@ -1,5 +1,5 @@
 import json
-from typing import Any, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 import singlestoredb as s2
 from langchain.docstore.document import Document
@@ -63,7 +63,7 @@ class SSDB(SingleStoreDB):
     def add_texts(
         self,
         texts: Iterable[str],
-        metadatas: Optional[List[dict]] = None,
+        metadatas: Optional[List[Dict[Any, Any]]] = None,
         embeddings: Optional[List[List[float]]] = None,
         **kwargs: Any,
     ) -> List[str]:
@@ -71,7 +71,7 @@ class SSDB(SingleStoreDB):
 
         Args:
             texts (Iterable[str]): Iterable of strings/text to add to the vectorstore.
-            metadatas (Optional[List[dict]], optional): Optional list of metadatas.
+            metadatas (Optional[List[Dict]], optional): Optional list of metadatas.
                 Defaults to None.
             embeddings (Optional[List[List[float]]], optional): Optional pre-generated
                 embeddings. Defaults to None.
