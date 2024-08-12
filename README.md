@@ -13,7 +13,7 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
-- [August, 2024] Cognita has now moved to using pydtantic v2.
+- [August, 2024] Cognita has now moved to using pydantic v2.
 - [July, 2024] Introducing `model gateway` a single file to manage all the models and their configurations.
 - [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
 - [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
