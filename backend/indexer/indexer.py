@@ -307,7 +307,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
 
         # convert to pydantic model if not already -> For prisma models
         if not isinstance(collection, Collection):
-            collection = Collection(**collection.dict())
+            collection = Collection(**collection.model_dump())
 
         if not collection:
             logger.error(
@@ -390,7 +390,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         "collection_name": collection.name,
                         "data_source_fqn": associated_data_source.data_source_fqn,
                         "data_ingestion_run_name": created_data_ingestion_run.name,
-                        "data_ingestion_mode": request.data_ingestion_mode.value,
+                        "data_ingestion_mode": request.data_ingestion_mode,
                         "raise_error_on_failure": (
                             "True" if request.raise_error_on_failure else "False"
                         ),
