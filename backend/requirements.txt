@@ -3,6 +3,7 @@ langchain==0.1.9
 langchain-community==0.0.24
 langchain-openai==0.1.7
 langchain-core==0.1.46
+langchain-aws
 openai==1.35.3
 tiktoken==0.7.0
 uvicorn[standard]==0.23.2
@@ -25,6 +26,7 @@ requests==2.32.2
 python-multipart==0.0.9
 opencv-python==4.9.0.80
 pillow==10.3.0
+boto3==1.34.137
 
 ### prisma
 prisma==0.13.1
