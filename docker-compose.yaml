@@ -139,6 +139,7 @@ services:
         container_name: cognita-backend
         ports:
             - "${COGNITA_BACKEND_PORT}:8000"
+            - 5555:5555
         depends_on:
             cognita-db:
                 condition: service_healthy
@@ -173,6 +174,11 @@ services:
             - TFY_HOST=${TFY_HOST}
             - TFY_API_KEY=${TFY_API_KEY}
             - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+            - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+            - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
         entrypoint: /bin/bash
         command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         networks:
