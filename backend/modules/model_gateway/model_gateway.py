@@ -1,10 +1,15 @@
+import logging
 import os
 from typing import List
 
+import boto3
 import yaml
 from langchain.embeddings.base import Embeddings
+from langchain_aws import ChatBedrock
+from langchain_community.embeddings import BedrockEmbeddings
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import (AzureChatOpenAI, AzureOpenAIEmbeddings,
+                              OpenAIEmbeddings)
 from langchain_openai.chat_models import ChatOpenAI
 
 from backend.logger import logger
@@ -102,15 +107,50 @@ class ModelGateway:
             api_key = "EMPTY"
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
+            if model_provider_config.provider_name == "bedrock":
+                aws_secret_access_key = os.environ.get(model_provider_config.secret_access_key_env_var, "")
+                aws_session_token = os.environ.get(model_provider_config.sesssion_token_env_var, "")
+                aws_default_region = os.environ.get(model_provider_config.default_region_env_var, "")
+                
         model_id = "/".join(model_name.split("/")[1:])
-        return OpenAIEmbeddings(
-            openai_api_key=api_key,
-            model=model_id,
-            openai_api_base=model_provider_config.base_url,
-            check_embedding_ctx_length=(
-                model_provider_config.provider_name == "openai"
-            ),
-        )
+        
+        logging.info(f"model_id: {model_id}", model_provider_config, api_key)
+        
+        if model_provider_config.provider_name == "azure":
+            logging.info(f"Using AzureOpenAIEmbeddings")
+            return AzureOpenAIEmbeddings(
+                api_key=api_key,
+                model=model_id,
+                openai_api_version=model_provider_config.openai_api_version,
+                azure_endpoint=model_provider_config.embeddings_base_url,
+                check_embedding_ctx_length=(
+                    model_provider_config.provider_name == "openai"
+                )
+            )
+        elif model_provider_config.provider_name == "openai":
+            logging.info(f"Using OpenAIEmbeddings")
+            return OpenAIEmbeddings(
+                openai_api_key=api_key,
+                model=model_id,
+                openai_api_base=model_provider_config.base_url,
+                check_embedding_ctx_length=(
+                    model_provider_config.provider_name == "openai"
+                ),
+            )
+        elif model_provider_config.provider_name == "bedrock":
+            logging.info(f"Using BedrockEmbeddings")
+            bedrock_client = boto3.client(
+                service_name="bedrock-runtime",
+                region_name=aws_default_region,
+                aws_access_key_id=api_key,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token
+            )
+            return BedrockEmbeddings(
+                client=bedrock_client, 
+                model_id=model_id
+                )
+            # return C
 
     def get_llm_from_model_config(
         self, model_config: ModelConfig, stream=False
@@ -128,16 +168,54 @@ class ModelGateway:
             api_key = "EMPTY"
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
+            if model_provider_config.provider_name == "bedrock":
+                aws_secret_access_key = os.environ.get(model_provider_config.secret_access_key_env_var, "")
+                aws_session_token = os.environ.get(model_provider_config.sesssion_token_env_var, "")
+                aws_default_region = os.environ.get(model_provider_config.default_region_env_var, "")
         model_id = "/".join(model_config.name.split("/")[1:])
-        return ChatOpenAI(
-            model=model_id,
-            temperature=model_config.parameters.get("temperature", 0.1),
-            max_tokens=model_config.parameters.get("max_tokens", 1024),
-            streaming=stream,
-            api_key=api_key,
-            base_url=model_provider_config.base_url,
-            default_headers=model_provider_config.default_headers,
-        )
+        if model_provider_config.provider_name == "azure":
+            logging.info(f"Using AzureChatOpenAI")
+            return AzureChatOpenAI(
+                api_key=api_key,
+                model=model_id,
+                temperature=model_config.parameters.get("temperature", 0.1),
+                max_tokens=model_config.parameters.get("max_tokens", 1024),
+                streaming=stream,
+                openai_api_version=model_provider_config.openai_api_version,
+                azure_endpoint=model_provider_config.llm_base_url,
+                azure_deployment=model_provider_config.llm_deployment
+            )
+        elif model_provider_config.provider_name == "openai":
+            logging.info(f"Using ChatOpenAI")
+            ChatOpenAI(
+                model=model_id,
+                temperature=model_config.parameters.get("temperature", 0.1),
+                max_tokens=model_config.parameters.get("max_tokens", 1024),
+                streaming=stream,
+                api_key=api_key,
+                base_url=model_provider_config.base_url,
+                default_headers=model_provider_config.default_headers,
+            )
+        elif model_provider_config.provider_name == "bedrock":
+            logging.info(f"Using ChatBedrock")
+            bedrock_client = boto3.client(
+                service_name="bedrock-runtime",
+                region_name=aws_default_region,
+                aws_access_key_id=api_key,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token
+            )
+            return ChatBedrock(
+                client=bedrock_client,
+                model_id=model_id,
+                model_kwargs={
+                    "temperature": model_config.parameters.get("temperature", 0.1),
+                    "max_tokens": model_config.parameters.get("max_tokens", 1024)
+                },
+                # TODO add additional parameters
+                # top_k=model_config.parameters.get("top_k", 100),
+                # top_p=model_config.parameters.get("top_p", 0.9),
+            )
 
     def get_reranker_from_model_config(self, model_name: str, top_k: int = 3):
         if model_name not in self.model_name_to_provider_config:
