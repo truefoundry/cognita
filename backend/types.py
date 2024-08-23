@@ -134,6 +134,15 @@ class ModelProviderConfig(ConfiguredBaseModel):
     llm_model_ids: List[str] = Field(default_factory=list)
     embedding_model_ids: List[str] = Field(default_factory=list)
     reranking_model_ids: List[str] = Field(default_factory=list)
+    embeddings_base_url: Optional[str] = None
+    embedding_deployment: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_deployment: Optional[str] = None
+    openai_api_version: Optional[str] = None
+    access_key_id_env_var: Optional[str] = None
+    secret_access_key_env_var: Optional[str] = None
+    sesssion_token_env_var: Optional[str] = None
+    default_region_env_var: Optional[str] = None
 
 
 class EmbedderConfig(ConfiguredBaseModel):
