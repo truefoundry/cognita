@@ -1,20 +1,14 @@
+import logging
 from abc import ABC
 from typing import Any, Dict, List, Optional, Union
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
-from backend.types import (
-    AssociateDataSourceWithCollection,
-    Collection,
-    CreateCollection,
-    CreateDataIngestionRun,
-    CreateDataSource,
-    DataIngestionRun,
-    DataIngestionRunStatus,
-    DataSource,
-    MetadataStoreConfig,
-    RagApplication,
-    RagApplicationDto,
-)
+from backend.types import (AssociateDataSourceWithCollection, Collection,
+                           CreateCollection, CreateDataIngestionRun,
+                           CreateDataSource, DataIngestionRun,
+                           DataIngestionRunStatus, DataSource,
+                           MetadataStoreConfig, RagApplication,
+                           RagApplicationDto)
 from backend.utils import run_in_executor
 
 
@@ -496,6 +490,7 @@ async def get_metadata_store_client(
 ) -> BaseMetadataStore:
     if config.provider in METADATA_STORE_REGISTRY:
         kwargs = config.config
+        logging.info(str(config))
         return await METADATA_STORE_REGISTRY[config.provider].aconnect(**kwargs)
     else:
         raise ValueError(f"Unknown metadata store type: {config.provider}")
