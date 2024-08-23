@@ -1,4 +1,4 @@
-import Logo from '@/assets/img/logos/CognitaLogo.png'
+import Logo from '@/assets/img/logos/website_logo.png'
 import LightLogo from '@/assets/img/logos/CognitaLightLogo.png'
 import Bars from '@/assets/img/drawer_bars.svg'
 import { IconProp } from '@fortawesome/fontawesome-svg-core'
@@ -152,7 +152,7 @@ export default function NavBar({ children }: any) {
             <div className="flex gap-5 items-center">{menu}</div>
           </div>
 
-          <div className="flex-1" />
+          {/* <div className="flex-1" />
           <Button
             white
             className="btn-xs text-sm h-7"
@@ -165,7 +165,7 @@ export default function NavBar({ children }: any) {
                 '_blank'
               )
             }}
-          />
+          /> */}
           <div
             className="cursor-pointer flex justify-end items-center self-flex-end"
             onClick={() => {
@@ -175,19 +175,19 @@ export default function NavBar({ children }: any) {
               )
             }}
           >
-            <IconProvider
+            {/* <IconProvider
               icon={'fa-brands fa-github' as IconProp}
               size={1.25}
-            />
+            /> */}
           </div>
-          <Button
+          {/* <Button
             className="btn-xs text-sm h-7 bg-black"
             text="Tweet"
             icon="x-twitter"
             onClick={() => {
               window.open('https://ctt.ac/XM87B', '_blank')
             }}
-          />
+          /> */}
           {children}
         </div>
       </div>
