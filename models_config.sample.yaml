@@ -4,42 +4,82 @@ model_providers:
   #   using ollama and infinity model server                                    #
   ###############################################################################
 
-  - provider_name: local-ollama
-    api_format: openai
-    base_url: http://ollama-server:11434/v1/
-    api_key_env_var: ""
-    llm_model_ids:
-      - "qwen2:1.5b"
-    embedding_model_ids: []
-    reranking_model_ids: []
-    default_headers: {}
+  # - provider_name: local-ollama
+  #   api_format: openai
+  #   base_url: http://ollama-server:11434/v1/
+  #   api_key_env_var: ""
+  #   llm_model_ids:
+  #     - "qwen2:1.5b"
+  #   embedding_model_ids: []
+  #   reranking_model_ids: []
+  #   default_headers: {}
 
-  - provider_name: local-infinity
-    api_format: openai
-    base_url: http://infinity-server:7997/
-    api_key_env_var: INFINITY_API_KEY
-    llm_model_ids: []
-    embedding_model_ids:
-      - "mixedbread-ai/mxbai-embed-large-v1"
-    reranking_model_ids:
-      - "mixedbread-ai/mxbai-rerank-xsmall-v1"
-    default_headers: {}
+  # - provider_name: local-infinity
+  #   api_format: openai
+  #   base_url: http://infinity-server:7997/
+  #   api_key_env_var: INFINITY_API_KEY
+  #   llm_model_ids: []
+  #   embedding_model_ids:
+  #     - "mixedbread-ai/mxbai-embed-large-v1"
+  #   reranking_model_ids:
+  #     - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+  #   default_headers: {}
+
 ############################ OpenAI ###########################################
 #   Uncomment this provider if you want to use OpenAI as a models provider    #
 #   Remember to set `OPENAI_API_KEY` in container environment                 #
 ###############################################################################
 
-# - provider_name: openai
-#   api_format: openai
-#   api_key_env_var: OPENAI_API_KEY
-#   llm_model_ids:
-#     - "gpt-3.5-turbo"
-#     - "gpt-4o"
-#   embedding_model_ids:
-#     - "text-embedding-3-small"
-#     - "text-embedding-ada-002"
-#   reranking_model_ids: []
-#   default_headers: {}
+  # - provider_name: openai
+  #   api_format: openai
+  #   api_key_env_var: OPENAI_API_KEY
+  #   llm_model_ids:
+  #     - "gpt-3.5-turbo"
+  #     - "gpt-4o"
+  #   embedding_model_ids:
+  #     - "text-embedding-3-small"
+  #     - "text-embedding-ada-002"
+  #   reranking_model_ids: []
+  #   default_headers: {}
+
+
+############################ AzureOpenAI ###########################################
+#   Uncomment this provider if you want to use OpenAI as a models provider    #
+#   Remember to set `OPENAI_API_KEY` in container environment                 #
+###############################################################################
+
+  # - provider_name: azure
+  #   api_format: openai
+  #   api_key_env_var: AZURE_OPENAI_API_KEY
+  #   embeddings_base_url: 
+  #   llm_base_url: 
+  #   openai_api_version: 
+  #   llm_deployment: "gpt-4o"
+  #   llm_model_ids:
+  #     - "gpt-4o"
+  #   embedding_deployment: 
+  #   embedding_model_ids:
+  #     - "text-embedding-ada-002"
+  #   reranking_model_ids: []
+  #   default_headers: {}
+
+############################ Amazon Bedrock ###########################################
+#   Uncomment this provider if you want to use Amazon Bedrock's Claude Sonnet 3.5 as a models provider    #
+#   Remember to set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_DEFAULT_REGION="us-east-1"` in container environment                 #
+###############################################################################
+
+  - provider_name: bedrock
+    api_format: amazon
+    api_key_env_var: AWS_ACCESS_KEY_ID
+    secret_access_key_env_var: AWS_SECRET_ACCESS_KEY
+    sesssion_token_env_var: AWS_SESSION_TOKEN
+    default_region_env_var: AWS_DEFAULT_REGION
+    llm_model_ids:
+      - "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    embedding_model_ids:
+      - "cohere.embed-english-v3"
+    reranking_model_ids: []
+    default_headers: {}
 
 ############################ TrueFoundry ###########################################
 #   Uncomment this provider if you want to use TrueFoundry as a models provider    #
