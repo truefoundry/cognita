@@ -89,7 +89,9 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
             paths=req.filepaths,
         )
 
-        data = [url.model_dump() for url in urls]
+        print(f"Signed URLs: {urls}")
+
+        data = [url.dict() for url in urls]
         return JSONResponse(
             content={"data": data, "data_directory_fqn": dataset.fqn},
         )
