@@ -1,0 +1,252 @@
+type: application-set
+name: cognita-app-set
+components:
+  - env:
+      LOG_LEVEL: DEBUG
+      INFINITY_API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
+      VECTOR_DB_CONFIG: >-
+        {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
+      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
+      METADATA_STORE_CONFIG: '{"provider":"truefoundry","config":{"ml_repo_name":"cognita-internal"}}'
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+    name: cas-indexer
+    type: job
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        command: >-
+          python -m backend.indexer.main  --collection_name {{collection_name}}
+          --data_source_fqn {{data_source_fqn}} --data_ingestion_run_name
+          {{data_ingestion_run_name}} --data_ingestion_mode {{data_ingestion_mode}} 
+          --raise_error_on_failure  {{raise_error_on_failure}}
+        dockerfile_path: ./backend/Dockerfile
+        build_context_path: ./
+      build_source:
+        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: release
+    params:
+      - name: collection_name
+        param_type: string
+      - name: data_source_fqn
+        param_type: string
+      - name: data_ingestion_run_name
+        default: ''
+        param_type: string
+      - name: data_ingestion_mode
+        default: INCREMENTAL
+        param_type: string
+      - name: raise_error_on_failure
+        default: 'False'
+        param_type: string
+    retries: 0
+    trigger:
+      type: manual
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1.5
+      cpu_request: 1
+      memory_limit: 1500
+      memory_request: 1000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1000
+  - env:
+      JOB_FQN: tfy-prod-euwe1:cognita-internal:cas-indexer
+      LOG_LEVEL: DEBUG
+      INFINITY_API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
+      VECTOR_DB_CONFIG: >-
+        {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
+      JOB_COMPONENT_NAME: cognita-internal-indexer
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
+      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
+      METADATA_STORE_CONFIG: '{"provider":"truefoundry","config":{"ml_repo_name":"cognita-internal"}}'
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+    name: cas-backend
+    type: service
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        command: uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app
+        dockerfile_path: ./backend/Dockerfile
+        build_context_path: ./
+      build_source:
+        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: release
+    ports:
+      - host: cas.truefoundry.com
+        path: /api/
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    replicas: 1
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1
+      cpu_request: 0.5
+      memory_limit: 1000
+      memory_request: 500
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1000
+    liveness_probe:
+      config:
+        path: /health-check
+        port: 8000
+        type: http
+        scheme: HTTP
+      period_seconds: 60
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
+    readiness_probe:
+      config:
+        path: /health-check
+        port: 8000
+        type: http
+        scheme: HTTP
+      period_seconds: 60
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
+  - env:
+      VITE_QA_FOUNDRY_URL: https://cas.truefoundry.com/api
+      VITE_DOCS_QA_STANDALONE_PATH: /
+      VITE_DOCS_QA_ENABLE_STANDALONE: 'true'
+      VITE_DOCS_QA_DELETE_COLLECTIONS: 'true'
+    name: cas-frontend
+    type: service
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        build_args:
+          VITE_DOCS_QA_DELETE_COLLECTIONS: 'true'
+        dockerfile_path: ./frontend/Dockerfile
+        build_context_path: ./frontend
+      build_source:
+        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: release
+    ports:
+      - host: cas.truefoundry.com
+        port: 5000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    replicas: 1
+    resources:
+      cpu_limit: 0.1
+      cpu_request: 0.05
+      memory_limit: 200
+      memory_request: 100
+      ephemeral_storage_limit: 200
+      ephemeral_storage_request: 100
+  - name: cas-qdrant
+    type: helm
+    source:
+      type: helm-repo
+      chart: qdrant
+      version: 0.6.1
+      repo_url: https://qdrant.github.io/qdrant-helm
+    values:
+      service:
+        type: ClusterIP
+        ports:
+          - name: http
+            port: 6333
+            protocol: TCP
+            targetPort: 6333
+            checksEnabled: true
+          - name: grpc
+            port: 6334
+            protocol: TCP
+            targetPort: 6334
+            checksEnabled: false
+          - name: http-p2p
+            port: 6335
+            protocol: TCP
+            targetPort: 6335
+            checksEnabled: false
+      persistence:
+        size: 50G
+      tolerations:
+        - key: kubernetes.azure.com/scalesetpriority
+          value: spot
+          effect: NoSchedule
+          operator: Equal
+        - key: cloud.google.com/gke-spot
+          value: 'true'
+          effect: NoSchedule
+          operator: Equal
+      replicaCount: 2
+      fullnameOverride: cas-qdrant
+  - env:
+      UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+    name: cas-unstructured-io
+    type: service
+    image:
+      type: image
+      image_uri: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
+    ports:
+      - host: cas-unstructured-io.truefoundry.com
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 2
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1.5
+      cpu_request: 0.8
+      memory_limit: 8000
+      memory_request: 4000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1500
+  - env:
+      PORT: '8000'
+      API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
+      BATCH_SIZE: '4'
+    name: cas-infinity
+    type: service
+    image:
+      type: image
+      command: >-
+        infinity_emb v2 --model-id mixedbread-ai/mxbai-embed-large-v1 --model-id
+        mixedbread-ai/mxbai-rerank-xsmall-v1 --port $(PORT) --batch-size
+        $(BATCH_SIZE) --api-key $(API_KEY)
+      image_uri: michaelf34/infinity:0.0.50
+    ports:
+      - host: cas-infinity.truefoundry.com
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 2
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1
+      cpu_request: 0.8
+      memory_limit: 8000
+      memory_request: 4000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1500
