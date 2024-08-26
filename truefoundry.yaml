@@ -56,7 +56,7 @@ components:
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1000
   - env:
-      JOB_FQN: tfy-prod-euwe1:cognita-internal:cas-indexer
+      JOB_FQN: tfy-secret://internal:cognita-app-set:INDEXER_JOB_FQN
       LOG_LEVEL: DEBUG
       INFINITY_API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
       VECTOR_DB_CONFIG: >-
