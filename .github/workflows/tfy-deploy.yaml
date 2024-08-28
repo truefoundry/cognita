@@ -12,7 +12,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
       - name: Install truefoundry
-        run: pip install -U --pre truefoundry==0.2.10
+        run: pip install -U --pre truefoundry
       - name: Generate truefoundry-patched.yaml
         run: |
           tfy patch --file truefoundry.yaml \
