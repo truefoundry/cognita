@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - release
+      - ci-cd
 jobs:
   deploy:
     runs-on: ubuntu-latest
