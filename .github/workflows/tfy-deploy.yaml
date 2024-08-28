@@ -19,7 +19,8 @@ jobs:
             --filter='(.components[] | select(.image.build_source != null)) |= (.image.build_source.ref = "${{ github.sha }}" | .image.build_source.branch_name = "${{ github.ref_name }}")' \
             --output-file truefoundry-patched.yaml
       - name: Deploy
-        run: tfy deploy --workspace-fqn ${{ secrets.TFY_WORKSPACE_FQN }} --file truefoundry-patched.yaml --no-wait
+        run: tfy deploy --workspace-fqn $TFY_WORKSPACE_FQN --file truefoundry-patched.yaml --no-wait
         env:
           TFY_API_KEY: ${{ secrets.TFY_API_KEY }}
           TFY_HOST: ${{ secrets.TFY_HOST }}
+          TFY_WORKSPACE_FQN: ${{ secrets.TFY_WORKSPACE_FQN }}
