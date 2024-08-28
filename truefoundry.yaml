@@ -104,7 +104,6 @@ components:
         path: /health-check
         port: 8000
         type: http
-        scheme: HTTP
       period_seconds: 60
       timeout_seconds: 2
       failure_threshold: 5
@@ -115,7 +114,6 @@ components:
         path: /health-check
         port: 8000
         type: http
-        scheme: HTTP
       period_seconds: 60
       timeout_seconds: 2
       failure_threshold: 5
