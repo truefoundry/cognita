@@ -491,9 +491,9 @@ const DocsQA = () => {
             </div>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
               <div className="flex gap-4 items-center">
-                <div className="w-full relative">
+                <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
                   <Input
-                    className="w-full h-[2.75rem] text-sm pr-14"
+                    className="w-full min-h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any question related to this document"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -505,7 +505,7 @@ const DocsQA = () => {
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
                   />
-                </div>
+                </form>
               </div>
               {answer ? (
                 <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">

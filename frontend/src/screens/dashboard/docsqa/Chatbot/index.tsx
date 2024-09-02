@@ -120,7 +120,7 @@ const DocsQAChatbot = () => {
                 </div>
               )}
               <div className="flex gap-4 items-center">
-                <div className="w-full relative">
+                <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
                   <Input
                     className="w-full h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any related question"
@@ -134,7 +134,7 @@ const DocsQAChatbot = () => {
                     loading={isRunningPrompt}
                     disabled={!prompt}
                   />
-                </div>
+                </form>
               </div>
             </div>
           </>
