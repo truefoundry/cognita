@@ -219,7 +219,7 @@ async def ingest_data_points(
 
     """
     embeddings = model_gateway.get_embedder_from_model_config(
-        model_name=inputs.embedder_config.model_config.name
+        model_name=inputs.embedder_config.name
     )
     documents_to_be_upserted = []
     logger.info(
@@ -232,9 +232,7 @@ async def ingest_data_points(
         # Get parser for required file extension
         parser = get_parser_for_extension(
             file_extension=loaded_data_point.file_extension,
-            parsers_map=inputs.parser_config.parser_map,
-            max_chunk_size=inputs.parser_config.chunk_size,
-            additional_config=inputs.parser_config.additional_config,
+            parsers_map=inputs.parser_config,
         )
         if parser is None:
             logger.warning(
@@ -309,7 +307,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
 
         # convert to pydantic model if not already -> For prisma models
         if not isinstance(collection, Collection):
-            collection = Collection(**collection.dict())
+            collection = Collection(**collection.model_dump())
 
         if not collection:
             logger.error(
@@ -370,9 +368,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
             else:
                 if not settings.JOB_FQN:
-                    logger.error(
-                        "Job FQN and Job Component Name are required to trigger the job"
-                    )
+                    logger.error("Job FQN is required to trigger the job")
                     raise HTTPException(
                         status_code=500,
                         detail="Job FQN and Job Component Name are required to trigger the job",
@@ -394,7 +390,7 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         "collection_name": collection.name,
                         "data_source_fqn": associated_data_source.data_source_fqn,
                         "data_ingestion_run_name": created_data_ingestion_run.name,
-                        "data_ingestion_mode": request.data_ingestion_mode.value,
+                        "data_ingestion_mode": request.data_ingestion_mode,
                         "raise_error_on_failure": (
                             "True" if request.raise_error_on_failure else "False"
                         ),

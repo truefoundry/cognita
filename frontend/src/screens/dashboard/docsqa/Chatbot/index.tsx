@@ -11,6 +11,7 @@ import {
   useGetApplicationDetailsByNameQuery,
 } from '@/stores/qafoundry'
 import { startCase } from 'lodash'
+import { SSE } from 'sse.js'
 
 const DocsQAChatbot = () => {
   const params = useParams()
@@ -37,33 +38,29 @@ const DocsQAChatbot = () => {
         query: prompt,
         stream: true,
       }
-      const response = await fetch(
-        `${baseQAFoundryPath}/retrievers/${applicationsData.config.query_controller}/answer`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...params,
-            stream: true,
-          }),
-        }
-      )
-      const reader = response?.body?.getReader()
-      const readChunk = (value: any): any => {
-        const chunkString = new TextDecoder().decode(value.value)
+      const sseRequest = new SSE(`${baseQAFoundryPath}/retrievers/${applicationsData.config.query_controller}/answer`, {
+        payload: JSON.stringify({
+          ...params,
+          stream: true,
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+
+      sseRequest.addEventListener('data', (event: any) => {
         try {
-          const parsedResponse = JSON.parse(chunkString)
-          if (parsedResponse?.end) return
-          if (parsedResponse?.answer) {
-            setAnswer((prevAnswer) => prevAnswer + parsedResponse.answer)
+          const parsed = JSON.parse(event.data)
+          if (parsed?.type === "answer") {
+            setAnswer((prevAnswer) => prevAnswer + parsed.content)
             setIsRunningPrompt(false)
           }
         } catch (err) {}
-        return reader?.read().then(readChunk)
-      }
-      reader?.read().then(readChunk)
+      })
+
+      sseRequest.addEventListener('end', (event: any) => {
+        sseRequest.close()
+      })
     } catch (err: any) {
       setErrorMessage(true)
     }
@@ -123,7 +120,7 @@ const DocsQAChatbot = () => {
                 </div>
               )}
               <div className="flex gap-4 items-center">
-                <div className="w-full relative">
+                <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
                   <Input
                     className="w-full h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any related question"
@@ -137,7 +134,7 @@ const DocsQAChatbot = () => {
                     loading={isRunningPrompt}
                     disabled={!prompt}
                   />
-                </div>
+                </form>
               </div>
             </div>
           </>

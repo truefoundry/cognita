@@ -24,17 +24,17 @@ async def upload_to_docker_directory(
     ),
     files: List[UploadFile] = File(...),
 ):
-    """This function uploads files within `/app/user_data/` given by the name req.upload_name"""
+    """This function uploads files within `settings.LOCAL_DATA_DIRECTORY` given by the name req.upload_name"""
     if not settings.LOCAL:
         return JSONResponse(
             content={"error": "API only supported for local docker environment"},
             status_code=500,
         )
     try:
-        logger.info(f"Uploading files to docker directory: {upload_name}")
+        logger.info(f"Uploading files to directory: {upload_name}")
         # create a folder within `/volumes/user_data/` that maps to `/app/user_data/` in the docker volume
         # this folder will be used to store the uploaded files
-        folder_path = os.path.join("/app/user_data/", upload_name)
+        folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name)
 
         # Create the folder if it does not exist, else raise an exception
         if not os.path.exists(folder_path):
@@ -60,8 +60,9 @@ async def upload_to_docker_directory(
         # Add the data source to the metadata store.
         return await add_data_source(data_source)
     except Exception as ex:
+        logger.exception(f"Error uploading files to directory: {ex}")
         return JSONResponse(
-            content={"error": f"Error uploading files to docker directory: {ex}"},
+            content={"error": f"Error uploading files to directory: {ex}"},
             status_code=500,
         )
 
@@ -93,7 +94,7 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
             content={"data": data, "data_directory_fqn": dataset.fqn},
         )
     except Exception as ex:
-        raise Exception(f"Error uploading files to data directory: {ex}")
+        raise Exception(f"Error uploading files to data directory: {ex}") from ex
 
 
 @router.get("/models")
@@ -113,7 +114,7 @@ def get_enabled_models(
         )
 
     # Serialized models
-    serialized_models = [model.dict() for model in enabled_models]
+    serialized_models = [model.model_dump() for model in enabled_models]
     return JSONResponse(
         content={"models": serialized_models},
     )

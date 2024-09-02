@@ -13,43 +13,45 @@ You can try out Cognita at: [https://cognita.truefoundry.com](https://cognita.tr
 
 # 🎉 What's new in Cognita
 
--   [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
--   [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
--   [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
--   [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
--   [May, 2024] Conditional docker builds with arguments for optional package installations
--   [April, 2024] Support for multi-modal vision parser using GPT-4
+- [August, 2024] Cognita has now moved to using pydantic v2.
+- [July, 2024] Introducing `model gateway` a single file to manage all the models and their configurations.
+- [June, 2024] Cognita now supports it's own Metadatastore, powered by Prisma and Postgress. You can now use Cognita via UI completely without the need of `local.metadata.yaml` file. You can create collections, data sources, and index them via UI. This makes it easier to use Cognita without any code changes.
+- [June, 2024] Added one click local deployment of cognita. You can now run the entire cognita system using docker-compose. This makes it easier to test and develop locally.
+- [May, 2024] Added support for Embedding and Reranking using [Infninty Server](https://github.com/michaelfeil/infinity). You can now use hosted services for variatey embeddings and reranking services available on huggingface. This reduces the burden on the main cognita system and makes it more scalable.
+- [May, 2024] Cleaned up requirements for optional package installations for vector dbs, parsers, embedders, and rerankers.
+- [May, 2024] Conditional docker builds with arguments for optional package installations
+- [April, 2024] Support for multi-modal vision parser using GPT-4
 
 # Contents
 
--   [Cognita](#cognita)
-    -   [Why use Cognita?](#why-use-cognita)
--   [🎉 What's new in Cognita](#-whats-new-in-cognita)
--   [Contents](#contents)
-    -   [Introduction](#introduction)
-        -   [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
-        -   [Features:](#features)
--   [:rocket: Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
-    -   [:whale: Using Docker compose (recommended)](#whale-using-docker-compose-recommended)
-    -   [Cognita from source](#cognita-from-source)
--   [:hammer_and_pick: Project Architecture](#hammer_and_pick-project-architecture)
-    -   [Cognita Components:](#cognita-components)
-    -   [Data Indexing:](#data-indexing)
-    -   [:question: Question-Answering using API Server:](#question-question-answering-using-api-server)
-    -   [:computer: Code Structure:](#computer-code-structure)
-    -   [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
-        -   [Customizing Dataloaders:](#customizing-dataloaders)
-        -   [Customizing Embedder:](#customizing-embedder)
-        -   [Customizing Parsers:](#customizing-parsers)
-        -   [Adding Custom VectorDB:](#adding-custom-vectordb)
-        -   [Rerankers:](#rerankers)
--   [:bulb: Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
-    -   [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
--   [:whale: Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
-    -   [Using the **RAG UI**:](#using-the-rag-ui)
--   [:sparkling_heart: Open Source Contribution](#sparkling_heart-open-source-contribution)
--   [:crystal_ball: Future developments](#crystal_ball-future-developments)
--   [Star History](#star-history)
+- [Cognita](#cognita)
+  - [Why use Cognita?](#why-use-cognita)
+- [🎉 What's new in Cognita](#-whats-new-in-cognita)
+- [Contents](#contents)
+  - [Introduction](#introduction)
+    - [Advantages of using Cognita are:](#advantages-of-using-cognita-are)
+    - [Features:](#features)
+- [:rocket: Quickstart: Running Cognita Locally](#rocket-quickstart-running-cognita-locally)
+  - [:whale: Using Docker compose (recommended)](#whale-using-docker-compose-recommended)
+  - [Cognita from source](#cognita-from-source)
+- [:hammer_and_pick: Project Architecture](#hammer_and_pick-project-architecture)
+  - [Cognita Components:](#cognita-components)
+  - [Data Indexing:](#data-indexing)
+  - [:question: Question-Answering using API Server:](#question-question-answering-using-api-server)
+  - [:computer: Code Structure:](#computer-code-structure)
+  - [Customizing the Code for your usecase](#customizing-the-code-for-your-usecase)
+    - [Customizing Dataloaders:](#customizing-dataloaders)
+    - [Customizing Embedder:](#customizing-embedder)
+    - [Customizing Parsers:](#customizing-parsers)
+    - [Adding Custom VectorDB:](#adding-custom-vectordb)
+    - [Rerankers:](#rerankers)
+- [:bulb: Writing your Query Controller (QnA):](#bulb-writing-your-query-controller-qna)
+  - [Steps to add your custom Query Controller:](#steps-to-add-your-custom-query-controller)
+- [:whale: Quickstart: Deployment with Truefoundry:](#whale-quickstart-deployment-with-truefoundry)
+  - [Using the **RAG UI**:](#using-the-rag-ui)
+- [:sparkling_heart: Open Source Contribution](#sparkling_heart-open-source-contribution)
+- [:crystal_ball: Future developments](#crystal_ball-future-developments)
+- [Star History](#star-history)
 
 ## Introduction
 
@@ -67,7 +69,7 @@ Cognita makes it really easy to customize and experiment everything about a RAG 
 1. A central reusable repository of parsers, loaders, embedders and retrievers.
 2. Ability for non-technical users to play with UI - Upload documents and perform QnA using modules built by the development team.
 3. Fully API driven - which allows integration with other systems.
-    > If you use Cognita with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries.
+   > If you use Cognita with Truefoundry AI Gateway, you can get logging, metrics and feedback mechanism for your user queries.
 
 ### Features:
 
@@ -95,20 +97,19 @@ cp models_config.sample.yaml models_config.yaml
 By default, the config has local providers enabled that need infinity and ollama server to run embedding and LLMs locally.
 However, if you have a OpenAI API Key, you can uncomment the `openai` provider in `models_config.yaml` and update `OPENAI_API_KEY` in `compose.env`
 
-
 Now, you can run the following command to start the services:
 
 ```shell
 docker-compose --env-file compose.env up
 ```
 
--   The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
--   The compose file will start the following services:
-    -   `cognita-db` - Postgres instance used to store metadata for collections and data sources.
-    -   `qdrant-server` - Used to start local vector db server.
-    -   `cognita-backend` - Used to start the FastAPI backend server for Cognita.
-    -   `cognita-frontend` - Used to start the frontend for Cognita.
--   Once the services are up, you can access the qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
+- The compose file uses `compose.env` file for environment variables. You can modify it as per your needs.
+- The compose file will start the following services:
+  - `cognita-db` - Postgres instance used to store metadata for collections and data sources.
+  - `qdrant-server` - Used to start local vector db server.
+  - `cognita-backend` - Used to start the FastAPI backend server for Cognita.
+  - `cognita-frontend` - Used to start the frontend for Cognita.
+- Once the services are up, you can access the qdrant server at `http://localhost:6333`, the backend at `http://localhost:8000` and frontend at `http://localhost:5001`.
 
 To start additional services such as `ollama` and `infinity-server` you can run the following command:
 
@@ -116,14 +117,23 @@ To start additional services such as `ollama` and `infinity-server` you can run 
 docker-compose --env-file compose.env --profile ollama --profile infinity up
 ```
 
--   This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
+- This will start additional servers for `ollama` and `infinity-server` which can be used for LLM, Embeddings and reranking respectively. You can access the `infinity-server` at `http://localhost:7997`.
 
+- If you want to build backend / frontend image locally, for e.g when you add new requirements/packages/take a new pull from Github you can add `--build` flag to the command.
+
+```shell
+docker-compose --env-file compose.env up --build
+```
+
+OR
+
+```shell
+docker-compose --env-file compose.env --profile ollama --profile infinity up --build
+```
 
 ## Developing in Cognita
 
 Docker compose is a great way to run the entire Cognita system locally. Any changes that you make in the `backend` folder will be automatically reflected in the running backend server. You can test out different APIs and endpoints by making changes in the backend code.
-
-If you want to build backend / frontend image locally, for e.g when you add new requirements/packages you can run `docker-compose build` before running `docker-compose up`
 
 # :hammer_and_pick: Project Architecture
 
@@ -137,11 +147,11 @@ Overall the architecture of Cognita is composed of several entities
 
 2. **Metadata Store** - This store contains metadata about the collection themselves. A collection refers to a set of documents from one or more data sources combined. For each collection, the collection metadata stores
 
-    - Name of the collection
-    - Name of the associated Vector DB collection
-    - Linked Data Sources
-    - Parsing Configuration for each data source
-    - Embedding Model and Configuration to be used
+   - Name of the collection
+   - Name of the associated Vector DB collection
+   - Linked Data Sources
+   - Parsing Configuration for each data source
+   - Embedding Model and Configuration to be used
 
 3. **LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format. This can be OpenAIChat, OllamaChat, or even TruefoundryChat that uses TF LLM Gateway.
 
@@ -149,20 +159,20 @@ Overall the architecture of Cognita is composed of several entities
 
 5. **Indexing Job** - This is an asynchronous Job responsible for orchestrating the indexing flow. Indexing can be started manually or run regularly on a cron schedule. It will
 
-    - Scan the Data Sources to get list of documents
-    - Check the Vector DB state to filter out unchanged documents
-    - Downloads and parses files to create smaller chunks with associated metadata
-    - Embeds those chunks using the AI Gateway and puts them into Vector DB
-        > The source code for this is in the `backend/indexer/`
+   - Scan the Data Sources to get list of documents
+   - Check the Vector DB state to filter out unchanged documents
+   - Downloads and parses files to create smaller chunks with associated metadata
+   - Embeds those chunks using the AI Gateway and puts them into Vector DB
+     > The source code for this is in the `backend/indexer/`
 
 6. **API Server** - This component processes the user query to generate answers with references synchronously. Each application has full control over the retrieval and answer process. Broadly speaking, when a user sends a request
 
-    - The corresponsing Query Controller bootstraps retrievers or multi-step agents according to configuration.
-    - User's question is processed and embedded using the AI Gateway.
-    - One or more retrievers interact with the Vector DB to fetch relevant chunks and metadata.
-    - A final answer is formed by using a LLM via the AI Gateway.
-    - Metadata for relevant documents fetched during the process can be optionally enriched. E.g. adding presigned URLs.
-        > The code for this component is in `backend/server/`
+   - The corresponsing Query Controller bootstraps retrievers or multi-step agents according to configuration.
+   - User's question is processed and embedded using the AI Gateway.
+   - One or more retrievers interact with the Vector DB to fetch relevant chunks and metadata.
+   - A final answer is formed by using a LLM via the AI Gateway.
+   - Metadata for relevant documents fetched during the process can be optionally enriched. E.g. adding presigned URLs.
+     > The code for this component is in `backend/server/`
 
 ## Data Indexing:
 
@@ -189,7 +199,7 @@ Overall the architecture of Cognita is composed of several entities
 
 7. The answer and relevant document chunks are returned in response.
 
-    **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
+   **Note:** In case of agents the intermediate steps can also be streamed. It is up to the specific app to decide.
 
 ## Customizing the Code for your usecase
 
@@ -201,66 +211,66 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 
 ### Customizing Dataloaders:
 
--   You can write your own data loader by inherting the `BaseDataLoader` class from `backend/modules/dataloaders/loader.py`
+- You can write your own data loader by inherting the `BaseDataLoader` class from `backend/modules/dataloaders/loader.py`
 
--   Finally, register the loader in `backend/modules/dataloaders/__init__.py`
+- Finally, register the loader in `backend/modules/dataloaders/__init__.py`
 
--   Testing a dataloader on localdir, in root dir, copy the following code as `test.py` and execute it. We show how to test an existing `LocalDirLoader` here:
+- Testing a dataloader on localdir, in root dir, copy the following code as `test.py` and execute it. We show how to test an existing `LocalDirLoader` here:
 
-    ```python
-    from backend.modules.dataloaders import LocalDirLoader
-    from backend.types import DataSource
+  ```python
+  from backend.modules.dataloaders import LocalDirLoader
+  from backend.types import DataSource
 
-    data_source = DataSource(
-    type="local",
-    uri="sample-data/creditcards",
-    )
+  data_source = DataSource(
+  type="local",
+  uri="sample-data/creditcards",
+  )
 
-    loader = LocalDirLoader()
-
-
-    loaded_data_pts = loader.load_full_data(
-        data_source=data_source,
-        dest_dir="test/creditcards",
-    )
+  loader = LocalDirLoader()
 
 
-    for data_pt in loaded_data_pts:
-        print(data_pt)
-    ```
+  loaded_data_pts = loader.load_full_data(
+      data_source=data_source,
+      dest_dir="test/creditcards",
+  )
+
+
+  for data_pt in loaded_data_pts:
+      print(data_pt)
+  ```
 
 ### Customizing Embedder:
 
--   The codebase currently uses `OpenAIEmbeddings` you can registered as `default`.
--   You can register your custom embeddings in `backend/modules/embedder/__init__.py`
--   You can also add your own embedder an example of which is given under `backend/modules/embedder/mixbread_embedder.py`. It inherits langchain embedding class.
+- The codebase currently uses `OpenAIEmbeddings` you can registered as `default`.
+- You can register your custom embeddings in `backend/modules/embedder/__init__.py`
+- You can also add your own embedder an example of which is given under `backend/modules/embedder/mixbread_embedder.py`. It inherits langchain embedding class.
 
 ### Customizing Parsers:
 
--   You can write your own parser by inherting the `BaseParser` class from `backend/modules/parsers/parser.py`
+- You can write your own parser by inherting the `BaseParser` class from `backend/modules/parsers/parser.py`
 
--   Finally, register the parser in `backend/modules/parsers/__init__.py`
+- Finally, register the parser in `backend/modules/parsers/__init__.py`
 
--   Testing a Parser on a local file, in root dir, copy the following code as `test.py` and execute it. Here we show how we can test existing `MarkdownParser`:
+- Testing a Parser on a local file, in root dir, copy the following code as `test.py` and execute it. Here we show how we can test existing `MarkdownParser`:
 
-    ```python
-    import asyncio
-    from backend.modules.parsers import MarkdownParser
+  ```python
+  import asyncio
+  from backend.modules.parsers import MarkdownParser
 
-    parser = MarkdownParser()
-    chunks =  asyncio.run(
-        parser.get_chunks(
-            filepath="sample-data/creditcards/diners-club-black.md",
-        )
-    )
-    print(chunks)
-    ```
+  parser = MarkdownParser()
+  chunks =  asyncio.run(
+      parser.get_chunks(
+          filepath="sample-data/creditcards/diners-club-black.md",
+      )
+  )
+  print(chunks)
+  ```
 
 ### Adding Custom VectorDB:
 
--   To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
+- To add your own interface for a VectorDB you can inhertit `BaseVectorDB` from `backend/modules/vector_db/base.py`
 
--   Register the vectordb under `backend/modules/vector_db/__init__.py`
+- Register the vectordb under `backend/modules/vector_db/__init__.py`
 
 # :bulb: Writing your Query Controller (QnA):
 
@@ -268,9 +278,9 @@ Code responsible for implementing the Query interface of RAG application. The me
 
 ## Steps to add your custom Query Controller:
 
--   Add your Query controller class in `backend/modules/query_controllers/`
+- Add your Query controller class in `backend/modules/query_controllers/`
 
--   Add `query_controller` decorator to your class and pass the name of your custom controller as argument
+- Add `query_controller` decorator to your class and pass the name of your custom controller as argument
 
 ```controller.py
 from backend.server.decorator import query_controller
@@ -280,7 +290,7 @@ class MyCustomController():
     ...
 ```
 
--   Add methods to this controller as per your needs and use our http decorators like `post, get, delete` to make your methods an API
+- Add methods to this controller as per your needs and use our http decorators like `post, get, delete` to make your methods an API
 
 ```controller.py
 from backend.server.decorator import post
@@ -296,7 +306,7 @@ class MyCustomController():
         ...
 ```
 
--   Import your custom controller class at `backend/modules/query_controllers/__init__.py`
+- Import your custom controller class at `backend/modules/query_controllers/__init__.py`
 
 ```__init__.py
 ...
@@ -311,59 +321,59 @@ To be able to **Query** on your own documents, follow the steps below:
 
 1.  Register at TrueFoundry, follow [here](https://www.truefoundry.com/register)
 
-    -   Fill up the form and register as an organization (let's say <org_name>)
-    -   On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
-    -   Complete your email verification
-    -   Login to the platform at your dashboard endpoint ie. https://<org_name>.truefoundry.cloud
+    - Fill up the form and register as an organization (let's say <org_name>)
+    - On `Submit`, you will be redirected to your dashboard endpoint ie https://<org_name>.truefoundry.cloud
+    - Complete your email verification
+    - Login to the platform at your dashboard endpoint ie. https://<org_name>.truefoundry.cloud
 
     `Note: Keep your dashboard endpoint handy, we will refer it as "TFY_HOST" and it should have structure like "https://<org_name>.truefoundry.cloud"`
 
 2.  Setup a cluster, use TrueFoundry managed for quick setup
 
-    -   Give a unique name to your **[Cluster](https://docs.truefoundry.com/docs/workspace)** and click on **Launch Cluster**
-    -   It will take few minutes to provision a cluster for you
-    -   On **Configure Host Domain** section, click `Register` for the pre-filled IP
-    -   Next, `Add` a **Docker Registry** to push your docker images to.
-    -   Next, **Deploy a Model**, you can choose to `Skip` this step
+    - Give a unique name to your **[Cluster](https://docs.truefoundry.com/docs/workspace)** and click on **Launch Cluster**
+    - It will take few minutes to provision a cluster for you
+    - On **Configure Host Domain** section, click `Register` for the pre-filled IP
+    - Next, `Add` a **Docker Registry** to push your docker images to.
+    - Next, **Deploy a Model**, you can choose to `Skip` this step
 
 3.  Add a **Storage Integration**
 
 4.  Create a **ML Repo**
 
-    -   Navigate to **ML Repo** tab
-    -   Click on `+ New ML Repo` button on top-right
-    -   Give a unique name to your **ML Repo** (say 'docs-qa-llm')
-    -   Select **Storage Integration**
-    -   On `Submit`, your **ML Repo** will be created
+    - Navigate to **ML Repo** tab
+    - Click on `+ New ML Repo` button on top-right
+    - Give a unique name to your **ML Repo** (say 'docs-qa-llm')
+    - Select **Storage Integration**
+    - On `Submit`, your **ML Repo** will be created
 
-        For more details: [link](https://docs.truefoundry.com/docs/creating-ml-repo-via-ui)
+      For more details: [link](https://docs.truefoundry.com/docs/creating-ml-repo-via-ui)
 
 5.  Create a **Workspace**
 
-    -   Navigate to **Workspace** tab
-    -   Click on `+ New Workspace` button on top-right
-    -   Select your **Cluster**
-    -   Give a name to your **Workspace** (say 'docs-qa-llm')
-    -   Enable **ML Repo Access** and `Add ML Repo Access`
-    -   Select your **ML Repo** and role as **Project Admin**
-    -   On `Submit`, a new **Workspace** will be created. You can copy the **Workspace FQN** by clicking on **FQN**.
+    - Navigate to **Workspace** tab
+    - Click on `+ New Workspace` button on top-right
+    - Select your **Cluster**
+    - Give a name to your **Workspace** (say 'docs-qa-llm')
+    - Enable **ML Repo Access** and `Add ML Repo Access`
+    - Select your **ML Repo** and role as **Project Admin**
+    - On `Submit`, a new **Workspace** will be created. You can copy the **Workspace FQN** by clicking on **FQN**.
 
     For more details: [link](https://docs.truefoundry.com/docs/installation-and-setup#5-creating-workspaces)
 
 6.  Deploy **RAG Application**
 
-    -   Navigate to **Deployments** tab
-    -   Click on `+ New Deployment` buttton on top-right
-    -   Select `Application Catalogue`
-    -   Select your workspace
-    -   Select RAG Application
-    -   Fill up the deployment template
-        -   Give your deployment a Name
-        -   Add ML Repo
-        -   You can either add an existing Qdrant DB or create a new one
-        -   By default, `main` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
-            > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
-        -   Click on `Submit` your application will be deployed.
+    - Navigate to **Deployments** tab
+    - Click on `+ New Deployment` buttton on top-right
+    - Select `Application Catalogue`
+    - Select your workspace
+    - Select RAG Application
+    - Fill up the deployment template
+      - Give your deployment a Name
+      - Add ML Repo
+      - You can either add an existing Qdrant DB or create a new one
+      - By default, `main` branch is used for deployment (You will find this option in `Show Advance fields`). You can change the branch name and git repository if required.
+        > Make sure to re-select the main branch, as the SHA commit, does not get updated automatically.
+      - Click on `Submit` your application will be deployed.
 
 ## Using the **RAG UI**:
 
@@ -371,24 +381,24 @@ The following steps will showcase how to use the cognita UI to query documents:
 
 1.  Create Data Source
 
-    -   Click on `Data Sources` tab
-        ![Datasource](./docs/images/datasource.png)
-    -   Click `+ New Datasource`
-    -   Data source type can be either files from local directory, web url, github url or providing Truefoundry artifact FQN.
-        -   E.g: If `Localdir` is selected upload files from your machine and click `Submit`.
-    -   Created Data sources list will be available in the Data Sources tab.
-        ![DataSourceList](./docs/images/list-datasources-in-collection.png)
+    - Click on `Data Sources` tab
+      ![Datasource](./docs/images/datasource.png)
+    - Click `+ New Datasource`
+    - Data source type can be either files from local directory, web url, github url or providing Truefoundry artifact FQN.
+      - E.g: If `Localdir` is selected upload files from your machine and click `Submit`.
+    - Created Data sources list will be available in the Data Sources tab.
+      ![DataSourceList](./docs/images/list-datasources-in-collection.png)
 
 2.  Create Collection
 
-    -   Click on `Collections` tab
-    -   Click `+ New Collection`
-        ![collection](./docs/images/adding-collection.png)
-    -   Enter Collection Name
-    -   Select Embedding Model
-    -   Add earlier created data source and the necessary configuration
-    -   Click `Process` to create the collection and index the data.
-        ![ingestionstarted](./docs/images/dataingestion-started.png)
+    - Click on `Collections` tab
+    - Click `+ New Collection`
+      ![collection](./docs/images/adding-collection.png)
+    - Enter Collection Name
+    - Select Embedding Model
+    - Add earlier created data source and the necessary configuration
+    - Click `Process` to create the collection and index the data.
+      ![ingestionstarted](./docs/images/dataingestion-started.png)
 
 3.  As soon as you create the collection, data ingestion begins, you can view it's status by selecting your collection in collections tab. You can also add additional data sources later on and index them in the collection.
     ![ingestioncomplete](./docs/images/dataingestion-complete.png)
@@ -396,11 +406,11 @@ The following steps will showcase how to use the cognita UI to query documents:
 4.  Response generation
     ![responsegen](./docs/images/response-generation.png)
 
-    -   Select the collection
-    -   Select the LLM and it's configuration
-    -   Select the document retriever
-    -   Write the prompt or use the default prompt
-    -   Ask the query
+    - Select the collection
+    - Select the LLM and it's configuration
+    - Select the document retriever
+    - Write the prompt or use the default prompt
+    - Ask the query
 
 # :sparkling_heart: Open Source Contribution
 
@@ -410,13 +420,13 @@ Your contributions are always welcome! Feel free to contribute ideas, feedback, 
 
 Contributions are welcomed for the following upcoming developments:
 
--   Support for other vector databases like `Chroma`, `Weaviate`, etc
--   Support for `Scalar + Binary Quantization` embeddings.
--   Support for `RAG Evalutaion` of different retrievers.
--   Support for `RAG Visualization`.
--   Support for conversational chatbot with context
--   Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
--   Support for `GraphDB`
+- Support for other vector databases like `Chroma`, `Weaviate`, etc
+- Support for `Scalar + Binary Quantization` embeddings.
+- Support for `RAG Evalutaion` of different retrievers.
+- Support for `RAG Visualization`.
+- Support for conversational chatbot with context
+- Support for RAG optimized LLMs like `stable-lm-3b`, `dragon-yi-6b`, etc
+- Support for `GraphDB`
 
 ---
 

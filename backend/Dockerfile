@@ -1,6 +1,7 @@
 FROM --platform=linux/amd64 python:3.11
 
-RUN apt-get update -y && apt-get install ffmpeg libsm6 libxext6 poppler-utils qpdf tesseract-ocr -y
+# Required for opencv
+RUN apt-get update -y && apt-get install ffmpeg libsm6 libxext6 -y
 
 # Set environment variables
 ENV PATH=/virtualenvs/venv/bin:$PATH
@@ -13,8 +14,6 @@ COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel && \
     python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/requirements.txt
-
-ENV LD_LIBRARY_PATH=/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cublas/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_cupti/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_nvrtc/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cuda_runtime/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cufft/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/curand/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusolver/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/cusparse/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nccl/lib:/virtualenvs/venv/lib/python3.11/site-packages/nvidia/nvtx/lib:/virtualenvs/venv/lib/python3.11/site-packages/torch/lib/:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 # Install VectorDB packages
 ARG ADD_VECTORDB=0

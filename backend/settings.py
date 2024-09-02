@@ -1,7 +1,8 @@
 import os
-from typing import Optional
+from typing import Any, Dict
 
-from pydantic import BaseSettings, root_validator
+from pydantic import ConfigDict, model_validator
+from pydantic_settings import BaseSettings
 
 from backend.types import MetadataStoreConfig, VectorDBConfig
 
@@ -11,19 +12,15 @@ class Settings(BaseSettings):
     Settings class to hold all the environment variables
     """
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
     VECTOR_DB_CONFIG: VectorDBConfig
-
     LOCAL: bool = False
-
     TFY_HOST: str = ""
     TFY_API_KEY: str = ""
     JOB_FQN: str = ""
-
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
 
@@ -35,8 +32,14 @@ class Settings(BaseSettings):
 
     UNSTRUCTURED_IO_API_KEY: str = ""
 
-    @root_validator(pre=True)
-    def _validate_values(cls, values):
+    @model_validator(mode="before")
+    @classmethod
+    def _validate_values(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate search type."""
+        if not isinstance(values, dict):
+            raise ValueError(
+                f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
+            )
         models_config_path = values.get("MODELS_CONFIG_PATH")
         if not os.path.isabs(models_config_path):
             this_dir = os.path.abspath(os.path.dirname(__file__))
@@ -44,7 +47,7 @@ class Settings(BaseSettings):
             models_config_path = os.path.join(root_dir, models_config_path)
 
         if not models_config_path:
-            raise Exception(
+            raise ValueError(
                 f"{models_config_path} does not exist. "
                 f"You can copy models_config.sample.yaml to {settings.MODELS_CONFIG_PATH} to bootstrap config"
             )

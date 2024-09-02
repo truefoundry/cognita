@@ -3,7 +3,7 @@ import base64
 import io
 import os
 from itertools import islice
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import fitz
@@ -17,7 +17,7 @@ from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import BaseParser
 from backend.modules.parsers.utils import contains_text
-from backend.types import ModelConfig
+from backend.types import ModelConfig, ModelType
 
 
 def stringToRGB(base64_string: str):
@@ -44,14 +44,13 @@ class MultiModalParser(BaseParser):
 
     Parser Configuration will look like the following while creating the collection:
     {
-        "chunk_size": 1000,
-        "parser_map": {
-            ".pdf": "MultiModalParser",
-        },
-        "additional_config": {
-            "model_configuration": {
-                # <provider>/<model_name> from model_config.yaml
-                "name": "truefoundry/openai-main/gpt-4-turbo"
+        ".pdf": {
+            "name": "MultiModalParser",
+            "parameters": {
+                "model_configuration": {
+                    "name" : "truefoundry/openai-main/gpt-4o-mini"
+                },
+                "prompt": "You are a PDF Parser ....."
             }
         }
     }
@@ -60,30 +59,24 @@ class MultiModalParser(BaseParser):
     supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
 
     def __init__(
-        self,
-        additional_config: dict = None,
-        *args,
-        **kwargs,
+        self, *, model_configuration: ModelConfig = None, prompt: str = "", **kwargs
     ):
         """
         Initializes the MultiModalParser object.
         """
-        additional_config = additional_config or {}
-
         # Multi-modal parser needs to be configured with the openai compatible client url and vision model
-        if "model_configuration" in additional_config:
-            self.model_configuration = ModelConfig.parse_obj(
-                additional_config["model_configuration"]
-            )
+        if model_configuration:
+            self.model_configuration = ModelConfig.model_validate(model_configuration)
             logger.info(f"Using custom vision model..., {self.model_configuration}")
         else:
             # Truefoundry specific model configuration
             self.model_configuration = ModelConfig(
-                name="truefoundry/openai-main/gpt-4-turbo"
+                name="truefoundry/openai-main/gpt-4o-mini",
+                type=ModelType.chat,
             )
 
-        if "prompt" in additional_config:
-            self.prompt = additional_config["prompt"]
+        if prompt:
+            self.prompt = prompt
             logger.info(f"Using custom prompt..., {self.prompt}")
         else:
             self.prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
@@ -96,7 +89,7 @@ Data Points: Identify specific data points or values represented in the charts, 
 Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
 Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
 
-            super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     async def call_vlm_agent(
         self,
@@ -137,7 +130,7 @@ Conclude with a summary of the key findings from your analysis and any recommend
             return {"error": f"Error in page: {page_number}"}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[dict] = None, *args, **kwargs
+        self, filepath: str, metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
     ):
         """
         Asynchronously extracts text from a PDF file and returns it in chunks.

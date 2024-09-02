@@ -1,4 +1,3 @@
-import json
 import os
 from typing import List
 
@@ -28,7 +27,7 @@ class ModelGateway:
 
         # parse the json data into a list of ModelProviderConfig objects
         self.provider_configs = [
-            ModelProviderConfig.parse_obj(item) for item in _providers
+            ModelProviderConfig.model_validate(item) for item in _providers
         ]
 
         # load llm models
@@ -133,6 +132,7 @@ class ModelGateway:
         return ChatOpenAI(
             model=model_id,
             temperature=model_config.parameters.get("temperature", 0.1),
+            max_tokens=model_config.parameters.get("max_tokens", 1024),
             streaming=stream,
             api_key=api_key,
             base_url=model_provider_config.base_url,

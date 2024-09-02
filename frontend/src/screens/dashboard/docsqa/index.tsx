@@ -20,6 +20,7 @@ import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
 import Modal from '@/components/base/atoms/Modal'
 import notify from '@/components/base/molecules/Notify'
+import { SSE } from 'sse.js'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -85,7 +86,7 @@ const DocsQA = () => {
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
-  const [isStreamEnabled, setIsStreamEnabled] = useState(false)
+  const [isStreamEnabled, setIsStreamEnabled] = useState(true)
   const [isInternetSearchEnabled, setIsInternetSearchEnabled] = useState(false)
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
@@ -180,35 +181,34 @@ const DocsQA = () => {
         }
         setIsRunningPrompt(false)
       } else {
-        const response = await fetch(
+        const sseRequest = new SSE(
           `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
           {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+            payload: JSON.stringify({
               ...params,
               stream: true,
             }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
           }
         )
-        const reader = response?.body?.getReader()
-        const readChunk = (value: any): any => {
-          const chunkString = new TextDecoder().decode(value.value)
+
+        sseRequest.addEventListener('data', (event: any) => {
           try {
-            const parsedResponse = JSON.parse(chunkString)
-            if (parsedResponse?.end) return
-            if (parsedResponse?.answer) {
-              setAnswer((prevAnswer) => prevAnswer + parsedResponse.answer)
+            const parsed = JSON.parse(event.data)
+            if (parsed?.type === 'answer') {
+              setAnswer((prevAnswer) => prevAnswer + parsed.content)
               setIsRunningPrompt(false)
-            } else if (parsedResponse?.docs) {
-              setSourceDocs((prevDocs) => [...prevDocs, ...parsedResponse.docs])
+            } else if (parsed?.type === 'docs') {
+              setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
             }
           } catch (err) {}
-          return reader?.read().then(readChunk)
-        }
-        reader?.read().then(readChunk)
+        })
+
+        sseRequest.addEventListener('end', (event: any) => {
+          sseRequest.close()
+        })
       }
     } catch (err: any) {
       setErrorMessage(true)
@@ -341,32 +341,6 @@ const DocsQA = () => {
           <>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex justify-between items-center mb-1">
-                <div className="text-sm">Query Controller:</div>
-                <Select
-                  value={selectedQueryController}
-                  onChange={(e) => {
-                    setSelectedQueryController(e.target.value)
-                  }}
-                  placeholder="Select Query Controller..."
-                  sx={{
-                    background: 'white',
-                    height: '2rem',
-                    width: '13.1875rem',
-                    border: '1px solid #CEE0F8 !important',
-                    outline: 'none !important',
-                    '& fieldset': {
-                      border: 'none !important',
-                    },
-                  }}
-                >
-                  {allQueryControllers?.map((retriever: any) => (
-                    <MenuItem value={retriever} key={retriever}>
-                      {retriever}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex justify-between items-center mb-1 mt-3">
                 <div className="text-sm">Collection:</div>
                 <Select
                   value={selectedCollection}
@@ -389,6 +363,32 @@ const DocsQA = () => {
                   {collections?.map((collection: any) => (
                     <MenuItem value={collection} key={collection}>
                       {collection}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex justify-between items-center mb-1 mt-3">
+                <div className="text-sm">Query Controller:</div>
+                <Select
+                  value={selectedQueryController}
+                  onChange={(e) => {
+                    setSelectedQueryController(e.target.value)
+                  }}
+                  placeholder="Select Query Controller..."
+                  sx={{
+                    background: 'white',
+                    height: '2rem',
+                    width: '13.1875rem',
+                    border: '1px solid #CEE0F8 !important',
+                    outline: 'none !important',
+                    '& fieldset': {
+                      border: 'none !important',
+                    },
+                  }}
+                >
+                  {allQueryControllers?.map((retriever: any) => (
+                    <MenuItem value={retriever} key={retriever}>
+                      {retriever}
                     </MenuItem>
                   ))}
                 </Select>
@@ -500,9 +500,9 @@ const DocsQA = () => {
             </div>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
               <div className="flex gap-4 items-center">
-                <div className="w-full relative">
+                <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
                   <Input
-                    className="w-full h-[2.75rem] text-sm pr-14"
+                    className="w-full min-h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any question related to this document"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
@@ -514,7 +514,7 @@ const DocsQA = () => {
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
                   />
-                </div>
+                </form>
               </div>
               {answer ? (
                 <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">
