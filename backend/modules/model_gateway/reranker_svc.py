@@ -6,14 +6,13 @@ from langchain.docstore.document import Document
 from langchain.retrievers.document_compressors.base import BaseDocumentCompressor
 
 from backend.logger import logger
-from backend.settings import settings
 
 
 # Reranking Service using Infinity API
 class InfinityRerankerSvc(BaseDocumentCompressor):
     """
     Reranker Service that uses Infinity API
-    Github: https://github.com/michaelfeil/infinity
+    GitHub: https://github.com/michaelfeil/infinity
     """
 
     model: str

@@ -95,20 +95,23 @@ const DocsQASettings = () => {
 
   return (
     <>
-      <div className="flex gap-5 h-full w-full">
-        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250">
-          <LinkButton
-            icon="plus"
-            iconClasses="fa-xs text-slate-400"
-            text={<span className="whitespace-nowrap">New Collection</span>}
-            rounded
-            className="bg-black btn-sm flex-nowrap w-[calc(100%-32px)] mx-4 mb-4"
-            onClick={() => setNewCollectionModalOpen(true)}
-          />
+      <div className='flex justify-between'>
+        <div className='text-[24px] font-bold font-inter'>Collections</div>
+        <LinkButton
+          icon="plus"
+          iconClasses="fa-xs text-slate-400"
+          text={<span className="whitespace-nowrap">New Collection</span>}
+          rounded
+          className="bg-black btn-sm flex-nowrap mb-4 px-5"
+          onClick={() => setNewCollectionModalOpen(true)}
+        />
+      </div>
+      <div className="flex gap-5 flex-1 w-full">
+        <div className="h-full bg-[#f0f7ff] rounded-lg py-5 w-[17.5rem] border border-gray-250 pt-3">
           <div
-            className="h-[calc(100vh-202px)] overflow-y-auto custom-scrollbar"
+            className="h-[calc(100vh-202px)] overflow-y-auto custom-scrollbar px-3"
             style={{
-              paddingRight: '0rem',
+              paddingRight: '0.75rem',
             }}
           >
             {isCollectionsLoading && <Spinner center />}
@@ -126,7 +129,7 @@ const DocsQASettings = () => {
           </div>
         </div>
         {selectedCollection ? (
-          <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-300px)] bg-white p-4">
+          <div className="flex-1 border rounded-lg border-[#CEE0F8] w-[calc(100%-300px)] bg-white p-4">
             {isCollectionDetailsFetching || isCollectionDetailsLoading ? (
               <div className="flex justify-center items-center h-full w-full">
                 <Spinner center medium />
@@ -147,7 +150,7 @@ const DocsQASettings = () => {
                     {collectionDetails && (
                       <div className="text-sm">
                         Embedder Used :{' '}
-                        {collectionDetails?.embedder_config?.config?.model}
+                        {collectionDetails?.embedder_config?.name}
                       </div>
                     )}
                   </div>
@@ -160,7 +163,7 @@ const DocsQASettings = () => {
                     onClick={() => setOpenDataSourceLinkForm(true)}
                   />
                 </div>
-                <div className="bg-[#f7fbff] h-[calc(100%-70px)] p-4">
+                <div className="h-[calc(100%-4.125rem)]">
                   <DataSourcesTable
                     collectionName={selectedCollection}
                     rows={associatedDataSourcesRows}
