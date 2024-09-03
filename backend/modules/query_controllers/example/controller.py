@@ -56,6 +56,7 @@ class BasicRAGQueryController:
         "page_number",
         "pg_no",
         "source",
+        "relevance_score",
     ]
 
     def _get_prompt_template(self, input_variables, template):
