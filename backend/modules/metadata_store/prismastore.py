@@ -321,9 +321,7 @@ class PrismaStore(BaseMetadataStore):
                 detail=f"Data source with fqn {data_source_fqn} does not exist",
             )
 
-        associated_data_sources: AssociatedDataSources = (
-            collection.associated_data_sources
-        )
+        associated_data_sources = collection.associated_data_sources
         if not associated_data_sources:
             logger.error(
                 f"No associated data sources found for collection {collection_name}"
