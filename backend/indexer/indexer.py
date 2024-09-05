@@ -68,7 +68,6 @@ def sync_data_source_to_collection(inputs: DataIngestionConfig):
         None
     """
     loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     def _run_async(coroutine):
         return loop.run_until_complete(coroutine)
     
