@@ -140,6 +140,12 @@ async def unassociate_data_source_from_collection(
             collection_name=request.collection_name,
             data_source_fqn=request.data_source_fqn,
         )
+        VECTOR_STORE_CLIENT.delete_data_point_vectors(collection_name=request.collection_name,
+                data_point_vectors=VECTOR_STORE_CLIENT.list_data_point_vectors(
+                    collection_name=request.collection_name,
+                    data_source_fqn=request.data_source_fqn
+            )
+        )
         return JSONResponse(content={"collection": collection.model_dump()})
     except HTTPException as exp:
         raise exp
