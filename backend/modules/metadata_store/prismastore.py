@@ -40,9 +40,6 @@ if TYPE_CHECKING:
 #
 
 
-# TODO (chiragjn): Either we make everything async or add sync method to this
-
-
 class PrismaStore(BaseMetadataStore):
     def __init__(self, *args, db, **kwargs) -> None:
         self.db = db

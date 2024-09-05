@@ -71,8 +71,12 @@ async def upload_to_docker_directory(
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
     """This function uploads files to the data directory given by the name req.upload_name"""
     try:
+        if settings.ML_REPO_NAME == "":
+            return JSONResponse(
+                content={"error": "ML_REPO_NAME is not set in the environment"},
+                status_code=500,
+            )
         truefoundry_client = ml.get_client()
-
         # Create a new data directory.
         dataset = truefoundry_client.create_data_directory(
             settings.ML_REPO_NAME,
