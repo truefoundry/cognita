@@ -544,14 +544,6 @@ class PrismaStore(BaseMetadataStore):
             logger.exception(f"Failed to update data ingestion run status: {e}")
             raise HTTPException(status_code=500, detail=f"{e}")
 
-    async def alog_metrics_for_data_ingestion_run(
-        self,
-        data_ingestion_run_name: str,
-        metric_dict: Dict[str, Union[int, float]],
-        step: int = 0,
-    ):
-        raise NotImplementedError()
-
     async def alog_errors_for_data_ingestion_run(
         self, data_ingestion_run_name: str, errors: Dict[str, Any]
     ) -> None:

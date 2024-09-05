@@ -69,14 +69,13 @@ async def upload_to_docker_directory(
 
 @router.post("/upload-to-data-directory")
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
-    if settings.METADATA_STORE_CONFIG.provider != "truefoundry":
-        raise Exception("API only supported for metadata store provider: truefoundry")
+    """This function uploads files to the data directory given by the name req.upload_name"""
     try:
         truefoundry_client = ml.get_client()
 
         # Create a new data directory.
         dataset = truefoundry_client.create_data_directory(
-            settings.METADATA_STORE_CONFIG.config.get("ml_repo_name"),
+            settings.ML_REPO_NAME,
             req.upload_name,
         )
 

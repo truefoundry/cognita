@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
+    ML_REPO_NAME: str = ""
     VECTOR_DB_CONFIG: VectorDBConfig
     LOCAL: bool = False
     TFY_HOST: str = ""
