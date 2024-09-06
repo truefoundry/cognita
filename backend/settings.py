@@ -33,6 +33,10 @@ class Settings(BaseSettings):
 
     UNSTRUCTURED_IO_API_KEY: str = ""
 
+    LOCAL_DATA_DIRECTORY: str = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
+    )
+
     @model_validator(mode="before")
     @classmethod
     def _validate_values(cls, values: Dict[str, Any]) -> Dict[str, Any]:

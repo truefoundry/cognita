@@ -384,12 +384,6 @@ class PrismaStore(BaseMetadataStore):
             raise HTTPException(status_code=500, detail="Failed to list data sources")
 
     async def adelete_data_source(self, data_source_fqn: str) -> None:
-        if not settings.LOCAL:
-            logger.error(f"Data source deletion is not allowed in local mode")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source deletion is not allowed in local mode",
-            )
         # Check if data source exists if not raise an error
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
