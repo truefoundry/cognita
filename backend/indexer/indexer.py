@@ -1,6 +1,7 @@
 import os
 import tempfile
-from typing import Dict, List
+from concurrent.futures import Executor
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -299,7 +300,7 @@ async def ingest_data_points(
     )
 
 
-async def ingest_data(request: IngestDataToCollectionDto):
+async def ingest_data(request: IngestDataToCollectionDto, pool: Optional[Executor]):
     """Ingest data into the collection"""
     try:
         client = await get_client()
@@ -353,19 +354,22 @@ async def ingest_data(request: IngestDataToCollectionDto):
                 created_data_ingestion_run = await client.acreate_data_ingestion_run(
                     data_ingestion_run=data_ingestion_run
                 )
-                await sync_data_source_to_collection(
-                    inputs=DataIngestionConfig(
-                        collection_name=created_data_ingestion_run.collection_name,
-                        data_ingestion_run_name=created_data_ingestion_run.name,
-                        data_source=associated_data_source.data_source,
-                        embedder_config=collection.embedder_config,
-                        parser_config=created_data_ingestion_run.parser_config,
-                        data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                        raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                        batch_size=request.batch_size,
-                    )
+                ingestion_config = DataIngestionConfig(
+                    collection_name=created_data_ingestion_run.collection_name,
+                    data_ingestion_run_name=created_data_ingestion_run.name,
+                    data_source=associated_data_source.data_source,
+                    embedder_config=collection.embedder_config,
+                    parser_config=created_data_ingestion_run.parser_config,
+                    data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                    raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                    batch_size=request.batch_size,
                 )
-                created_data_ingestion_run.status = DataIngestionRunStatus.COMPLETED
+                if pool:
+                    # future of this submission is ignored, failures not tracked
+                    pool.submit(sync_data_source_to_collection, ingestion_config)
+                else:
+                    await sync_data_source_to_collection(ingestion_config)
+                created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
             else:
                 if not settings.JOB_FQN:
                     logger.error("Job FQN is required to trigger the job")

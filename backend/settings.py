@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     UNSTRUCTURED_IO_URL: str = ""
 
     UNSTRUCTURED_IO_API_KEY: str = ""
+    PROCESS_POOL_WORKERS: int = 1
 
     @model_validator(mode="before")
     @classmethod
