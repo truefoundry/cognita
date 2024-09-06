@@ -148,10 +148,10 @@ components:
         dockerfile_path: ./frontend/Dockerfile
         build_context_path: ./frontend
       build_source:
-        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
         type: git
         repo_url: https://github.com/truefoundry/cognita
-        branch_name: release
+        branch_name: ps_cleanup_metadatastore
     ports:
       - host: cas.truefoundry.com
         port: 5000
