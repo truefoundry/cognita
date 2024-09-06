@@ -29,7 +29,7 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: adc987bd0641d62a249be1375e7693d89ab47854
+        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -89,7 +89,7 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: adc987bd0641d62a249be1375e7693d89ab47854
+        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -171,7 +171,6 @@ components:
     source:
       type: helm-repo
       chart: qdrant
-      # TODO: update the version
       version: 0.8.4
       repo_url: https://qdrant.github.io/qdrant-helm
     values:
