@@ -3,13 +3,17 @@ name: cognita-app-set
 components:
   - env:
       LOG_LEVEL: DEBUG
-      INFINITY_API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
+      DATABASE_URL: postgresql://cas-db.cognita-internal.svc.cluser.local:5432/cognita-config
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
-      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
+      MODELS_CONFIG_PATH: ./models_config.custom.yaml
+      METADATA_STORE_CONFIG: '{"provider":"prisma"}'
+      ML_REPO_NAME: cognita-internal
+      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+      INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
-      METADATA_STORE_CONFIG: '{"provider":"truefoundry","config":{"ml_repo_name":"cognita-internal"}}'
-      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
+      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
     name: cas-indexer
     type: job
     image:
@@ -32,15 +36,16 @@ components:
       - name: collection_name
         param_type: string
       - name: data_source_fqn
+        default: ""
         param_type: string
       - name: data_ingestion_run_name
-        default: ''
+        default: ""
         param_type: string
       - name: data_ingestion_mode
         default: INCREMENTAL
         param_type: string
       - name: raise_error_on_failure
-        default: 'False'
+        default: "False"
         param_type: string
     retries: 0
     trigger:
@@ -56,31 +61,37 @@ components:
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1000
   - env:
-      JOB_FQN: tfy-secret://internal:cognita-app-set:INDEXER_JOB_FQN
+      DATABASE_URL: postgresql://cas-db.cognita-internal.svc.cluser.local:5432/cognita-config
       LOG_LEVEL: DEBUG
-      INFINITY_API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
       JOB_COMPONENT_NAME: cognita-internal-indexer
-      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
-      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
-      METADATA_STORE_CONFIG: '{"provider":"truefoundry","config":{"ml_repo_name":"cognita-internal"}}'
-      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+      # JOB_FQN can be any string?
+      JOB_FQN: tfy-secret://internal:cognita:INDEXER_JOB_FQN
+      MODELS_CONFIG_PATH: ./models_config.custom.yaml
+      METADATA_STORE_CONFIG: '{"provider":"prisma"}'
+      ML_REPO_NAME: cognita-internal
       INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+      INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
+      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
+      BRAVE_API_KEY: tfy-secret://internal:cognita:BRAVE_API_KEY
+      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
     name: cas-backend
     type: service
     image:
       type: build
       build_spec:
         type: dockerfile
-        command: uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app
+        command: prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
+      # To change this to release later
       build_source:
-        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        ref: 694ce429b2137b4bbceb936d97e8ba3121d74143
         type: git
         repo_url: https://github.com/truefoundry/cognita
-        branch_name: release
+        branch_name: ps_cleanup_metadatastore
     ports:
       - host: cas.truefoundry.com
         path: /api/
@@ -122,8 +133,9 @@ components:
   - env:
       VITE_QA_FOUNDRY_URL: https://cas.truefoundry.com/api
       VITE_DOCS_QA_STANDALONE_PATH: /
-      VITE_DOCS_QA_ENABLE_STANDALONE: 'true'
-      VITE_DOCS_QA_DELETE_COLLECTIONS: 'true'
+      VITE_DOCS_QA_ENABLE_STANDALONE: "true"
+      VITE_DOCS_QA_DELETE_COLLECTIONS: "true"
+      VITE_CARBON_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
     name: cas-frontend
     type: service
     image:
@@ -131,7 +143,7 @@ components:
       build_spec:
         type: dockerfile
         build_args:
-          VITE_DOCS_QA_DELETE_COLLECTIONS: 'true'
+          VITE_DOCS_QA_DELETE_COLLECTIONS: "true"
         dockerfile_path: ./frontend/Dockerfile
         build_context_path: ./frontend
       build_source:
@@ -158,6 +170,7 @@ components:
     source:
       type: helm-repo
       chart: qdrant
+      # TODO: update the version
       version: 0.6.1
       repo_url: https://qdrant.github.io/qdrant-helm
     values:
@@ -187,13 +200,13 @@ components:
           effect: NoSchedule
           operator: Equal
         - key: cloud.google.com/gke-spot
-          value: 'true'
+          value: "true"
           effect: NoSchedule
           operator: Equal
       replicaCount: 2
       fullnameOverride: cas-qdrant
   - env:
-      UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita-app-set:UNSTRUCTURED_IO_API_KEY
+      UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
     name: cas-unstructured-io
     type: service
     image:
@@ -218,9 +231,9 @@ components:
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1500
   - env:
-      PORT: '8000'
-      API_KEY: tfy-secret://internal:cognita-app-set:INFINITY_API_KEY
-      BATCH_SIZE: '4'
+      PORT: "8000"
+      API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
+      BATCH_SIZE: "4"
     name: cas-infinity
     type: service
     image:
@@ -248,3 +261,32 @@ components:
       memory_request: 4000
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1500
+
+  # Database
+  - name: cas-db
+    type: helm
+    source:
+      type: oci-repo
+      oci_chart_url: oci://registry-1.docker.io/bitnamicharts/postgresql
+      version: 13.4.3
+    values:
+      auth:
+        database: cognita-config
+        password: password
+        username: admin
+        postgresPassword: password
+        enablePostgresUser: true
+      primary:
+        service:
+          ports:
+            postgresql: 5432
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        persistence:
+          size: 5Gi
+      architecture: standalone
