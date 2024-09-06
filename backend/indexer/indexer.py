@@ -300,7 +300,7 @@ async def ingest_data_points(
     )
 
 
-async def ingest_data(request: IngestDataToCollectionDto, process_pool: Optional[Executor]):
+async def ingest_data(request: IngestDataToCollectionDto, pool: Optional[Executor]):
     """Ingest data into the collection"""
     try:
         client = await get_client()
@@ -364,9 +364,9 @@ async def ingest_data(request: IngestDataToCollectionDto, process_pool: Optional
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
                         batch_size=request.batch_size,
                     )
-                if process_pool:
+                if pool:
                     # future of this submission is ignored, failures not tracked
-                    process_pool.submit(sync_data_source_to_collection, ingestion_config)
+                    pool.submit(sync_data_source_to_collection, ingestion_config)
                 else:
                     await sync_data_source_to_collection(ingestion_config)
                 created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
