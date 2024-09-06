@@ -26,3 +26,7 @@ qdrant_db/
 .truefoundry
 volumes/
 pgdata/
+user_data/
+.env
+*.bak
+node_modules/

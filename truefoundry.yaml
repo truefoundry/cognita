@@ -30,11 +30,12 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
+        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     params:
       - name: collection_name
         param_type: string
@@ -92,11 +93,12 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
+        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     ports:
       - host: cas.truefoundry.com
         path: /api/
@@ -186,11 +188,12 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
+        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     ports:
       - host: cas.truefoundry.com
         port: 5000
