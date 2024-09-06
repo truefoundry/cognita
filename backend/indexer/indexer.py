@@ -65,7 +65,6 @@ async def async_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    
     client = await get_client()
     await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
