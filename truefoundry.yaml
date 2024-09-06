@@ -3,7 +3,7 @@ name: cognita-app-set
 components:
   - env:
       LOG_LEVEL: DEBUG
-      DATABASE_URL: postgresql://cas-db.cognita-internal.svc.cluster.local:5432/cognita-config
+      DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
       MODELS_CONFIG_PATH: ./models_config.custom.yaml
@@ -29,7 +29,7 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: cca0269051f8b0992ffb8f87ef52600d917a148a
+        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -63,7 +63,7 @@ components:
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1000
   - env:
-      DATABASE_URL: postgresql://cas-db.cognita-internal.svc.cluster.local:5432/cognita-config
+      DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
       LOG_LEVEL: DEBUG
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
@@ -90,7 +90,7 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: cca0269051f8b0992ffb8f87ef52600d917a148a
+        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -182,7 +182,7 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: cca0269051f8b0992ffb8f87ef52600d917a148a
+        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
