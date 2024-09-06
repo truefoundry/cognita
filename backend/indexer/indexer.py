@@ -14,6 +14,7 @@ from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import get_parser_for_extension
+from backend.modules.process_pool import process_pool
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
@@ -371,18 +372,9 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
                         batch_size=request.batch_size,
                     )
-                # Import here to avoid circular dependency
-                from backend.server.app import process_pool
                 # future of this submission is ignored, ingestion failure due to process termination will not be tracked
-                if process_pool:
-                    process_pool.submit(sync_data_source_to_collection, ingestion_config)
-                    created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
-                else:
-                    logger.error("Process Pool Executor is required to trigger the job, but it is not initialized yet")
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Process Pool Executor is required to trigger the job, but it is not initialized yet",
-                    )
+                process_pool.submit(sync_data_source_to_collection, ingestion_config)
+                created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
             else:
                 if not settings.JOB_FQN:
                     logger.error("Job FQN is required to trigger the job")
