@@ -172,7 +172,7 @@ components:
       type: helm-repo
       chart: qdrant
       # TODO: update the version
-      version: 0.6.1
+      version: 0.8.4
       repo_url: https://qdrant.github.io/qdrant-helm
     values:
       service:
