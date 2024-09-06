@@ -162,6 +162,7 @@ services:
         environment:
             - DEBUG_MODE=true
             - LOCAL=${LOCAL}
+            - PROCESS_POOL_WORKERS=${PROCESS_POOL_WORKERS}
             - LOG_LEVEL=DEBUG
             - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
             - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}

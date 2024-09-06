@@ -2,7 +2,6 @@ import os
 import asyncio
 import tempfile
 from typing import Dict, List
-from multiprocessing import Process
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -372,7 +371,10 @@ async def ingest_data(request: IngestDataToCollectionDto):
                         raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
                         batch_size=request.batch_size,
                     )
-                Process(target=sync_data_source_to_collection, args=(ingestion_config, )).start()
+                # Import here to avoid circular dependency
+                from backend.server.app import process_pool
+                # future of this submission is ignored, ingestion failure due to process termination will not be tracked   
+                process_pool.submit(sync_data_source_to_collection, ingestion_config)
                 created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
             else:
                 if not settings.JOB_FQN:
