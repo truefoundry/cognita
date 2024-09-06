@@ -46,6 +46,7 @@ declare interface ImportMetaEnv {
   readonly VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: string
   readonly VITE_USE_LOCAL: string
   readonly VITE_GTAG_ID: string
+  readonly VITE_CARBON_API_KEY: string
   // * Seeded by VITE
   readonly DEV: boolean
   readonly PROD: boolean

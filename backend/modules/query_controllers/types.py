@@ -155,6 +155,10 @@ class BaseQueryInput(ConfiguredBaseModel):
         "contextual-compression-multi-query",
     )
 
+    internet_search_enabled: Optional[bool] = Field(
+        title="Enable internet search", default=False
+    )
+
     stream: bool = Field(title="Stream the results", default=False)
 
     @model_validator(mode="before")

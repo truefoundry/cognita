@@ -3,6 +3,7 @@ import json
 from typing import AsyncIterator
 
 import async_timeout
+import requests
 from fastapi import HTTPException
 from langchain.prompts import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
@@ -15,6 +16,7 @@ from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.types import *
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
+from backend.settings import settings
 from backend.types import Collection, ModelConfig
 
 
@@ -179,6 +181,43 @@ class BaseQueryController:
                 Document(page_content=doc.page_content, metadata=metadata)
             )
         return formatted_docs
+
+    def _intent_summary_search(self, query: str):
+        url = f"https://api.search.brave.com/res/v1/web/search?q={query}&summary=1"
+
+        payload = {}
+        headers = {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": f"{settings.BRAVE_API_KEY}",
+        }
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+        answer = response.json()
+
+        if "summarizer" in answer.keys():
+            summary_query = answer["summarizer"]["key"]
+            url = f"https://api.search.brave.com/res/v1/summarizer/search?key={summary_query}"
+            response = requests.request("GET", url, headers=headers, data=payload)
+            answer = response.json()["summary"][0]["data"]
+            return answer
+        return ""
+
+    def _internet_search(self, context):
+        logger.info("Using Internet search...")
+        if settings.BRAVE_API_KEY:
+            data_context, question = context["context"], context["question"]
+            intent_summary_results = self._intent_summary_search(question)
+            # insert internet search results into context at the beginning
+            data_context.insert(
+                0,
+                Document(
+                    page_content=intent_summary_results,
+                    metadata={"_data_point_fqn": "internet::Internet"},
+                ),
+            )
+            context["context"] = data_context
+        return context
 
     async def _sse_wrap(self, gen):
         async for data in gen:
