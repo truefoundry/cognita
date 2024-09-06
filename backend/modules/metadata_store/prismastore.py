@@ -321,9 +321,7 @@ class PrismaStore(BaseMetadataStore):
                 detail=f"Data source with fqn {data_source_fqn} does not exist",
             )
 
-        associated_data_sources: AssociatedDataSources = (
-            collection.associated_data_sources
-        )
+        associated_data_sources = collection.associated_data_sources
         if not associated_data_sources:
             logger.error(
                 f"No associated data sources found for collection {collection_name}"
@@ -340,17 +338,26 @@ class PrismaStore(BaseMetadataStore):
                 status_code=400,
                 detail=f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}",
             )
-
         associated_data_sources.pop(data_source_fqn, None)
 
         try:
+            # Convert associated_data_sources of type [dict, AssociatedDataSources] to [dict, dict]
+            updated_associated_data_sources: Dict[str, Dict[str, Any]] = {}
+            for (
+                data_source_fqn,
+                data_source,
+            ) in associated_data_sources.items():
+                updated_associated_data_sources[
+                    data_source_fqn
+                ] = data_source.model_dump()
+
             updated_collection: Optional[
                 "PrismaCollection"
             ] = await self.db.collection.update(
                 where={"name": collection_name},
                 data={
                     "associated_data_sources": json.dumps(
-                        associated_data_sources.model_dump()
+                        updated_associated_data_sources
                     )
                 },
             )
