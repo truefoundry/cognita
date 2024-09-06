@@ -44,7 +44,7 @@ def get_data_point_fqn_to_hash_map(
     return data_point_fqn_to_hash
 
 
-async def async_data_source_to_collection(inputs: DataIngestionConfig):
+async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     """
     Synchronizes the data source to the collection by performing the following steps:
     1. Updates the data ingestion run status to indicate that existing vectors are being fetched.
@@ -132,12 +132,6 @@ async def async_data_source_to_collection(inputs: DataIngestionConfig):
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.COMPLETED,
     )
-
-def sync_data_source_to_collection(inputs: DataIngestionConfig):
-    loop = asyncio.new_event_loop()
-    result = loop.run_until_complete(async_data_source_to_collection(inputs))
-    loop.close()
-    return result
 
 
 async def _sync_data_source_to_collection(
