@@ -23,12 +23,14 @@ class Settings(BaseSettings):
     JOB_FQN: str = ""
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
+
+    BRAVE_API_KEY: str = ""
+
+    CARBON_AI_API_KEY: str = ""
+
     UNSTRUCTURED_IO_URL: str = ""
+
     UNSTRUCTURED_IO_API_KEY: str = ""
-    # default is ../user_data
-    LOCAL_DATA_DIRECTORY: str = os.path.abspath(
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
-    )
 
     @model_validator(mode="before")
     @classmethod
@@ -38,7 +40,6 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
             )
-
         models_config_path = values.get("MODELS_CONFIG_PATH")
         if not os.path.isabs(models_config_path):
             this_dir = os.path.abspath(os.path.dirname(__file__))
