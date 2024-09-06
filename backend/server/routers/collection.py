@@ -149,14 +149,18 @@ async def unassociate_data_source_from_collection(
 
 
 @router.post("/ingest")
-async def ingest_data(ingest_data_to_collection_dto: IngestDataToCollectionDto, request: Request):
+async def ingest_data(
+    ingest_data_to_collection_dto: IngestDataToCollectionDto, request: Request
+):
     """Ingest data into the collection"""
     try:
         process_pool = request.app.state.process_pool
     except AttributeError:
         process_pool = None
     try:
-        return await ingest_data_to_collection(ingest_data_to_collection_dto, process_pool)
+        return await ingest_data_to_collection(
+            ingest_data_to_collection_dto, process_pool
+        )
     except HTTPException as exp:
         raise exp
     except Exception as exp:

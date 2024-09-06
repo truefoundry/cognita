@@ -1,6 +1,6 @@
 import os
-from concurrent.futures import Executor
 import tempfile
+from concurrent.futures import Executor
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
@@ -355,15 +355,15 @@ async def ingest_data(request: IngestDataToCollectionDto, pool: Optional[Executo
                     data_ingestion_run=data_ingestion_run
                 )
                 ingestion_config = DataIngestionConfig(
-                        collection_name=created_data_ingestion_run.collection_name,
-                        data_ingestion_run_name=created_data_ingestion_run.name,
-                        data_source=associated_data_source.data_source,
-                        embedder_config=collection.embedder_config,
-                        parser_config=created_data_ingestion_run.parser_config,
-                        data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                        raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                        batch_size=request.batch_size,
-                    )
+                    collection_name=created_data_ingestion_run.collection_name,
+                    data_ingestion_run_name=created_data_ingestion_run.name,
+                    data_source=associated_data_source.data_source,
+                    embedder_config=collection.embedder_config,
+                    parser_config=created_data_ingestion_run.parser_config,
+                    data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                    raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                    batch_size=request.batch_size,
+                )
                 if pool:
                     # future of this submission is ignored, failures not tracked
                     pool.submit(sync_data_source_to_collection, ingestion_config)
