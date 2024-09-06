@@ -1,6 +1,7 @@
 type: application-set
 name: cognita-app-set
 components:
+  # indexer
   - env:
       LOG_LEVEL: DEBUG
       DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
@@ -21,15 +22,15 @@ components:
       build_spec:
         type: dockerfile
         command: >-
-          python -m backend.indexer.main  --collection_name {{collection_name}}
+          /bin/bash -c "set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name {{collection_name}}
           --data_source_fqn {{data_source_fqn}} --data_ingestion_run_name
           {{data_ingestion_run_name}} --data_ingestion_mode {{data_ingestion_mode}}
-          --raise_error_on_failure  {{raise_error_on_failure}}
+          --raise_error_on_failure  {{raise_error_on_failure}}"
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
       # Change this later
       build_source:
-        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
+        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -62,6 +63,8 @@ components:
       memory_request: 1000
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1000
+
+  # Backend
   - env:
       DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
       LOG_LEVEL: DEBUG
@@ -84,12 +87,12 @@ components:
       type: build
       build_spec:
         type: dockerfile
-        command: /bin/bash -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
+        command: /bin/bash -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app"
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
+        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -163,6 +166,8 @@ components:
               reranking_model_ids:
                 - "mixedbread-ai/mxbai-rerank-xsmall-v1"
               default_headers: {}
+
+  # Frontend
   - env:
       VITE_QA_FOUNDRY_URL: https://cas.truefoundry.com/api
       VITE_DOCS_QA_STANDALONE_PATH: /
@@ -181,7 +186,7 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
+        ref: 53b4935dce8154e2b049d7b2a183193ee192cebe
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -239,6 +244,8 @@ components:
           operator: Equal
       replicaCount: 2
       fullnameOverride: cas-qdrant
+
+  # Unstructured IO
   - env:
       UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
     name: cas-unstructured-io
@@ -264,6 +271,8 @@ components:
       memory_request: 4000
       ephemeral_storage_limit: 2000
       ephemeral_storage_request: 1500
+
+  # Infinity
   - env:
       PORT: "8000"
       API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
