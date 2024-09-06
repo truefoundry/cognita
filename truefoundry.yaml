@@ -29,7 +29,7 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
+        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -68,8 +68,7 @@ components:
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
       JOB_COMPONENT_NAME: cognita-internal-indexer
-      # JOB_FQN can be any string?
-      JOB_FQN: tfy-secret://internal:cognita:INDEXER_JOB_FQN
+      JOB_FQN: tfy-prod-euwe1:cognita-internal:cas-indexer
       MODELS_CONFIG_PATH: ./models_config.custom.yaml
       METADATA_STORE_CONFIG: '{"provider":"prisma"}'
       ML_REPO_NAME: cognita-internal
@@ -90,7 +89,7 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
+        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -182,7 +181,7 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: 3fbc70fe83f3b4a4873455986ee320181c98a2b6
+        ref: 8e90071075757e3d3c6014f407b74a77f5c00b25
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
