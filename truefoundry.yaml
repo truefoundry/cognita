@@ -29,10 +29,11 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
-        type: git
+        ref: 0bb61b33a8bf6d7fb7ee3ef2477e8784704bddba
+        # type: local
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
+        # local_build: false
     params:
       - name: collection_name
         param_type: string
@@ -84,15 +85,16 @@ components:
       type: build
       build_spec:
         type: dockerfile
-        command: prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app
+        command: /bin/bash -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
-        type: git
+        ref: 0bb61b33a8bf6d7fb7ee3ef2477e8784704bddba
+        # type: local
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
+        # local_build: false
     ports:
       - host: cas.truefoundry.com
         path: /api/
@@ -133,7 +135,7 @@ components:
       initial_delay_seconds: 10
     mounts:
       - type: string
-        mount_path: ./models_config.custom.yaml
+        mount_path: /models_config.custom.yaml
         data: |
           model_providers:
             - provider_name: truefoundry
@@ -179,10 +181,11 @@ components:
         dockerfile_path: ./frontend/Dockerfile
         build_context_path: ./frontend
       build_source:
-        ref: 6e56740f7ae395eba4ce02a33bbc48f544be4a91
-        type: git
+        ref: 0bb61b33a8bf6d7fb7ee3ef2477e8784704bddba
+        # type: local
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
+        # local_build: false
     ports:
       - host: cas.truefoundry.com
         port: 5000
