@@ -44,19 +44,17 @@ def get_data_point_fqn_to_hash_map(
     return data_point_fqn_to_hash
 
 
-def sync_data_source_to_collection(inputs: DataIngestionConfig):
+async def async_data_source_to_collection(inputs: DataIngestionConfig):
     """
     Synchronizes the data source to the collection by performing the following steps:
-    1. Creates a new event loop for running all async functions
-    2. Updates the data ingestion run status to indicate that existing vectors are being fetched.
-    3. Retrieves the existing data point vectors from the vector store.
-    4. Logs the total number of existing data point vectors in the collection.
-    5. Updates the data ingestion run status to indicate that data ingestion has started.
-    6. Calls the _sync_data_source_to_collection function to perform the actual data ingestion.
-    7. Updates the data ingestion run status to indicate the completion of data ingestion.
-    8. If the data ingestion mode is set to FULL, deletes the outdated data point vectors from the vector store.
-    9. Updates the data ingestion run status to indicate the completion of data cleanup.
-    10. Closes the event loop created in step 1
+    1. Updates the data ingestion run status to indicate that existing vectors are being fetched.
+    2. Retrieves the existing data point vectors from the vector store.
+    3. Logs the total number of existing data point vectors in the collection.
+    4. Updates the data ingestion run status to indicate that data ingestion has started.
+    5. Calls the _sync_data_source_to_collection function to perform the actual data ingestion.
+    6. Updates the data ingestion run status to indicate the completion of data ingestion.
+    7. If the data ingestion mode is set to FULL, deletes the outdated data point vectors from the vector store.
+    8. Updates the data ingestion run status to indicate the completion of data cleanup.
 
     Args:
         inputs (DataIngestionConfig): The configuration for data ingestion.
@@ -67,15 +65,12 @@ def sync_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    loop = asyncio.new_event_loop()
-    def _run_async(coroutine):
-        return loop.run_until_complete(coroutine)
     
-    client = _run_async(get_client())
-    _run_async(client.aupdate_data_ingestion_run_status(
+    client = await get_client()
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
-    ))
+    )
     try:
         existing_data_point_vectors = VECTOR_STORE_CLIENT.list_data_point_vectors(
             collection_name=inputs.collection_name,
@@ -90,38 +85,38 @@ def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        _run_async( client.aupdate_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
-        ))
+        )
         raise e
 
-    _run_async( client.aupdate_data_ingestion_run_status(
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
-    ))
+    )
     try:
-        _run_async( _sync_data_source_to_collection(
+        await _sync_data_source_to_collection(
             inputs=inputs,
             previous_snapshot=previous_snapshot,
-        ))
+        )
     except Exception as e:
         logger.exception(e)
-        _run_async( client.aupdate_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
-        ))
+        )
         raise e
-    _run_async( client.aupdate_data_ingestion_run_status(
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
-    ))
+    )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        _run_async( client.aupdate_data_ingestion_run_status(
+        await client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
-        ))
+        )
         try:
             VECTOR_STORE_CLIENT.delete_data_point_vectors(
                 collection_name=inputs.collection_name,
@@ -129,16 +124,21 @@ def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            _run_async(client.aupdate_data_ingestion_run_status(
+            await client.aupdate_data_ingestion_run_status(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
-            ))
+            )
             raise e
-    _run_async(client.aupdate_data_ingestion_run_status(
+    await client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.COMPLETED,
-    ))
+    )
+
+def sync_data_source_to_collection(inputs: DataIngestionConfig):
+    loop = asyncio.new_event_loop()
+    result = loop.run_until_complete(async_data_source_to_collection(inputs))
     loop.close()
+    return result
 
 
 async def _sync_data_source_to_collection(
