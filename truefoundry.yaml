@@ -27,11 +27,12 @@ components:
           --raise_error_on_failure  {{raise_error_on_failure}}
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
+      # Change this later
       build_source:
-        ref: f7db690f5c9574e7f9a03e200c163249e9eb6352
+        ref: adc987bd0641d62a249be1375e7693d89ab47854
         type: git
         repo_url: https://github.com/truefoundry/cognita
-        branch_name: release
+        branch_name: ps_cleanup_metadatastore
     params:
       - name: collection_name
         param_type: string
@@ -88,7 +89,7 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 694ce429b2137b4bbceb936d97e8ba3121d74143
+        ref: adc987bd0641d62a249be1375e7693d89ab47854
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
