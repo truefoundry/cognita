@@ -1,15 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.modules.process_pool import process_pool_lifespan_manager
 from backend.modules.query_controllers.query_controller import QUERY_CONTROLLER_REGISTRY
 from backend.server.routers.collection import router as collection_router
 from backend.server.routers.components import router as components_router
 from backend.server.routers.data_source import router as datasource_router
 from backend.server.routers.internal import router as internal_router
 from backend.server.routers.rag_apps import router as rag_apps_router
+from backend.utils import AsyncProcessPoolExecutor
 from backend.settings import settings
+
+
+@asynccontextmanager
+async def _process_pool_lifespan_manager(app: FastAPI):
+    app.state.process_pool = AsyncProcessPoolExecutor(max_workers=settings.PROCESS_POOL_WORKERS)
+    yield # FastAPI runs here
+    app.state.process_pool.shutdown(wait=True)
 
 
 # FastAPI Initialization
@@ -17,7 +26,7 @@ app = FastAPI(
     title="Backend for RAG",
     root_path=settings.TFY_SERVICE_ROOT_PATH,
     docs_url="/",
-    lifespan=process_pool_lifespan_manager
+    lifespan=_process_pool_lifespan_manager
 )
 
 app.add_middleware(

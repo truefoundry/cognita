@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
@@ -149,10 +149,15 @@ async def unassociate_data_source_from_collection(
 
 
 @router.post("/ingest")
-async def ingest_data(request: IngestDataToCollectionDto):
+async def ingest_data(request: Request):
     """Ingest data into the collection"""
     try:
-        return await ingest_data_to_collection(request)
+        process_pool = request.app.state.process_pool
+    except AttributeError:
+        process_pool = None
+    try:
+        return await ingest_data_to_collection(IngestDataToCollectionDto(**await request.json()),
+                                               process_pool)
     except HTTPException as exp:
         raise exp
     except Exception as exp:
