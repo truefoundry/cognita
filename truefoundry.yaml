@@ -131,6 +131,37 @@ components:
       failure_threshold: 5
       success_threshold: 1
       initial_delay_seconds: 10
+    mounts:
+      - type: string
+        mount_path: ./models_config.custom.yaml
+        data: |
+          model_providers:
+            - provider_name: truefoundry
+              api_format: openai
+              base_url: https://llm-gateway.truefoundry.com/api/inference/openai
+              api_key_env_var: TFY_API_KEY
+              llm_model_ids:
+                - "openai-main/gpt-4o-mini"
+                - "openai-main/gpt-4-turbo"
+                - "openai-main/gpt-3-5-turbo"
+                - "azure-openai/gpt-4"
+                - "together-ai/llama-3-70b-chat-hf"
+              embedding_model_ids:
+                - "openai-main/text-embedding-ada-002"
+              reranking_model_ids: []
+              default_headers:
+                "X-TFY-METADATA": '{"tfy_log_request": "true", "Custom-Metadata": "Cognita-LLM-Request"}'
+
+            - provider_name: local-infinity
+              api_format: openai
+              base_url: https://infinity-svc-prod.truefoundry.com
+              api_key_env_var: INFINITY_API_KEY
+              llm_model_ids: []
+              embedding_model_ids:
+                - "mixedbread-ai/mxbai-embed-large-v1"
+              reranking_model_ids:
+                - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+              default_headers: {}
   - env:
       VITE_QA_FOUNDRY_URL: https://cas.truefoundry.com/api
       VITE_DOCS_QA_STANDALONE_PATH: /
