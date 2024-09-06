@@ -373,9 +373,16 @@ async def ingest_data(request: IngestDataToCollectionDto):
                     )
                 # Import here to avoid circular dependency
                 from backend.server.app import process_pool
-                # future of this submission is ignored, ingestion failure due to process termination will not be tracked   
-                process_pool.submit(sync_data_source_to_collection, ingestion_config)
-                created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
+                # future of this submission is ignored, ingestion failure due to process termination will not be tracked
+                if process_pool:
+                    process_pool.submit(sync_data_source_to_collection, ingestion_config)
+                    created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
+                else:
+                    logger.error("Process Pool Executor is required to trigger the job, but it is not initialized yet")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Process Pool Executor is required to trigger the job, but it is not initialized yet",
+                    )
             else:
                 if not settings.JOB_FQN:
                     logger.error("Job FQN is required to trigger the job")
