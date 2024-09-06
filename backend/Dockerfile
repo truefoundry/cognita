@@ -20,8 +20,7 @@ ARG ADD_VECTORDB=0
 RUN if [ "${ADD_VECTORDB}" = "1" ]; then python3 -m pip install --use-pep517 --no-cache-dir -r /tmp/vectordb.requirements.txt; fi
 
 # Install Prisma CLI
-ARG ADD_PRISMA=0
-RUN if [ "${ADD_PRISMA}" = "1" ]; then prisma version; fi
+RUN prisma version; fi
 
 # TODO: Remove these when templates inject env vars
 ARG MODELS_CONFIG_PATH

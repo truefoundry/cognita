@@ -129,86 +129,84 @@ services:
     networks:
       - cognita-docker
 
-    cognita-backend:
-      build:
-        context: .
-        dockerfile: ./backend/Dockerfile
-        args:
-          - ADD_PRISMA=1
-      restart: unless-stopped
-      container_name: cognita-backend
-      ports:
-        - "${COGNITA_BACKEND_PORT}:8000"
-      depends_on:
-        cognita-db:
-          condition: service_healthy
-          restart: true
-        qdrant-server:
-          condition: service_healthy
-          restart: true
-        unstructured-io-parsers:
-          condition: service_healthy
-          restart: true
-      volumes:
-        - .:/app
-        - ./volumes/pgdata:/var/lib/postgresql/data
-        - ./volumes/user_data:/app/user_data
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
-        interval: 30s
-        timeout: 5s
-        retries: 3
-        start_period: 10s
-      environment:
-        - DEBUG_MODE=true
-        - LOCAL=${LOCAL}
-        - LOG_LEVEL=DEBUG
-        - ML_REPO_NAME=${ML_REPO_NAME}
-        - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
-        - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
-        - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
-        - LOCAL_DATA_DIRECTORY=/app/user_data
-        - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
-        - UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
-        - INFINITY_API_KEY=${INFINITY_API_KEY}
-        - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
-        - TFY_HOST=${TFY_HOST}
-        - TFY_API_KEY=${TFY_API_KEY}
-        - OPENAI_API_KEY=${OPENAI_API_KEY}
-        - BRAVE_API_KEY=${BRAVE_API_KEY}
-        - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
-      entrypoint: /bin/bash
-      command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
-      networks:
-        - cognita-docker
+  cognita-backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    restart: unless-stopped
+    container_name: cognita-backend
+    ports:
+      - "${COGNITA_BACKEND_PORT}:8000"
+    depends_on:
+      cognita-db:
+        condition: service_healthy
+        restart: true
+      qdrant-server:
+        condition: service_healthy
+        restart: true
+      unstructured-io-parsers:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - .:/app
+      - ./volumes/pgdata:/var/lib/postgresql/data
+      - ./volumes/user_data:/app/user_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health-check"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - DEBUG_MODE=true
+      - LOCAL=${LOCAL}
+      - LOG_LEVEL=DEBUG
+      - ML_REPO_NAME=${ML_REPO_NAME}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
+      - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
+      - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
+      - LOCAL_DATA_DIRECTORY=/app/user_data
+      - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+      - UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
+      - INFINITY_API_KEY=${INFINITY_API_KEY}
+      - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
+      - TFY_HOST=${TFY_HOST}
+      - TFY_API_KEY=${TFY_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
+    entrypoint: /bin/bash
+    command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
+    networks:
+      - cognita-docker
 
-    cognita-frontend:
-      build:
-        context: ./frontend
-        dockerfile: ./Dockerfile.dev
-        args:
-          - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
-          - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
-          - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
-          - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
-          - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
-          - VITE_USE_LOCAL=${LOCAL}
-          - VITE_CARBON_API_KEY=${CARBON_AI_API_KEY}
-      restart: unless-stopped
-      container_name: cognita-frontend
-      ports:
-        - "${COGNITA_FRONTEND_PORT}:5001"
-      volumes:
-        - ./frontend:/app
-        - /app/node_modules
-      depends_on:
-        cognita-backend:
-          condition: service_healthy
-          restart: true
-      entrypoint: /bin/bash
-      command: -c "set -e; yarn install --frozen-lockfile && yarn dev --host 0.0.0.0"
-      networks:
-        - cognita-docker
+  cognita-frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile.dev
+      args:
+        - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
+        - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
+        - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
+        - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
+        - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
+        - VITE_USE_LOCAL=${LOCAL}
+        - VITE_CARBON_API_KEY=${CARBON_AI_API_KEY}
+    restart: unless-stopped
+    container_name: cognita-frontend
+    ports:
+      - "${COGNITA_FRONTEND_PORT}:5001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      cognita-backend:
+        condition: service_healthy
+        restart: true
+    entrypoint: /bin/bash
+    command: -c "set -e; yarn install --frozen-lockfile && yarn dev --host 0.0.0.0"
+    networks:
+      - cognita-docker
 
 networks:
   cognita-docker:
