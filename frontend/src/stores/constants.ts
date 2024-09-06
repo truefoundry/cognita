@@ -7,3 +7,4 @@ export const DOCS_QA_MAX_UPLOAD_SIZE_MB = parseInt(
 )
 export const IS_LOCAL_DEVELOPMENT = import.meta.env.VITE_USE_LOCAL === 'true'
 export const GTAG_ID = import.meta.env.VITE_GTAG_ID
+export const CARBON_API_KEY = import.meta.env.VITE_CARBON_API_KEY
