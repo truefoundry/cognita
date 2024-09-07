@@ -15,6 +15,7 @@ from backend.types import (
     ListDataIngestionRunsDto,
     UnassociateDataSourceWithCollectionDto,
 )
+from backend.utils import run_in_executor
 
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
@@ -140,7 +141,9 @@ async def unassociate_data_source_from_collection(
             collection_name=request.collection_name,
             data_source_fqn=request.data_source_fqn,
         )
-        VECTOR_STORE_CLIENT.delete_data_point_vectors_by_data_source(
+        await run_in_executor(
+            executor=None,
+            func=VECTOR_STORE_CLIENT.delete_data_point_vectors_by_data_source,
             collection_name=request.collection_name,
             data_source_fqn=request.data_source_fqn,
         )

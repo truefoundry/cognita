@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from typing import Generator, List, Optional
 
@@ -113,11 +114,13 @@ class BaseVectorDB(ABC):
         """
         Delete vectors from the collection based on data_source_fqn
         """
-        self.delete_data_point_vectors(
+        for data_points_batch in self.yield_data_point_vector_batches(
             collection_name=collection_name,
-            data_point_vectors=self.list_data_point_vectors(
+            data_source_fqn=data_source_fqn,
+            batch_size=batch_size,
+        ):
+            self.delete_data_point_vectors(
                 collection_name=collection_name,
-                data_source_fqn=data_source_fqn,
-                batch_size=batch_size,
+                data_point_vectors=data_points_batch
             ),
-        )
+
