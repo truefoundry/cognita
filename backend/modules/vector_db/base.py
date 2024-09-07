@@ -118,6 +118,6 @@ class BaseVectorDB(ABC):
             data_point_vectors=self.list_data_point_vectors(
                 collection_name=collection_name,
                 data_source_fqn=data_source_fqn,
-                batch_size=batch_size
+                batch_size=batch_size,
             ),
         )
