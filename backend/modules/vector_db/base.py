@@ -1,4 +1,3 @@
-import time
 from abc import ABC, abstractmethod
 from typing import Generator, List, Optional
 
@@ -7,6 +6,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStore
 
 from backend.constants import DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+from backend.logger import logger
 from backend.types import DataPointVector
 
 MAX_SCROLL_LIMIT = int(1e6)
@@ -84,6 +84,9 @@ class BaseVectorDB(ABC):
         """
         Get vectors from the collection
         """
+        logger.debug(
+            f"Listing all data point vectors for collection {collection_name}"
+        )
         data_point_vectors = []
         for batch in self.yield_data_point_vector_batches(
             collection_name, data_source_fqn, batch_size
@@ -91,6 +94,9 @@ class BaseVectorDB(ABC):
             data_point_vectors.extend(batch)
             if len(data_point_vectors) >= MAX_SCROLL_LIMIT:
                 return data_point_vectors
+        logger.debug(
+            f"Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
+        )
         return data_point_vectors
 
     @abstractmethod
