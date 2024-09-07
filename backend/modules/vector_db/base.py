@@ -93,7 +93,7 @@ class BaseVectorDB(ABC):
         ):
             data_point_vectors.extend(batch)
             if len(data_point_vectors) >= MAX_SCROLL_LIMIT:
-                return data_point_vectors
+                break
         logger.debug(
             f"Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
         )
