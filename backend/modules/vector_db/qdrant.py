@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Generator
 from urllib.parse import urlparse
 
 from langchain.embeddings.base import Embeddings
@@ -8,10 +8,9 @@ from qdrant_client.http.models import Distance, VectorParams
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
-from backend.modules.vector_db.base import BaseVectorDB
+from backend.modules.vector_db.base import BaseVectorDB, MAX_SCROLL_LIMIT
 from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
 
-MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 
 
@@ -188,12 +187,9 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(f"[Qdrant] Getting Qdrant client")
         return self.qdrant_client
 
-    def list_data_point_vectors(
+    def yield_data_point_vector_batches(
         self, collection_name: str, data_source_fqn: str, batch_size: int = BATCH_SIZE
-    ) -> List[DataPointVector]:
-        logger.debug(
-            f"[Qdrant] Listing all data point vectors for collection {collection_name}"
-        )
+    ) -> Generator[List[DataPointVector], None, None]:
         stop = False
         offset = None
         data_point_vectors: List[DataPointVector] = []
@@ -232,17 +228,12 @@ class QdrantVectorDB(BaseVectorDB):
                             data_point_hash=metadata.get(DATA_POINT_HASH_METADATA_KEY),
                         )
                     )
-                if len(data_point_vectors) > MAX_SCROLL_LIMIT:
-                    stop = True
-                    break
+            yield data_point_vectors
+            data_point_vectors = []
             if next_offset is None:
                 stop = True
             else:
                 offset = next_offset
-        logger.debug(
-            f"[Qdrant] Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
-        )
-        return data_point_vectors
 
     def delete_data_point_vectors(
         self,

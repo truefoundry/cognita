@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Generator, Optional
 
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
@@ -7,6 +7,8 @@ from langchain.schema.vectorstore import VectorStore
 
 from backend.constants import DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
 from backend.types import DataPointVector
+
+MAX_SCROLL_LIMIT = int(1e6)
 
 
 class BaseVectorDB(ABC):
@@ -61,6 +63,18 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def yield_data_point_vector_batches(
+            self,
+            collection_name: str,
+            data_source_fqn: str,
+            batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+    ) -> Generator[List[DataPointVector], None, Optional[List[DataPointVector]]]:
+        """
+        Yield vectors from the collection
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def list_data_point_vectors(
         self,
         collection_name: str,
@@ -70,7 +84,12 @@ class BaseVectorDB(ABC):
         """
         Get vectors from the collection
         """
-        raise NotImplementedError()
+        data_point_vectors = []
+        for batch in self.yield_data_point_vector_batches(collection_name, data_source_fqn, batch_size):
+            data_point_vectors.extend(batch)
+            if len(data_point_vectors) >= MAX_SCROLL_LIMIT:
+                return data_point_vectors
+        return data_point_vectors
 
     @abstractmethod
     def delete_data_point_vectors(

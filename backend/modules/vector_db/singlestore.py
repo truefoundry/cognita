@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Generator
 
 import singlestoredb as s2
 from langchain.docstore.document import Document
@@ -8,10 +8,9 @@ from langchain_community.vectorstores.singlestoredb import SingleStoreDB
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
-from backend.modules.vector_db.base import BaseVectorDB
+from backend.modules.vector_db.base import BaseVectorDB, MAX_SCROLL_LIMIT
 from backend.types import DataPointVector, VectorDBConfig
 
-MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 
 
@@ -218,15 +217,12 @@ class SingleStoreVectorDB(BaseVectorDB):
     def get_vector_client(self):
         return s2.connect(self.host)
 
-    def list_data_point_vectors(
-        self,
-        collection_name: str,
-        data_source_fqn: str,
-        batch_size: int = BATCH_SIZE,
-    ) -> List[DataPointVector]:
-        logger.debug(
-            f"[SingleStore] Listing all data point vectors for collection {collection_name}"
-        )
+    def yield_data_point_vector_batches(
+            self,
+            collection_name: str,
+            data_source_fqn: str,
+            batch_size: int = BATCH_SIZE,
+    ) -> Generator[List[DataPointVector], None, None]:
         data_point_vectors: List[DataPointVector] = []
         logger.debug(f"data_source_fqn: {data_source_fqn}")
 
@@ -236,6 +232,7 @@ class SingleStoreVectorDB(BaseVectorDB):
             curr = conn.cursor()
 
             # Remove all data point vectors with the same data_source_fqn
+            # TODO : Scroll in batches
             curr.execute(
                 f"SELECT * FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, '{DATA_POINT_FQN_METADATA_KEY}') LIKE '%{data_source_fqn}%' LIMIT {MAX_SCROLL_LIMIT}"
             )
@@ -255,15 +252,12 @@ class SingleStoreVectorDB(BaseVectorDB):
                             data_point_hash=metadata.get(DATA_POINT_HASH_METADATA_KEY),
                         )
                     )
+            yield data_point_vectors
+            data_point_vectors = []
         except Exception as e:
             logger.exception(f"[SingleStore] Failed to list data point vectors: {e}")
         finally:
             conn.close()
-
-        logger.debug(
-            f"[SingleStore] Listing {len(data_point_vectors)} data point vectors for collection {collection_name}"
-        )
-        return data_point_vectors
 
     def delete_data_point_vectors(
         self,

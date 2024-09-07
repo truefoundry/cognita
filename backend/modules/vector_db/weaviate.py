@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Generator, Optional
 
 import weaviate
 from langchain.embeddings.base import Embeddings
@@ -130,12 +130,12 @@ class WeaviateVectorDB(BaseVectorDB):
     def get_vector_client(self):
         return self.weaviate_client
 
-    def list_data_point_vectors(
-        self,
-        collection_name: str,
-        data_source_fqn: str,
-        batch_size: int = 1000,
-    ) -> List[DataPointVector]:
+    def yield_data_point_vector_batches(
+            self,
+            collection_name: str,
+            data_source_fqn: str,
+            batch_size: int = 1000,
+    ) -> Generator[List[DataPointVector], None, Optional[List[DataPointVector]]]:
         pass
 
     def delete_data_point_vectors(
