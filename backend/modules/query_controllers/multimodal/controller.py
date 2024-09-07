@@ -85,13 +85,23 @@ class MultiModalRAGQueryController(BaseQueryController):
                 logger.info(f"Using default prompt")
                 prompt = PROMPT.format(question=request.query)
 
-            # Generate payload for VLM
-            images_set = set()
-
             setup_and_retrieval = RunnableParallel(
                 {"context": retriever, "question": RunnablePassthrough()}
             )
-            outputs = await setup_and_retrieval.ainvoke(request.query)
+
+            # Generate payload for VLM
+            images_set = set()
+            internet_search_result = ""
+            if request.internet_search_enabled:
+                outputs = await (setup_and_retrieval | self._internet_search).ainvoke(
+                    request.query
+                )
+                internet_search_result = outputs["context"][0].page_content
+                if request.internet_search_enabled:
+                    prompt += f"\nContext: {internet_search_result}"
+                    logger.info(f"Prompt: {prompt}")
+            else:
+                outputs = await setup_and_retrieval.ainvoke(request.query)
 
             if "context" in outputs:
                 docs = outputs["context"]
