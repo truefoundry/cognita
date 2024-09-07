@@ -120,7 +120,6 @@ class BaseVectorDB(ABC):
             batch_size=batch_size,
         ):
             self.delete_data_point_vectors(
-                collection_name=collection_name,
-                data_point_vectors=data_points_batch
+                collection_name=collection_name, data_point_vectors=data_points_batch
             ),
 
