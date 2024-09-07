@@ -84,9 +84,7 @@ class BaseVectorDB(ABC):
         """
         Get vectors from the collection
         """
-        logger.debug(
-            f"Listing all data point vectors for collection {collection_name}"
-        )
+        logger.debug(f"Listing all data point vectors for collection {collection_name}")
         data_point_vectors = []
         for batch in self.yield_data_point_vector_batches(
             collection_name, data_source_fqn, batch_size
