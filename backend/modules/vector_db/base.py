@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Generator, Optional
+from typing import Generator, List, Optional
 
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
@@ -64,17 +64,16 @@ class BaseVectorDB(ABC):
 
     @abstractmethod
     def yield_data_point_vector_batches(
-            self,
-            collection_name: str,
-            data_source_fqn: str,
-            batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+        self,
+        collection_name: str,
+        data_source_fqn: str,
+        batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
     ) -> Generator[List[DataPointVector], None, Optional[List[DataPointVector]]]:
         """
         Yield vectors from the collection
         """
         raise NotImplementedError()
 
-    @abstractmethod
     def list_data_point_vectors(
         self,
         collection_name: str,
@@ -85,7 +84,9 @@ class BaseVectorDB(ABC):
         Get vectors from the collection
         """
         data_point_vectors = []
-        for batch in self.yield_data_point_vector_batches(collection_name, data_source_fqn, batch_size):
+        for batch in self.yield_data_point_vector_batches(
+            collection_name, data_source_fqn, batch_size
+        ):
             data_point_vectors.extend(batch)
             if len(data_point_vectors) >= MAX_SCROLL_LIMIT:
                 return data_point_vectors
@@ -102,3 +103,21 @@ class BaseVectorDB(ABC):
         Delete vectors from the collection
         """
         raise NotImplementedError()
+
+    def delete_data_point_vectors_by_data_source(
+        self,
+        collection_name: str,
+        data_source_fqn: str,
+        batch_size: int = DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+    ):
+        """
+        Delete vectors from the collection based on data_source_fqn
+        """
+        self.delete_data_point_vectors(
+            collection_name=collection_name,
+            data_point_vectors=self.list_data_point_vectors(
+                collection_name=collection_name,
+                data_source_fqn=data_source_fqn,
+                batch_size=batch_size
+            ),
+        )

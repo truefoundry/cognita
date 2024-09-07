@@ -1,4 +1,4 @@
-from typing import List, Generator
+from typing import Generator, List
 from urllib.parse import urlparse
 
 from langchain.embeddings.base import Embeddings
@@ -8,7 +8,7 @@ from qdrant_client.http.models import Distance, VectorParams
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
-from backend.modules.vector_db.base import BaseVectorDB, MAX_SCROLL_LIMIT
+from backend.modules.vector_db.base import MAX_SCROLL_LIMIT, BaseVectorDB
 from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
 
 BATCH_SIZE = 1000

@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Iterable, List, Optional, Generator
+from typing import Any, Dict, Generator, Iterable, List, Optional
 
 import singlestoredb as s2
 from langchain.docstore.document import Document
@@ -8,7 +8,7 @@ from langchain_community.vectorstores.singlestoredb import SingleStoreDB
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
-from backend.modules.vector_db.base import BaseVectorDB, MAX_SCROLL_LIMIT
+from backend.modules.vector_db.base import MAX_SCROLL_LIMIT, BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
 
 BATCH_SIZE = 1000
@@ -218,10 +218,10 @@ class SingleStoreVectorDB(BaseVectorDB):
         return s2.connect(self.host)
 
     def yield_data_point_vector_batches(
-            self,
-            collection_name: str,
-            data_source_fqn: str,
-            batch_size: int = BATCH_SIZE,
+        self,
+        collection_name: str,
+        data_source_fqn: str,
+        batch_size: int = BATCH_SIZE,
     ) -> Generator[List[DataPointVector], None, None]:
         data_point_vectors: List[DataPointVector] = []
         logger.debug(f"data_source_fqn: {data_source_fqn}")
