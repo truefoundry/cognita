@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     UNSTRUCTURED_IO_URL: str = ""
 
     UNSTRUCTURED_IO_API_KEY: str = ""
+    PROCESS_POOL_WORKERS: int = 1
 
     LOCAL_DATA_DIRECTORY: str = os.path.abspath(
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
