@@ -245,7 +245,74 @@ components:
           operator: Equal
       replicaCount: 2
       fullnameOverride: cas-qdrant
+    kustomize:
+      additions:
+        - kind: VirtualService
+          spec:
+            http:
+              - match:
+                  - uri:
+                      prefix: /qdrant/
+                route:
+                  - destination:
+                      host: cas-qdrant.cognita-internal.svc.cluster.local
+                      port:
+                        number: 6333
+                rewrite:
+                  uri: /
+              - match:
+                  - headers:
+                      x-route-service:
+                        exact: qdrant-ui
+                route:
+                  - destination:
+                      host: cas-qdrant.cognita-internal.svc.cluster.local
+                      port:
+                        number: 6333
+                rewrite:
+                  uri: /
+            hosts:
+              - cas-qdrant-ui.truefoundry.com
+            gateways:
+              - istio-system/tfy-wildcard
+          metadata:
+            name: cas-qdrant
+            namespace: cognita-internal
+          apiVersion: networking.istio.io/v1alpha3
 
+  # Qdrant-UI
+  - name: cas-qdrant-ui
+    type: service
+    image:
+      type: build
+      build_source:
+        type: git
+        repo_url: https://github.com/truefoundry/qdrant-web-ui-new
+        branch_name: support-path-based-routing
+        ref: 038f5a4db22b54459e1820ab2ec51771f8f09919
+      build_spec:
+        type: dockerfile
+        dockerfile_path: ./Dockerfile
+        build_context_path: ./
+    ports:
+      - host: cas-qdrant-ui.truefoundry.com
+        path: /qdrant-ui/
+        port: 3000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 1
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_request: 0.2
+      cpu_limit: 0.5
+      memory_request: 200
+      memory_limit: 500
+      ephemeral_storage_request: 1000
+      ephemeral_storage_limit: 2000
   # Unstructured IO
   - env:
       UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
