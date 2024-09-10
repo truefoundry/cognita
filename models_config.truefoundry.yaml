@@ -17,7 +17,7 @@ model_providers:
 
   - provider_name: local-infinity
     api_format: openai
-    base_url: https://infinity-svc-prod.truefoundry.com
+    base_url: http://cas-infinity.cognita-internal.svc.cluster.local:8000
     api_key_env_var: INFINITY_API_KEY
     llm_model_ids: []
     embedding_model_ids:

@@ -40,9 +40,6 @@ if TYPE_CHECKING:
 #
 
 
-# TODO (chiragjn): Either we make everything async or add sync method to this
-
-
 class PrismaStore(BaseMetadataStore):
     def __init__(self, *args, db, **kwargs) -> None:
         self.db = db
@@ -387,12 +384,6 @@ class PrismaStore(BaseMetadataStore):
             raise HTTPException(status_code=500, detail="Failed to list data sources")
 
     async def adelete_data_source(self, data_source_fqn: str) -> None:
-        if not settings.LOCAL:
-            logger.error(f"Data source deletion is not allowed in local mode")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source deletion is not allowed in local mode",
-            )
         # Check if data source exists if not raise an error
         try:
             data_source = await self.aget_data_source_from_fqn(data_source_fqn)
@@ -550,14 +541,6 @@ class PrismaStore(BaseMetadataStore):
         except Exception as e:
             logger.exception(f"Failed to update data ingestion run status: {e}")
             raise HTTPException(status_code=500, detail=f"{e}")
-
-    async def alog_metrics_for_data_ingestion_run(
-        self,
-        data_ingestion_run_name: str,
-        metric_dict: Dict[str, Union[int, float]],
-        step: int = 0,
-    ):
-        raise NotImplementedError()
 
     async def alog_errors_for_data_ingestion_run(
         self, data_ingestion_run_name: str, errors: Dict[str, Any]

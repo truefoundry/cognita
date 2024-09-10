@@ -78,7 +78,7 @@ class _CarbonClient:
             response = self._request(
                 "POST", "https://api.carbon.ai/user_files_v2", json=payload
             )
-            page = _UserFilesV2Response.parse_obj(response)
+            page = _UserFilesV2Response.model_validate(response)
             if total == -1:
                 total = page.count
             for file in page.results:
