@@ -1,7 +1,6 @@
-from abc import ABC
-from typing import Any, Dict, List, Optional, Union
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
-from backend.constants import DATA_POINT_FQN_METADATA_KEY, FQN_SEPARATOR
 from backend.types import (
     AssociateDataSourceWithCollection,
     Collection,
@@ -15,7 +14,6 @@ from backend.types import (
     RagApplication,
     RagApplicationDto,
 )
-from backend.utils import run_in_executor
 
 
 class BaseMetadataStore(ABC):
@@ -30,6 +28,7 @@ class BaseMetadataStore(ABC):
     # COLLECTIONS
     #####
 
+    @abstractmethod
     async def aget_collection_by_name(
         self, collection_name: str, no_cache: bool = True
     ) -> Optional[Collection]:
@@ -38,12 +37,14 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
         """
         Create a collection in the metadata store
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aget_retrieve_collection_by_name(
         self, collection_name: str, no_cache: bool = True
     ) -> Optional[Collection]:
@@ -52,6 +53,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aget_collections(
         self,
     ) -> List[Collection]:
@@ -60,6 +62,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def alist_collections(
         self,
     ) -> List[str]:
@@ -68,6 +71,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def adelete_collection(self, collection_name: str, include_runs=False):
         """
         Delete a collection from the metadata store
@@ -78,24 +82,28 @@ class BaseMetadataStore(ABC):
     # DATA SOURCE
     #####
 
+    @abstractmethod
     async def aget_data_source_from_fqn(self, fqn: str) -> Optional[DataSource]:
         """
         Get a data source from the metadata store by fqn
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def acreate_data_source(self, data_source: CreateDataSource) -> DataSource:
         """
         Create a data source in the metadata store
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aget_data_sources(self) -> List[DataSource]:
         """
         Get all data sources from the metadata store
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aassociate_data_source_with_collection(
         self,
         collection_name: str,
@@ -106,6 +114,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aunassociate_data_source_with_collection(
         self,
         collection_name: str,
@@ -116,6 +125,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def alist_data_sources(
         self,
     ) -> List[Dict[str, str]]:
@@ -124,6 +134,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def adelete_data_source(self, data_source_fqn: str):
         """
         Delete a data source from the metadata store
@@ -134,6 +145,7 @@ class BaseMetadataStore(ABC):
     # DATA INGESTION RUNS
     #####
 
+    @abstractmethod
     async def acreate_data_ingestion_run(
         self, data_ingestion_run: CreateDataIngestionRun
     ) -> DataIngestionRun:
@@ -142,6 +154,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aget_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
     ) -> Optional[DataIngestionRun]:
@@ -150,6 +163,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aget_data_ingestion_runs(
         self, collection_name: str, data_source_fqn: str = None
     ) -> List[DataIngestionRun]:
@@ -158,6 +172,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def aupdate_data_ingestion_run_status(
         self,
         data_ingestion_run_name: str,
@@ -168,6 +183,7 @@ class BaseMetadataStore(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def alog_errors_for_data_ingestion_run(
         self, data_ingestion_run_name: str, errors: Dict[str, Any]
     ):
@@ -180,24 +196,28 @@ class BaseMetadataStore(ABC):
     # RAG APPLICATIONS
     ####
 
+    @abstractmethod
     async def aget_rag_app(self, app_name: str) -> Optional[RagApplicationDto]:
         """
         Get a RAG application from the metadata store by name
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def acreate_rag_app(self, app: RagApplication) -> RagApplicationDto:
         """
         create a RAG application in the metadata store
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def alist_rag_apps(self) -> List[str]:
         """
         List all RAG application names from metadata store
         """
         raise NotImplementedError()
 
+    @abstractmethod
     async def adelete_rag_app(self, app_name: str):
         """
         Delete a RAG application from the metadata store

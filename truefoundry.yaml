@@ -8,7 +8,7 @@ components:
       DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
       VECTOR_DB_CONFIG: >-
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
-      MODELS_CONFIG_PATH: ./models_config.custom.yaml
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
       METADATA_STORE_CONFIG: '{"provider":"prisma"}'
       ML_REPO_NAME: cognita-internal
       INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
@@ -30,12 +30,12 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
-        local_build: false
-        type: local
+        ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
     params:
       - name: collection_name
         param_type: string
@@ -93,12 +93,12 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
-        local_build: false
-        type: local
+        ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
     ports:
       - host: cas.truefoundry.com
         path: /api/
@@ -139,7 +139,7 @@ components:
       initial_delay_seconds: 10
     mounts:
       - type: string
-        mount_path: /models_config.custom.yaml
+        mount_path: /models_config.truefoundry.yaml
         data: |
           model_providers:
             - provider_name: truefoundry
@@ -186,12 +186,12 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        # ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
-        local_build: false
-        type: local
+        ref: b2c1a10d37d19f80f0473bd28832dfb426deb050
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
     ports:
       - host: cas.truefoundry.com
         port: 5000
