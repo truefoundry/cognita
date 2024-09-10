@@ -353,7 +353,7 @@ components:
         infinity_emb v2 --model-id mixedbread-ai/mxbai-embed-large-v1 --model-id
         mixedbread-ai/mxbai-rerank-xsmall-v1 --port $(PORT) --batch-size
         $(BATCH_SIZE) --api-key $(API_KEY)
-      image_uri: michaelf34/infinity:0.0.50
+      image_uri: michaelf34/infinity:0.0.54
     ports:
       - host: cas-infinity.truefoundry.com
         port: 8000
