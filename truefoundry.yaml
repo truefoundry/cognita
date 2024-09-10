@@ -30,7 +30,7 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: 3fa6ff0be1f87c410967dce5d8743a2a8b616bad
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -93,7 +93,7 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: 3fa6ff0be1f87c410967dce5d8743a2a8b616bad
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
@@ -186,7 +186,7 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: 3fa6ff0be1f87c410967dce5d8743a2a8b616bad
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
         type: git
         repo_url: https://github.com/truefoundry/cognita
         branch_name: ps_cleanup_metadatastore
