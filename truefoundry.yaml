@@ -74,7 +74,7 @@ components:
         {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
       JOB_COMPONENT_NAME: cognita-internal-indexer
       JOB_FQN: tfy-prod-euwe1:cognita-internal:cas-indexer
-      MODELS_CONFIG_PATH: ./models_config.custom.yaml
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
       METADATA_STORE_CONFIG: '{"provider":"prisma"}'
       ML_REPO_NAME: cognita-internal
       INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
