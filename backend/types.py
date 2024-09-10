@@ -514,6 +514,10 @@ class RagApplication(ConfiguredBaseModel):
         title="Configuration for the rag app",
     )
 
+    questions: List[str] = Field(
+        title="Questions for the rag app",
+    )
+
 
 class CreateRagApplication(RagApplication):
     pass
