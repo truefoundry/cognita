@@ -516,6 +516,7 @@ class RagApplication(ConfiguredBaseModel):
 
     questions: List[str] = Field(
         title="Questions for the rag app",
+        default_factory=list,
     )
 
 
