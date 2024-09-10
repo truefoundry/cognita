@@ -300,7 +300,7 @@ async def ingest_data_points(
     )
 
 
-async def ingest_data(request: IngestDataToCollectionDto, pool: Optional[Executor]=None):
+async def ingest_data(request: IngestDataToCollectionDto, pool: Optional[Executor] = None):
     """Ingest data into the collection"""
     try:
         client = await get_client()
