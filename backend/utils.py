@@ -1,6 +1,6 @@
 import asyncio
 import zipfile
-from concurrent.futures import Executor
+from concurrent.futures import Executor, ProcessPoolExecutor
 from contextvars import copy_context
 from functools import partial
 from typing import Callable, Optional, TypeVar, cast
@@ -86,3 +86,12 @@ async def run_in_executor(
         )
 
     return await asyncio.get_running_loop().run_in_executor(executor, wrapper)
+
+
+class AsyncProcessPoolExecutor(ProcessPoolExecutor):
+    @staticmethod
+    def _async_to_sync(__fn, *args, **kwargs):
+        return asyncio.run(__fn(*args, **kwargs))
+
+    def submit(self, __fn, *args, **kwargs):
+        return super().submit(self._async_to_sync, __fn, *args, **kwargs)
