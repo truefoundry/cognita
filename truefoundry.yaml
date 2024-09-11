@@ -1,0 +1,403 @@
+type: application-set
+name: cognita-app-set
+components:
+  # indexer
+  - name: cas-indexer
+    env:
+      LOG_LEVEL: DEBUG
+      DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
+      VECTOR_DB_CONFIG: >-
+        {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
+      METADATA_STORE_CONFIG: '{"provider":"prisma"}'
+      ML_REPO_NAME: cognita-internal
+      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+      INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
+      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
+      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
+    type: job
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        command: >-
+          /bin/bash -c "set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name {{collection_name}}
+          --data_source_fqn {{data_source_fqn}} --data_ingestion_run_name
+          {{data_ingestion_run_name}} --data_ingestion_mode {{data_ingestion_mode}}
+          --raise_error_on_failure  {{raise_error_on_failure}}"
+        dockerfile_path: ./backend/Dockerfile
+        build_context_path: ./
+      # Change this later
+      build_source:
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
+    params:
+      - name: collection_name
+        param_type: string
+      - name: data_source_fqn
+        default: ""
+        param_type: string
+      - name: data_ingestion_run_name
+        default: ""
+        param_type: string
+      - name: data_ingestion_mode
+        default: INCREMENTAL
+        param_type: string
+      - name: raise_error_on_failure
+        default: "False"
+        param_type: string
+    retries: 0
+    trigger:
+      type: manual
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1.5
+      cpu_request: 1
+      memory_limit: 1500
+      memory_request: 1000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1000
+
+  # Backend
+  - name: cas-backend
+    env:
+      DATABASE_URL: postgresql://admin:password@cas-db-postgresql.cognita-internal.svc.cluster.local:5432/cognita-config
+      LOG_LEVEL: DEBUG
+      VECTOR_DB_CONFIG: >-
+        {"provider":"qdrant","url":"http://cas-qdrant.cognita-internal.svc.cluster.local:6333","api_key":""}
+      JOB_COMPONENT_NAME: cognita-internal-indexer
+      JOB_FQN: tfy-prod-euwe1:cognita-internal:cas-indexer
+      MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
+      METADATA_STORE_CONFIG: '{"provider":"prisma"}'
+      ML_REPO_NAME: cognita-internal
+      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+      INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
+      UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
+      UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
+      BRAVE_API_KEY: tfy-secret://internal:cognita:BRAVE_API_KEY
+      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
+    type: service
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        command: /bin/bash -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app"
+        dockerfile_path: ./backend/Dockerfile
+        build_context_path: ./
+      # To change this to release later
+      build_source:
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
+    ports:
+      - host: cas.truefoundry.com
+        path: /api/
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    replicas: 1
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1
+      cpu_request: 0.5
+      memory_limit: 1000
+      memory_request: 500
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1000
+    liveness_probe:
+      config:
+        path: /health-check
+        port: 8000
+        type: http
+      period_seconds: 60
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
+    readiness_probe:
+      config:
+        path: /health-check
+        port: 8000
+        type: http
+      period_seconds: 60
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
+    mounts:
+      - type: string
+        mount_path: /models_config.truefoundry.yaml
+        data: |
+          model_providers:
+            - provider_name: truefoundry
+              api_format: openai
+              base_url: https://llm-gateway.truefoundry.com/api/inference/openai
+              api_key_env_var: TFY_API_KEY
+              llm_model_ids:
+                - "openai-main/gpt-4o-mini"
+                - "openai-main/gpt-4-turbo"
+                - "openai-main/gpt-3-5-turbo"
+                - "azure-openai/gpt-4"
+                - "together-ai/llama-3-70b-chat-hf"
+              embedding_model_ids:
+                - "openai-main/text-embedding-ada-002"
+              reranking_model_ids: []
+              default_headers:
+                "X-TFY-METADATA": '{"tfy_log_request": "true", "Custom-Metadata": "Cognita-LLM-Request"}'
+
+            - provider_name: local-infinity
+              api_format: openai
+              base_url: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+              api_key_env_var: INFINITY_API_KEY
+              llm_model_ids: []
+              embedding_model_ids:
+                - "mixedbread-ai/mxbai-embed-large-v1"
+              reranking_model_ids:
+                - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+              default_headers: {}
+
+  # Frontend
+  - name: cas-frontend
+    type: service
+    image:
+      type: build
+      build_spec:
+        type: dockerfile
+        build_args:
+          VITE_DOCS_QA_DELETE_COLLECTIONS: "true"
+          VITE_QA_FOUNDRY_URL: https://cas.truefoundry.com/api
+          VITE_DOCS_QA_STANDALONE_PATH: /
+          VITE_DOCS_QA_ENABLE_STANDALONE: "true"
+          VITE_CARBON_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
+        dockerfile_path: ./frontend/Dockerfile
+        build_context_path: ./frontend
+      # Change this later
+      build_source:
+        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        type: git
+        repo_url: https://github.com/truefoundry/cognita
+        branch_name: ps_cleanup_metadatastore
+        # local_build: false
+        # type: local
+    ports:
+      - host: cas.truefoundry.com
+        port: 5000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    replicas: 1
+    resources:
+      cpu_limit: 0.1
+      cpu_request: 0.05
+      memory_limit: 200
+      memory_request: 100
+      ephemeral_storage_limit: 200
+      ephemeral_storage_request: 100
+  - name: cas-qdrant
+    type: helm
+    source:
+      type: helm-repo
+      chart: qdrant
+      version: 0.8.4
+      repo_url: https://qdrant.github.io/qdrant-helm
+    values:
+      service:
+        type: ClusterIP
+        ports:
+          - name: http
+            port: 6333
+            protocol: TCP
+            targetPort: 6333
+            checksEnabled: true
+          - name: grpc
+            port: 6334
+            protocol: TCP
+            targetPort: 6334
+            checksEnabled: false
+          - name: http-p2p
+            port: 6335
+            protocol: TCP
+            targetPort: 6335
+            checksEnabled: false
+      persistence:
+        size: 50G
+      tolerations:
+        - key: kubernetes.azure.com/scalesetpriority
+          value: spot
+          effect: NoSchedule
+          operator: Equal
+        - key: cloud.google.com/gke-spot
+          value: "true"
+          effect: NoSchedule
+          operator: Equal
+      replicaCount: 2
+      fullnameOverride: cas-qdrant
+    kustomize:
+      additions:
+        - kind: VirtualService
+          spec:
+            http:
+              - match:
+                  - uri:
+                      prefix: /qdrant/
+                route:
+                  - destination:
+                      host: cas-qdrant.cognita-internal.svc.cluster.local
+                      port:
+                        number: 6333
+                rewrite:
+                  uri: /
+              - match:
+                  - headers:
+                      x-route-service:
+                        exact: qdrant-ui
+                route:
+                  - destination:
+                      host: cas-qdrant.cognita-internal.svc.cluster.local
+                      port:
+                        number: 6333
+                rewrite:
+                  uri: /
+            hosts:
+              - cas-qdrant-ui.truefoundry.com
+            gateways:
+              - istio-system/tfy-wildcard
+          metadata:
+            name: cas-qdrant
+            namespace: cognita-internal
+          apiVersion: networking.istio.io/v1alpha3
+
+  # Qdrant-UI
+  - name: cas-qdrant-ui
+    type: service
+    image:
+      type: build
+      build_source:
+        type: git
+        repo_url: https://github.com/truefoundry/qdrant-web-ui-new
+        branch_name: support-path-based-routing
+        ref: 038f5a4db22b54459e1820ab2ec51771f8f09919
+      build_spec:
+        type: dockerfile
+        dockerfile_path: ./Dockerfile
+        build_context_path: ./
+    ports:
+      - host: cas-qdrant-ui.truefoundry.com
+        path: /qdrant-ui/
+        port: 3000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 1
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_request: 0.2
+      cpu_limit: 0.5
+      memory_request: 200
+      memory_limit: 500
+      ephemeral_storage_request: 1000
+      ephemeral_storage_limit: 2000
+  # Unstructured IO
+  - env:
+      UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
+    name: cas-unstructured-io
+    type: service
+    image:
+      type: image
+      image_uri: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
+    ports:
+      - host: cas-unstructured-io.truefoundry.com
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 2
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1.5
+      cpu_request: 0.8
+      memory_limit: 8000
+      memory_request: 4000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1500
+
+  # Infinity
+  - env:
+      PORT: "8000"
+      API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
+      BATCH_SIZE: "4"
+    name: cas-infinity
+    type: service
+    image:
+      type: image
+      command: >-
+        infinity_emb v2 --model-id mixedbread-ai/mxbai-embed-large-v1 --model-id
+        mixedbread-ai/mxbai-rerank-xsmall-v1 --port $(PORT) --batch-size
+        $(BATCH_SIZE) --api-key $(API_KEY)
+      image_uri: michaelf34/infinity:0.0.54
+    ports:
+      - host: cas-infinity.truefoundry.com
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 2
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1
+      cpu_request: 0.8
+      memory_limit: 8000
+      memory_request: 4000
+      ephemeral_storage_limit: 2000
+      ephemeral_storage_request: 1500
+
+  # Database
+  - name: cas-db
+    type: helm
+    source:
+      type: oci-repo
+      oci_chart_url: oci://registry-1.docker.io/bitnamicharts/postgresql
+      version: 13.4.3
+    values:
+      auth:
+        database: cognita-config
+        password: password
+        username: admin
+        postgresPassword: password
+        enablePostgresUser: true
+      primary:
+        service:
+          ports:
+            postgresql: 5432
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        persistence:
+          size: 5Gi
+      architecture: standalone

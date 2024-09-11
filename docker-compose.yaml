@@ -133,8 +133,6 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-      args:
-        - ADD_PRISMA=1
     restart: unless-stopped
     container_name: cognita-backend
     ports:
@@ -164,11 +162,13 @@ services:
       - LOCAL=${LOCAL}
       - PROCESS_POOL_WORKERS=${PROCESS_POOL_WORKERS}
       - LOG_LEVEL=DEBUG
+      - ML_REPO_NAME=${ML_REPO_NAME}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
       - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
       - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
       - LOCAL_DATA_DIRECTORY=/app/user_data
       - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+      - UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
       - INFINITY_API_KEY=${INFINITY_API_KEY}
       - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
       - TFY_HOST=${TFY_HOST}
