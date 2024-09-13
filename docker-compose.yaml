@@ -129,6 +129,26 @@ services:
     networks:
       - cognita-docker
 
+  # https://github.com/fedirz/faster-whisper-server/tree/master
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: faster-whisper
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL}
+    ports:
+      - ${WHISPER_PORT}:8000
+    volumes:
+      - ./volumes/hugging_face_cache:/root/.cache/huggingface
+    networks:
+      - cognita-docker
+
   cognita-backend:
     build:
       context: .
@@ -177,7 +197,7 @@ services:
       - BRAVE_API_KEY=${BRAVE_API_KEY}
       - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
     entrypoint: /bin/bash
-    command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
+    command: -c "set -e; prisma db push --accept-data-loss --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
     networks:
       - cognita-docker
 
