@@ -148,7 +148,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
       let fqn
       if (selectedDataSourceType === 'localdir') {
         let res
-        console.log('IS_LOCAL_DEVELOPMENT', IS_LOCAL_DEVELOPMENT)
         if (IS_LOCAL_DEVELOPMENT) {
           res = await uploadDataToLocalDirectory({
             files: files?.map((f) => f.file),

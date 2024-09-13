@@ -21,6 +21,7 @@ import DocsQaInformation from './DocsQaInformation'
 import Modal from '@/components/base/atoms/Modal'
 import notify from '@/components/base/molecules/Notify'
 import { SSE } from 'sse.js'
+import { LightTooltip } from '@/components/base/atoms/Tooltip'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -91,6 +92,7 @@ const DocsQA = () => {
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
   const [applicationName, setApplicationName] = useState('')
+  const [questions, setQuestions] = useState<string[]>([])
 
   const pattern = /^[a-z][a-z0-9-]*$/
   const isValidApplicationName = pattern.test(applicationName)
@@ -216,6 +218,9 @@ const DocsQA = () => {
   }
 
   const createChatApplication = async () => {
+    if (!applicationName) {
+      return notify('error', 'Application name is required')
+    }
     const selectedModel = allEnabledModels.find(
       (model: any) => model.name == selectedQueryModel
     )
@@ -235,6 +240,7 @@ const DocsQA = () => {
           prompt_template: promptTemplate,
           query_controller: selectedQueryController,
         },
+        questions,
       }).unwrap()
       setApplicationName('')
       setIsCreateApplicationModalOpen(false)
@@ -286,7 +292,11 @@ const DocsQA = () => {
       {isCreateApplicationModalOpen && (
         <Modal
           open={isCreateApplicationModalOpen}
-          onClose={() => setIsCreateApplicationModalOpen(false)}
+          onClose={() => {
+            setApplicationName('')
+            setQuestions([])
+            setIsCreateApplicationModalOpen(false)
+          }}
         >
           <div className="modal-box">
             <div className="text-center font-medium text-xl mb-2">
@@ -315,6 +325,47 @@ const DocsQA = () => {
               ) : (
                 <></>
               )}
+              <div className='mt-2 text-sm'>Questions (Optional)</div>
+              {questions.map((question, index) => (
+                <div className='flex items-center gap-2 mt-2 w-full'>
+                  <div className='flex-1'>
+                    <Input
+                      key={index}
+                      value={question}
+                      onChange={(e) => {
+                        const updatedQuestions = [...questions]
+                        updatedQuestions[index] = e.target.value
+                        setQuestions(updatedQuestions)
+                      }}
+                      className="py-1 input-sm w-full"
+                      placeholder={`Question ${index + 1}`}
+                      maxLength={100}
+                    />
+                  </div>
+                  <Button 
+                    icon='trash-alt'
+                    className='btn-sm hover:bg-red-600 hover:border-white hover:text-white'
+                    onClick={() => {
+                      setQuestions(questions.filter((_, i) => i !== index))
+                    }}
+                  />
+                </div>
+              ))}
+              <LightTooltip title={questions.length === 4 ? 'Maximum 4 questions are allowed' : ''} size="fit">
+                <div className='w-fit'>
+                  <Button
+                    text='Add Question'
+                    white
+                    disabled={questions.length == 4}
+                    className='text-sm font-medium text-gray-1000 hover:bg-white mt-2' 
+                    onClick={() => {
+                      if (questions.length < 4) {
+                        setQuestions([...questions, ''])
+                      }
+                    }}
+                  />
+                </div>
+              </LightTooltip>
             </div>
             <div className="flex justify-end w-full mt-4 gap-2">
               <Button
@@ -326,7 +377,11 @@ const DocsQA = () => {
               <Button
                 text="Cancel"
                 className="btn-sm bg-red-600 hover:bg-red-700 border-0"
-                onClick={() => setIsCreateApplicationModalOpen(false)}
+                onClick={() => {
+                  setApplicationName('')
+                  setQuestions([])
+                  setIsCreateApplicationModalOpen(false)
+                }}
               />
             </div>
           </div>
