@@ -342,7 +342,7 @@ const DocsQA = () => {
                       maxLength={100}
                     />
                   </div>
-                  <Button 
+                  <Button
                     icon='trash-alt'
                     className='btn-sm hover:bg-red-600 hover:border-white hover:text-white'
                     onClick={() => {
@@ -357,7 +357,7 @@ const DocsQA = () => {
                     text='Add Question'
                     white
                     disabled={questions.length == 4}
-                    className='text-sm font-medium text-gray-1000 hover:bg-white mt-2' 
+                    className='text-sm font-medium text-gray-1000 hover:bg-white mt-2'
                     onClick={() => {
                       if (questions.length < 4) {
                         setQuestions([...questions, ''])
