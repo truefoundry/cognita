@@ -44,9 +44,10 @@ model IngestionRuns {
 }
 
 model RagApps {
-    id     Int    @id @default(autoincrement())
-    name   String @unique
-    config Json
+    id        Int      @id @default(autoincrement())
+    name      String   @unique
+    config    Json
+    questions String[]
 
     @@map("rag_apps")
 }

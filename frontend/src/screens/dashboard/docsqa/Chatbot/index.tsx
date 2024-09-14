@@ -112,9 +112,16 @@ const DocsQAChatbot = () => {
                 </div>
               ) : (
                 <div className="h-[calc(100%-3.125rem)] flex justify-center items-center overflow-y-auto">
-                  <div className="h-full">
+                  <div className="h-full flex flex-col justify-between">
                     <div className="font-medium text-lg text-center">
                       Welcome to {startCase(applicationsData.name) ?? 'Cognita'}
+                    </div>
+                    <div className='flex flex-wrap mb-5 justify-center'>
+                      {applicationsData?.questions?.map((question: string, index: number) => (
+                        <div key={index} className="bg-gray-50 p-2 rounded m-1 border text-sm border-gray-250 cursor-pointer" onClick={() => setPrompt(question)}>
+                          {question}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
