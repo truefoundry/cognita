@@ -48,10 +48,10 @@ class AudioProcessingSvc:
             headers = {"accept": "application/json"}
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
-
             response = self.session.post(
-                self.base_url.rstrip("/") + "/transcribe",
+                self.base_url.rstrip("/") + "/v1/audio/transcriptions",
                 headers=headers,
+                data=self.data,
                 files=files,
                 stream=True,
             )

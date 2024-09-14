@@ -132,6 +132,7 @@ services:
   # https://github.com/fedirz/faster-whisper-server/tree/master
   faster-whisper:
     image: fedirz/faster-whisper-server:latest-cpu
+    pull_policy: if_not_present
     container_name: faster-whisper
     restart: unless-stopped
     healthcheck:

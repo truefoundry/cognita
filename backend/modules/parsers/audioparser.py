@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 from typing import Any, Dict, List
 
@@ -14,6 +15,19 @@ from backend.types import ModelConfig
 class AudioParser(BaseParser):
     """
     AudioParser is a parser class for extracting text from audio input.
+
+    {
+        ".mp3": {
+            "name": "AudioParser",
+            "parameters": {
+                "model_configuration": {
+                    "name" : "faster-whisper/Systran/faster-distil-whisper-large-v3"
+                },
+                "max_chunk_size": 2000
+            }
+        }
+    }
+
     """
 
     supported_file_extensions = [
@@ -32,12 +46,18 @@ class AudioParser(BaseParser):
         """
         Initializes the AudioParser object.
         """
-        self.model_configuration = model_configuration
-        self.max_chunk_size = self.model_configuration.parameters.get(
-            "max_chunk_size", 2000
-        )
+        if model_configuration:
+            self.model_configuration = ModelConfig.model_validate(model_configuration)
+            self.max_chunk_size = self.model_configuration.parameters.get(
+                "max_chunk_size", 2000
+            )
+            self.model_name = self.model_configuration.name
+        else:
+            self.max_chunk_size = 2000
+            self.model_name = "faster-whisper/Systran/faster-distil-whisper-large-v3"
+
         self.audio_processing_svc = model_gateway.get_audio_model_from_model_config(
-            model_name=self.model_configuration.name
+            model_name=self.model_name
         )
 
     async def get_chunks(
@@ -49,12 +69,16 @@ class AudioParser(BaseParser):
         try:
             parsed_audio_text = []
 
-            response = self.audio_processing_svc.get_transcription(filepath=filepath)
+            response = self.audio_processing_svc.get_transcription(
+                audio_file_path=filepath
+            )
 
             try:
                 for line in response.iter_lines():
                     if line:
-                        data = json.loads(line.decode("utf-8").split("data: ")[1])
+                        data = json.loads(line.decode("utf-8").split("data: ")[1])[
+                            "text"
+                        ]
                         parsed_audio_text.append(data)
                         logger.info(f"Transcription: {data}")
             except Exception as e:
@@ -63,19 +87,28 @@ class AudioParser(BaseParser):
 
             combined_audio_text = " ".join(parsed_audio_text)
 
-            # Save combined audio text to a temporary file
-            with tempfile.NamedTemporaryFile(mode="w") as f:
-                f.write(combined_audio_text)
-                temp_filepath = f.name
+            # Write the combined text to a '.txt' temporary file
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".txt", delete=False
+            ) as temp_file:
+                temp_file.write(combined_audio_text)
+                tempfile_name = temp_file.name
 
-                # Split the text into chunks
-                unstructured_io_parser = UnstructuredIoParser(
-                    max_chunk_size=self.max_chunk_size
-                )
+            # Split the text into chunks
+            unstructured_io_parser = UnstructuredIoParser(
+                max_chunk_size=self.max_chunk_size
+            )
 
-                final_texts = await unstructured_io_parser.get_chunks(
-                    filepath=temp_filepath, metadata=metadata
-                )
+            final_texts = await unstructured_io_parser.get_chunks(
+                filepath=tempfile_name, metadata=metadata
+            )
+
+            # Remove the temporary file
+            try:
+                os.remove(tempfile_name)
+                logger.info(f"Removed temporary file: {tempfile_name}")
+            except Exception as e:
+                logger.error(f"Error in removing temporary file: {e}")
 
             return final_texts
 
