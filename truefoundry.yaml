@@ -11,7 +11,6 @@ components:
       MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
       METADATA_STORE_CONFIG: '{"provider":"prisma"}'
       ML_REPO_NAME: cognita-internal
-      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
       INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
       UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
@@ -30,12 +29,12 @@ components:
         build_context_path: ./
       # Change this later
       build_source:
-        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
-        # type: local
+        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     params:
       - name: collection_name
         param_type: string
@@ -77,7 +76,6 @@ components:
       MODELS_CONFIG_PATH: ./models_config.truefoundry.yaml
       METADATA_STORE_CONFIG: '{"provider":"prisma"}'
       ML_REPO_NAME: cognita-internal
-      INFINITY_URL: http://cas-infinity.cognita-internal.svc.cluster.local:8000
       INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
       UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
@@ -93,12 +91,12 @@ components:
         build_context_path: ./
       # To change this to release later
       build_source:
-        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
-        # type: local
+        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     ports:
       - host: cas.truefoundry.com
         path: /api/
@@ -169,6 +167,17 @@ components:
                 - "mixedbread-ai/mxbai-rerank-xsmall-v1"
               default_headers: {}
 
+            - provider_name: faster-whisper
+              api_format: openai
+              base_url: http://cas-whisper.cognita-internal.svc.cluster.local:8000
+              api_key_env_var: ""
+              llm_model_ids: []
+              embedding_model_ids: []
+              reranking_model_ids: []
+              audio_model_ids:
+                - "Systran/faster-distil-whisper-large-v3"
+              default_headers: {}
+
   # Frontend
   - name: cas-frontend
     type: service
@@ -186,12 +195,12 @@ components:
         build_context_path: ./frontend
       # Change this later
       build_source:
-        ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        type: git
-        repo_url: https://github.com/truefoundry/cognita
-        branch_name: ps_cleanup_metadatastore
-        # local_build: false
-        # type: local
+        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
+        # type: git
+        # repo_url: https://github.com/truefoundry/cognita
+        # branch_name: ps_cleanup_metadatastore
+        local_build: false
+        type: local
     ports:
       - host: cas.truefoundry.com
         port: 5000
@@ -313,10 +322,11 @@ components:
       memory_limit: 500
       ephemeral_storage_request: 1000
       ephemeral_storage_limit: 2000
+
   # Unstructured IO
-  - env:
+  - name: cas-unstructured-io
+    env:
       UNSTRUCTURED_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
-    name: cas-unstructured-io
     type: service
     image:
       type: image
@@ -401,3 +411,51 @@ components:
         persistence:
           size: 5Gi
       architecture: standalone
+
+  # Whisper
+  - name: cas-whisper
+    env:
+      WHISPER_PORT: 8000
+      WHISPER_MODEL: Systran/faster-distil-whisper-large-v3
+    type: service
+    image:
+      type: image
+      image_uri: fedirz/faster-whisper-server:latest-cpu
+    ports:
+      - host: cas-whisper.truefoundry.com
+        port: 8000
+        expose: true
+        protocol: TCP
+        app_protocol: http
+    mounts: []
+    replicas: 2
+    resources:
+      node:
+        type: node_selector
+        capacity_type: spot_fallback_on_demand
+      cpu_limit: 1
+      cpu_request: 0.8
+      memory_limit: 8000
+      memory_request: 4000
+      ephemeral_storage_limit: 4000
+      ephemeral_storage_request: 2500
+    liveness_probe:
+      config:
+        path: /health
+        port: 8000
+        type: http
+      period_seconds: 60
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
+    readiness_probe:
+      config:
+        path: /health
+        port: 8000
+        type: http
+      period_seconds: 30
+      timeout_seconds: 2
+      failure_threshold: 5
+      success_threshold: 1
+      initial_delay_seconds: 10
