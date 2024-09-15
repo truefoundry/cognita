@@ -28,3 +28,6 @@ pillow==10.3.0
 
 ### prisma
 prisma==0.13.1
+
+### video processing
+moviepy==1.0.3

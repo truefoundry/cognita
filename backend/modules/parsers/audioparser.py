@@ -42,23 +42,18 @@ class AudioParser(BaseParser):
         ".webm",
     ]
 
-    def __init__(self, *, model_configuration: ModelConfig = None, **kwargs):
+    def __init__(
+        self, *, model_configuration: ModelConfig, max_chunk_size: int = 2000, **kwargs
+    ):
         """
         Initializes the AudioParser object.
         """
-        if model_configuration:
-            self.model_configuration = ModelConfig.model_validate(model_configuration)
-            self.max_chunk_size = self.model_configuration.parameters.get(
-                "max_chunk_size", 2000
-            )
-            self.model_name = self.model_configuration.name
-        else:
-            self.max_chunk_size = 2000
-            self.model_name = "faster-whisper/Systran/faster-distil-whisper-large-v3"
-
+        self.model_configuration = ModelConfig.model_validate(model_configuration)
         self.audio_processing_svc = model_gateway.get_audio_model_from_model_config(
-            model_name=self.model_name
+            model_name=self.model_configuration.name
         )
+        self.max_chunk_size = max_chunk_size
+        super().__init__(**kwargs)
 
     async def get_chunks(
         self, filepath: str, metadata: Dict[Any, Any] | None, **kwargs
@@ -108,10 +103,10 @@ class AudioParser(BaseParser):
                 os.remove(tempfile_name)
                 logger.info(f"Removed temporary file: {tempfile_name}")
             except Exception as e:
-                logger.error(f"Error in removing temporary file: {e}")
+                logger.exception(f"Error in removing temporary file: {e}")
 
             return final_texts
 
         except Exception as e:
-            logger.error(f"Error in getting chunks: {e}")
+            logger.exception(f"Error in getting chunks: {e}")
             raise e

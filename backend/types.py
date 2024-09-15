@@ -159,7 +159,7 @@ class ParserConfig(ConfiguredBaseModel):
     Parser configuration
     """
 
-    name: str
+    name: str  # File extension
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="before")
