@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     """
 
     model_config = ConfigDict(extra="allow")
+
+    AUTH_SECRET_KEY: Optional[str] = None
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    QA_FRONTEND_URL: str
+    QA_BACKEND_HOSTED_URL: str
 
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig

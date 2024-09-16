@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Path, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
@@ -6,6 +8,7 @@ from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
+from backend.server.auth.AuthMiddleware import get_current_user
 from backend.types import (
     AssociateDataSourceWithCollection,
     AssociateDataSourceWithCollectionDto,

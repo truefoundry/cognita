@@ -66,6 +66,12 @@ export default defineConfig(({ mode }) => {
       define: {
         'process.env.NODE_DEBUG': false,
       },
+      server: {
+        hmr: {
+            host: "localhost",
+            protocol: "ws",
+        },
+      }
     }
   } else {
     return {

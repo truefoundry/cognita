@@ -6,6 +6,8 @@ import ScreenFallbackLoader from '@/components/base/molecules/ScreenFallbackLoad
 import DataHub from '@/screens/dashboard/docsqa/DataSources'
 import NavBar from '@/screens/dashboard/docsqa/Navbar'
 import Applications from '@/screens/dashboard/docsqa/Applications'
+import Login from '@/screens/auth/Login'
+import Callback from '@/screens/auth/Callback'
 const DocsQA = lazy(() => import('@/screens/dashboard/docsqa'))
 const DocsQAChatbot = lazy(() => import('@/screens/dashboard/docsqa/Chatbot'))
 const DocsQASettings = lazy(() => import('@/screens/dashboard/docsqa/settings'))
@@ -52,6 +54,14 @@ export const routes = (): BreadcrumbsRoute[] => [
       {
         path: '/embed/:id',
         children: [{ index: true, element: <DocsQAChatbot /> }],
+      },
+      {
+        path: '/login',
+        children: [{ index: true, element: <Login /> }],
+      },
+      {
+        path: '/callback',
+        children: [{ index: true, element: <Callback /> }],
       },
       {
         path: '*',

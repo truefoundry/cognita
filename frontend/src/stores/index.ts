@@ -3,12 +3,17 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import { setupListeners } from '@reduxjs/toolkit/query'
 
 import { qafoundryApi } from './qafoundry'
+import UserInfoReducer, { logout } from './UserInfo'
 
 const reducer = combineReducers({
   [qafoundryApi.reducerPath]: qafoundryApi.reducer,
+  userInfo: UserInfoReducer
 })
 
 const rootReducer: typeof reducer = (state, action) => {
+  if (logout.match(action)) {
+    state = undefined
+  }
   return reducer(state, action)
 }
 

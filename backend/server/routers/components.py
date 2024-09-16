@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from backend.modules.dataloaders.loader import list_dataloaders
 from backend.modules.parsers.parser import list_parsers

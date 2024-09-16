@@ -18,6 +18,7 @@ const getBaseName = () => {
 }
 
 function App() {
+
   // disable scroll on number inputs
   useEffect(() => {
     const onWheel = () => {

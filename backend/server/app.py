@@ -3,8 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 from backend.modules.query_controllers.query_controller import QUERY_CONTROLLER_REGISTRY
+from backend.server.routers.auth import router as auth_router
 from backend.server.routers.collection import router as collection_router
 from backend.server.routers.components import router as components_router
 from backend.server.routers.data_source import router as datasource_router
@@ -31,6 +33,9 @@ app = FastAPI(
     lifespan=_process_pool_lifespan_manager,
 )
 
+if settings.AUTH_SECRET_KEY is not None and settings.AUTH_SECRET_KEY != "":
+    app.add_middleware(SessionMiddleware, secret_key=settings.AUTH_SECRET_KEY)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -50,6 +55,7 @@ app.include_router(datasource_router)
 app.include_router(rag_apps_router)
 app.include_router(collection_router)
 app.include_router(internal_router)
+app.include_router(auth_router)
 
 # Register Query Controllers dynamically as FastAPI routers
 for cls in QUERY_CONTROLLER_REGISTRY.values():
