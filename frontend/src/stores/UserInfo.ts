@@ -7,7 +7,10 @@ export interface AuthState {
   customerId?: string
 }
 
-const initialState: AuthState = {}
+const initialState: AuthState = {
+  accessToken: jsCookie.get('accessToken'),
+  customerId: jsCookie.get('customerId'),
+}
 
 export const removeAuthCookies = () => {
   jsCookie.remove('accessToken')
@@ -24,6 +27,8 @@ export const UserInfoSlice = createSlice({
     }>) => {
       state.accessToken = action.payload.accessToken
       state.customerId = action.payload.customerId
+      jsCookie.set('accessToken', action.payload.accessToken, { expires: 1 })
+      jsCookie.set('customerId', action.payload.customerId, { expires: 1 })
       // Redirect to the dashboard
       history.push('/');
     },
