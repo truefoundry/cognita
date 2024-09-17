@@ -28,7 +28,7 @@ class VideoParser(BaseParser):
                     "name": "faster-whisper/Systran/faster-distil-whisper-large-v3"
                 },
                 "max_chunk_size": 2000,
-                "prompt": "Descibe the given information present in the image - textual/charts/graphs/tables in detail."
+                "prompt": "Descibe the given information present in the image - textual/charts/graphs/tables in detail.",
                 "total_frames": 15, // total images to be process from video, for testing puposes, if not provided all the images will be processed
                 "fps": 0.2 // configure this for controlling frame rate.
             }
