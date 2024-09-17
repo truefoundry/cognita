@@ -400,7 +400,8 @@ components:
   - name: cas-whisper
     env:
       WHISPER_PORT: 8000
-      WHISPER_MODEL: Systran/faster-distil-whisper-large-v3
+      WHISPER__MODEL: Systran/faster-distil-whisper-large-v3
+      WHISPER__INFERENCE_DEVICE: auto
     type: service
     image:
       type: image
