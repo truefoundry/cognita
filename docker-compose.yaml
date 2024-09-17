@@ -143,6 +143,7 @@ services:
       start_period: 10s
     environment:
       - WHISPER__MODEL=${WHISPER_MODEL}
+      - WHISPER__INFERENCE_DEVICE=auto
     ports:
       - ${WHISPER_PORT}:8000
     volumes:
@@ -198,7 +199,7 @@ services:
       - BRAVE_API_KEY=${BRAVE_API_KEY}
       - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
     entrypoint: /bin/bash
-    command: -c "set -e; prisma db push --accept-data-loss --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
+    command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
     networks:
       - cognita-docker
 

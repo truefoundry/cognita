@@ -27,12 +27,7 @@ components:
           --raise_error_on_failure  {{raise_error_on_failure}}"
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
-      # Change this later
       build_source:
-        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
         local_build: false
         type: local
     params:
@@ -89,12 +84,7 @@ components:
         command: /bin/bash -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app"
         dockerfile_path: ./backend/Dockerfile
         build_context_path: ./
-      # To change this to release later
       build_source:
-        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
         local_build: false
         type: local
     ports:
@@ -194,12 +184,7 @@ components:
           VITE_CARBON_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
         dockerfile_path: ./frontend/Dockerfile
         build_context_path: ./frontend
-      # Change this later
       build_source:
-        # ref: fdfce2e13d5939d7d1c1fce57b90748d8cadd65b
-        # type: git
-        # repo_url: https://github.com/truefoundry/cognita
-        # branch_name: ps_cleanup_metadatastore
         local_build: false
         type: local
     ports:
@@ -333,9 +318,8 @@ components:
       type: image
       image_uri: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
     ports:
-      - host: cas-unstructured-io.truefoundry.com
-        port: 8000
-        expose: true
+      - port: 8000
+        expose: false
         protocol: TCP
         app_protocol: http
     mounts: []
@@ -366,9 +350,8 @@ components:
         $(BATCH_SIZE) --api-key $(API_KEY)
       image_uri: michaelf34/infinity:0.0.54
     ports:
-      - host: cas-infinity.truefoundry.com
-        port: 8000
-        expose: true
+      - port: 8000
+        expose: false
         protocol: TCP
         app_protocol: http
     mounts: []
@@ -423,13 +406,12 @@ components:
       type: image
       image_uri: fedirz/faster-whisper-server:latest-cpu
     ports:
-      - host: cas-whisper.truefoundry.com
-        port: 8000
-        expose: true
+      - port: 8000
+        expose: false
         protocol: TCP
         app_protocol: http
     mounts: []
-    replicas: 2
+    replicas: 1
     resources:
       node:
         type: node_selector

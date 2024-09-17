@@ -1,9 +1,8 @@
 from typing import Optional, Sequence
 
+import aiohttp
 import requests
 from requests.adapters import HTTPAdapter, Retry
-
-from backend.logger import logger
 
 
 class AudioProcessingSvc:
@@ -29,32 +28,49 @@ class AudioProcessingSvc:
             "timestamp_granularities": "segment",
             "stream": "true",
         }
-        self.retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["POST"],
-        )
-        self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
-        self.session.mount("https://", self.adapter)
-        self.session.mount("http://", self.adapter)
 
-    def get_transcription(self, audio_file_path: str) -> str:
+    # def get_transcription(self, audio_file_path: str) -> requests.Response:
+    #     """
+    #     Get streaming audio transcription from Faster-Whisper Server
+    #     """
+    #     with open(audio_file_path, "rb") as f:
+    #         files = {"file": f}
+    #         headers = {"accept": "application/json"}
+    #         if self.api_key:
+    #             headers["Authorization"] = f"Bearer {self.api_key}"
+    #         response = self.session.post(
+    #             self.base_url.rstrip("/") + "/v1/audio/transcriptions",
+    #             headers=headers,
+    #             data=self.data,
+    #             files=files,
+    #             stream=True,
+    #         )
+    #         response.raise_for_status()
+
+    #     return response
+
+    async def get_transcription(self, audio_file_path: str) -> aiohttp.ClientResponse:
         """
         Get streaming audio transcription from Faster-Whisper Server
         """
-        with open(audio_file_path, "rb") as f:
-            files = {"file": f}
-            headers = {"accept": "application/json"}
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
-            response = self.session.post(
-                self.base_url.rstrip("/") + "/v1/audio/transcriptions",
-                headers=headers,
-                data=self.data,
-                files=files,
-                stream=True,
-            )
-            response.raise_for_status()
+        async with aiohttp.ClientSession() as session:
+            async with aiohttp.MultipartWriter("form-data") as mpwriter:
+                with open(audio_file_path, "rb") as f:
+                    part = mpwriter.append(f)
+                    part.set_content_disposition(
+                        "form-data", name="file", filename=audio_file_path
+                    )
 
-        return response
+                headers = {"accept": "application/json"}
+                if self.api_key:
+                    headers["Authorization"] = f"Bearer {self.api_key}"
+
+                async with session.post(
+                    self.base_url.rstrip("/") + "/v1/audio/transcriptions",
+                    headers=headers,
+                    data=self.data,
+                    data=mpwriter,
+                    timeout=aiohttp.ClientTimeout(total=None),
+                ) as response:
+                    response.raise_for_status()
+                    return response

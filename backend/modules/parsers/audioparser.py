@@ -3,6 +3,7 @@ import os
 import tempfile
 from typing import Any, Dict, List
 
+import aiohttp
 from langchain.docstore.document import Document
 
 from backend.logger import logger
@@ -64,12 +65,14 @@ class AudioParser(BaseParser):
         try:
             parsed_audio_text = []
 
-            response = self.audio_processing_svc.get_transcription(
-                audio_file_path=filepath
+            response: aiohttp.ClientResponse = (
+                await self.audio_processing_svc.get_transcription(
+                    audio_file_path=filepath
+                )
             )
 
             try:
-                for line in response.iter_lines():
+                async for line in response.content:
                     if line:
                         data = json.loads(line.decode("utf-8").split("data: ")[1])[
                             "text"

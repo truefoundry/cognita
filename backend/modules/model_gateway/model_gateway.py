@@ -8,11 +8,10 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
 
 from backend.logger import logger
+from backend.modules.model_gateway.audio_processing_svc import AudioProcessingSvc
+from backend.modules.model_gateway.reranker_svc import InfinityRerankerSvc
 from backend.settings import settings
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
-
-from .audio_processing_svc import AudioProcessingSvc
-from .reranker_svc import InfinityRerankerSvc
 
 
 class ModelGateway:
@@ -188,11 +187,11 @@ class ModelGateway:
             api_key = "EMPTY"
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
-        model_id = "/".join(model_name.split("/")[1:])
+        _, model = model_name.split("/", 1)
         return AudioProcessingSvc(
             api_key=api_key,
             base_url=model_provider_config.base_url,
-            model=model_id,
+            model=model,
         )
 
 
