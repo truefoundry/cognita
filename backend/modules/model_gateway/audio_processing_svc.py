@@ -1,13 +1,12 @@
-from typing import Optional, Sequence
+from typing import Optional
 
+import aiofiles
 import aiohttp
-import requests
-from requests.adapters import HTTPAdapter, Retry
 
 
 class AudioProcessingSvc:
     """
-    Audio Processing Service that uses Faster-Whisper Server
+    Async Audio Processing Service that uses Faster-Whisper Server
     # Github: https://github.com/fedirz/faster-whisper-server
     """
 
@@ -19,7 +18,7 @@ class AudioProcessingSvc:
         self.model = model
         self.base_url = base_url
         self.api_key = api_key
-        self.session = requests.Session()
+        self.session = None
         self.data = {
             "model": self.model,
             "temperature": 0.1,
@@ -29,48 +28,42 @@ class AudioProcessingSvc:
             "stream": "true",
         }
 
-    # def get_transcription(self, audio_file_path: str) -> requests.Response:
-    #     """
-    #     Get streaming audio transcription from Faster-Whisper Server
-    #     """
-    #     with open(audio_file_path, "rb") as f:
-    #         files = {"file": f}
-    #         headers = {"accept": "application/json"}
-    #         if self.api_key:
-    #             headers["Authorization"] = f"Bearer {self.api_key}"
-    #         response = self.session.post(
-    #             self.base_url.rstrip("/") + "/v1/audio/transcriptions",
-    #             headers=headers,
-    #             data=self.data,
-    #             files=files,
-    #             stream=True,
-    #         )
-    #         response.raise_for_status()
+    # allows class to be used as async context manager
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession()
+        return self
 
-    #     return response
+    # allows class to be used as async context manager
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.session:
+            await self.session.close()
 
     async def get_transcription(self, audio_file_path: str) -> aiohttp.ClientResponse:
         """
         Get streaming audio transcription from Faster-Whisper Server
         """
-        async with aiohttp.ClientSession() as session:
-            async with aiohttp.MultipartWriter("form-data") as mpwriter:
-                with open(audio_file_path, "rb") as f:
-                    part = mpwriter.append(f)
-                    part.set_content_disposition(
-                        "form-data", name="file", filename=audio_file_path
-                    )
+        if not self.session:
+            raise RuntimeError(
+                "Session not initialized. Use 'async with' context manager."
+            )
 
-                headers = {"accept": "application/json"}
-                if self.api_key:
-                    headers["Authorization"] = f"Bearer {self.api_key}"
+        async with aiofiles.open(audio_file_path, "rb") as f:
+            file_data = await f.read()
 
-                async with session.post(
-                    self.base_url.rstrip("/") + "/v1/audio/transcriptions",
-                    headers=headers,
-                    data=self.data,
-                    data=mpwriter,
-                    timeout=aiohttp.ClientTimeout(total=None),
-                ) as response:
-                    response.raise_for_status()
-                    return response
+        data = aiohttp.FormData()
+        data.add_field("file", file_data, filename="audio.wav")
+        for key, value in self.data.items():
+            data.add_field(key, str(value))
+
+        headers = {"accept": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        response = await self.session.post(
+            self.base_url.rstrip("/") + "/v1/audio/transcriptions",
+            headers=headers,
+            data=data,
+        )
+        response.raise_for_status()
+
+        return response

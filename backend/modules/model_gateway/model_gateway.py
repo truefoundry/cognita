@@ -177,7 +177,7 @@ class ModelGateway:
             top_k=top_k,
         )
 
-    def get_audio_model_from_model_config(self, model_name: str):
+    async def get_audio_model_from_model_config(self, model_name: str):
         if model_name not in self.model_name_to_provider_config:
             raise ValueError(f"Model {model_name} not registered in the model gateway.")
         model_provider_config: ModelProviderConfig = self.model_name_to_provider_config[
