@@ -31,3 +31,4 @@ user_data/
 *.bak
 node_modules/
 sample-data/
+.github/
