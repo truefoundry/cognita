@@ -69,10 +69,10 @@ class AudioParser(BaseParser):
                     data = json.loads(line)["text"]
                     parsed_audio_text.append(data)
                 except json.JSONDecodeError:
-                    logger.exception(f"Error decoding JSON: {line}")
+                    logger.error(f"Error decoding JSON: {line}")
                     raise json.JSONDecodeError
                 except KeyError:
-                    logger.exception(f"Missing 'text' key in JSON: {line}")
+                    logger.error(f"Missing 'text' key in JSON: {line}")
                     raise KeyError
                 except Exception as e:
                     logger.exception(f"Error processing transcription line: {e}")
