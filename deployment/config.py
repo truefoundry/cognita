@@ -6,4 +6,3 @@ UNSTRUCTURED_IO_SERVICE_NAME = "unstructured-io"
 FRONTEND_SERVICE_NAME = "frontend"
 VECTOR_DB_HELM_NAME = "qdrant"
 QDRANT_SERVICE_UI_NAME = "qdrant-ui"
-
