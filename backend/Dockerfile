@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 python:3.11
 
 # Required for opencv
-RUN apt-get update -y && apt-get install ffmpeg libsm6 libxext6 -y
+RUN apt-get update -y && apt-get install --no-install-recommends ffmpeg libsm6 libxext6 -y
 
 # Set environment variables
 ENV PATH=/virtualenvs/venv/bin:$PATH
