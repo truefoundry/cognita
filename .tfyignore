@@ -30,3 +30,5 @@ user_data/
 .env
 *.bak
 node_modules/
+sample-data/
+.github/
