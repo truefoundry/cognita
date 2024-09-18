@@ -30,7 +30,9 @@ from deployment.config import *
 logging.basicConfig(level=logging.INFO)
 
 
-def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
+def run_deploy(
+    workspace_fqn: str, application_set_name: str, ml_repo: str, base_domain_url: str
+):
     workspace = workspace_fqn.split(":")[1]
     QDRANT_URL = f"http://{VECTOR_DB_HELM_NAME}.{workspace}.svc.cluster.local:6333"
     VECTOR_DB_CONFIG = json.dumps(
@@ -42,9 +44,6 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
             Job(
                 name=INDEXER_SERVICE_NAME,
                 image=Build(
-                    # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
-                    # With local_build=False flag, docker image will be built on cloud instead of local
-                    # Else it will try to use docker installed on your local machine to build the image
                     build_source=LocalSource(local_build=False),
                     build_spec=DockerFileBuild(
                         dockerfile_path="./backend/Dockerfile",
@@ -72,21 +71,20 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                 env={
                     "LOG_LEVEL": "DEBUG",
                     "DATABASE_URL": f"postgresql://admin:password@{DATABASE_NAME}-postgresql.{workspace}.svc.cluster.local:5432/cognita-config",
-                    "INFINITY_URL": f"http://{INFINITY_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "ML_REPO_NAME": ml_repo,
-                    "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
                     "VECTOR_DB_CONFIG": VECTOR_DB_CONFIG,
                     "CARBON_AI_API_KEY": "tfy-secret://internal:cognita:CARBON_AI_API_KEY",
                     "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
-                    "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
+                    "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
+                    "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "UNSTRUCTURED_IO_API_KEY": "tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY",
                 },
                 resources=Resources(
                     cpu_request=1.0,
                     cpu_limit=1.5,
-                    memory_request=1000,
-                    memory_limit=1500,
+                    memory_request=1500,
+                    memory_limit=2000,
                     ephemeral_storage_request=1000,
                     ephemeral_storage_limit=2000,
                     node=NodeSelector(capacity_type="spot_fallback_on_demand"),
@@ -97,9 +95,6 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
             Service(
                 name=BACKEND_SERVICE_NAME,
                 image=Build(
-                    # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
-                    # With local_build=False flag, docker image will be built on cloud instead of local
-                    # Else it will try to use docker installed on your local machine to build the image
                     build_source=LocalSource(local_build=False),
                     build_spec=DockerFileBuild(
                         dockerfile_path="./backend/Dockerfile",
@@ -108,7 +103,7 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                     ),
                 ),
                 resources=Resources(
-                    cpu_request=0.5,
+                    cpu_request=0.8,
                     cpu_limit=1.0,
                     memory_request=500,
                     memory_limit=1000,
@@ -120,17 +115,16 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                     "JOB_FQN": f"{workspace_fqn}:{INDEXER_SERVICE_NAME}",
                     "LOG_LEVEL": "DEBUG",
                     "DATABASE_URL": f"postgresql://admin:password@{DATABASE_NAME}-postgresql.{workspace}.svc.cluster.local:5432/cognita-config",
-                    "INFINITY_URL": f"http://{INFINITY_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "ML_REPO_NAME": ml_repo,
-                    "BRAVE_API_KEY": "tfy-secret://internal:cognita:BRAVE_API_KEY",
-                    "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
                     "VECTOR_DB_CONFIG": VECTOR_DB_CONFIG,
-                    "CARBON_AI_API_KEY": "tfy-secret://internal:cognita:CARBON_AI_API_KEY",
                     "JOB_COMPONENT_NAME": f"{workspace}-{INDEXER_SERVICE_NAME}",
                     "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
-                    "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
+                    "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{workspace}.svc.cluster.local:8000",
                     "UNSTRUCTURED_IO_API_KEY": "tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY",
+                    "BRAVE_API_KEY": "tfy-secret://internal:cognita:BRAVE_API_KEY",
+                    "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
+                    "CARBON_AI_API_KEY": "tfy-secret://internal:cognita:CARBON_AI_API_KEY",
                 },
                 ports=[
                     Port(
@@ -153,11 +147,12 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                                 api_key_env_var: TFY_API_KEY
                                 llm_model_ids:
                                 - "openai-main/gpt-4o-mini"
+                                - "openai-main/gpt-4o"
                                 - "openai-main/gpt-4-turbo"
-                                - "openai-main/gpt-3-5-turbo"
                                 - "azure-openai/gpt-4"
                                 - "together-ai/llama-3-70b-chat-hf"
                                 embedding_model_ids:
+                                - "openai-main/text-embedding-3-small"
                                 - "openai-main/text-embedding-ada-002"
                                 reranking_model_ids: []
                                 default_headers:
@@ -198,9 +193,6 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
             Service(
                 name=FRONTEND_SERVICE_NAME,
                 image=Build(
-                    # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
-                    # With local_build=False flag, docker image will be built on cloud instead of local
-                    # Else it will try to use docker installed on your local machine to build the image
                     build_source=LocalSource(local_build=False),
                     build_spec=DockerFileBuild(
                         dockerfile_path="./frontend/Dockerfile",
@@ -211,6 +203,7 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                             "VITE_DOCS_QA_STANDALONE_PATH": "/",
                             "VITE_DOCS_QA_ENABLE_STANDALONE": "true",
                             "VITE_DOCS_QA_DELETE_COLLECTIONS": "true",
+                            "VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB": 200,
                         },
                     ),
                 ),
@@ -342,9 +335,6 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
             Service(
                 name=QDRANT_SERVICE_UI_NAME,
                 image=Build(
-                    # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
-                    # With local_build=False flag, docker image will be built on cloud instead of local
-                    # Else it will try to use docker installed on your local machine to build the image
                     build_source=GitSource(
                         repo_url="https://github.com/truefoundry/qdrant-web-ui-new",
                         ref="038f5a4db22b54459e1820ab2ec51771f8f09919",
