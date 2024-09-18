@@ -484,4 +484,4 @@ if __name__ == "__main__":
 
 
 ### To run the script, run the following command
-### python -m deployment.backend_deploy --workspace_fqn <> --application_set_name <> --ml_repo <> --base_domain_url <>
+### python -m deployment.deploy --workspace_fqn <> --application_set_name <> --ml_repo <> --base_domain_url <>
