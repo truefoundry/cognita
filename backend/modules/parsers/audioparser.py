@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, List
 
 import aiofiles
-import aiohttp
+import aiofiles.os
 from langchain.docstore.document import Document
 
 from backend.logger import logger
@@ -14,7 +14,7 @@ from backend.types import ModelConfig
 
 class AudioParser(BaseParser):
     """
-    AsyncAudioParser is a parser class for extracting text from audio input.
+    AudioParser is a parser class for extracting text from audio input.
 
     {
         ".mp3": {
@@ -46,22 +46,14 @@ class AudioParser(BaseParser):
         self, *, model_configuration: ModelConfig, max_chunk_size: int = 2000, **kwargs
     ):
         """
-        Initializes the AsyncAudioParser object.
+        Initializes the AudioParser object.
         """
         self.model_configuration = ModelConfig.model_validate(model_configuration)
-        self.audio_processing_svc = None
+        self.audio_processing_svc = model_gateway.get_audio_model_from_model_config(
+            model_name=self.model_configuration.name
+        )
         self.max_chunk_size = max_chunk_size
         super().__init__(**kwargs)
-
-    async def initialize(self):
-        """
-        Initialize the audio processing service.
-        """
-        self.audio_processing_svc = (
-            await model_gateway.get_audio_model_from_model_config(
-                model_name=self.model_configuration.name
-            )
-        )
 
     async def get_chunks(
         self, filepath: str, metadata: Dict[Any, Any] | None, **kwargs
@@ -69,29 +61,20 @@ class AudioParser(BaseParser):
         """
         Get the chunks of the audio file.
         """
-        if not self.audio_processing_svc:
-            await self.initialize()
-
         try:
             parsed_audio_text = []
 
-            async with self.audio_processing_svc as svc:
-                response: aiohttp.ClientResponse = await svc.get_transcription(
-                    audio_file_path=filepath
-                )
-
+            async for line in self.audio_processing_svc.get_transcription(filepath):
                 try:
-                    async for line in response.content:
-                        line = line.strip()
-                        if line:
-                            data = json.loads(
-                                line.decode("utf-8").strip().split("data: ")[1]
-                            )["text"]
-                            parsed_audio_text.append(data)
-                            logger.info(f"Transcription: {data}")
+                    data = json.loads(line)["text"]
+                    parsed_audio_text.append(data)
+                    logger.info(f"Transcription: {data}")
+                except json.JSONDecodeError:
+                    logger.error(f"Error decoding JSON: {line}")
+                except KeyError:
+                    logger.error(f"Missing 'text' key in JSON: {line}")
                 except Exception as e:
-                    logger.error(f"Error in getting transcription: {e}")
-                    raise e
+                    logger.error(f"Error processing transcription line: {e}")
 
             combined_audio_text = " ".join(parsed_audio_text)
 
