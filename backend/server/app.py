@@ -19,8 +19,14 @@ async def _process_pool_lifespan_manager(app: FastAPI):
     app.state.process_pool = AsyncProcessPoolExecutor(
         max_workers=settings.PROCESS_POOL_WORKERS
     )
-    yield  # FastAPI runs here
-    app.state.process_pool.shutdown(wait=True)
+    try:
+        yield
+    except Exception as e:
+        # Log the exception
+        logger.error(f"An error occurred in the process pool: {e}")
+    finally:
+        # Ensure shutdown happens even if there was an exception
+        await app.state.process_pool.shutdown(wait=True)
 
 
 # FastAPI Initialization
