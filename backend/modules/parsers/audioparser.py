@@ -68,7 +68,6 @@ class AudioParser(BaseParser):
                 try:
                     data = json.loads(line)["text"]
                     parsed_audio_text.append(data)
-                    logger.info(f"Transcription: {data}")
                 except json.JSONDecodeError:
                     logger.error(f"Error decoding JSON: {line}")
                 except KeyError:
@@ -77,6 +76,7 @@ class AudioParser(BaseParser):
                     logger.error(f"Error processing transcription line: {e}")
 
             combined_audio_text = " ".join(parsed_audio_text)
+            logger.info(f"Total Combined audio text: {len(combined_audio_text)}")
 
             # Write the combined text to a '.txt' temporary file
             async with aiofiles.tempfile.NamedTemporaryFile(
