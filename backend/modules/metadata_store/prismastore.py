@@ -50,7 +50,7 @@ class PrismaStore(BaseMetadataStore):
         try:
             db = Prisma()
             await db.connect()
-            logger.info(f"Connected to Prisma....")
+            logger.info(f"Connected to Prisma")
             return cls(db=db, **kwargs)
         except Exception as e:
             logger.exception(f"Failed to connect to Prisma: {e}")

@@ -1,11 +1,13 @@
 import asyncio
 import zipfile
-from concurrent.futures import Executor, ProcessPoolExecutor
+from concurrent.futures import Executor, Future, ProcessPoolExecutor
 from contextvars import copy_context
 from functools import partial
 from typing import Callable, Optional, TypeVar, cast
 
 from typing_extensions import ParamSpec
+
+from backend.logger import logger
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -90,8 +92,25 @@ async def run_in_executor(
 
 class AsyncProcessPoolExecutor(ProcessPoolExecutor):
     @staticmethod
-    def _async_to_sync(__fn, *args, **kwargs):
-        return asyncio.run(__fn(*args, **kwargs))
+    def _async_to_sync(fn, *args, **kwargs):
+        # TODO (chiragjn): This is a hacky fix to handle exceptions in the worker process.
+        # If we just simply use asyncio.run(fn(*args, **kwargs))
+        # And for whatever reason if the function passed to this method raises an exception
+        # Then any subsequent calls to `fn(*args, **kwargs)` end up raising RuntimeError: Event loop is closed
+        # And at some point the whole process in the pool becomes unusable
+        # The main problem seems to be Prisma uses httpx under the hood
+        # which might maintain reference to the closed event loop and we end up with the following error
+        # RuntimeError: Event loop is closed
+        # even though asyncio.run(fn(*args, **kwargs)) would have launched a new event loop every time
+        future = Future()
+        loop = asyncio.get_event_loop()
+        try:
+            result = loop.run_until_complete(fn(*args, **kwargs))
+            future.set_result(result)
+        except Exception as e:
+            logger.exception("Error in AsyncProcessPoolExecutor worker")
+            future.set_exception(e)
+        return future
 
-    def submit(self, __fn, *args, **kwargs):
-        return super().submit(self._async_to_sync, __fn, *args, **kwargs)
+    def submit(self, fn, *args, **kwargs):
+        return super().submit(self._async_to_sync, fn, *args, **kwargs)

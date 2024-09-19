@@ -367,9 +367,15 @@ async def ingest_data(
                     batch_size=request.batch_size,
                 )
                 if pool:
+                    logger.info(
+                        f"Submitting sync_data_source_to_collection job to pool"
+                    )
                     # future of this submission is ignored, failures not tracked
                     pool.submit(sync_data_source_to_collection, ingestion_config)
                 else:
+                    logger.info(
+                        f"Running sync_data_source_to_collection on main event loop"
+                    )
                     await sync_data_source_to_collection(ingestion_config)
                 created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
             else:
