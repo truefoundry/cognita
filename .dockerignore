@@ -23,3 +23,5 @@ ragenv/
 volumes/
 qdrant_db/
 qdrant_storage/
+sample-data/
+user_data/
