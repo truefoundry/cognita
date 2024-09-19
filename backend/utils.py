@@ -96,11 +96,11 @@ class AsyncProcessPoolExecutor(ProcessPoolExecutor):
         # TODO (chiragjn): This is a hacky fix to handle exceptions in the worker process.
         # If we just simply use asyncio.run(fn(*args, **kwargs))
         # And for whatever reason if the function passed to this method raises an exception
-        # Then any subsequent calls to `fn(*args, **kwargs)` end up raising RuntimeError: Event loop is closed
-        # And at some point the whole process in the pool becomes unusable
+        # Then any subsequent calls to prisma db async methods inside fn end up raising RuntimeError: Event loop is closed
+        # And any more submissions start breaking the whole pool.
         # The main problem seems to be Prisma uses httpx under the hood
-        # which might maintain reference to the closed event loop and we end up with the following error
-        # RuntimeError: Event loop is closed
+        # which might maintain reference to the previously closed event loop
+        # and we end up with the following error: RuntimeError: Event loop is closed
         # even though asyncio.run(fn(*args, **kwargs)) would have launched a new event loop every time
         future = Future()
         loop = asyncio.get_event_loop()
