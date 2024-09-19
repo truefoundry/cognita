@@ -59,7 +59,6 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
 
 
 if __name__ == "__main__":
-    # print(Infinity().create_service())
     # Setup the argument parser by instantiating `ArgumentParser` class
     parser = argparse.ArgumentParser()
     # Add the parameters as arguments
@@ -83,12 +82,7 @@ if __name__ == "__main__":
         """,
     )
     parser.add_argument(
-        "--base_domain_url",
-        type=str,
-        required=True,
-        help="""\
-            The host name of the application set.
-        """,
+        "--base_domain_url", type=str, required=True, help="cluster base domain url"
     )
 
     args = parser.parse_args()
@@ -97,4 +91,4 @@ if __name__ == "__main__":
 
 
 ### To run the script, run the following command
-### python -m deployment.backend_deploy --workspace_fqn tfy-devtest-euwe1:jitender-ws --application_set_name backend-test --ml_repo cognita-testing --base_domain_url devtest.truefoundry.tech
+### python -m deployment.deploy --workspace_fqn <worksapce> --application_set_name <application_set_name> --ml_repo <ml_repo> --base_domain_url <cluster base domain url>
