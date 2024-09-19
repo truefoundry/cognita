@@ -24,6 +24,17 @@ model_providers:
     reranking_model_ids:
       - "mixedbread-ai/mxbai-rerank-xsmall-v1"
     default_headers: {}
+
+  - provider_name: faster-whisper
+    api_format: openai
+    base_url: http://faster-whisper:8000
+    api_key_env_var: ""
+    llm_model_ids: []
+    embedding_model_ids: []
+    reranking_model_ids: []
+    audio_model_ids:
+      - "Systran/faster-distil-whisper-large-v3"
+    default_headers: {}
 ############################ OpenAI ###########################################
 #   Uncomment this provider if you want to use OpenAI as a models provider    #
 #   Remember to set `OPENAI_API_KEY` in container environment                 #

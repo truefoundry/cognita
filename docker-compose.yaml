@@ -129,6 +129,28 @@ services:
     networks:
       - cognita-docker
 
+  # https://github.com/fedirz/faster-whisper-server/tree/master
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    pull_policy: if_not_present
+    container_name: faster-whisper
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL}
+      - WHISPER__INFERENCE_DEVICE=auto
+    ports:
+      - ${WHISPER_PORT}:8000
+    volumes:
+      - ./volumes/hugging_face_cache:/root/.cache/huggingface
+    networks:
+      - cognita-docker
+
   cognita-backend:
     build:
       context: .
