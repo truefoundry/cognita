@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
@@ -16,11 +17,16 @@ from backend.utils import AsyncProcessPoolExecutor
 
 @asynccontextmanager
 async def _process_pool_lifespan_manager(app: FastAPI):
-    app.state.process_pool = AsyncProcessPoolExecutor(
-        max_workers=settings.PROCESS_POOL_WORKERS
-    )
+    app.state.process_pool = None
+    if settings.PROCESS_POOL_WORKERS > 0:
+        app.state.process_pool = AsyncProcessPoolExecutor(
+            max_workers=settings.PROCESS_POOL_WORKERS,
+            # Setting to spawn because we don't want to fork - it can cause issues with the event loop
+            mp_context=mp.get_context("spawn"),
+        )
     yield  # FastAPI runs here
-    app.state.process_pool.shutdown(wait=True)
+    if app.state.process_pool is not None:
+        app.state.process_pool.shutdown(wait=True)
 
 
 # FastAPI Initialization

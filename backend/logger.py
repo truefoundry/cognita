@@ -13,7 +13,7 @@ logging.getLogger("s3transfer").setLevel(logging.CRITICAL)
 logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
-    "%(levelname)s:    %(asctime)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s"
+    "[PID:%(process)d/%(processName)s][%(thread)d/%(threadName)s] %(levelname)s:    %(asctime)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s"
 )
 handler = logging.StreamHandler(stream=sys.stdout)
 handler.setLevel(LOG_LEVEL)
