@@ -57,7 +57,6 @@ class Indexer:
                 "ML_REPO_NAME": self.ml_repo,
                 "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
                 "VECTOR_DB_CONFIG": self.VECTOR_DB_CONFIG,
-                "CARBON_AI_API_KEY": "tfy-secret://internal:cognita:CARBON_AI_API_KEY",
                 "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
                 "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',

@@ -1,11 +1,8 @@
 import IconProvider from '@/components/assets/IconProvider';
-import { CARBON_API_KEY } from '@/stores/constants';
 import { customerId } from '@/stores/qafoundry';
-import axios from 'axios';
 import classNames from 'classnames';
 import React from 'react'
 import { PreviewResource } from './types';
-import { getFileInfo } from '@/utils/carbon';
 
 type DocLinkProps = {
   pageNumber?: number;
@@ -14,19 +11,16 @@ type DocLinkProps = {
   loadPreview?: (resourse: PreviewResource) => void;
 };
 
+const LINK_RENDERING_SUPPORTED: string[] = []
+
 const DocLink = ({ pageNumber, fqn, fileFormat, loadPreview }: DocLinkProps) => {
   const splittedFqn = fqn.split('::');
 
-  const isUrlHandlerSupport = ['carbon'].includes(splittedFqn[0].toLowerCase())
+  const isUrlHandlerSupport = LINK_RENDERING_SUPPORTED.includes(splittedFqn[0].toLowerCase())
   const clickHandler = async () => {
-    if (splittedFqn[0].toLowerCase() === 'carbon') {
-      const fileData = await getFileInfo(customerId, splittedFqn[3]);
-      fileData && loadPreview && loadPreview({
-        presignedUrl: fileData.presigned_url,
-        externalUrl: fileData.external_url,
-        fileFormat,
-        name: fileData.name
-      });
+    switch(splittedFqn[0].toLowerCase()) {
+      default:
+        break;
     }
   }
 
