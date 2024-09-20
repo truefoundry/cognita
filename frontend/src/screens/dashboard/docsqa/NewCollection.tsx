@@ -302,7 +302,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           <Button
             text="Process"
             onClick={handleSubmit}
-            className="gap-1 btn-sm font-normal"
+            className="gap-1 btn-sm font-normal bg-black text-white hover:bg-gray-700"
             type="button"
             disabled={
               !collectionName ||

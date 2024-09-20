@@ -3,8 +3,8 @@ import forms from '@tailwindcss/forms'
 import lineClamp from '@tailwindcss/line-clamp'
 import daisyui from 'daisyui'
 import plugin from 'tailwindcss/plugin'
+import daisyuiThemes from 'daisyui/src/theming/themes'
 // @ts-ignore
-import * as daisyuiThemes from 'daisyui/src/colors/themes'
 import scrollbar from './src/utils/tailwindScrollbar'
 
 const config = {

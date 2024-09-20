@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { MenuItem, Select } from '@mui/material'
-import { startCase } from 'lodash'
+import { set, startCase } from 'lodash'
 import { uploadArtifactFileWithSignedURI } from '@/api/truefoundry'
 import IconProvider from '@/components/assets/IconProvider'
 import Badge from '@/components/base/atoms/Badge'
@@ -10,11 +10,11 @@ import Spinner from '@/components/base/atoms/Spinner'
 import { DarkTooltip } from '@/components/base/atoms/Tooltip'
 import notify from '@/components/base/molecules/Notify'
 import {
-  CARBON_API_KEY,
   DOCS_QA_MAX_UPLOAD_SIZE_MB,
   IS_LOCAL_DEVELOPMENT,
 } from '@/stores/constants'
 import {
+  customerId,
   useAddDataSourceMutation,
   useGetDataLoadersQuery,
   useUploadDataToDataDirectoryMutation,
@@ -22,11 +22,8 @@ import {
 } from '@/stores/qafoundry'
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
-import { CarbonConnect, EmbeddingGenerators } from 'carbon-connect'
 import axios from 'axios'
-import Logo from '@/assets/img/logos/logo.svg'
 
-const CUSTOMER_ID = 'cognita'
 
 const parseFileSize = (size: number) => {
   const units = ['B', 'Ki', 'Mi', 'Gi']
@@ -45,11 +42,12 @@ type FileObject = {
 }
 
 interface NewDataSourceProps {
-  open: boolean
   onClose: () => void
 }
 
-const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
+const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
+  const [isNewDataSourceDrawerOpen, setIsNewDataSourceDrawerOpen] =
+    React.useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [selectedDataSourceType, setSelectedDataSourceType] = useState('')
   const [dataSourceUri, setDataSourceUri] = useState('')
@@ -59,9 +57,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
   const [files, setFiles] = React.useState<{ id: string; file: File }[]>([])
   const { data: dataLoaders, isLoading } = useGetDataLoadersQuery()
 
-  const [isCarbonConnectOpen, setIsCarbonConnectOpen] = useState(false)
-  const [dataSourceId, setDataSourceId] = useState('')
-  const dataSourceExternalId = React.useRef('')
 
   const pattern = /^[a-z][a-z0-9-]*$/
   const isValidUploadName = pattern.test(uploadName)
@@ -144,7 +139,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
           'Please upload files to process'
         )
       }
-
       let fqn
       if (selectedDataSourceType === 'localdir') {
         let res
@@ -165,11 +159,10 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
       } else {
         const res = await addDataSource({
           type: selectedDataSourceType,
-          uri:
-            selectedDataSourceType === 'carbon'
-              ? `${CUSTOMER_ID}/${dataSourceId}`
-              : dataSourceUri,
-          metadata: {},
+          uri: dataSourceUri,
+          metadata: {
+            customerId: customerId,
+          },
         }).unwrap()
         fqn = res.data_source?.fqn
       }
@@ -194,123 +187,21 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
     setIsSaving(false)
   }
 
-  const tokenFetcher = async () => {
-    const response = await axios.get(
-      'https://api.carbon.ai/auth/v1/access_token',
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'customer-id': CUSTOMER_ID,
-          authorization: `Bearer ${CARBON_API_KEY}`,
-        },
-      }
-    )
-    return response.data
-  }
-
-  const getDataSources = async () => {
-    const carbonAccessToken = window.sessionStorage.getItem(
-      'carbon_access_token'
-    )
-    const response = await axios.post(
-      'https://api.carbon.ai/user_data_sources',
-      {
-        filters: {
-          source: 'GOOGLE_DRIVE',
-        },
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `token ${carbonAccessToken}`,
-        },
-      }
-    )
-    const filteredData = response.data.results.filter(
-      (res) => res.data_source_external_id === dataSourceExternalId.current
-    )
-    if (filteredData.length === 0) return
-    setDataSourceId(filteredData[0].id)
-    return filteredData
-  }
-
-  useEffect(() => {
-    const carbonAccessToken = window.sessionStorage.getItem(
-      'carbon_access_token'
-    )
-    if (carbonAccessToken) return
-    tokenFetcher()
-      .then((data) => {
-        window.sessionStorage.setItem('carbon_access_token', data.access_token)
-      })
-      .catch((err) => {})
-  }, [])
-
   return (
     <>
-      <CarbonConnect
-        orgName="Cognita"
-        brandIcon={Logo}
-        embeddingModel={EmbeddingGenerators.OPENAI_ADA_LARGE_1024}
-        tokenFetcher={tokenFetcher}
-        tags={{
-          tag1: 'cognita',
-          tag2: 'gdrive',
-        }}
-        maxFileSize={10000000}
-        enabledIntegrations={[
-          {
-            id: 'GOOGLE_DRIVE',
-            chunkSize: 1000,
-            overlapSize: 20,
-          },
-          {
-            id: 'NOTION',
-            chunkSize: 1500,
-            overlapSize: 20,
-            embeddingModel: 'OPENAI',
-          },
-          {
-            id: 'DROPBOX',
-            chunkSize: 1500,
-            overlapSize: 20,
-            embeddingModel: 'OPENAI',
-          },
-          {
-            id: 'ONEDRIVE',
-            chunkSize: 1500,
-            overlapSize: 20,
-            embeddingModel: 'OPENAI',
-          },
-          {
-            id: 'CONFLUENCE',
-            chunkSize: 1500,
-            overlapSize: 20,
-            embeddingModel: 'OPENAI',
-          },
-        ]}
-        onSuccess={(data) => {
-          if (data?.action === 'UPDATE') {
-            const externalId = data?.data?.data_source_external_id
-            dataSourceExternalId.current = externalId ?? ''
-            getDataSources()
-          }
-        }}
-        primaryBackgroundColor="#F2F2F2"
-        primaryTextColor="#555555"
-        secondaryBackgroundColor="#f2f2f2"
-        secondaryTextColor="#000000"
-        allowMultipleFiles={true}
-        open={isCarbonConnectOpen}
-        setOpen={setIsCarbonConnectOpen}
-        chunkSize={1500}
-        zIndex={1500}
-      ></CarbonConnect>
+      <Button
+          icon={'plus'}
+          iconClasses="text-gray-400"
+          text={'New Data Source'}
+          className="btn-sm text-sm bg-black text-white hover:bg-gray-700"
+          onClick={() => setIsNewDataSourceDrawerOpen(true)}
+        />
       <CustomDrawer
         anchor={'right'}
-        open={open}
+        open={isNewDataSourceDrawerOpen }
         onClose={() => {
           onClose()
+          setIsNewDataSourceDrawerOpen(false)
           resetForm()
         }}
         bodyClassName="z-2"
@@ -328,52 +219,45 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
           <div className="font-bold font-inter text-2xl py-2 border-b border-gray-200 px-4">
             Create New Data Source
           </div>
-          <div className="h-[calc(100vh-124px)] overflow-y-auto p-4">
-            <div className="bg-yellow-100 p-2 mb-2 text-xs rounded">
+          <div className="h-[calc(100vh-124px)] p-4">
+            <div className="bg-yellow-100 p-2 my-4 text-xs rounded">
               Documents that are uploaded will be accessible to the public.
               Please do not upload any confidential or sensitive data.
             </div>
-            <div className="mb-4 w-full"></div>
             <div>
               <div className="mb-2">
-                <label>
-                  <div className="label-text font-inter mb-1">
-                    Data Source Type
-                  </div>
-                  <Select
-                    id="data_sources"
-                    value={selectedDataSourceType}
-                    onChange={(e) => {
-                      setDataSourceUri('')
-                      setFiles([])
-                      setSelectedDataSourceType(e.target.value)
-                    }}
-                    placeholder="Select Data Source FQN"
-                    sx={{
-                      background: 'white',
-                      height: '42px',
-                      width: '100%',
-                      border: '1px solid #CEE0F8 !important',
-                      outline: 'none !important',
-                      '& fieldset': {
-                        border: 'none !important',
-                      },
-                    }}
-                  >
-                    {dataLoaders?.map((source: any) => (
-                      <MenuItem value={source.type} key={source.type}>
-                        <div className="capitalize flex items-center gap-1.5">
-                          {startCase(source.type)}
-                          {source.description && (
-                            <div className="text-sm text-gray-500">
-                              ({source.description})
-                            </div>
-                          )}
-                        </div>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </label>
+                <div className="label-text font-inter mb-1">
+                  Data Source Type
+                </div>
+                <div className='grid grid-cols-2 gap-2'>
+                  {dataLoaders?.map((source: any) => (
+                    <button
+                      key={source.type}
+                      className={classNames(
+                        'flex p-4 rounded-lg border border-gray-200 active:scale-95 transition-all',
+                        {
+                          'bg-gray-700 text-white': selectedDataSourceType === source.type,
+                          'hover:bg-gray-100': selectedDataSourceType !== source.type,
+                        }
+                      )}
+                      onClick={() => {
+                        setDataSourceUri('')
+                        setFiles([])
+                        setSelectedDataSourceType(source.type)
+                      }}
+                      type='button'
+                    >
+                      <div className="capitalize">
+                        <h5 className='text-lg font-semibold text-left'>{startCase(source.type)}</h5>
+                        {source.description && (
+                          <div className="text-sm text-gray-500">
+                            ({source.description})
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
               {selectedDataSourceType === 'localdir' ? (
                 <>
@@ -464,14 +348,6 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                     </div>
                   </label>
                 </>
-              ) : selectedDataSourceType === 'carbon' ? (
-                <div className="flex justify-center mt-4">
-                  <Button
-                    text="Connect Carbon"
-                    className="btn-sm text-base p-2 mx-auto"
-                    onClick={() => setIsCarbonConnectOpen(true)}
-                  />
-                </div>
               ) : (
                 <>
                   <label htmlFor="collection-name-input">
@@ -607,10 +483,7 @@ const NewDataSource = ({ open, onClose }: NewDataSourceProps) => {
                   (files.length === 0 ||
                     uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB ||
                     !uploadName ||
-                    !isValidUploadName)) ||
-                (selectedDataSourceType === 'carbon'
-                  ? !dataSourceId
-                  : selectedDataSourceType !== 'localdir' && !dataSourceUri)
+                    !isValidUploadName))
               }
             />
           </div>

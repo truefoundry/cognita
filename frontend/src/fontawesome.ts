@@ -25,6 +25,8 @@ import {
   faCircleInfo,
   faTriangleExclamation,
   faXmark,
+  faUpRightFromSquare,
+  faDownload,
 } from '@fortawesome/free-solid-svg-icons'
 
 const icons: any[] = [
@@ -41,6 +43,8 @@ const icons: any[] = [
   faSlack,
   faSpinner,
   faFile,
+  faUpRightFromSquare,
+  faDownload,
   faMessage,
   faTriangleExclamation,
   faDatabase,

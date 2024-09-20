@@ -181,7 +181,7 @@ export default function NavBar({ children }: any) {
             />
           </div>
           <Button
-            className="btn-xs text-sm h-7 bg-black"
+            className="btn-xs text-sm h-7 bg-black text-white hover:bg-gray-700"
             text="Tweet"
             icon="x-twitter"
             onClick={() => {

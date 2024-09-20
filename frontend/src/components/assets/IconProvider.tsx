@@ -25,8 +25,7 @@ const IconProvider = ({
   size = 0.75,
   className,
   onClick,
-  forwardedRef,
-}: IconProps) => {
+}: IconProps, forwardedRef) => {
   return EXT_ICONS_MAP[icon as string] ? (
     <img
       ref={forwardedRef}
@@ -36,7 +35,7 @@ const IconProvider = ({
     />
   ) : (
     <FontAwesomeIcon
-      forwardedRef={forwardedRef}
+      ref={forwardedRef}
       icon={icon as IconProp}
       style={{ color, fontSize: `${size}rem` }}
       className={classNames('text-xs', className)}
@@ -46,7 +45,5 @@ const IconProvider = ({
 }
 
 export default React.memo(
-  forwardRef<HTMLElement, IconProps>((props, ref) => (
-    <IconProvider {...props} forwardedRef={ref} />
-  ))
+  forwardRef<HTMLElement, IconProps>(IconProvider)
 )

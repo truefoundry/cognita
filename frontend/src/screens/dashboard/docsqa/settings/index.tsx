@@ -102,7 +102,7 @@ const DocsQASettings = () => {
           iconClasses="fa-xs text-slate-400"
           text={<span className="whitespace-nowrap">New Collection</span>}
           rounded
-          className="bg-black btn-sm flex-nowrap mb-4 px-5"
+          className="bg-black text-white hover:bg-gray-700 btn-sm flex-nowrap mb-4 px-5"
           onClick={() => setNewCollectionModalOpen(true)}
         />
       </div>
