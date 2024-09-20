@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:18.2.0 AS build-step
+FROM node:22 AS build-step
 WORKDIR /build
 COPY . .
 

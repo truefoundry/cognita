@@ -1,4 +1,6 @@
 import os
+import time
+from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional
 
 import requests
@@ -8,6 +10,8 @@ from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.settings import settings
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+
+MAX_SYNC_ATTEMPTS = 5
 
 
 class _FileStatistics(BaseModel):
@@ -21,14 +25,33 @@ class _File(BaseModel):
     name: str
     presigned_url: Optional[str] = None
     external_file_id: str
+    sync_status: str
     source: str
     source_created_at: str
-    file_statistics: _FileStatistics = Field(default_factory=_FileStatistics)
+    file_statistics: Optional[_FileStatistics] = Field(default_factory=_FileStatistics)
 
 
 class _UserFilesV2Response(BaseModel):
     results: List[_File]
     count: int
+
+
+class SyncStatus(str, Enum):
+    QUEUED = "QUEUED_FOR_SYNCING"
+    SYNCING = "SYNCING"
+    READY = "READY"
+    ERROR = "SYNC_ERROR"
+
+
+class _Connection(BaseModel):
+    id: int
+    data_source_external_id: str
+    data_source_type: str
+    sync_status: SyncStatus
+
+
+class _SyncStatusResponse(BaseModel):
+    results: List[_Connection]
 
 
 class _CarbonClient:
@@ -44,6 +67,27 @@ class _CarbonClient:
         response = requests.request(method, endpoint, headers=headers, **kwargs)
         response.raise_for_status()
         return response.json()
+
+    def check_sync_status(self, collection_id: str) -> bool:
+        response = self._request(
+            "POST",
+            "https://api.carbon.ai/user_data_sources",
+            json={"filters": {"ids": [collection_id]}},
+        )
+
+        data = _SyncStatusResponse.model_validate(response)
+
+        if len(data.results) != 1:
+            raise Exception(f"Data source {collection_id} not found")
+
+        data = data.results[0]
+
+        if data.sync_status == SyncStatus.ERROR:
+            raise Exception(
+                f"Syncing failed for data source {data.data_source_external_id}"
+            )
+
+        return data.sync_status == SyncStatus.READY
 
     def query_user_files(
         self,
@@ -109,11 +153,25 @@ class CarbonDataLoader(BaseDataLoader):
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
     ) -> Iterator[List[LoadedDataPoint]]:
-        carbon_customer_id, carbon_data_source_id = data_source.uri.split("/")
+        carbon_customer_id = data_source.metadata["customerId"]
+        carbon_data_source_id = data_source.metadata["internalId"]
         carbon = _CarbonClient(
             api_key=settings.CARBON_AI_API_KEY,
             customer_id=carbon_customer_id,
         )
+
+        attempts = 0
+
+        while not carbon.check_sync_status(collection_id=carbon_data_source_id):
+            if attempts >= MAX_SYNC_ATTEMPTS:
+                raise Exception(
+                    f"Data source {carbon_data_source_id} is not ready after {MAX_SYNC_ATTEMPTS} attempts, please check for partially failed files or wait and try again."
+                )
+            logger.info(
+                f"Data source {carbon_data_source_id} is not ready yet. Retrying in 5 seconds"
+            )
+            time.sleep(5)
+            attempts += 1
 
         user_files = carbon.query_user_files(
             pagination={
@@ -134,8 +192,30 @@ class CarbonDataLoader(BaseDataLoader):
             url = file.presigned_url
             filename = file.name
             file_id = file.external_file_id
+            if file.file_statistics is None:
+                logger.warning(f"File statistics missing for file {file_id}")
+                continue
+            mime_type = file.file_statistics.mime_type
+            file_format = file.file_statistics.file_format
+
+            # Convert CONFLUENCE file format to HTML or NOTION file format to JSON
+            match file_format:
+                case "CONFLUENCE":
+                    filename += ".html"
+                    file_format = "HTML"
+                    mime_type = "text/html"
+
+                case "NOTION":
+                    filename += ".json"
+                    file_format = "JSON"
+                    mime_type = "application/json"
+
             _, file_extension = os.path.splitext(filename)
-            local_filepath = os.path.join(dest_dir, f"{file_id}-{filename}")
+
+            # Replace spaces and slashes in the filename
+            escaped_filename = filename.replace(" ", "_").replace("/", "-")
+            local_filepath = os.path.join(dest_dir, f"{file_id}-{escaped_filename}")
+
             logger.info(
                 f"Downloading file {filename} from {file.source} data source type to {local_filepath}"
             )
@@ -174,10 +254,11 @@ class CarbonDataLoader(BaseDataLoader):
                         "data_source_type": file.source,
                         "id": file.id,
                         "external_file_id": file.external_file_id,
-                        "filename": filename,
-                        "file_format": file.file_statistics.file_format,
-                        "mime_type": file.file_statistics.mime_type,
+                        "file_name": escaped_filename,
+                        "file_format": file_format,
+                        "mime_type": mime_type,
                         "created_at": file.source_created_at,
+                        "file_url": f"CARBON::{file.id}",
                     },
                 )
             )

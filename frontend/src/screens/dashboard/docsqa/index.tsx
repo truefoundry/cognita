@@ -22,6 +22,7 @@ import Modal from '@/components/base/atoms/Modal'
 import notify from '@/components/base/molecules/Notify'
 import { SSE } from 'sse.js'
 import { LightTooltip } from '@/components/base/atoms/Tooltip'
+import SourceDocsPreview from './DocsQA/SourceDocsPreview'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -45,33 +46,6 @@ interface SelectedRetrieverType {
   summary: string
   config: any
 }
-
-const ExpandableText = ({
-  text,
-  maxLength,
-}: {
-  text: string
-  maxLength: number
-}) => {
-  const [showAll, setShowAll] = useState(false)
-  const displayText = showAll ? text : text.slice(0, maxLength)
-
-  return (
-    <p className="whitespace-pre-line inline">
-      "{displayText}
-      {displayText.length < text.length && !showAll && '...'}"
-      {text.length > maxLength && (
-        <span
-          onClick={() => setShowAll((prev) => !prev)}
-          className="text-blue-600 focus:outline-none ml-3 cursor-pointer"
-        >
-          {showAll ? 'Show less' : 'Show more'}
-        </span>
-      )}
-    </p>
-  )
-}
-
 const DocsQA = () => {
   const [selectedQueryModel, setSelectedQueryModel] = React.useState('')
   const [selectedCollection, setSelectedCollection] = useState('')
@@ -564,7 +538,7 @@ const DocsQA = () => {
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm absolute right-2 top-[0.375rem]"
+                    className="btn-sm btn-primary text-white absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
@@ -583,38 +557,9 @@ const DocsQA = () => {
                     </div>
                   </div>
                   {sourceDocs && (
-                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
-                      <div className="font-semibold mb-3.5">
-                        Source Documents:
-                      </div>
-                      {sourceDocs?.map((doc, index) => {
-                        const splittedFqn =
-                          doc?.metadata?._data_point_fqn.split('::')
-                        const pageNumber =
-                          doc?.metadata?.page_number || doc?.metadata?.page_num
-                        const relevanceScore = doc?.metadata?.relevance_score
-                        return (
-                          <div key={index} className="mb-3">
-                            <div className="text-sm">
-                              {index + 1}.{' '}
-                              <ExpandableText
-                                text={doc.page_content}
-                                maxLength={250}
-                              />
-                            </div>
-                            {relevanceScore && (
-                              <div className="text-sm text-indigo-600 mt-1">
-                                Relevance Score: {relevanceScore}
-                              </div>
-                            )}
-                            <div className="text-sm text-indigo-600 mt-1">
-                              Source: {splittedFqn?.[splittedFqn.length - 1]}
-                              {pageNumber && `, Page No.: ${pageNumber}`}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                    <SourceDocsPreview
+                      sourceDocs={sourceDocs}
+                    /> 
                   )}
                 </div>
               ) : isRunningPrompt ? (

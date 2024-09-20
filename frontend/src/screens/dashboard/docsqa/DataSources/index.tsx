@@ -6,7 +6,7 @@ import {
 } from '@/stores/qafoundry'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import React, { useMemo } from 'react'
-import NewDataSource from '../NewDataSource'
+import NewDataSource from './NewDataSource'
 import CopyField from '@/components/base/atoms/CopyField'
 import { IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
 import notify from '@/components/base/molecules/Notify'
@@ -41,8 +41,6 @@ const DeleteDataSource = ({ fqn }: { fqn: string }) => {
 }
 
 const DataHub = () => {
-  const [isNewDataSourceDrawerOpen, setIsNewDataSourceDrawerOpen] =
-    React.useState(false)
   const { data: dataSources, isLoading, refetch } = useGetDataSourcesQuery()
 
   const columns: GridColDef[] = [
@@ -103,28 +101,17 @@ const DataHub = () => {
   return (
     <>
       <div className="h-full">
-        <div className="w-full flex justify-end items-center mb-4">
-          <Button
-            icon={'plus'}
-            iconClasses="text-gray-400"
-            text={'New Data Source'}
-            className="btn-sm text-sm bg-black"
-            onClick={() => setIsNewDataSourceDrawerOpen(true)}
+        <div className="w-full flex justify-end items-center gap-4 mb-4">
+          <NewDataSource
+            onClose={() => {
+              refetch()
+            }}
           />
         </div>
         <div className="h-[calc(100%-50px)] overflow-auto bg-white">
           <Table rows={rows} columns={columns} isLoading={isLoading} />
         </div>
       </div>
-      {isNewDataSourceDrawerOpen && (
-        <NewDataSource
-          open={isNewDataSourceDrawerOpen}
-          onClose={() => {
-            refetch()
-            setIsNewDataSourceDrawerOpen(false)
-          }}
-        />
-      )}
     </>
   )
 }

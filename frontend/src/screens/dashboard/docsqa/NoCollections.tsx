@@ -22,7 +22,7 @@ const NoCollections = ({ fullWidth }: { fullWidth?: boolean }) => {
               <br /> and start a chat
             </p>
             <Button
-              className="btn-sm text-sm mt-4 bg-black"
+              className="btn-sm text-sm mt-4 bg-black text-white hover:bg-gray-700"
               text={'New Collection'}
               icon={'plus'}
               iconClasses="text-gray-400"
