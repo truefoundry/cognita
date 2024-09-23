@@ -128,6 +128,11 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
     setIsSaving(false)
   }
 
+  const close = () => {
+    setIsNewDataSourceDrawerOpen(false)
+    onClose()
+  }
+
   const handleSubmit = async () => {
     setIsSaving(true)
     try {
@@ -167,7 +172,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
         fqn = res.data_source?.fqn
       }
 
-      onClose()
+      close()
       resetForm()
       notify(
         'success',
@@ -200,8 +205,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
         anchor={'right'}
         open={isNewDataSourceDrawerOpen }
         onClose={() => {
-          onClose()
-          setIsNewDataSourceDrawerOpen(false)
+          close()
           resetForm()
         }}
         bodyClassName="z-2"
@@ -463,7 +467,6 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
           </div>
           <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
             <Button
-              outline
               text="Cancel"
               onClick={() => {
                 onClose()
@@ -475,7 +478,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
             <Button
               text="Submit"
               onClick={handleSubmit}
-              className="gap-1 btn-sm font-normal"
+              className="gap-1 btn-sm font-normal btn-neutral"
               type="button"
               disabled={
                 isSaving ||

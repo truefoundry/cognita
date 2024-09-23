@@ -136,7 +136,7 @@ const DocsQAChatbot = () => {
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm absolute right-2 top-[0.375rem]"
+                    className="btn-sm absolute right-2 top-[0.375rem] btn-neutral"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt}

@@ -343,20 +343,23 @@ const DocsQA = () => {
             </div>
             <div className="flex justify-end w-full mt-4 gap-2">
               <Button
-                text="Create"
-                className="btn-sm"
-                loading={isCreateApplicationLoading}
-                onClick={createChatApplication}
-              />
-              <Button
+                outline
                 text="Cancel"
-                className="btn-sm bg-red-600 hover:bg-red-700 border-0"
+                className="btn-sm btn-error"
                 onClick={() => {
                   setApplicationName('')
                   setQuestions([])
                   setIsCreateApplicationModalOpen(false)
                 }}
               />
+              <Button
+                outline
+                text="Create"
+                className="btn-sm btn-primary"
+                loading={isCreateApplicationLoading}
+                onClick={createChatApplication}
+              />
+
             </div>
           </div>
         </Modal>
@@ -538,7 +541,7 @@ const DocsQA = () => {
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm btn-primary text-white absolute right-2 top-[0.375rem]"
+                    className="btn-sm btn-neutral absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}

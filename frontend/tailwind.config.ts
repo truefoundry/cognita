@@ -194,6 +194,7 @@ const config = {
         foundry: {
           ...daisyuiThemes['[data-theme=light]'],
           primary: '#5429FF',
+          neutral: '#000000'
         },
       },
     ],
