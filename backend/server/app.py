@@ -1,3 +1,4 @@
+import asyncio
 import multiprocessing as mp
 from contextlib import asynccontextmanager
 
@@ -5,6 +6,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from backend.logger import logger
 from backend.modules.query_controllers.query_controller import QUERY_CONTROLLER_REGISTRY
 from backend.server.routers.collection import router as collection_router
 from backend.server.routers.components import router as components_router
@@ -24,8 +26,29 @@ async def _process_pool_lifespan_manager(app: FastAPI):
             # Setting to spawn because we don't want to fork - it can cause issues with the event loop
             mp_context=mp.get_context("spawn"),
         )
+
+        async def check_pool_health():
+            while True:
+                try:
+                    # Submit a simple task to check if the pool is responsive
+                    app.state.process_pool.submit(asyncio.sleep, 0)
+                except Exception as e:
+                    logger.error(f"Process pool health check failed: {e}")
+                    await restart_pool()
+                await asyncio.sleep(5)  # Check every 5 seconds
+
+        async def restart_pool():
+            logger.info("Restarting the process pool")
+            app.state.process_pool.shutdown(wait=True)
+            app.state.process_pool = AsyncProcessPoolExecutor(
+                max_workers=settings.PROCESS_POOL_WORKERS
+            )
+
+        health_check_task = asyncio.create_task(check_pool_health())
     yield  # FastAPI runs here
     if app.state.process_pool is not None:
+        health_check_task.cancel()
+        logger.info("Shutting down the process pool")
         app.state.process_pool.shutdown(wait=True)
 
 
