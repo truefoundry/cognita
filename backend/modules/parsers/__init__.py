@@ -1,4 +1,5 @@
 from backend.modules.parsers.audioparser import AudioParser
+from backend.modules.parsers.llamaindexparser import LlamaIndexParser
 from backend.modules.parsers.multimodalparser import MultiModalParser
 from backend.modules.parsers.parser import register_parser
 from backend.modules.parsers.unstructured_io import UnstructuredIoParser
@@ -9,3 +10,4 @@ register_parser("UnstructuredIoParser", UnstructuredIoParser)
 register_parser("MultiModalParser", MultiModalParser)
 register_parser("AudioParser", AudioParser)
 register_parser("VideoParser", VideoParser)
+register_parser("LlamaIndexParser", LlamaIndexParser)

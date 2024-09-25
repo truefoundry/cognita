@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.11
+FROM --platform=$BUILDPLATFORM python:3.11
 
 # Required for opencv
 RUN apt-get update -y && \

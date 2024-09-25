@@ -1,11 +1,13 @@
 import os
-from typing import List
+from typing import List, Union
 
 import yaml
 from langchain.embeddings.base import Embeddings
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
+from llama_index.core.llms.llm import LLM
+from llama_index.llms.openllm import OpenLLM
 
 from backend.logger import logger
 from backend.modules.model_gateway.audio_processing_svc import AudioProcessingSvc
@@ -131,8 +133,8 @@ class ModelGateway:
         )
 
     def get_llm_from_model_config(
-        self, model_config: ModelConfig, stream=False
-    ) -> BaseChatModel:
+        self, model_config: ModelConfig, stream=False, library="langchain"
+    ) -> Union[BaseChatModel | LLM]:
         if model_config.name not in self.model_name_to_provider_config:
             raise ValueError(
                 f"Model {model_config.name} not registered in the model gateway."
@@ -147,15 +149,28 @@ class ModelGateway:
         else:
             api_key = os.environ.get(model_provider_config.api_key_env_var, "")
         model_id = "/".join(model_config.name.split("/")[1:])
-        return ChatOpenAI(
-            model=model_id,
-            temperature=model_config.parameters.get("temperature", 0.1),
-            max_tokens=model_config.parameters.get("max_tokens", 1024),
-            streaming=stream,
-            api_key=api_key,
-            base_url=model_provider_config.base_url,
-            default_headers=model_provider_config.default_headers,
-        )
+
+        if library == "llama-index":
+            return OpenLLM(
+                model=model_id,
+                api_base=model_provider_config.base_url,
+                api_key=api_key,
+                temperature=model_config.parameters.get("temperature", 0.1),
+                max_tokens=model_config.parameters.get("max_tokens", 1024),
+                default_headers=model_provider_config.default_headers,
+                streaming=stream,
+                is_chat_model=True,
+            )
+        elif library == "langchain":
+            return ChatOpenAI(
+                model=model_id,
+                temperature=model_config.parameters.get("temperature", 0.1),
+                max_tokens=model_config.parameters.get("max_tokens", 1024),
+                streaming=stream,
+                api_key=api_key,
+                base_url=model_provider_config.base_url,
+                default_headers=model_provider_config.default_headers,
+            )
 
     def get_reranker_from_model_config(self, model_name: str, top_k: int = 3):
         if model_name not in self.model_name_to_provider_config:
