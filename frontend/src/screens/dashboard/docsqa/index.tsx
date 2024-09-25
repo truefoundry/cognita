@@ -343,9 +343,8 @@ const DocsQA = () => {
             </div>
             <div className="flex justify-end w-full mt-4 gap-2">
               <Button
-                outline
                 text="Cancel"
-                className="btn-sm btn-error"
+                className="btn-sm"
                 onClick={() => {
                   setApplicationName('')
                   setQuestions([])
@@ -353,9 +352,8 @@ const DocsQA = () => {
                 }}
               />
               <Button
-                outline
                 text="Create"
-                className="btn-sm btn-primary"
+                className="btn-sm btn-neutral"
                 loading={isCreateApplicationLoading}
                 onClick={createChatApplication}
               />

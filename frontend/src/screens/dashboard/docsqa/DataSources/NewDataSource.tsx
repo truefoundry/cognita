@@ -124,7 +124,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
   const resetForm = () => {
     setFiles([])
     setDataSourceUri('')
-    setSelectedDataSourceType('none')
+    setSelectedDataSourceType(dataLoaders[0]?.type || 'none')
     setIsSaving(false)
   }
 
