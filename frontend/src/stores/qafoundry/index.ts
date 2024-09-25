@@ -108,6 +108,7 @@ export interface SourceDocs {
     page_num?: number
     page_number?: number
     relevance_score?: number
+    file_format?: string
     type: string
     _id: string
     _collection_name: string
@@ -119,6 +120,8 @@ interface QueryAnswer {
   answer: string
   docs: SourceDocs[]
 }
+
+export const customerId = 'cognita'
 
 export const baseQAFoundryPath = import.meta.env.VITE_QA_FOUNDRY_URL
 

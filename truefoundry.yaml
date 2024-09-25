@@ -14,7 +14,6 @@ components:
       INFINITY_API_KEY: tfy-secret://internal:cognita:INFINITY_API_KEY
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
       UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
-      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
     type: job
     image:
       type: build
@@ -75,7 +74,6 @@ components:
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
       UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
       BRAVE_API_KEY: tfy-secret://internal:cognita:BRAVE_API_KEY
-      CARBON_AI_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
     type: service
     image:
       type: build
@@ -181,7 +179,6 @@ components:
           VITE_DOCS_QA_STANDALONE_PATH: /
           VITE_DOCS_QA_ENABLE_STANDALONE: "true"
           VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: 200
-          VITE_CARBON_API_KEY: tfy-secret://internal:cognita:CARBON_AI_API_KEY
         dockerfile_path: ./frontend/Dockerfile
         build_context_path: ./frontend
       build_source:

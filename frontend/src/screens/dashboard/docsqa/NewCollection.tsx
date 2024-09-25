@@ -290,7 +290,6 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         </div>
         <div className="flex justify-end items-center gap-2 h-[58px] border-t border-gray-200 px-4">
           <Button
-            outline
             text="Cancel"
             onClick={() => {
               onClose()
@@ -302,7 +301,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
           <Button
             text="Process"
             onClick={handleSubmit}
-            className="gap-1 btn-sm font-normal"
+            className="gap-1 btn-sm font-normal btn-neutral"
             type="button"
             disabled={
               !collectionName ||

@@ -3,10 +3,10 @@ import duration from 'dayjs/esm/plugin/duration'
 import LocalizedFormat from 'dayjs/esm/plugin/localizedFormat'
 import relativeTime from 'dayjs/esm/plugin/relativeTime'
 import React, { lazy, Suspense } from 'react'
-import ReactDOM from 'react-dom'
 import { ErrorBoundary } from 'react-error-boundary'
 import { HelmetProvider } from 'react-helmet-async'
 import { Provider } from 'react-redux'
+import { createRoot } from 'react-dom/client';
 
 import App from './App'
 import './index.scss'
@@ -35,7 +35,11 @@ const renderFallback = () => (
   </Suspense>
 )
 
-ReactDOM.render(
+
+const container = document.getElementById('app')!;
+const root = createRoot(container);
+
+root.render(
   <React.StrictMode>
     <ErrorBoundary fallback={renderFallback()}>
       <HelmetProvider context={helmetContext}>
@@ -45,7 +49,6 @@ ReactDOM.render(
       </HelmetProvider>
     </ErrorBoundary>
   </React.StrictMode>,
-  document.getElementById('app')
 )
 
 // If you want to start measuring performance in your app, pass a function

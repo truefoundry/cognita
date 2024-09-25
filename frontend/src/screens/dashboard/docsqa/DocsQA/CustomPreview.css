@@ -1,0 +1,7 @@
+#react-doc-viewer #proxy-renderer {
+  flex-grow: 1;
+}
+
+#react-doc-viewer #proxy-renderer > div {
+  height: 100%;
+}
