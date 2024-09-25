@@ -197,6 +197,7 @@ services:
       - TFY_API_KEY=${TFY_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
     entrypoint: /bin/bash
     command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
     networks:
@@ -213,6 +214,7 @@ services:
         - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
         - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
         - VITE_USE_LOCAL=${LOCAL}
+        - VITE_CARBON_API_KEY=${CARBON_AI_API_KEY}
     restart: unless-stopped
     container_name: cognita-frontend
     ports:

@@ -72,6 +72,7 @@
     "@sentry/tracing": "^7.103.0",
     "async-mutex": "^0.5.0",
     "axios": "^1.7.4",
+    "carbon-connect": "3.0.14",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.3.1",
     "clsx": "^2.1.1",

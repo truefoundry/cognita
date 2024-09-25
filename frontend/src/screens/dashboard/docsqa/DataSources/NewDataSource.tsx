@@ -23,6 +23,7 @@ import {
 import { getFilePath, getUniqueFiles } from '@/utils/artifacts'
 import classNames from '@/utils/classNames'
 import axios from 'axios'
+import CarbonIntegration from './CarbonIntegration'
 
 
 const parseFileSize = (size: number) => {
@@ -77,6 +78,16 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
       setSelectedDataSourceType(dataLoaders[0]?.type)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataLoaders])
+
+  const dataSources = useMemo(
+    () => dataLoaders?.filter((source) => !['carbon'].includes(source.type)),
+    [dataLoaders]
+  )
+
+  const isCarbonIntegrationEnabled = useMemo(
+    () => dataLoaders?.some((source) => source.type === 'carbon'),
+    [dataLoaders]
+  )
 
   const uploadDocs = async () => {
     try {
@@ -194,6 +205,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
 
   return (
     <>
+      {isCarbonIntegrationEnabled && <CarbonIntegration customerId={customerId} />}
       <Button
           icon={'plus'}
           iconClasses="text-gray-400"
@@ -234,7 +246,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
                   Data Source Type
                 </div>
                 <div className='grid grid-cols-2 gap-2'>
-                  {dataLoaders?.map((source: any) => (
+                  {dataSources?.map((source: any) => (
                     <button
                       key={source.type}
                       className={classNames(
@@ -486,7 +498,10 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
                   (files.length === 0 ||
                     uploadSizeMb > DOCS_QA_MAX_UPLOAD_SIZE_MB ||
                     !uploadName ||
-                    !isValidUploadName))
+                    !isValidUploadName)) ||
+                (selectedDataSourceType === 'carbon'
+                  ? !dataSourceId
+                  : selectedDataSourceType !== 'localdir' && !dataSourceUri)
               }
             />
           </div>

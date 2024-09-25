@@ -11,3 +11,7 @@ if settings.TFY_API_KEY:
     from backend.modules.dataloaders.truefoundryloader import TrueFoundryLoader
 
     register_dataloader("truefoundry", TrueFoundryLoader)
+if settings.CARBON_AI_API_KEY:
+    from backend.modules.dataloaders.carbondataloader import CarbonDataLoader
+
+    register_dataloader("carbon", CarbonDataLoader)

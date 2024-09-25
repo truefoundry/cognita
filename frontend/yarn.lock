@@ -2050,6 +2050,16 @@ canvas@^2.11.2:
     nan "^2.17.0"
     simple-get "^3.0.3"
 
+carbon-connect@3.0.14:
+  version "3.0.14"
+  resolved "https://registry.yarnpkg.com/carbon-connect/-/carbon-connect-3.0.14.tgz#a80e0b561415df13b49d12e7701c56f6630c222d"
+  integrity sha512-5k0ofCrloy6tlfkfbWaBPKZqRoz1qHsYRlpNng1cUtZsBHEI+qkR4kbzt9NRGOyUfDZrLzzLjMG2QhUXqmVGrQ==
+  dependencies:
+    date-fns "^3.6.0"
+    react-circular-progressbar "^2.1.0"
+    react-day-picker "^8.10.1"
+    tailwindcss-scoped-preflight "^3.4.3"
+
 ccount@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/ccount/-/ccount-2.0.1.tgz#17a3bf82302e0870d6da43a01311a8bc02a3ecf5"
@@ -2332,6 +2342,11 @@ data-view-byte-offset@^1.0.0:
     call-bind "^1.0.6"
     es-errors "^1.3.0"
     is-data-view "^1.0.1"
+
+date-fns@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.6.0.tgz#f20ca4fe94f8b754951b24240676e8618c0206bf"
+  integrity sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==
 
 dayjs@^1.11.0:
   version "1.11.13"
@@ -4643,6 +4658,16 @@ randombytes@^2.1.0:
   dependencies:
     safe-buffer "^5.1.0"
 
+react-circular-progressbar@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/react-circular-progressbar/-/react-circular-progressbar-2.1.0.tgz#99e5ae499c21de82223b498289e96f66adb8fa3a"
+  integrity sha512-xp4THTrod4aLpGy68FX/k1Q3nzrfHUjUe5v6FsdwXBl3YVMwgeXYQKDrku7n/D6qsJA9CuunarAboC2xCiKs1g==
+
+react-day-picker@^8.10.1:
+  version "8.10.1"
+  resolved "https://registry.yarnpkg.com/react-day-picker/-/react-day-picker-8.10.1.tgz#4762ec298865919b93ec09ba69621580835b8e80"
+  integrity sha512-TMx7fNbhLk15eqcMt+7Z7S2KF7mfTId/XJDjKE8f+IUcFn0l08/kI4FiYTL/0yuOLmEcbR4Fwe3GJf/NiiMnPA==
+
 react-dom@^18.3.1:
   version "18.3.1"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.3.1.tgz#c2265d79511b57d479b3dd3fdfa51536494c5cb4"
@@ -5402,6 +5427,11 @@ tailwind-merge@^2.3.0:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-2.5.2.tgz#000f05a703058f9f9f3829c644235f81d4c08a1f"
   integrity sha512-kjEBm+pvD+6eAwzJL2Bi+02/9LFLal1Gs61+QB7HvTfQQ0aXwC5LGT8PEt1gS0CWKktKe6ysPTAy3cBC5MeiIg==
+
+tailwindcss-scoped-preflight@^3.4.3:
+  version "3.4.4"
+  resolved "https://registry.yarnpkg.com/tailwindcss-scoped-preflight/-/tailwindcss-scoped-preflight-3.4.4.tgz#97ccba76c4ecbd369f98c64e49571bc58f96c825"
+  integrity sha512-mUT5S35ndFqRKjAQFYqfmldVkRQx1HtEB1NnHoPOdJerUqBx22pfVFdydPrfjPlDfuP5IwtkPEx5+MLNhI/2RA==
 
 tailwindcss@*, tailwindcss@3.4.12:
   version "3.4.12"

@@ -27,6 +27,7 @@ class Frontend:
                     dockerfile_path="./frontend/Dockerfile",
                     build_context_path="./frontend",
                     build_args={
+                        "VITE_CARBON_API_KEY": "tfy-secret://internal:cognita:CARBON_AI_API_KEY",
                         "VITE_QA_FOUNDRY_URL": f"https://{self.application_set_name}.{self.base_domain_url}/api",
                         "VITE_DOCS_QA_STANDALONE_PATH": "/",
                         "VITE_DOCS_QA_ENABLE_STANDALONE": "true",

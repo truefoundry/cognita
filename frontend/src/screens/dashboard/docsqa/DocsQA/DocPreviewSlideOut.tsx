@@ -6,7 +6,7 @@ import "./CustomPreview.css";
 import CustomDrawer from "@/components/base/atoms/CustomDrawer"
 import IconProvider from "@/components/assets/IconProvider";
 import type { PreviewResource } from "./types";
-import { getFileFromS3 } from "@/utils/file";
+import { getFileFromS3 } from "@/utils/carbon";
 
 type Props = {
   onClose: () => void
