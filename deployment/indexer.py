@@ -25,6 +25,7 @@ class Indexer:
         self.VECTOR_DB_CONFIG = VECTOR_DB_CONFIG
 
     def create_job(self):
+        INDEXER_COMMAND = """/bin/bash -c 'set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name "{{collection_name}}" --data_source_fqn "{{data_source_fqn}}" --data_ingestion_run_name "{{data_ingestion_run_name}}" --data_ingestion_mode "{{data_ingestion_mode}}" --raise_error_on_failure  "{{raise_error_on_failure}}"'"""
         return Job(
             name=INDEXER_SERVICE_NAME,
             image=Build(
@@ -32,7 +33,7 @@ class Indexer:
                 build_spec=DockerFileBuild(
                     dockerfile_path="./backend/Dockerfile",
                     build_context_path="./",
-                    command='/bin/bash -c "set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name {{collection_name}} --data_source_fqn {{data_source_fqn}} --data_ingestion_run_name {{data_ingestion_run_name}} --data_ingestion_mode {{data_ingestion_mode}} --raise_error_on_failure  {{raise_error_on_failure}}"',
+                    command=INDEXER_COMMAND,
                 ),
             ),
             trigger=Manual(type="manual"),
