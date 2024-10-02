@@ -166,7 +166,7 @@ async def ingest_data(
         process_pool = None
     try:
         return await ingest_data_to_collection(
-            ingest_data_to_collection_dto, process_pool
+            ingest_data_to_collection_dto, pool=process_pool
         )
     except HTTPException as exp:
         raise exp

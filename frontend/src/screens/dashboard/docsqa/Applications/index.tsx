@@ -126,13 +126,23 @@ const Applications = () => {
             <Spinner center medium />
           ) : (
             <>
-              <div className="mb-2">Config:</div>
+              <div className="mb-2 text-sm">Config:</div>
               <SimpleCodeEditor
                 language="json"
                 height={350}
                 value={JSON.stringify(applicationData?.config, null, 2)}
                 readOnly
               />
+              {!!applicationData?.questions?.length && (
+                <>
+                  <div className="mt-3 text-sm mb-1">Questions:</div>
+                  <ul className='list-disc ml-4'>
+                    {applicationData?.questions?.map((question: string, index: number) => (
+                      <li className='text-sm font-medium' key={index}>{question}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
               <div className="mt-4">
                 <div className="mb-1">
                   Use the below code to embed this application:

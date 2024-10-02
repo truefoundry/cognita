@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     MODELS_CONFIG_PATH: str
     METADATA_STORE_CONFIG: MetadataStoreConfig
+    ML_REPO_NAME: str = ""
     VECTOR_DB_CONFIG: VectorDBConfig
     LOCAL: bool = False
     TFY_HOST: str = ""
@@ -23,15 +24,13 @@ class Settings(BaseSettings):
     JOB_FQN: str = ""
     LOG_LEVEL: str = "info"
     TFY_SERVICE_ROOT_PATH: str = ""
-
     BRAVE_API_KEY: str = ""
-
-    CARBON_AI_API_KEY: str = ""
-
     UNSTRUCTURED_IO_URL: str = ""
-
     UNSTRUCTURED_IO_API_KEY: str = ""
     PROCESS_POOL_WORKERS: int = 1
+    LOCAL_DATA_DIRECTORY: str = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
+    )
 
     @model_validator(mode="before")
     @classmethod

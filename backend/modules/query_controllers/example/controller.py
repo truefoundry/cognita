@@ -32,7 +32,6 @@ class BasicRAGQueryController(BaseQueryController):
         """
         Sample answer method to answer the question using the context from the collection
         """
-        logger.info(f"Request: {request.dict()}")
         try:
             # Get the vector store
             vector_store = await self._get_vector_store(request.collection_name)

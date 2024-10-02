@@ -8,10 +8,10 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_openai.chat_models import ChatOpenAI
 
 from backend.logger import logger
+from backend.modules.model_gateway.audio_processing_svc import AudioProcessingSvc
+from backend.modules.model_gateway.reranker_svc import InfinityRerankerSvc
 from backend.settings import settings
 from backend.types import ModelConfig, ModelProviderConfig, ModelType
-
-from .reranker_svc import InfinityRerankerSvc
 
 
 class ModelGateway:
@@ -37,6 +37,9 @@ class ModelGateway:
 
         # load reranker models
         self.reranker_models: List[ModelConfig] = []
+
+        # load audio processing models
+        self.audio_models: List[ModelConfig] = []
 
         for provider_config in self.provider_configs:
             if provider_config.api_key_env_var and not os.environ.get(
@@ -83,6 +86,18 @@ class ModelGateway:
                     )
                 )
 
+            for model_id in provider_config.audio_model_ids:
+                model_name = f"{provider_config.provider_name}/{model_id}"
+                self.model_name_to_provider_config[model_name] = provider_config
+
+                # Register the model as an audio model
+                self.audio_models.append(
+                    ModelConfig(
+                        name=f"{provider_config.provider_name}/{model_id}",
+                        type=ModelType.audio,
+                    )
+                )
+
     def get_embedding_models(self) -> List[ModelConfig]:
         return self.embedding_models
 
@@ -91,6 +106,9 @@ class ModelGateway:
 
     def get_reranker_models(self) -> List[ModelConfig]:
         return self.reranker_models
+
+    def get_audio_models(self) -> List[ModelConfig]:
+        return self.audio_models
 
     def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
         if model_name not in self.model_name_to_provider_config:
@@ -157,6 +175,23 @@ class ModelGateway:
             api_key=api_key,
             base_url=model_provider_config.base_url,
             top_k=top_k,
+        )
+
+    def get_audio_model_from_model_config(self, model_name: str):
+        if model_name not in self.model_name_to_provider_config:
+            raise ValueError(f"Model {model_name} not registered in the model gateway.")
+        model_provider_config: ModelProviderConfig = self.model_name_to_provider_config[
+            model_name
+        ]
+        if not model_provider_config.api_key_env_var:
+            api_key = "EMPTY"
+        else:
+            api_key = os.environ.get(model_provider_config.api_key_env_var, "")
+        _, model = model_name.split("/", 1)
+        return AudioProcessingSvc(
+            api_key=api_key,
+            base_url=model_provider_config.base_url,
+            model=model,
         )
 
 

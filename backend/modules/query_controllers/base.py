@@ -204,8 +204,8 @@ class BaseQueryController:
         return ""
 
     def _internet_search(self, context):
-        logger.info("Using Internet search...")
         if settings.BRAVE_API_KEY:
+            logger.info("Using Internet search...")
             data_context, question = context["context"], context["question"]
             intent_summary_results = self._intent_summary_search(question)
             # insert internet search results into context at the beginning

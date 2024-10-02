@@ -129,12 +129,32 @@ services:
     networks:
       - cognita-docker
 
+  # https://github.com/fedirz/faster-whisper-server/tree/master
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    pull_policy: if_not_present
+    container_name: faster-whisper
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL}
+      - WHISPER__INFERENCE_DEVICE=auto
+    ports:
+      - ${WHISPER_PORT}:8000
+    volumes:
+      - ./volumes/hugging_face_cache:/root/.cache/huggingface
+    networks:
+      - cognita-docker
+
   cognita-backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-      args:
-        - ADD_PRISMA=1
     restart: unless-stopped
     container_name: cognita-backend
     ports:
@@ -164,18 +184,19 @@ services:
       - LOCAL=${LOCAL}
       - PROCESS_POOL_WORKERS=${PROCESS_POOL_WORKERS}
       - LOG_LEVEL=DEBUG
+      - ML_REPO_NAME=${ML_REPO_NAME}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@cognita-db:5432/cognita-config
       - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
       - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
       - LOCAL_DATA_DIRECTORY=/app/user_data
       - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+      - UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
       - INFINITY_API_KEY=${INFINITY_API_KEY}
       - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
       - TFY_HOST=${TFY_HOST}
       - TFY_API_KEY=${TFY_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BRAVE_API_KEY=${BRAVE_API_KEY}
-      - CARBON_AI_API_KEY=${CARBON_AI_API_KEY}
     entrypoint: /bin/bash
     command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
     networks:
@@ -192,7 +213,6 @@ services:
         - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
         - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
         - VITE_USE_LOCAL=${LOCAL}
-        - VITE_CARBON_API_KEY=${CARBON_AI_API_KEY}
     restart: unless-stopped
     container_name: cognita-frontend
     ports:

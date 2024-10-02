@@ -21,6 +21,8 @@ import DocsQaInformation from './DocsQaInformation'
 import Modal from '@/components/base/atoms/Modal'
 import notify from '@/components/base/molecules/Notify'
 import { SSE } from 'sse.js'
+import { LightTooltip } from '@/components/base/atoms/Tooltip'
+import SourceDocsPreview from './DocsQA/SourceDocsPreview'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -44,33 +46,6 @@ interface SelectedRetrieverType {
   summary: string
   config: any
 }
-
-const ExpandableText = ({
-  text,
-  maxLength,
-}: {
-  text: string
-  maxLength: number
-}) => {
-  const [showAll, setShowAll] = useState(false)
-  const displayText = showAll ? text : text.slice(0, maxLength)
-
-  return (
-    <p className="whitespace-pre-line inline">
-      "{displayText}
-      {displayText.length < text.length && !showAll && '...'}"
-      {text.length > maxLength && (
-        <span
-          onClick={() => setShowAll((prev) => !prev)}
-          className="text-blue-600 focus:outline-none ml-3 cursor-pointer"
-        >
-          {showAll ? 'Show less' : 'Show more'}
-        </span>
-      )}
-    </p>
-  )
-}
-
 const DocsQA = () => {
   const [selectedQueryModel, setSelectedQueryModel] = React.useState('')
   const [selectedCollection, setSelectedCollection] = useState('')
@@ -91,6 +66,7 @@ const DocsQA = () => {
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
   const [applicationName, setApplicationName] = useState('')
+  const [questions, setQuestions] = useState<string[]>([])
 
   const pattern = /^[a-z][a-z0-9-]*$/
   const isValidApplicationName = pattern.test(applicationName)
@@ -216,6 +192,9 @@ const DocsQA = () => {
   }
 
   const createChatApplication = async () => {
+    if (!applicationName) {
+      return notify('error', 'Application name is required')
+    }
     const selectedModel = allEnabledModels.find(
       (model: any) => model.name == selectedQueryModel
     )
@@ -235,6 +214,7 @@ const DocsQA = () => {
           prompt_template: promptTemplate,
           query_controller: selectedQueryController,
         },
+        questions,
       }).unwrap()
       setApplicationName('')
       setIsCreateApplicationModalOpen(false)
@@ -286,7 +266,11 @@ const DocsQA = () => {
       {isCreateApplicationModalOpen && (
         <Modal
           open={isCreateApplicationModalOpen}
-          onClose={() => setIsCreateApplicationModalOpen(false)}
+          onClose={() => {
+            setApplicationName('')
+            setQuestions([])
+            setIsCreateApplicationModalOpen(false)
+          }}
         >
           <div className="modal-box">
             <div className="text-center font-medium text-xl mb-2">
@@ -315,19 +299,65 @@ const DocsQA = () => {
               ) : (
                 <></>
               )}
+              <div className='mt-2 text-sm'>Questions (Optional)</div>
+              {questions.map((question, index) => (
+                <div className='flex items-center gap-2 mt-2 w-full'>
+                  <div className='flex-1'>
+                    <Input
+                      key={index}
+                      value={question}
+                      onChange={(e) => {
+                        const updatedQuestions = [...questions]
+                        updatedQuestions[index] = e.target.value
+                        setQuestions(updatedQuestions)
+                      }}
+                      className="py-1 input-sm w-full"
+                      placeholder={`Question ${index + 1}`}
+                      maxLength={100}
+                    />
+                  </div>
+                  <Button
+                    icon='trash-alt'
+                    className='btn-sm hover:bg-red-600 hover:border-white hover:text-white'
+                    onClick={() => {
+                      setQuestions(questions.filter((_, i) => i !== index))
+                    }}
+                  />
+                </div>
+              ))}
+              <LightTooltip title={questions.length === 4 ? 'Maximum 4 questions are allowed' : ''} size="fit">
+                <div className='w-fit'>
+                  <Button
+                    text='Add Question'
+                    white
+                    disabled={questions.length == 4}
+                    className='text-sm font-medium text-gray-1000 hover:bg-white mt-2'
+                    onClick={() => {
+                      if (questions.length < 4) {
+                        setQuestions([...questions, ''])
+                      }
+                    }}
+                  />
+                </div>
+              </LightTooltip>
             </div>
             <div className="flex justify-end w-full mt-4 gap-2">
               <Button
-                text="Create"
+                text="Cancel"
                 className="btn-sm"
+                onClick={() => {
+                  setApplicationName('')
+                  setQuestions([])
+                  setIsCreateApplicationModalOpen(false)
+                }}
+              />
+              <Button
+                text="Create"
+                className="btn-sm btn-neutral"
                 loading={isCreateApplicationLoading}
                 onClick={createChatApplication}
               />
-              <Button
-                text="Cancel"
-                className="btn-sm bg-red-600 hover:bg-red-700 border-0"
-                onClick={() => setIsCreateApplicationModalOpen(false)}
-              />
+
             </div>
           </div>
         </Modal>
@@ -509,7 +539,7 @@ const DocsQA = () => {
                   />
                   <Button
                     icon="paper-plane-top"
-                    className="btn-sm absolute right-2 top-[0.375rem]"
+                    className="btn-sm btn-neutral absolute right-2 top-[0.375rem]"
                     onClick={handlePromptSubmit}
                     loading={isRunningPrompt}
                     disabled={!prompt || !selectedQueryModel}
@@ -528,38 +558,9 @@ const DocsQA = () => {
                     </div>
                   </div>
                   {sourceDocs && (
-                    <div className="bg-gray-100 rounded-md w-full p-4 py-3 h-full overflow-y-auto border border-blue-500">
-                      <div className="font-semibold mb-3.5">
-                        Source Documents:
-                      </div>
-                      {sourceDocs?.map((doc, index) => {
-                        const splittedFqn =
-                          doc?.metadata?._data_point_fqn.split('::')
-                        const pageNumber =
-                          doc?.metadata?.page_number || doc?.metadata?.page_num
-                        const relevanceScore = doc?.metadata?.relevance_score
-                        return (
-                          <div key={index} className="mb-3">
-                            <div className="text-sm">
-                              {index + 1}.{' '}
-                              <ExpandableText
-                                text={doc.page_content}
-                                maxLength={250}
-                              />
-                            </div>
-                            {relevanceScore && (
-                              <div className="text-sm text-indigo-600 mt-1">
-                                Relevance Score: {relevanceScore}
-                              </div>
-                            )}
-                            <div className="text-sm text-indigo-600 mt-1">
-                              Source: {splittedFqn?.[splittedFqn.length - 1]}
-                              {pageNumber && `, Page No.: ${pageNumber}`}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                    <SourceDocsPreview
+                      sourceDocs={sourceDocs}
+                    /> 
                   )}
                 </div>
               ) : isRunningPrompt ? (
