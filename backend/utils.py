@@ -5,12 +5,15 @@ from contextvars import copy_context
 from functools import partial
 from typing import Callable, Optional, TypeVar, cast
 
+from truefoundry.ml import get_client as get_tfy_client
 from typing_extensions import ParamSpec
 
 from backend.logger import logger
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+TRUEFOUNDRY_CLIENT = get_tfy_client()
 
 
 def flatten(dct, sub_dct_key_name, prefix=None):
