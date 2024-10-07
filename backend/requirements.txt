@@ -1,5 +1,5 @@
 GitPython==3.1.43
-langchain==0.1.9
+langchain==0.2.10
 langchain-community==0.0.24
 langchain-openai==0.1.7
 langchain-core==0.1.46
