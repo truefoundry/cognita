@@ -69,9 +69,7 @@ class WeaviateVectorDB(BaseVectorDB):
         logger.debug(
             f"[Weaviate] Incremental Ingestion: collection={collection_name} Addition={len(data_point_fqns)}, Updates={len(record_ids_to_be_updated)}"
         )
-        return record_ids_to_be_updated
-            
-            
+        return record_ids_to_be_updated          
 
     def upsert_documents(
         self,
@@ -150,20 +148,6 @@ class WeaviateVectorDB(BaseVectorDB):
             by_text=False,
             attributes=[f"{DATA_POINT_FQN_METADATA_KEY}"],
         )
-
-    def list_documents_in_collection(
-        self, collection_name: str, base_document_id: str = None
-    ) -> List[str]:
-        """
-        List all documents in a collection
-        """
-        pass
-
-    def delete_documents(self, collection_name: str, document_ids: List[str]):
-        """
-        Delete documents from the collection that match given `document_id_match`
-        """
-        pass
 
     def get_vector_client(self):
         return self.weaviate_client
