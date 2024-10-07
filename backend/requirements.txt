@@ -14,7 +14,7 @@ pydantic-settings==2.3.3
 orjson==3.9.15
 PyMuPDF==1.23.6
 beautifulsoup4==4.12.2
-truefoundry[ml]==0.3.1
+truefoundry==0.4.1
 markdownify==0.11.6
 gunicorn==22.0.0
 markdown-crawler==0.0.8
