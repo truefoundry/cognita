@@ -2,7 +2,7 @@ import asyncio
 import multiprocessing as mp
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -67,6 +67,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def catch_exceptions_middleware(_request: Request, exc: Exception):
+    logger.exception(exc)
+    return JSONResponse(
+        content={"error": f"An unexpected error occurred: {str(exc)}"}, status_code=500
+    )
 
 
 @app.get("/health-check")

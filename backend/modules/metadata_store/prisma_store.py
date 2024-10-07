@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from fastapi import HTTPException
 from prisma import Prisma
+from prisma.errors import RecordNotFoundError, UniqueViolationError
 
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore
@@ -24,6 +25,7 @@ from backend.types import (
     DataSource,
     RagApplication,
 )
+from backend.utils import TRUEFOUNDRY_CLIENT
 
 if TYPE_CHECKING:
     # TODO (chiragjn): Can we import these safely even if the prisma client might not be generated yet?
@@ -41,16 +43,20 @@ if TYPE_CHECKING:
 
 
 class PrismaStore(BaseMetadataStore):
-    def __init__(self, *args, db, **kwargs) -> None:
+    def __init__(self, *args, db: Prisma, **kwargs) -> None:
         self.db = db
         super().__init__(*args, **kwargs)
 
     @classmethod
     async def aconnect(cls, **kwargs):
         try:
+            # Create a new Prisma client instance
             db = Prisma()
+            # Connect to the database
             await db.connect()
+            # Log the connection
             logger.info(f"Connected to Prisma")
+            # Return a new instance of the class with the database connection
             return cls(db=db, **kwargs)
         except Exception as e:
             logger.exception(f"Failed to connect to Prisma: {e}")
@@ -64,12 +70,19 @@ class PrismaStore(BaseMetadataStore):
         self, collection_name: str, no_cache: bool = True
     ) -> Optional[Collection]:
         try:
-            collection: Optional[
-                "PrismaCollection"
-            ] = await self.db.collection.find_first(where={"name": collection_name})
-            if collection:
-                return Collection.model_validate(collection.model_dump())
-            return None
+            # Fetch the collection by name
+            collection: "PrismaCollection" = (
+                await self.db.collection.find_first_or_raise(
+                    where={"name": collection_name}
+                )
+            )
+            # Validate the collection and return it
+            return Collection.model_validate(collection.model_dump())
+        except RecordNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection with name {collection_name!r} not found",
+            )
         except Exception as e:
             logger.exception(f"Failed to get collection by name: {e}")
             raise HTTPException(
@@ -77,19 +90,6 @@ class PrismaStore(BaseMetadataStore):
             )
 
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
-        try:
-            existing_collection = await self.aget_collection_by_name(collection.name)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=e)
-
-        if existing_collection:
-            logger.error(f"Collection with name {collection.name} already exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection with name {collection.name} already exists",
-            )
-
         try:
             logger.info(f"Creating collection: {collection.model_dump()}")
             collection_data = collection.model_dump()
@@ -100,22 +100,21 @@ class PrismaStore(BaseMetadataStore):
                 data=collection_data
             )
             return Collection.model_validate(collection.model_dump())
+        except UniqueViolationError as e:
+            # Collection already exists
+            logger.error(f"Collection with name {collection.name} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Collection with name {collection.name} already exists",
+            )
         except Exception as e:
             logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-    async def aget_retrieve_collection_by_name(
-        self, collection_name: str, no_cache: bool = True
-    ) -> Optional[Collection]:
-        collection: "PrismaCollection" = await self.aget_collection_by_name(
-            collection_name, no_cache
-        )
-        return Collection.model_validate(collection.model_dump())
-
     async def aget_collections(self) -> List[Collection]:
         try:
             collections: List["PrismaCollection"] = await self.db.collection.find_many(
-                order={"id": "desc"}
+                order={"id": "desc"},
             )
             return [Collection.model_validate(c.model_dump()) for c in collections]
         except Exception as e:
@@ -130,62 +129,92 @@ class PrismaStore(BaseMetadataStore):
             logger.exception(f"Failed to list collections: {e}")
             raise HTTPException(status_code=500, detail="Failed to list collections")
 
+    # TODO: (mnvsk97) Add association between collections and ingestion runs and delete all associated records using `includes`. See: https://prisma-client-py.readthedocs.io/en/stable/reference/operations/#unique-record
     async def adelete_collection(self, collection_name: str, include_runs=False):
         try:
-            deleted_collection: Optional[
-                "PrismaCollection"
-            ] = await self.db.collection.delete(where={"name": collection_name})
-            if not deleted_collection:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Failed to delete collection {collection_name!r}. No such record found",
+            # Initialize a database transaction
+            async with self.db.tx() as transaction:
+                # Check if the collection exists before attempting to delete
+                existing_collection = await transaction.collection.find_unique(
+                    where={"name": collection_name}
                 )
-            if include_runs:
-                try:
-                    _deleted_count = await self.db.ingestionruns.delete_many(
+                if not existing_collection:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Collection {collection_name!r} not found",
+                    )
+
+                # Delete ingestion runs first if include_runs is True
+                if include_runs:
+                    deleted_runs = await transaction.ingestionruns.delete_many(
                         where={"collection_name": collection_name}
                     )
-                except Exception as e:
-                    logger.exception(f"Failed to delete data ingestion runs: {e}")
+                    logger.info(
+                        f"Deleted ingestion runs for collection {collection_name}"
+                    )
+
+                # Delete the collection
+                deleted_collection = await transaction.collection.delete(
+                    where={"name": collection_name}
+                )
+
+                logger.info(
+                    f"Successfully deleted collection: {deleted_collection.name}"
+                )
+                return deleted_collection
+
+        except HTTPException as he:
+            # Re-raise HTTP exceptions
+            raise he
         except Exception as e:
-            logger.exception(f"Failed to delete collection: {e}")
-            raise HTTPException(status_code=500, detail="Failed to delete collection")
+            logger.exception(f"Failed to delete collection {collection_name}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to delete collection {collection_name}: {str(e)}",
+            )
 
     ######
     # DATA SOURCE APIS
     ######
-    async def aget_data_source_from_fqn(self, fqn: str) -> Optional[DataSource]:
+    async def aget_data_source_from_fqn(self, fqn: str) -> DataSource:
         try:
-            data_source: Optional[
-                "PrismaDataSource"
-            ] = await self.db.datasource.find_first(where={"fqn": fqn})
-            if data_source:
-                return DataSource.model_validate(data_source.model_dump())
-            return None
+            # Fetch the data source from the database by fqn. If not found, raise a RecordNotFoundError
+            data_source: "PrismaDataSource" = (
+                await self.db.datasource.find_first_or_raise(where={"fqn": fqn})
+            )
+            # Validate the data source and return it
+            return DataSource.model_validate(data_source.model_dump())
+        except RecordNotFoundError:
+            raise HTTPException(
+                status_code=404, detail=f"Data source with fqn {fqn} not found"
+            )
         except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
+            logger.exception(f"Error retrieving data source: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Error retrieving data source: {e}"
+            )
 
     async def acreate_data_source(self, data_source: CreateDataSource) -> DataSource:
         try:
-            existing_data_source = await self.aget_data_source_from_fqn(data_source.fqn)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
+            # If metadata is not provided, remove it from the payload
+            data_source_dict = data_source.model_dump(exclude_unset=True)
+            if data_source_dict.get("metadata") is None:
+                data_source_dict.pop("metadata", None)
 
-        if existing_data_source:
-            logger.exception(f"Data source with fqn {data_source.fqn} already exists")
+            # Create the data source
+            data_source: "PrismaDataSource" = await self.db.datasource.create(
+                data=data_source_dict
+            )
+            logger.info(f"Created data source: {data_source}")
+            # Validate the data source and return it
+            return DataSource.model_validate(data_source.model_dump())
+        except UniqueViolationError as e:
+            print(f"Data source with fqn {data_source.fqn} already exists")
+            logger.error(f"Data source with fqn {data_source.fqn} already exists")
             raise HTTPException(
                 status_code=400,
                 detail=f"Data source with fqn {data_source.fqn} already exists",
             )
-
-        try:
-            data = data_source.model_dump()
-            data["metadata"] = json.dumps(data["metadata"])
-            data_source: "PrismaDataSource" = await self.db.datasource.create(data)
-            logger.info(f"Created data source: {data_source}")
-            return DataSource.model_validate(data_source.model_dump())
         except Exception as e:
             logger.exception(f"Failed to create data source: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
@@ -195,162 +224,102 @@ class PrismaStore(BaseMetadataStore):
             data_sources: List["PrismaDataSource"] = await self.db.datasource.find_many(
                 order={"id": "desc"}
             )
-            return [DataSource.model_validate(ds.model_dump()) for ds in data_sources]
+            return [
+                DataSource.model_validate(data_source.model_dump())
+                for data_source in data_sources
+            ]
         except Exception as e:
             logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-    async def aassociate_data_source_with_collection(
+    async def aassociate_data_sources_with_collection(
         self,
         collection_name: str,
-        data_source_association: AssociateDataSourceWithCollection,
+        data_source_associations: List[AssociateDataSourceWithCollection],
     ) -> Collection:
         try:
-            existing_collection = await self.aget_collection_by_name(collection_name)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
+            # Get the collection by name
+            collection = await self.aget_collection_by_name(collection_name)
 
-        if not existing_collection:
-            logger.error(f"Collection with name {collection_name} does not exist")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
+            # Get the existing associated data sources. If not found, initialize an empty dict.
+            existing_associated_data_sources = collection.associated_data_sources or {}
 
-        try:
-            data_source = await self.aget_data_source_from_fqn(
-                data_source_association.data_source_fqn
+            # Fetch all data sources in a single query
+            data_source_fqns = [
+                assoc.data_source_fqn for assoc in data_source_associations
+            ]
+            data_sources = await self.db.datasource.find_many(
+                where={"fqn": {"in": data_source_fqns}}
             )
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
+            data_sources_dict = {ds.fqn: ds for ds in data_sources}
 
-        if not data_source:
-            logger.error(
-                f"Data source with fqn {data_source_association.data_source_fqn} does not exist"
-            )
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source with fqn {data_source_association.data_source_fqn} does not exist",
-            )
+            # Create AssociatedDataSources objects and update the existing_associated_data_sources
+            for assoc in data_source_associations:
+                data_source = data_sources_dict.get(assoc.data_source_fqn)
+                if not data_source:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Data source with fqn {assoc.data_source_fqn} not found",
+                    )
 
-        logger.info(f"Data source to associate: {data_source}")
-        try:
-            # Append datasource to existing collection
-            existing_collection_associated_data_sources = (
-                existing_collection.associated_data_sources
-            )
-            logger.info(
-                f"Existing associated data sources: {existing_collection_associated_data_sources}"
-            )
-
-            data_src_to_associate = AssociatedDataSources(
-                data_source_fqn=data_source_association.data_source_fqn,
-                parser_config=data_source_association.parser_config,
-                data_source=data_source,
-            )
-
-            if existing_collection_associated_data_sources:
-                existing_collection_associated_data_sources[
-                    data_src_to_associate.data_source_fqn
+                data_src_to_associate = AssociatedDataSources(
+                    data_source_fqn=assoc.data_source_fqn,
+                    parser_config=assoc.parser_config,
+                    data_source=DataSource.model_validate(data_source.model_dump()),
+                )
+                existing_associated_data_sources[
+                    assoc.data_source_fqn
                 ] = data_src_to_associate
-            else:
-                existing_collection_associated_data_sources = {
-                    data_src_to_associate.data_source_fqn: data_src_to_associate
-                }
 
-            logger.info(existing_collection_associated_data_sources)
-            associated_data_sources: Dict[str, Dict[str, Any]] = {}
-            for (
-                data_source_fqn,
-                data_source,
-            ) in existing_collection_associated_data_sources.items():
-                associated_data_sources[data_source_fqn] = data_source.model_dump()
+            # Convert the existing associated data sources to a dictionary
+            associated_data_sources = {
+                fqn: data_source.model_dump()
+                for fqn, data_source in existing_associated_data_sources.items()
+            }
 
-            updated_collection: Optional[
-                "PrismaCollection"
-            ] = await self.db.collection.update(
+            # Update the collection with the new associated data sources
+            updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
                 data={"associated_data_sources": json.dumps(associated_data_sources)},
             )
+
+            # If the update fails, raise an HTTPException
             if not updated_collection:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Failed to associate data source with collection {collection_name!r}. "
-                    f"No such record found",
+                    detail=f"Failed to associate data sources with collection {collection_name!r}. No such record found",
                 )
-            return Collection.model_validate(updated_collection.model_dump())
 
+            # Validate the updated collection and return it
+            return Collection.model_validate(updated_collection.model_dump())
         except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error: {e}",
-            )
+            logger.exception(f"Error associating data sources with collection: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def aunassociate_data_source_with_collection(
         self, collection_name: str, data_source_fqn: str
     ) -> Collection:
         try:
-            collection: Collection = await self.aget_collection_by_name(collection_name)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
+            # Get the collection by name
+            collection = await self.aget_collection_by_name(collection_name)
+            # Get the existing associated data sources
+            associated_data_sources = collection.associated_data_sources or {}
+            # If the data source is not associated with the collection, deletion is not possible and an error is raised
+            if data_source_fqn not in associated_data_sources:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Data source with fqn {data_source_fqn!r} not associated with collection {collection_name!r}",
+                )
+            # Remove the data source from associated data sources
+            associated_data_sources.pop(data_source_fqn)
 
-        if not collection:
-            logger.error(f"Collection with name {collection_name} does not exist")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
+            # Convert the associated data sources to a dictionary
+            updated_associated_data_sources = {
+                fqn: ds.model_dump() for fqn, ds in associated_data_sources.items()
+            }
 
-        try:
-            data_source = await self.aget_data_source_from_fqn(data_source_fqn)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
-
-        if not data_source:
-            logger.error(f"Data source with fqn {data_source_fqn} does not exist")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source with fqn {data_source_fqn} does not exist",
-            )
-
-        associated_data_sources = collection.associated_data_sources
-        if not associated_data_sources:
-            logger.error(
-                f"No associated data sources found for collection {collection_name}"
-            )
-            raise HTTPException(
-                status_code=400,
-                detail=f"No associated data sources found for collection {collection_name}",
-            )
-        if data_source_fqn not in associated_data_sources:
-            logger.error(
-                f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}"
-            )
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source with fqn {data_source_fqn} not associated with collection {collection_name}",
-            )
-        associated_data_sources.pop(data_source_fqn, None)
-
-        try:
-            # Convert associated_data_sources of type [dict, AssociatedDataSources] to [dict, dict]
-            updated_associated_data_sources: Dict[str, Dict[str, Any]] = {}
-            for (
-                data_source_fqn,
-                data_source,
-            ) in associated_data_sources.items():
-                updated_associated_data_sources[
-                    data_source_fqn
-                ] = data_source.model_dump()
-
-            updated_collection: Optional[
-                "PrismaCollection"
-            ] = await self.db.collection.update(
+            # Update the collection with the new associated data sources
+            updated_collection = await self.db.collection.update(
                 where={"name": collection_name},
                 data={
                     "associated_data_sources": json.dumps(
@@ -358,20 +327,19 @@ class PrismaStore(BaseMetadataStore):
                     )
                 },
             )
+
+            # If the update fails, raise an HTTPException
             if not updated_collection:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Failed to unassociate data source from collection. "
-                    f"No collection found with name {collection_name}",
+                    detail=f"Failed to unassociate data source from collection {collection_name!r}. No such record found",
                 )
-            logger.info(f"Updated collection: {updated_collection}")
+
+            # Validate the updated collection and return it
             return Collection.model_validate(updated_collection.model_dump())
         except Exception as e:
-            logger.exception(f"Failed to unassociate data source with collection: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to unassociate data source with collection",
-            )
+            logger.exception(f"Error unassociating data source from collection: {e}")
+            raise HTTPException(status_code=500, detail=f"Error: {e}")
 
     async def alist_data_sources(
         self,
@@ -384,30 +352,15 @@ class PrismaStore(BaseMetadataStore):
             raise HTTPException(status_code=500, detail="Failed to list data sources")
 
     async def adelete_data_source(self, data_source_fqn: str) -> None:
-        # Check if data source exists if not raise an error
-        try:
-            data_source = await self.aget_data_source_from_fqn(data_source_fqn)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
-
-        if not data_source:
-            logger.error(f"Data source with fqn {data_source_fqn} does not exist")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source with fqn {data_source_fqn} does not exist",
-            )
-
+        # Fetch the data source entity by fqn
+        data_source = await self.aget_data_source_from_fqn(data_source_fqn)
+        # Fetch all collections
+        collections = await self.aget_collections()
         # Check if data source is associated with any collection
-        try:
-            collections = await self.aget_collections()
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=f"Error: {e}")
-
         for collection in collections:
-            associated_data_sources = collection.associated_data_sources
-            if associated_data_sources and data_source_fqn in associated_data_sources:
+            associated_data_sources = collection.associated_data_sources or {}
+            # If data source is associated with any collection, raise an error prompting the user to either delete the collection or unassociate the data source from the collection
+            if data_source_fqn in associated_data_sources:
                 logger.error(
                     f"Data source with fqn {data_source_fqn} is already associated with "
                     f"collection {collection.name}"
@@ -425,28 +378,41 @@ class PrismaStore(BaseMetadataStore):
             deleted_datasource: Optional[
                 PrismaDataSource
             ] = await self.db.datasource.delete(where={"fqn": data_source.fqn})
-            if not deleted_datasource:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Failed to delete data source {data_source.fqn!r}. No such record found",
-                )
             # Delete the data from `/users_data` directory if data source is of type `localdir`
-            if data_source.type == "localdir":
-                data_source_uri = data_source.uri
-                # data_source_uri is of the form: `/app/users_data/folder_name`
-                folder_name = data_source_uri.split("/")[-1]
-                folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, folder_name)
-                logger.info(
-                    f"Deleting folder: {folder_path}, path exists: {os.path.exists(folder_path)}"
-                )
-                if os.path.exists(folder_path):
-                    shutil.rmtree(folder_path)
-                else:
-                    logger.error(f"Folder does not exist: {folder_path}")
-
         except Exception as e:
             logger.exception(f"Failed to delete data source: {e}")
-            raise HTTPException(status_code=500, detail="Failed to delete data source")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to delete data source: {e}"
+            )
+
+        # Upon successful deletion of the data source, delete the data from `/users_data` directory if data source is of type `localdir`
+        if data_source.type == "localdir":
+            data_source_uri = data_source.uri
+            # data_source_uri is of the form: `/app/users_data/folder_name`
+            folder_name = data_source_uri.split("/")[-1]
+            folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, folder_name)
+            logger.info(
+                f"Deleting folder: {folder_path}, path exists: {os.path.exists(folder_path)}"
+            )
+            # If the folder does not exist, skip deleting it
+            if not os.path.exists(folder_path):
+                logger.error(f"Folder does not exist: {folder_path}")
+            else:
+                # Delete the folder
+                shutil.rmtree(folder_path)
+                logger.info(f"Deleted folder: {folder_path}")
+
+        if data_source.type == "truefoundry":
+            # Delete the data directory from truefoundry data directory
+            try:
+                # Since the uri contains the source of data
+                data_directory = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(
+                    data_source.uri
+                )
+                data_directory.delete(delete_contents=True)
+                logger.info(f"Deleted data directory: {data_directory}")
+            except Exception as e:
+                logger.exception(f"Failed to delete data directory: {e}")
 
     ######
     # DATA INGESTION RUN APIS
@@ -572,10 +538,13 @@ class PrismaStore(BaseMetadataStore):
         try:
             rag_app: Optional[
                 "PrismaRagApplication"
-            ] = await self.db.ragapps.find_first(where={"name": app_name})
-            if rag_app:
-                return RagApplication.model_validate(rag_app.model_dump())
-            return None
+            ] = await self.db.ragapps.find_first_or_raise(where={"name": app_name})
+
+            return RagApplication.model_validate(rag_app.model_dump())
+        except RecordNotFoundError:
+            raise HTTPException(
+                status_code=404, detail=f"RAG application {app_name} not found"
+            )
         except Exception as e:
             logger.exception(f"Failed to get RAG application by name: {e}")
             raise HTTPException(
@@ -585,19 +554,6 @@ class PrismaStore(BaseMetadataStore):
     async def acreate_rag_app(self, app: RagApplication) -> RagApplication:
         """Create a RAG application in the metadata store"""
         try:
-            existing_app = await self.aget_rag_app(app.name)
-        except Exception as e:
-            logger.exception(f"Error: {e}")
-            raise HTTPException(status_code=500, detail=e)
-
-        if existing_app:
-            logger.error(f"RAG application with name {app.name} already exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"RAG application with name {app.name} already exists",
-            )
-
-        try:
             logger.info(f"Creating RAG application: {app.model_dump()}")
             rag_app_data = app.model_dump()
             rag_app_data["config"] = json.dumps(rag_app_data["config"])
@@ -605,6 +561,12 @@ class PrismaStore(BaseMetadataStore):
                 data=rag_app_data
             )
             return RagApplication.model_validate(rag_app.model_dump())
+        except UniqueViolationError as e:
+            logger.error(f"RAG application with name {app.name} already exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"RAG application with name {app.name} already exists",
+            )
         except Exception as e:
             logger.exception(f"Error: {e}")
             raise HTTPException(status_code=500, detail=f"Error: {e}")
