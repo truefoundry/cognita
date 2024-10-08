@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 
 from backend.indexer.indexer import ingest_data as ingest_data_to_collection
@@ -53,10 +53,10 @@ async def get_collection_by_name(collection_name: str = Path(title="Collection n
 @router.post("")
 async def create_collection(
     collection: CreateCollectionDto,
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
 ):
     """API to create a collection"""
     logger.info(f"Creating collection {collection.name}...")
+    metadata_store_client = await get_client()
     created_collection = await metadata_store_client.acreate_collection(
         collection=CreateCollection(
             name=collection.name,
@@ -97,9 +97,9 @@ async def create_collection(
 @router.post("/associate_data_source")
 async def associate_data_source_to_collection(
     request: AssociateDataSourceWithCollectionDto,
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
 ):
     """Add a data source to the collection"""
+    metadata_store_client = await get_client()
     collection = await metadata_store_client.aassociate_data_sources_with_collection(
         collection_name=request.collection_name,
         data_source_associations=[
@@ -115,9 +115,9 @@ async def associate_data_source_to_collection(
 @router.post("/unassociate_data_source")
 async def unassociate_data_source_from_collection(
     request: UnassociateDataSourceWithCollectionDto,
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
 ):
     """Remove a data source to the collection"""
+    metadata_store_client = await get_client()
     collection = await metadata_store_client.aunassociate_data_source_with_collection(
         collection_name=request.collection_name,
         data_source_fqn=request.data_source_fqn,
@@ -140,21 +140,17 @@ async def ingest_data(
 
 
 @router.delete("/{collection_name}")
-async def delete_collection(
-    collection_name: str = Path(title="Collection name"),
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
-):
+async def delete_collection(collection_name: str = Path(title="Collection name")):
     """Delete collection given its name"""
+    metadata_store_client: BaseMetadataStore = await get_client()
     await metadata_store_client.adelete_collection(collection_name, include_runs=True)
     VECTOR_STORE_CLIENT.delete_collection(collection_name=collection_name)
     return JSONResponse(content={"deleted": True})
 
 
 @router.post("/data_ingestion_runs/list")
-async def list_data_ingestion_runs(
-    request: ListDataIngestionRunsDto,
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
-):
+async def list_data_ingestion_runs(request: ListDataIngestionRunsDto):
+    metadata_store_client: BaseMetadataStore = await get_client()
     data_ingestion_runs = await metadata_store_client.aget_data_ingestion_runs(
         request.collection_name, request.data_source_fqn
     )
@@ -168,9 +164,9 @@ async def list_data_ingestion_runs(
 @router.get("/data_ingestion_runs/{data_ingestion_run_name}/status")
 async def get_collection_status(
     data_ingestion_run_name: str = Path(title="Data Ingestion Run name"),
-    metadata_store_client: BaseMetadataStore = Depends(get_client),
 ):
     """Get status for given data ingestion run"""
+    metadata_store_client: BaseMetadataStore = await get_client()
     data_ingestion_run = await metadata_store_client.aget_data_ingestion_run(
         data_ingestion_run_name=data_ingestion_run_name, no_cache=True
     )
