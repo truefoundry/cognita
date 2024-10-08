@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Depends, Path
 from fastapi.responses import JSONResponse
 
 from backend.logger import logger
@@ -12,10 +12,10 @@ router = APIRouter(prefix="/v1/apps", tags=["apps"])
 @router.post("")
 async def register_rag_app(
     rag_app: CreateRagApplication,
+    metadata_store_client: BaseMetadataStore = Depends(get_client),
 ):
     """Create a rag app"""
     logger.info(f"Creating rag app: {rag_app}")
-    metadata_store_client = await get_client()
     created_rag_app = await metadata_store_client.acreate_rag_app(rag_app)
     return JSONResponse(
         content={"rag_app": created_rag_app.model_dump()}, status_code=201
@@ -23,17 +23,20 @@ async def register_rag_app(
 
 
 @router.get("/list")
-async def list_rag_apps():
+async def list_rag_apps(
+    metadata_store_client: BaseMetadataStore = Depends(get_client),
+):
     """Get rag apps"""
-    metadata_store_client = await get_client()
     rag_apps = await metadata_store_client.alist_rag_apps()
     return JSONResponse(content={"rag_apps": rag_apps})
 
 
 @router.get("/{app_name}")
-async def get_rag_app_by_name(app_name: str = Path(title="App name")):
+async def get_rag_app_by_name(
+    app_name: str = Path(title="App name"),
+    metadata_store_client: BaseMetadataStore = Depends(get_client),
+):
     """Get the rag app config given its name"""
-    metadata_store_client = await get_client()
     rag_app = await metadata_store_client.aget_rag_app(app_name)
     if rag_app is None:
         return JSONResponse(content={"rag_app": []})
@@ -41,8 +44,10 @@ async def get_rag_app_by_name(app_name: str = Path(title="App name")):
 
 
 @router.delete("/{app_name}")
-async def delete_rag_app(app_name: str = Path(title="App name")):
+async def delete_rag_app(
+    app_name: str = Path(title="App name"),
+    metadata_store_client: BaseMetadataStore = Depends(get_client),
+):
     """Delete the rag app config given its name"""
-    metadata_store_client = await get_client()
     await metadata_store_client.adelete_rag_app(app_name)
     return JSONResponse(content={"deleted": True})
