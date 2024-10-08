@@ -65,39 +65,23 @@ class PrismaStore(BaseMetadataStore):
     async def aget_collection_by_name(
         self, collection_name: str, no_cache: bool = True
     ) -> Optional[Collection]:
-        try:
-            # Fetch the collection by name
-            collection: "PrismaCollection" = (
-                await self.db.collection.find_first_or_raise(
-                    where={"name": collection_name}
-                )
-            )
-            # Validate the collection and return it
-            return Collection.model_validate(collection.model_dump())
-        except RecordNotFoundError:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name!r} not found",
-            )
+        # Fetch the collection by name
+        collection: "PrismaCollection" = await self.db.collection.find_first_or_raise(
+            where={"name": collection_name}
+        )
+        # Validate the collection and return it
+        return Collection.model_validate(collection.model_dump())
 
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
-        try:
-            logger.info(f"Creating collection: {collection.model_dump()}")
-            collection_data = collection.model_dump()
-            collection_data["embedder_config"] = json.dumps(
-                collection_data["embedder_config"]
-            )
-            collection: "PrismaCollection" = await self.db.collection.create(
-                data=collection_data
-            )
-            return Collection.model_validate(collection.model_dump())
-        except UniqueViolationError as e:
-            # Collection already exists
-            logger.error(f"Collection with name {collection.name} already exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection with name {collection.name} already exists",
-            )
+        logger.info(f"Creating collection: {collection.model_dump()}")
+        collection_data = collection.model_dump()
+        collection_data["embedder_config"] = json.dumps(
+            collection_data["embedder_config"]
+        )
+        collection: "PrismaCollection" = await self.db.collection.create(
+            data=collection_data
+        )
+        return Collection.model_validate(collection.model_dump())
 
     async def aget_collections(self) -> List[Collection]:
         collections: List["PrismaCollection"] = await self.db.collection.find_many(
@@ -137,38 +121,26 @@ class PrismaStore(BaseMetadataStore):
     # DATA SOURCE APIS
     ######
     async def aget_data_source_from_fqn(self, fqn: str) -> DataSource:
-        try:
-            # Fetch the data source from the database by fqn. If not found, raise a RecordNotFoundError
-            data_source: "PrismaDataSource" = (
-                await self.db.datasource.find_first_or_raise(where={"fqn": fqn})
-            )
-            # Validate the data source and return it
-            return DataSource.model_validate(data_source.model_dump())
-        except RecordNotFoundError:
-            raise HTTPException(
-                status_code=404, detail=f"Data source with fqn {fqn} not found"
-            )
+        # Fetch the data source from the database by fqn. If not found, raise a RecordNotFoundError
+        data_source: "PrismaDataSource" = await self.db.datasource.find_first_or_raise(
+            where={"fqn": fqn}
+        )
+        # Validate the data source and return it
+        return DataSource.model_validate(data_source.model_dump())
 
     async def acreate_data_source(self, data_source: CreateDataSource) -> DataSource:
-        try:
-            # If metadata is not provided, remove it from the payload
-            data_source_dict = data_source.model_dump(exclude_unset=True)
-            if data_source_dict.get("metadata") is None:
-                data_source_dict.pop("metadata", None)
+        # If metadata is not provided, remove it from the payload
+        data_source_dict = data_source.model_dump(exclude_unset=True)
+        if data_source_dict.get("metadata") is None:
+            data_source_dict.pop("metadata", None)
 
-            # Create the data source
-            data_source: "PrismaDataSource" = await self.db.datasource.create(
-                data=data_source_dict
-            )
-            logger.info(f"Created data source: {data_source}")
-            # Validate the data source and return it
-            return DataSource.model_validate(data_source.model_dump())
-        except UniqueViolationError as e:
-            logger.error(f"Data source with fqn {data_source.fqn} already exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Data source with fqn {data_source.fqn} already exists",
-            )
+        # Create the data source
+        data_source: "PrismaDataSource" = await self.db.datasource.create(
+            data=data_source_dict
+        )
+        logger.info(f"Created data source: {data_source}")
+        # Validate the data source and return it
+        return DataSource.model_validate(data_source.model_dump())
 
     async def aget_data_sources(self) -> List[DataSource]:
         data_sources: List["PrismaDataSource"] = await self.db.datasource.find_many(
@@ -409,33 +381,20 @@ class PrismaStore(BaseMetadataStore):
     ######
     async def aget_rag_app(self, app_name: str) -> Optional[RagApplication]:
         """Get a RAG application from the metadata store"""
-        try:
-            rag_app: Optional[
-                "PrismaRagApplication"
-            ] = await self.db.ragapps.find_first_or_raise(where={"name": app_name})
+        rag_app: Optional[
+            "PrismaRagApplication"
+        ] = await self.db.ragapps.find_first_or_raise(where={"name": app_name})
 
-            return RagApplication.model_validate(rag_app.model_dump())
-        except RecordNotFoundError:
-            raise HTTPException(
-                status_code=404, detail=f"RAG application {app_name} not found"
-            )
+        return RagApplication.model_validate(rag_app.model_dump())
 
     async def acreate_rag_app(self, app: RagApplication) -> RagApplication:
         """Create a RAG application in the metadata store"""
-        try:
-            logger.info(f"Creating RAG application: {app.model_dump()}")
-            rag_app_data = app.model_dump()
-            rag_app_data["config"] = json.dumps(rag_app_data["config"])
-            rag_app: "PrismaRagApplication" = await self.db.ragapps.create(
-                data=rag_app_data
-            )
-            return RagApplication.model_validate(rag_app.model_dump())
-        except UniqueViolationError as e:
-            logger.error(f"RAG application with name {app.name} already exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"RAG application with name {app.name} already exists",
-            )
+        rag_app_data = app.model_dump()
+        rag_app_data["config"] = json.dumps(rag_app_data["config"])
+        rag_app: "PrismaRagApplication" = await self.db.ragapps.create(
+            data=rag_app_data
+        )
+        return RagApplication.model_validate(rag_app.model_dump())
 
     async def alist_rag_apps(self) -> List[str]:
         """List all RAG applications from the metadata store"""
