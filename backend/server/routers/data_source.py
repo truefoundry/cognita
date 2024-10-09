@@ -73,13 +73,15 @@ async def delete_data_source(
             shutil.rmtree(folder_path)
             logger.info(f"Deleted folder: {folder_path}")
 
-    if deleted_data_source.type == "truefoundry":
+    if "truefoundry" in deleted_data_source.fqn:
         # Delete the data directory from truefoundry data directory
         try:
-            # Since the uri contains the source of data
+            # When the data source is of type `truefoundry`, the uri contains the fqn of the data directory
+            # Fetch the data directory object
             data_directory = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(
-                data_source_uri
+                deleted_data_source.uri
             )
+            # Delete the data directory
             data_directory.delete(delete_contents=True)
             logger.info(f"Deleted data directory: {data_directory}")
         except Exception as e:
