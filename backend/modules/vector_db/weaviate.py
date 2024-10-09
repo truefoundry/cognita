@@ -6,6 +6,7 @@ from langchain_community.vectorstores.weaviate import Weaviate
 from langchain_core.documents import Document
 
 from backend.constants import DATA_POINT_FQN_METADATA_KEY
+from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import DataPointVector, VectorDBConfig
 
@@ -125,7 +126,7 @@ class WeaviateVectorDB(BaseVectorDB):
         )
         deleted_vectors = res.get("results", {}).get("successful", None)
         if deleted_vectors:
-            print(f"Deleted {len(document_ids)} documents from the collection")
+            logger.info(f"Deleted {len(document_ids)} documents from the collection")
 
     def get_vector_client(self):
         return self.weaviate_client

@@ -2,9 +2,10 @@ import asyncio
 import multiprocessing as mp
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from prisma.errors import RecordNotFoundError, UniqueViolationError
 
 from backend.logger import logger
 from backend.modules.query_controllers.query_controller import QUERY_CONTROLLER_REGISTRY
@@ -67,6 +68,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def catch_exceptions_middleware(_request: Request, exc: Exception):
+    logger.exception(exc)
+    return JSONResponse(
+        content={"error": f"An unexpected error occurred: {str(exc)}"}, status_code=500
+    )
+
+
+@app.exception_handler(RecordNotFoundError)
+async def catch_exceptions_middleware(_request: Request, exc: RecordNotFoundError):
+    logger.exception(exc)
+    return JSONResponse(
+        content={"error": f"Record not found: {str(exc)}"}, status_code=404
+    )
+
+
+@app.exception_handler(UniqueViolationError)
+async def catch_exceptions_middleware(_request: Request, exc: UniqueViolationError):
+    logger.exception(exc)
+    return JSONResponse(
+        content={"error": f"Record already exists: {str(exc)}"}, status_code=400
+    )
 
 
 @app.get("/health-check")

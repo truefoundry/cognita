@@ -505,6 +505,11 @@ class ListDataIngestionRunsDto(ConfiguredBaseModel):
     )
 
 
+################################
+## RAG Application
+################################
+
+
 class RagApplication(ConfiguredBaseModel):
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
     name: Annotated[
