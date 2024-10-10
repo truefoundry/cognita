@@ -8,17 +8,28 @@ from langchain.retrievers.document_compressors.base import BaseDocumentCompresso
 from backend.logger import logger
 
 
-# Reranking Service using Infinity API
 class InfinityRerankerSvc(BaseDocumentCompressor):
     """
-    Reranker Service that uses Infinity API
+    Reranker Service that uses Infinity API for document reranking.
     GitHub: https://github.com/michaelfeil/infinity
     """
 
-    model: str
-    top_k: int
-    base_url: str
-    api_key: Optional[str] = None
+    def __init__(
+        self, model: str, top_k: int, base_url: str, api_key: Optional[str] = None
+    ):
+        """
+        Initialize the InfinityRerankerSvc.
+
+        Args:
+            model: The model to use for reranking.
+            top_k: The number of top documents to return.
+            base_url: The base URL for the Infinity API.
+            api_key: Optional API key for authentication.
+        """
+        self.model = model
+        self.top_k = top_k
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key
 
     def compress_documents(
         self,
@@ -26,66 +37,76 @@ class InfinityRerankerSvc(BaseDocumentCompressor):
         query: str,
         callbacks: Optional[Callbacks] = None,
     ) -> Sequence[Document]:
-        """Compress retrieved documents given the query context."""
-        docs = [doc.page_content for doc in documents]
+        """
+        Compress retrieved documents given the query context.
 
+        Args:
+            documents: The input documents to rerank.
+            query: The query to use for reranking.
+            callbacks: Optional callbacks (not used in this implementation).
+
+        Returns:
+            A sequence of reranked documents.
+        """
+        reranked_docs = self._get_reranked_results(documents, query)
+        return self._process_reranked_results(documents, reranked_docs)
+
+    def _get_reranked_results(self, documents: Sequence[Document], query: str) -> dict:
+        """
+        Send a request to the Infinity API to get reranked results.
+
+        Args:
+            documents: The input documents to rerank.
+            query: The query to use for reranking.
+
+        Returns:
+            A dictionary containing the reranked results.
+        """
         payload = {
             "query": query,
-            "documents": docs,
+            "documents": [doc.page_content for doc in documents],
             "return_documents": False,
             "model": self.model,
         }
 
-        headers = {
-            "Content-Type": "application/json",
-        }
-
+        headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-        reranked_docs = requests.post(
-            self.base_url.rstrip("/") + "/rerank", headers=headers, json=payload
-        ).json()
-
-        """
-        reranked_docs =
-        {
-            "results": [
-                {
-                    "relevance_score": 0.039407938718795776,
-                    "index": 0,
-                },
-                {
-                    "relevance_score": 0.03979039937257767,
-                    "index": 1,
-                },
-                {
-                    "relevance_score": 0.1976623684167862,
-                    "index": 2,
-                }
-            ]
-        }
-        """
+        response = requests.post(
+            f"{self.base_url}/rerank", headers=headers, json=payload
+        )
+        response.raise_for_status()
+        reranked_docs = response.json()
 
         logger.info(f"Reranked documents: {reranked_docs}")
+        return reranked_docs
 
-        # Sort the results by relevance_score in descending order
+    def _process_reranked_results(
+        self, original_docs: Sequence[Document], reranked_docs: dict
+    ) -> Sequence[Document]:
+        """
+        Process the reranked results and return the top-k documents.
+
+        Args:
+            original_docs: The original input documents.
+            reranked_docs: The reranked results from the API.
+
+        Returns:
+            A sequence of reranked documents.
+        """
         sorted_results = sorted(
-            reranked_docs.get("results"),
+            reranked_docs.get("results", []),
             key=lambda x: x["relevance_score"],
             reverse=True,
-        )
+        )[: self.top_k]
 
-        # Extract the indices from the sorted results
-        sorted_indices = [result["index"] for result in sorted_results][: self.top_k]
-        relevance_scores = [result["relevance_score"] for result in sorted_results][
-            : self.top_k
-        ]
+        ranked_documents = []
+        for result in sorted_results:
+            index = result["index"]
+            relevance_score = round(result["relevance_score"], 2)
+            doc = original_docs[index]
+            doc.metadata["relevance_score"] = relevance_score
+            ranked_documents.append(doc)
 
-        # sort documents based on the sorted indices
-        ranked_documents = list()
-        for idx, index in enumerate(sorted_indices):
-            # show relevance scores upto 2 decimal places
-            documents[index].metadata["relevance_score"] = relevance_scores[idx]
-            ranked_documents.append(documents[index])
         return ranked_documents
