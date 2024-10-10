@@ -31,16 +31,21 @@ def get_data_point_fqn_to_hash_map(
     data_point_vectors: List[DataPointVector],
 ) -> Dict[str, str]:
     """
-    Returns a map of data point fqn to hash
-    """
-    data_point_fqn_to_hash: Dict[str, str] = {}
-    for data_point_vector in data_point_vectors:
-        if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[
-                data_point_vector.data_point_fqn
-            ] = data_point_vector.data_point_hash
+    Returns a map of data point fqn to hash.
 
-    return data_point_fqn_to_hash
+    This function creates a dictionary mapping data point FQNs to their
+    corresponding hashes, avoiding duplicate entries.
+
+    Args:
+        data_point_vectors (List[DataPointVector]): A list of DataPointVector objects.
+
+    Returns:
+        Dict[str, str]: A dictionary with data point FQNs as keys and their hashes as values.
+    """
+    return {
+        data_point_vector.data_point_fqn: data_point_vector.data_point_hash
+        for data_point_vector in data_point_vectors
+    }
 
 
 async def sync_data_source_to_collection(inputs: DataIngestionConfig):
@@ -282,41 +287,26 @@ async def ingest_data(
 ):
     """Ingest data into the collection"""
     try:
-        client = await get_client()
-        collection = await client.aget_collection_by_name(request.collection_name)
-
-        # convert to pydantic model if not already -> For prisma models
-        if not isinstance(collection, Collection):
-            collection = Collection(**collection.model_dump())
-
-        if not collection:
-            logger.error(
-                f"Collection with name {request.collection_name} does not exist."
-            )
-            raise HTTPException(
-                status_code=404,
-                detail=f"Collection with name {request.collection_name} does not exist.",
-            )
+        metadata_store_client = await get_client()
+        collection = await metadata_store_client.aget_collection_by_name(request.collection_name)
 
         if not collection.associated_data_sources:
-            logger.error(
-                f"Collection {request.collection_name} does not have any associated data sources."
-            )
+            error_message = f"Collection {request.collection_name} does not have any associated data sources."
+            logger.error(error_message)
             raise HTTPException(
                 status_code=400,
-                detail=f"Collection {request.collection_name} does not have any associated data sources.",
+                detail=error_message,
             )
-        associated_data_sources_to_be_ingested = []
-        if request.data_source_fqn:
-            associated_data_sources_to_be_ingested = [
-                collection.associated_data_sources.get(request.data_source_fqn)
-            ]
-        else:
-            associated_data_sources_to_be_ingested = (
-                collection.associated_data_sources.values()
-            )
+    
+        # Make a list of associated data sources to be ingested
+        associated_data_sources_to_be_ingested = (
+            [collection.associated_data_sources.get(request.data_source_fqn)]
+            if request.data_source_fqn
+            else list(collection.associated_data_sources.values())
+        )
 
         logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
+        
         for associated_data_source in associated_data_sources_to_be_ingested:
             logger.debug(
                 f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
@@ -330,7 +320,7 @@ async def ingest_data(
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                created_data_ingestion_run = await metadata_store_client.acreate_data_ingestion_run(
                     data_ingestion_run=data_ingestion_run
                 )
                 ingestion_config = DataIngestionConfig(
@@ -367,7 +357,7 @@ async def ingest_data(
                     data_ingestion_mode=request.data_ingestion_mode,
                     raise_error_on_failure=request.raise_error_on_failure,
                 )
-                created_data_ingestion_run = await client.acreate_data_ingestion_run(
+                created_data_ingestion_run = await metadata_store_client.acreate_data_ingestion_run(
                     data_ingestion_run=data_ingestion_run
                 )
                 trigger_job(
