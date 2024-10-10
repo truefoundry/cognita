@@ -96,18 +96,21 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
         }).unwrap()
         dataDirectoryFqn = response.data_directory_fqn
 
-        await Promise.all(
-          response.data.map(({ path, url }: any) =>
-            uploadArtifactFileWithSignedURI(url, pathToFileMap[path].file).then(
-              () =>
-                setUploadedFileIds((prev) =>
-                  pathToFileMap[path].id
-                    ? [...prev, pathToFileMap[path].id]
-                    : prev
-                )
-            )
-          )
-        )
+        // Upload files to data directory and collect file ids
+        const uploadedFileIds = await Promise.all(
+          response.data.map(async ({ path, signed_url }: any) => {
+            try {
+              await uploadArtifactFileWithSignedURI(signed_url, pathToFileMap[path].file);
+              return pathToFileMap[path].id;
+            } catch (error) {
+              console.error(`Failed to upload file: ${path}`, error);
+              return null;
+            }
+          })
+        );
+
+        // Update the uploaded file ids state, filtering out null values
+        setUploadedFileIds((prev) => [...prev, ...uploadedFileIds.filter(Boolean)]);
       }
       return dataDirectoryFqn
     } catch (err) {
@@ -156,8 +159,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
           const ddFqn = await uploadDocs()
           res = await addDataSource({
             type: 'truefoundry',
-            uri: ddFqn,
-            metadata: {},
+            uri: ddFqn
           }).unwrap()
         }
         fqn = res.data_source?.fqn

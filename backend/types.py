@@ -315,7 +315,7 @@ class BaseDataSource(ConfiguredBaseModel):
         title="A unique identifier for the data source",
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        None, title="Additional config for your data source"
+        default_factory=dict, title="Additional config for your data source"
     )
 
     @computed_field
