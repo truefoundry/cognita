@@ -26,6 +26,7 @@ markdown-crawler==0.0.8
 ## async
 async-timeout==4.0.3
 aiofiles==24.1.0
+cachetools==5.5.0
 
 ## requests
 requests==2.32.2
