@@ -130,10 +130,18 @@ const config = {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+         dotAnimation: {
+          '0%, 80%, 100%': { transform: 'scale(0)' },
+          '40%': { transform: 'scale(1)' },
+        },
       },
       animation: {
         fadeOut: 'fadeOut 250ms ease-in-out',
         fadeIn: 'fadeIn 250ms ease-in-out',
+        'dot-1': 'dotAnimation 1.4s infinite ease-in-out both',
+        'dot-2': 'dotAnimation 1.4s infinite ease-in-out both -0.16s',
+        'dot-3': 'dotAnimation 1.4s infinite ease-in-out both -0.32s',
+
       },
     },
     fontFamily: {
