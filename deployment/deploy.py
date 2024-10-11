@@ -54,9 +54,7 @@ def run_deploy(
             ).create_service(),
             Qdrant(workspace=workspace, base_domain_url=base_domain_url).create_helm(),
             QdrantUI(base_domain_url=base_domain_url).create_service(),
-            UnstructuredIO(
-                dockerhub_images_registry=dockerhub_images_registry
-            ).create_service(),
+            UnstructuredIO().create_service(),
             Infinity(
                 dockerhub_images_registry=dockerhub_images_registry
             ).create_service(),

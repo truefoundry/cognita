@@ -20,7 +20,7 @@ class Audio:
             name=AUDIO_SERVICE_NAME,
             image=Image(
                 type="image",
-                image_uri="fedirz/faster-whisper-server:latest-cpu",
+                image_uri=f"{self.dockerhub_images_registry}/fedirz/faster-whisper-server:latest-cpu",
                 docker_registry=self.dockerhub_images_registry,
             ),
             resources=Resources(

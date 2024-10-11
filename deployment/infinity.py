@@ -11,7 +11,7 @@ class Infinity:
         return Service(
             name=INFINITY_SERVICE_NAME,
             image=Image(
-                image_uri="michaelf34/infinity:0.0.63",
+                image_uri=f"{self.dockerhub_images_registry}/michaelf34/infinity:0.0.63",
                 docker_registry=self.dockerhub_images_registry,
                 command="infinity_emb v2 --model-id mixedbread-ai/mxbai-embed-large-v1 --model-id mixedbread-ai/mxbai-rerank-xsmall-v1 --port $(PORT) --batch-size $(BATCH_SIZE) --api-key $(API_KEY)",
             ),
