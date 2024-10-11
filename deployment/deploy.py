@@ -96,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dockerhub-images-registry",
         type=str,
-        required=True,
+        required=False,
         help="dockerhub images registry",
         default="docker.io",
     )
