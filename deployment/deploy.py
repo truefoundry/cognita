@@ -52,13 +52,19 @@ def run_deploy(
                 application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
             ).create_service(),
-            Qdrant(workspace=workspace, base_domain_url=base_domain_url).create_helm(),
+            Qdrant(
+                workspace=workspace,
+                base_domain_url=base_domain_url,
+                dockerhub_images_registry=dockerhub_images_registry,
+            ).create_helm(),
             QdrantUI(base_domain_url=base_domain_url).create_service(),
             UnstructuredIO().create_service(),
             Infinity(
                 dockerhub_images_registry=dockerhub_images_registry
             ).create_service(),
-            PostgresDatabase().create_helm(),
+            PostgresDatabase(
+                dockerhub_images_registry=dockerhub_images_registry
+            ).create_helm(),
             Audio(dockerhub_images_registry=dockerhub_images_registry).create_service(),
         ],
         workspace_fqn=workspace_fqn,
