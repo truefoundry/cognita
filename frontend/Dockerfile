@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:22 AS build-step
+FROM public.ecr.aws/docker/library/node:22 AS build-step
 WORKDIR /build
 COPY . .
 
@@ -30,7 +30,7 @@ ENV VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS} \
 RUN yarn build
 
 # Production Stage
-FROM node:18.2.0 AS production-stage
+FROM public.ecr.aws/docker/library/node:18.2.0 AS production-stage
 RUN npm install -g serve
 WORKDIR /app
 COPY --from=build-step /build/dist /app/dist
