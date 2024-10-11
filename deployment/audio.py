@@ -21,7 +21,6 @@ class Audio:
             image=Image(
                 type="image",
                 image_uri=f"{self.dockerhub_images_registry}/fedirz/faster-whisper-server:latest-cpu",
-                docker_registry=self.dockerhub_images_registry,
             ),
             resources=Resources(
                 node=NodeSelector(capacity_type="spot_fallback_on_demand"),
