@@ -12,8 +12,8 @@ from deployment.config import AUDIO_SERVICE_NAME
 
 
 class Audio:
-    def __init__(self):
-        pass
+    def __init__(self, dockerhub_images_registry):
+        self.dockerhub_images_registry = dockerhub_images_registry
 
     def create_service(self):
         return Service(
@@ -21,6 +21,7 @@ class Audio:
             image=Image(
                 type="image",
                 image_uri="fedirz/faster-whisper-server:latest-cpu",
+                docker_registry=self.dockerhub_images_registry,
             ),
             resources=Resources(
                 node=NodeSelector(capacity_type="spot_fallback_on_demand"),
