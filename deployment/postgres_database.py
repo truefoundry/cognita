@@ -4,8 +4,8 @@ from deployment.config import DATABASE_NAME
 
 
 class PostgresDatabase:
-    def __init__(self):
-        pass
+    def __init__(self, dockerhub_images_registry):
+        self.dockerhub_images_registry = dockerhub_images_registry
 
     def create_helm(self):
         return Helm(
@@ -15,6 +15,7 @@ class PostgresDatabase:
                 version="13.4.3",
             ),
             values={
+                "global": {"imageRegistry": self.dockerhub_images_registry},
                 "auth": {
                     "database": "cognita-config",
                     "password": "password",
