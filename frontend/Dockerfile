@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:22 AS build-step
+FROM public.ecr.aws/docker/library/node:22 AS build-step
 WORKDIR /build
 COPY . .
 
