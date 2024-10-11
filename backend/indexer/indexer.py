@@ -69,8 +69,8 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
     Returns:
         None
     """
-    client = await get_client()
-    await client.aupdate_data_ingestion_run_status(
+    metadata_store_client = await get_client()
+    await metadata_store_client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS,
     )
@@ -88,13 +88,13 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        await client.aupdate_data_ingestion_run_status(
+        await metadata_store_client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.FETCHING_EXISTING_VECTORS_FAILED,
         )
         raise e
 
-    await client.aupdate_data_ingestion_run_status(
+    await metadata_store_client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_STARTED,
     )
@@ -105,18 +105,18 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
         )
     except Exception as e:
         logger.exception(e)
-        await client.aupdate_data_ingestion_run_status(
+        await metadata_store_client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_INGESTION_FAILED,
         )
         raise e
-    await client.aupdate_data_ingestion_run_status(
+    await metadata_store_client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.DATA_INGESTION_COMPLETED,
     )
     # Delete the outdated data point vectors from the vector store
     if inputs.data_ingestion_mode == DataIngestionMode.FULL:
-        await client.aupdate_data_ingestion_run_status(
+        await metadata_store_client.aupdate_data_ingestion_run_status(
             data_ingestion_run_name=inputs.data_ingestion_run_name,
             status=DataIngestionRunStatus.DATA_CLEANUP_STARTED,
         )
@@ -127,12 +127,12 @@ async def sync_data_source_to_collection(inputs: DataIngestionConfig):
             )
         except Exception as e:
             logger.exception(e)
-            await client.aupdate_data_ingestion_run_status(
+            await metadata_store_client.aupdate_data_ingestion_run_status(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 status=DataIngestionRunStatus.DATA_CLEANUP_FAILED,
             )
             raise e
-    await client.aupdate_data_ingestion_run_status(
+    await metadata_store_client.aupdate_data_ingestion_run_status(
         data_ingestion_run_name=inputs.data_ingestion_run_name,
         status=DataIngestionRunStatus.COMPLETED,
     )
@@ -155,7 +155,7 @@ async def _sync_data_source_to_collection(
         None
     """
 
-    client = await get_client()
+    metadata_store_client = await get_client()
 
     failed_data_point_fqns = []
     documents_ingested_count = 0
@@ -195,7 +195,7 @@ async def _sync_data_source_to_collection(
                 f"Failed to ingest {len(failed_data_point_fqns)} data points. data point fqns:"
             )
             logger.error(failed_data_point_fqns)
-            await client.alog_errors_for_data_ingestion_run(
+            await metadata_store_client.alog_errors_for_data_ingestion_run(
                 data_ingestion_run_name=inputs.data_ingestion_run_name,
                 errors={"failed_data_point_fqns": failed_data_point_fqns},
             )
