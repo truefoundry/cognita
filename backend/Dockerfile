@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.11
+FROM --platform=linux/amd64 public.ecr.aws/docker/library/python:3.11
 
 # Required for opencv
 RUN apt-get update -y && \
