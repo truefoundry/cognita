@@ -61,7 +61,7 @@ const DocsQA = () => {
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
-  const [isStreamEnabled, setIsStreamEnabled] = useState(true)
+  // const [isStreamEnabled, setIsStreamEnabled] = useState(true)
   const [isInternetSearchEnabled, setIsInternetSearchEnabled] = useState(false)
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
@@ -112,7 +112,7 @@ const DocsQA = () => {
     setErrorMessage(false)
     try {
       const selectedModel = allEnabledModels.find(
-        (model: any) => model.name == selectedQueryModel
+        (model: any) => model.name == selectedQueryModel,
       )
       if (!selectedModel) {
         throw new Error('Model not found')
@@ -141,51 +141,37 @@ const DocsQA = () => {
           prompt_template: promptTemplate,
           internet_search_enabled: isInternetSearchEnabled,
         },
-        {}
+        {},
       )
-      if (!isStreamEnabled) {
-        const res: any = await searchAnswer({
-          ...params,
-          stream: false,
-          queryController: selectedQueryController,
-        })
-        if (res?.error) {
-          setErrorMessage(true)
-        } else {
-          setAnswer(res.data.answer)
-          setSourceDocs(res.data.docs ?? [])
-        }
-        setIsRunningPrompt(false)
-      } else {
-        const sseRequest = new SSE(
-          `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
-          {
-            payload: JSON.stringify({
-              ...params,
-              stream: true,
-            }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
+
+      const sseRequest = new SSE(
+        `${baseQAFoundryPath}/retrievers/${selectedQueryController}/answer`,
+        {
+          payload: JSON.stringify({
+            ...params,
+            stream: true,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+
+      sseRequest.addEventListener('data', (event: any) => {
+        try {
+          const parsed = JSON.parse(event.data)
+          if (parsed?.type === 'answer') {
+            setAnswer((prevAnswer) => prevAnswer + parsed.content)
+            setIsRunningPrompt(false)
+          } else if (parsed?.type === 'docs') {
+            setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
           }
-        )
+        } catch (err) {}
+      })
 
-        sseRequest.addEventListener('data', (event: any) => {
-          try {
-            const parsed = JSON.parse(event.data)
-            if (parsed?.type === 'answer') {
-              setAnswer((prevAnswer) => prevAnswer + parsed.content)
-              setIsRunningPrompt(false)
-            } else if (parsed?.type === 'docs') {
-              setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
-            }
-          } catch (err) {}
-        })
-
-        sseRequest.addEventListener('end', (event: any) => {
-          sseRequest.close()
-        })
-      }
+      sseRequest.addEventListener('end', (event: any) => {
+        sseRequest.close()
+      })
     } catch (err: any) {
       setErrorMessage(true)
     }
@@ -196,7 +182,7 @@ const DocsQA = () => {
       return notify('error', 'Application name is required')
     }
     const selectedModel = allEnabledModels.find(
-      (model: any) => model.name == selectedQueryModel
+      (model: any) => model.name == selectedQueryModel,
     )
 
     try {
@@ -299,10 +285,10 @@ const DocsQA = () => {
               ) : (
                 <></>
               )}
-              <div className='mt-2 text-sm'>Questions (Optional)</div>
+              <div className="mt-2 text-sm">Questions (Optional)</div>
               {questions.map((question, index) => (
-                <div className='flex items-center gap-2 mt-2 w-full'>
-                  <div className='flex-1'>
+                <div className="flex items-center gap-2 mt-2 w-full">
+                  <div className="flex-1">
                     <Input
                       key={index}
                       value={question}
@@ -317,21 +303,28 @@ const DocsQA = () => {
                     />
                   </div>
                   <Button
-                    icon='trash-alt'
-                    className='btn-sm hover:bg-red-600 hover:border-white hover:text-white'
+                    icon="trash-alt"
+                    className="btn-sm hover:bg-red-600 hover:border-white hover:text-white"
                     onClick={() => {
                       setQuestions(questions.filter((_, i) => i !== index))
                     }}
                   />
                 </div>
               ))}
-              <LightTooltip title={questions.length === 4 ? 'Maximum 4 questions are allowed' : ''} size="fit">
-                <div className='w-fit'>
+              <LightTooltip
+                title={
+                  questions.length === 4
+                    ? 'Maximum 4 questions are allowed'
+                    : ''
+                }
+                size="fit"
+              >
+                <div className="w-fit">
                   <Button
-                    text='Add Question'
+                    text="Add Question"
                     white
                     disabled={questions.length == 4}
-                    className='text-sm font-medium text-gray-1000 hover:bg-white mt-2'
+                    className="text-sm font-medium text-gray-1000 hover:bg-white mt-2"
                     onClick={() => {
                       if (questions.length < 4) {
                         setQuestions([...questions, ''])
@@ -357,7 +350,6 @@ const DocsQA = () => {
                 loading={isCreateApplicationLoading}
                 onClick={createChatApplication}
               />
-
             </div>
           </div>
         </Modal>
@@ -465,7 +457,7 @@ const DocsQA = () => {
                     value={selectedRetriever?.key}
                     onChange={(e) => {
                       const retriever = allRetrieverOptions.find(
-                        (retriever) => retriever.key === e.target.value
+                        (retriever) => retriever.key === e.target.value,
                       )
                       setSelectedRetriever(retriever)
                       setPromptTemplate(retriever?.promptTemplate)
@@ -500,13 +492,7 @@ const DocsQA = () => {
                   setRetrieverConfig(updatedConfig ?? '')
                 }
               />
-              <div className="flex justify-between items-center mt-1.5">
-                <div className="text-sm">Stream</div>
-                <Switch
-                  checked={isStreamEnabled}
-                  onChange={(e) => setIsStreamEnabled(e.target.checked)}
-                />
-              </div>
+
               <div className="flex justify-between items-center mt-1.5">
                 <div className="text-sm">Internet Search</div>
                 <Switch
@@ -530,7 +516,10 @@ const DocsQA = () => {
             </div>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
               <div className="flex gap-4 items-center">
-                <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
+                <form
+                  className="w-full relative"
+                  onSubmit={(e) => e.preventDefault()}
+                >
                   <Input
                     className="w-full min-h-[2.75rem] text-sm pr-14"
                     placeholder="Ask any question related to this document"
@@ -557,11 +546,7 @@ const DocsQA = () => {
                       <Markdown>{answer}</Markdown>
                     </div>
                   </div>
-                  {sourceDocs && (
-                    <SourceDocsPreview
-                      sourceDocs={sourceDocs}
-                    /> 
-                  )}
+                  {sourceDocs && <SourceDocsPreview sourceDocs={sourceDocs} />}
                 </div>
               ) : isRunningPrompt ? (
                 <div className="overflow-y-auto flex flex-col justify-center items-center gap-2 h-[calc(100%-4.375rem)]">
