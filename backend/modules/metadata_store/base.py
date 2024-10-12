@@ -45,15 +45,6 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def aget_retrieve_collection_by_name(
-        self, collection_name: str, no_cache: bool = True
-    ) -> Optional[Collection]:
-        """
-        Get a collection from the metadata store by name used during retrieval phase
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     async def aget_collections(
         self,
     ) -> List[Collection]:
@@ -104,7 +95,7 @@ class BaseMetadataStore(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def aassociate_data_source_with_collection(
+    async def aassociate_data_sources_with_collection(
         self,
         collection_name: str,
         data_source_association: AssociateDataSourceWithCollection,

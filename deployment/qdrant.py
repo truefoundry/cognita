@@ -4,9 +4,10 @@ from deployment.config import QDRANT_SERVICE_UI_NAME, VECTOR_DB_HELM_NAME
 
 
 class Qdrant:
-    def __init__(self, workspace, base_domain_url):
+    def __init__(self, workspace, base_domain_url, dockerhub_images_registry):
         self.workspace = workspace
         self.base_domain_url = base_domain_url
+        self.dockerhub_images_registry = dockerhub_images_registry
 
     def create_helm(self):
         return Helm(
@@ -17,6 +18,9 @@ class Qdrant:
                 version="0.8.4",
             ),
             values={
+                "image": {
+                    "repository": f"{self.dockerhub_images_registry}/qdrant/qdrant",
+                },
                 "service": {
                     "type": "ClusterIP",
                     "ports": [

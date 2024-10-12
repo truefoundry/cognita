@@ -315,7 +315,7 @@ class BaseDataSource(ConfiguredBaseModel):
         title="A unique identifier for the data source",
     )
     metadata: Optional[Dict[str, Any]] = Field(
-        None, title="Additional config for your data source"
+        default_factory=dict, title="Additional config for your data source"
     )
 
     @computed_field
@@ -503,6 +503,11 @@ class ListDataIngestionRunsDto(ConfiguredBaseModel):
     data_source_fqn: Optional[str] = Field(
         title="Fully qualified name of the data source", default=None
     )
+
+
+################################
+## RAG Application
+################################
 
 
 class RagApplication(ConfiguredBaseModel):

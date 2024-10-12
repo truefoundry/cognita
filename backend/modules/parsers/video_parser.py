@@ -8,8 +8,8 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
-from backend.modules.parsers.audioparser import AudioParser
-from backend.modules.parsers.multimodalparser import MultiModalParser
+from backend.modules.parsers.audio_parser import AudioParser
+from backend.modules.parsers.multi_modal_parser import MultiModalParser
 from backend.modules.parsers.parser import BaseParser
 from backend.types import ModelConfig
 
