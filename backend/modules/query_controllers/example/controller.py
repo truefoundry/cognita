@@ -32,93 +32,86 @@ class BasicRAGQueryController(BaseQueryController):
         """
         Sample answer method to answer the question using the context from the collection
         """
-        try:
-            # Get the vector store
-            vector_store = await self._get_vector_store(request.collection_name)
+        # Get the vector store
+        vector_store = await self._get_vector_store(request.collection_name)
 
-            # Create the QA prompt templates
-            QA_PROMPT = self._get_prompt_template(
-                input_variables=["context", "question"],
-                template=request.prompt_template,
-            )
+        # Create the QA prompt templates
+        QA_PROMPT = self._get_prompt_template(
+            input_variables=["context", "question"],
+            template=request.prompt_template,
+        )
 
-            # Get the LLM
-            llm = self._get_llm(request.model_configuration, request.stream)
+        # Get the LLM
+        llm = self._get_llm(request.model_configuration, request.stream)
 
-            # get retriever
-            retriever = await self._get_retriever(
-                vector_store=vector_store,
-                retriever_name=request.retriever_name,
-                retriever_config=request.retriever_config,
-            )
+        # get retriever
+        retriever = await self._get_retriever(
+            vector_store=vector_store,
+            retriever_name=request.retriever_name,
+            retriever_config=request.retriever_config,
+        )
 
-            # Using LCEL
-            rag_chain_from_docs = (
-                RunnablePassthrough.assign(
-                    # add internet search results to context
-                    context=(
-                        lambda x: self._format_docs(
-                            x["context"],
-                        )
+        # Using LCEL
+        rag_chain_from_docs = (
+            RunnablePassthrough.assign(
+                # add internet search results to context
+                context=(
+                    lambda x: self._format_docs(
+                        x["context"],
                     )
                 )
-                | QA_PROMPT
-                | llm
-                | StrOutputParser()
+            )
+            | QA_PROMPT
+            | llm
+            | StrOutputParser()
+        )
+
+        rag_chain_with_source = RunnableParallel(
+            {"context": retriever, "question": RunnablePassthrough()}
+        )
+
+        if request.internet_search_enabled:
+            rag_chain_with_source = (
+                rag_chain_with_source | self._internet_search
+            ).assign(answer=rag_chain_from_docs)
+        else:
+            rag_chain_with_source = rag_chain_with_source.assign(
+                answer=rag_chain_from_docs
             )
 
-            rag_chain_with_source = RunnableParallel(
-                {"context": retriever, "question": RunnablePassthrough()}
+        if request.stream:
+            return StreamingResponse(
+                self._sse_wrap(
+                    self._stream_answer(rag_chain_with_source, request.query),
+                ),
+                media_type="text/event-stream",
             )
 
-            if request.internet_search_enabled:
-                rag_chain_with_source = (
-                    rag_chain_with_source | self._internet_search
-                ).assign(answer=rag_chain_from_docs)
-            else:
-                rag_chain_with_source = rag_chain_with_source.assign(
-                    answer=rag_chain_from_docs
-                )
+        else:
+            outputs = await rag_chain_with_source.ainvoke(request.query)
 
-            if request.stream:
-                return StreamingResponse(
-                    self._sse_wrap(
-                        self._stream_answer(rag_chain_with_source, request.query),
-                    ),
-                    media_type="text/event-stream",
-                )
+            # Intermediate testing
+            # Just the retriever
+            # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+            # outputs = await setup_and_retrieval.ainvoke(request.query)
+            # print(outputs)
 
-            else:
-                outputs = await rag_chain_with_source.ainvoke(request.query)
+            # Retriever, internet search
+            # outputs = await (setup_and_retrieval | self.internet_search).ainvoke(request.query)
+            # print(outputs)
 
-                # Intermediate testing
-                # Just the retriever
-                # setup_and_retrieval = RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
-                # outputs = await setup_and_retrieval.ainvoke(request.query)
-                # print(outputs)
+            # Retriever and QA
+            # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
+            # print(outputs)
 
-                # Retriever, internet search
-                # outputs = await (setup_and_retrieval | self.internet_search).ainvoke(request.query)
-                # print(outputs)
+            # Retriever, QA and LLM
+            # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
+            # print(outputs)
 
-                # Retriever and QA
-                # outputs = await (setup_and_retrieval | QA_PROMPT).ainvoke(request.query)
-                # print(outputs)
-
-                # Retriever, QA and LLM
-                # outputs = await (setup_and_retrieval | QA_PROMPT | llm).ainvoke(request.query)
-                # print(outputs)
-
-                return {
-                    "answer": outputs["answer"],
-                    "docs": outputs["context"] if outputs["context"] else [],
-                }
-
-        except HTTPException as exp:
-            raise exp
-        except Exception as exp:
-            logger.exception(exp)
-            raise HTTPException(status_code=500, detail=str(exp))
+            return {
+                "answer": outputs["answer"],
+                "docs": self._enrich_context_for_non_stream_response(outputs),
+            }
 
 
 #######

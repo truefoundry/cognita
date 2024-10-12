@@ -19,7 +19,6 @@ async def main():
     try:
         await ingest_data(request=inputs)
     except Exception as e:
-        print(f"Indexer exception - {e}")
         logger.exception(e)
         exit(1)
 

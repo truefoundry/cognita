@@ -1,22 +1,28 @@
 import tempfile
 from concurrent.futures import Executor
+from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from langchain.docstore.document import Document
 from truefoundry.deploy import trigger_job
+from truefoundry.ml import DataDirectory
 
-from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
+from backend.constants import (
+    DATA_POINT_FILE_PATH_METADATA_KEY,
+    DATA_POINT_FQN_METADATA_KEY,
+    DATA_POINT_HASH_METADATA_KEY,
+)
 from backend.indexer.types import DataIngestionConfig
 from backend.logger import logger
 from backend.modules.dataloaders.loader import get_loader_for_data_source
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
-from backend.modules.parsers.parser import get_parser_for_extension
+from backend.modules.parsers.parser import get_parser_for_extension_with_cache
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
 from backend.types import (
-    Collection,
     CreateDataIngestionRun,
     DataIngestionMode,
     DataIngestionRunStatus,
@@ -32,14 +38,7 @@ def get_data_point_fqn_to_hash_map(
     """
     Returns a map of data point fqn to hash
     """
-    data_point_fqn_to_hash: Dict[str, str] = {}
-    for data_point_vector in data_point_vectors:
-        if data_point_vector.data_point_fqn not in data_point_fqn_to_hash:
-            data_point_fqn_to_hash[
-                data_point_vector.data_point_fqn
-            ] = data_point_vector.data_point_hash
-
-    return data_point_fqn_to_hash
+    return {dpv.data_point_fqn: dpv.data_point_hash for dpv in data_point_vectors}
 
 
 async def sync_data_source_to_collection(inputs: DataIngestionConfig):
@@ -207,67 +206,56 @@ async def ingest_data_points(
     Ingests data points into the vector store for a given batch.
 
     Args:
-        inputs (DataIngestionConfig): The configuration for data ingestion.
-        loaded_data_points (List[LoadedDataPoint]): The list of loaded data points to be ingested.
-        documents_ingested_count (int): The count of documents already ingested.
+        inputs (DataIngestionConfig): Configuration for data ingestion.
+        loaded_data_points (List[LoadedDataPoint]): List of loaded data points to be ingested.
+        documents_ingested_count (int): Current count of ingested documents.
 
     Returns:
-        None: If no documents are found to index in the given batch.
-
-    Raises:
         None
-
     """
+    # Calculate embeddings for the data points
     embeddings = model_gateway.get_embedder_from_model_config(
-        model_name=inputs.embedder_config.name
+        inputs.embedder_config.name
     )
     documents_to_be_upserted = []
     logger.info(
-        f"Processing {len(loaded_data_points)} new documents and completed: {documents_ingested_count}"
+        f"Processing {len(loaded_data_points)} new documents. Total ingested: {documents_ingested_count}"
     )
-    for index, loaded_data_point in enumerate(loaded_data_points):
-        logger.info(
-            f"[{index+1}/{len(loaded_data_points)}/{documents_ingested_count}] Parsing [{index+1}/{len(loaded_data_points)}] new document"
+
+    parser_cache = {}
+
+    for index, data_point in enumerate(loaded_data_points, start=1):
+        logger.info(f"Parsing document {index}/{len(loaded_data_points)}")
+
+        # Get the parser for the data point extension
+        parser = get_parser_for_extension_with_cache(
+            data_point.file_extension, inputs.parser_config, parser_cache
         )
-        # Get parser for required file extension
-        parser = get_parser_for_extension(
-            file_extension=loaded_data_point.file_extension,
-            parsers_map=inputs.parser_config,
-        )
-        if parser is None:
+        if not parser:
             logger.warning(
-                f"Could not parse data point {loaded_data_point.data_point_fqn} as no parser found for file extension: {loaded_data_point.file_extension}"
+                f"No parser found for {data_point.data_point_fqn} with extension: {data_point.file_extension}"
             )
             continue
-        # chunk the given document
-        chunks = await parser.get_chunks(
-            filepath=loaded_data_point.local_filepath,
-            metadata=loaded_data_point.metadata,
-        )
-        # Update data source metadata
-        for chunk in chunks:
-            if loaded_data_point.metadata:
-                chunk.metadata.update(loaded_data_point.metadata)
-            # Most importantly, update the metadata with data point fqn and hash
-            chunk.metadata.update(
-                {
-                    f"{DATA_POINT_FQN_METADATA_KEY}": loaded_data_point.data_point_fqn,
-                    f"{DATA_POINT_HASH_METADATA_KEY}": loaded_data_point.data_point_hash,
-                }
-            )
-            documents_to_be_upserted.append(chunk)
-        logger.info("%s -> %s chunks", loaded_data_point.local_filepath, len(chunks))
 
-    docs_to_index_count = len(documents_to_be_upserted)
-    if docs_to_index_count == 0:
-        logger.warning(
-            "No documents found to index in given batch. Moving to next batch..."
+        # For the current data point, get the chunks by parser
+        chunks = await parser.get_chunks(data_point.local_filepath, data_point.metadata)
+
+        # Enrich the chunk with data point metadata
+        documents_to_be_upserted.extend(
+            [
+                enrich_chunk_with_data_point_metadata(chunk, data_point)
+                for chunk in chunks
+            ]
         )
+
+        logger.info(f"{data_point.local_filepath} -> {len(chunks)} chunks")
+
+    # If there are no documents to be upserted, log a warning and return
+    if not documents_to_be_upserted:
+        logger.warning("No documents to index in this batch.")
         return
-    logger.info(
-        f"Upserting {docs_to_index_count} documents to vector store for given batch"
-    )
-    # Upserted all the documents_to_be_ingested
+    # Ingest the documents to the vector store
+    logger.info(f"Upserting {len(documents_to_be_upserted)} documents to vector store")
     VECTOR_STORE_CLIENT.upsert_documents(
         collection_name=inputs.collection_name,
         documents=documents_to_be_upserted,
@@ -276,118 +264,119 @@ async def ingest_data_points(
     )
 
 
+def enrich_chunk_with_data_point_metadata(chunk: Document, data_point: LoadedDataPoint):
+    # Add the data point metadata to the chunk metadata
+    chunk.metadata.update(data_point.metadata or {})
+    # Add the data point fqn and hash to the chunk metadata
+    # This information will be used in the retrieval process to identify the source of the chunk
+    chunk.metadata.update(
+        {
+            DATA_POINT_FQN_METADATA_KEY: data_point.data_point_fqn,
+            DATA_POINT_HASH_METADATA_KEY: data_point.data_point_hash,
+            DATA_POINT_FILE_PATH_METADATA_KEY: data_point.local_filepath,
+            "_data_source_fqn": data_point.data_source_fqn,
+        }
+    )
+
+    return chunk
+
+
 async def ingest_data(
     request: IngestDataToCollectionDto, pool: Optional[Executor] = None
 ):
     """Ingest data into the collection"""
-    try:
-        client = await get_client()
-        collection = await client.aget_collection_by_name(request.collection_name)
+    metadata_store_client = await get_client()
+    collection = await metadata_store_client.aget_collection_by_name(
+        request.collection_name
+    )
 
-        # convert to pydantic model if not already -> For prisma models
-        if not isinstance(collection, Collection):
-            collection = Collection(**collection.model_dump())
-
-        if not collection:
-            logger.error(
-                f"Collection with name {request.collection_name} does not exist."
-            )
-            raise HTTPException(
-                status_code=404,
-                detail=f"Collection with name {request.collection_name} does not exist.",
-            )
-
-        if not collection.associated_data_sources:
-            logger.error(
-                f"Collection {request.collection_name} does not have any associated data sources."
-            )
-            raise HTTPException(
-                status_code=400,
-                detail=f"Collection {request.collection_name} does not have any associated data sources.",
-            )
-        associated_data_sources_to_be_ingested = []
-        if request.data_source_fqn:
-            associated_data_sources_to_be_ingested = [
-                collection.associated_data_sources.get(request.data_source_fqn)
-            ]
-        else:
-            associated_data_sources_to_be_ingested = (
-                collection.associated_data_sources.values()
-            )
-
-        logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
-        for associated_data_source in associated_data_sources_to_be_ingested:
-            logger.debug(
-                f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
-            )
-            if not request.run_as_job or settings.LOCAL:
-                data_ingestion_run = CreateDataIngestionRun(
-                    collection_name=collection.name,
-                    data_source_fqn=associated_data_source.data_source_fqn,
-                    embedder_config=collection.embedder_config,
-                    parser_config=associated_data_source.parser_config,
-                    data_ingestion_mode=request.data_ingestion_mode,
-                    raise_error_on_failure=request.raise_error_on_failure,
-                )
-                created_data_ingestion_run = await client.acreate_data_ingestion_run(
-                    data_ingestion_run=data_ingestion_run
-                )
-                ingestion_config = DataIngestionConfig(
-                    collection_name=created_data_ingestion_run.collection_name,
-                    data_ingestion_run_name=created_data_ingestion_run.name,
-                    data_source=associated_data_source.data_source,
-                    embedder_config=collection.embedder_config,
-                    parser_config=created_data_ingestion_run.parser_config,
-                    data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
-                    raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
-                    batch_size=request.batch_size,
-                )
-                if pool:
-                    logger.info(
-                        f"Submitting sync_data_source_to_collection job to pool"
-                    )
-                    # future of this submission is ignored, failures not tracked
-                    pool.submit(sync_data_source_to_collection, ingestion_config)
-                else:
-                    await sync_data_source_to_collection(ingestion_config)
-                created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
-            else:
-                if not settings.JOB_FQN:
-                    logger.error("Job FQN is required to trigger the job")
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Job FQN and Job Component Name are required to trigger the job",
-                    )
-                data_ingestion_run = CreateDataIngestionRun(
-                    collection_name=collection.name,
-                    data_source_fqn=associated_data_source.data_source_fqn,
-                    embedder_config=collection.embedder_config,
-                    parser_config=associated_data_source.parser_config,
-                    data_ingestion_mode=request.data_ingestion_mode,
-                    raise_error_on_failure=request.raise_error_on_failure,
-                )
-                created_data_ingestion_run = await client.acreate_data_ingestion_run(
-                    data_ingestion_run=data_ingestion_run
-                )
-                trigger_job(
-                    application_fqn=settings.JOB_FQN,
-                    params={
-                        "collection_name": collection.name,
-                        "data_source_fqn": associated_data_source.data_source_fqn,
-                        "data_ingestion_run_name": created_data_ingestion_run.name,
-                        "data_ingestion_mode": request.data_ingestion_mode,
-                        "raise_error_on_failure": (
-                            "True" if request.raise_error_on_failure else "False"
-                        ),
-                    },
-                )
-        return JSONResponse(
-            status_code=201,
-            content={"message": "triggered"},
+    if not collection.associated_data_sources:
+        logger.error(
+            f"Collection {request.collection_name} does not have any associated data sources."
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collection {request.collection_name} does not have any associated data sources.",
+        )
+    associated_data_sources_to_be_ingested = []
+    if request.data_source_fqn:
+        associated_data_sources_to_be_ingested = [
+            collection.associated_data_sources.get(request.data_source_fqn)
+        ]
+    else:
+        associated_data_sources_to_be_ingested = (
+            collection.associated_data_sources.values()
         )
 
-    except HTTPException as exp:
-        raise exp
-    except Exception as exp:
-        logger.exception(exp)
-        raise HTTPException(status_code=500, detail=str(exp))
+    logger.info(f"Associated: {associated_data_sources_to_be_ingested}")
+    for associated_data_source in associated_data_sources_to_be_ingested:
+        logger.debug(
+            f"Starting ingestion for data source fqn: {associated_data_source.data_source_fqn}"
+        )
+        if not request.run_as_job or settings.LOCAL:
+            data_ingestion_run = CreateDataIngestionRun(
+                collection_name=collection.name,
+                data_source_fqn=associated_data_source.data_source_fqn,
+                embedder_config=collection.embedder_config,
+                parser_config=associated_data_source.parser_config,
+                data_ingestion_mode=request.data_ingestion_mode,
+                raise_error_on_failure=request.raise_error_on_failure,
+            )
+            created_data_ingestion_run = (
+                await metadata_store_client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
+            )
+            ingestion_config = DataIngestionConfig(
+                collection_name=created_data_ingestion_run.collection_name,
+                data_ingestion_run_name=created_data_ingestion_run.name,
+                data_source=associated_data_source.data_source,
+                embedder_config=collection.embedder_config,
+                parser_config=created_data_ingestion_run.parser_config,
+                data_ingestion_mode=created_data_ingestion_run.data_ingestion_mode,
+                raise_error_on_failure=created_data_ingestion_run.raise_error_on_failure,
+                batch_size=request.batch_size,
+            )
+            if pool:
+                logger.info(f"Submitting sync_data_source_to_collection job to pool")
+                # future of this submission is ignored, failures not tracked
+                pool.submit(sync_data_source_to_collection, ingestion_config)
+            else:
+                await sync_data_source_to_collection(ingestion_config)
+            created_data_ingestion_run.status = DataIngestionRunStatus.INITIALIZED
+        else:
+            if not settings.JOB_FQN:
+                logger.error("Job FQN is required to trigger the job")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Job FQN and Job Component Name are required to trigger the job",
+                )
+            data_ingestion_run = CreateDataIngestionRun(
+                collection_name=collection.name,
+                data_source_fqn=associated_data_source.data_source_fqn,
+                embedder_config=collection.embedder_config,
+                parser_config=associated_data_source.parser_config,
+                data_ingestion_mode=request.data_ingestion_mode,
+                raise_error_on_failure=request.raise_error_on_failure,
+            )
+            created_data_ingestion_run = (
+                await metadata_store_client.acreate_data_ingestion_run(
+                    data_ingestion_run=data_ingestion_run
+                )
+            )
+            trigger_job(
+                application_fqn=settings.JOB_FQN,
+                params={
+                    "collection_name": collection.name,
+                    "data_source_fqn": associated_data_source.data_source_fqn,
+                    "data_ingestion_run_name": created_data_ingestion_run.name,
+                    "data_ingestion_mode": request.data_ingestion_mode,
+                    "raise_error_on_failure": (
+                        "True" if request.raise_error_on_failure else "False"
+                    ),
+                },
+            )
+    return JSONResponse(
+        status_code=201,
+        content={"message": "triggered"},
+    )
