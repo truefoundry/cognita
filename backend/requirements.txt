@@ -17,11 +17,10 @@ pydantic-settings==2.6.1
 PyMuPDF==1.23.6
 
 ## html
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 ## markdown
 markdownify==0.11.6
-markdown-crawler==0.0.8
 
 ## async
 async-timeout==4.0.3
@@ -37,7 +36,7 @@ requests==2.32.2
 opencv-python==4.9.0.80
 
 ## pillow
-pillow==10.3.0
+pillow==10.4.0
 
 ## truefoundry
 truefoundry==0.4.1
@@ -61,3 +60,6 @@ qdrant-client==1.9.0
 autoflake==2.3.1
 black==24.3.0
 pre-commit==3.7.0
+
+### Web Crawling
+crawl4ai==0.3.5

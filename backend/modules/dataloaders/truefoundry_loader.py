@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Iterator, List
+from typing import AsyncGenerator, Dict, List
 
 from truefoundry.ml import get_client as get_tfy_client
 
@@ -14,14 +14,14 @@ class TrueFoundryLoader(BaseDataLoader):
     Load data from a TrueFoundry data source (data-dir).
     """
 
-    def load_filtered_data(
+    async def load_filtered_data(
         self,
         data_source: DataSource,
         dest_dir: str,
         previous_snapshot: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
-    ) -> Iterator[List[LoadedDataPoint]]:
+    ) -> AsyncGenerator[List[LoadedDataPoint], None]:
         """
         Loads data from a truefoundry data directory with FQN specified by the given source URI.
         """
@@ -48,7 +48,7 @@ class TrueFoundryLoader(BaseDataLoader):
         # If tfy_files_dir is None, it means the data was not downloaded.
         if tfy_files_dir is None:
             logger.error("Download info not found")
-            return iter([])
+            raise ValueError("Failed to download data directory")
 
         if os.path.exists(os.path.join(tfy_files_dir, "files")):
             logger.debug("Files directory exists")

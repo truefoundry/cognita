@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Iterator, List
+from typing import AsyncGenerator, Dict, List
 
 from backend.types import DataIngestionMode, DataSource, LoadedDataPoint
 
@@ -36,7 +36,7 @@ class BaseDataLoader(ABC):
     Base data loader class. Data loader is responsible for detecting, filtering and then loading data points to be ingested.
     """
 
-    def load_full_data(
+    async def load_full_data(
         self,
         data_source: DataSource,
         dest_dir: str,
@@ -51,7 +51,7 @@ class BaseDataLoader(ABC):
         Returns:
             None
         """
-        return self.load_filtered_data(
+        return await self.load_filtered_data(
             data_source,
             dest_dir,
             previous_snapshot={},
@@ -59,7 +59,7 @@ class BaseDataLoader(ABC):
             data_ingestion_mode=DataIngestionMode.FULL,
         )
 
-    def load_incremental_data(
+    async def load_incremental_data(
         self,
         data_source: DataSource,
         dest_dir: str,
@@ -76,7 +76,7 @@ class BaseDataLoader(ABC):
         Returns:
             None
         """
-        return self.load_filtered_data(
+        return await self.load_filtered_data(
             data_source,
             dest_dir,
             previous_snapshot,
@@ -85,14 +85,14 @@ class BaseDataLoader(ABC):
         )
 
     @abstractmethod
-    def load_filtered_data(
+    async def load_filtered_data(
         self,
         data_source: DataSource,
         dest_dir: str,
         previous_snapshot: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
-    ) -> Iterator[List[LoadedDataPoint]]:
+    ) -> AsyncGenerator[List[LoadedDataPoint], None]:
         """
         Sync the data source, filter data points and load them from the source to the destination directory.
         This method returns the loaded data points in batches as an iterator.

@@ -7,6 +7,7 @@ import CustomDrawer from "@/components/base/atoms/CustomDrawer"
 import IconProvider from "@/components/assets/IconProvider";
 import type { PreviewResource } from "./types";
 import { getFileFromS3 } from "@/utils/file";
+import { WEB_SOURCE_NAME } from "@/stores/constants";
 
 type Props = {
   onClose: () => void
@@ -18,6 +19,10 @@ const PreviewHandler: React.FC<{ name: string, fileFormat: string, previewUrl?: 
 
   if (!previewUrl) {
     return <div className={classes}>No preview available</div>
+  }
+
+  if (fileFormat === WEB_SOURCE_NAME) {
+    return <iframe src={previewUrl} className={classes} />
   }
 
   const [document, setDocument] = useState<File | null>(null)
@@ -67,7 +72,7 @@ const DocPreviewSlideOut: React.FC<Props> = ({ onClose, previewResource }) => {
       </div>
       {
         previewResource.fileFormat
-          ? <PreviewHandler previewUrl={previewResource.presignedUrl} name={previewResource.name} fileFormat={previewResource.fileFormat} />
+          ? <PreviewHandler previewUrl={previewResource.presignedUrl || previewResource.externalUrl} name={previewResource.name} fileFormat={previewResource.fileFormat} />
           : <span>
             No Preview available as file format unknown.
           </span>
