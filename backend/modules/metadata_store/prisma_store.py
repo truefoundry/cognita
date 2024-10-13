@@ -131,8 +131,13 @@ class PrismaStore(BaseMetadataStore):
     async def acreate_data_source(self, data_source: CreateDataSource) -> DataSource:
         # If metadata is not provided, remove it from the payload
         data_source_dict = data_source.model_dump(exclude_unset=True)
+
         if data_source_dict.get("metadata") is None:
             data_source_dict.pop("metadata", None)
+
+        # If metadata is provided, convert it to a JSON string
+        if isinstance(data_source_dict.get("metadata"), dict):
+            data_source_dict["metadata"] = json.dumps(data_source_dict["metadata"])
 
         # Create the data source
         data_source: "PrismaDataSource" = await self.db.datasource.create(
