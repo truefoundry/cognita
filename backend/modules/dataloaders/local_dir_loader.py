@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Dict, Iterator, List
+from typing import AsyncGenerator, Dict, List
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
@@ -12,14 +12,14 @@ class LocalDirLoader(BaseDataLoader):
     Load data from a local directory
     """
 
-    def load_filtered_data(
+    async def load_filtered_data(
         self,
         data_source: DataSource,
         dest_dir: str,
         previous_snapshot: Dict[str, str],
         batch_size: int,
         data_ingestion_mode: DataIngestionMode,
-    ) -> Iterator[List[LoadedDataPoint]]:
+    ) -> AsyncGenerator[List[LoadedDataPoint], None]:
         """
         Loads data from a local directory specified by the given source URI.
         """
