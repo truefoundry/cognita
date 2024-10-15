@@ -11,7 +11,7 @@ import {
   useGetApplicationsQuery,
 } from '@/stores/qafoundry'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 const DeleteApplication = ({ appName }: { appName: string }) => {
   const [deleteApplication, { isLoading }] = useDeleteApplicationMutation()
@@ -25,7 +25,7 @@ const DeleteApplication = ({ appName }: { appName: string }) => {
         'error',
         'Something went wrong!',
         e?.data?.detail ??
-          'The RAG Application deletion failed. Please try again later.'
+          'The RAG Application deletion failed. Please try again later.',
       )
     }
   }
@@ -48,6 +48,8 @@ const Applications = () => {
     string | null
   >(null)
   const [isConfigModalOpen, setIsConfigModalOpen] = React.useState(false)
+  const [showCurl, setShowCurl] = useState(false)
+  const [curlCommand, setCurlCommand] = useState('')
 
   const { data: applicationData, isLoading: isApplicationDataLoading } =
     useGetApplicationDetailsByNameQuery(selectedApplication ?? '', {
@@ -110,8 +112,33 @@ const Applications = () => {
             url: `${window.location.origin}/embed/${name}`,
           }))
         : [],
-    [applicationNames]
+    [applicationNames],
   )
+
+  useEffect(() => {
+    if (applicationData) {
+      const config = applicationData.config
+
+      const modelConfiguration = JSON.stringify(
+        config.model_configuration,
+        null,
+        2,
+      )
+      const retrieverConfig = JSON.stringify(config.retriever_config, null, 2)
+
+      const curlCommand = `curl -X POST http://localhost:8000/retrievers/${config.query_controller}/answer \\
+-H "Content-Type: application/json" \\
+-d '{
+  "collection_name": "${config.collection_name}",
+  "query": "Explain in detail about this pdf",
+  "model_configuration": ${modelConfiguration},
+  "prompt_template": "You are an AI assistant specialising in information retrieval and analysis. Answer the following question based only on the given context:\\nContext: {context} \\nQuestion: {question}",
+  "retriever_name": "${config.retriever_name}",
+  "retriever_config": ${retrieverConfig}
+}'`
+      setCurlCommand(curlCommand)
+    }
+  }, [applicationData])
 
   const embedCode = `<embed src="${window.location.origin}/embed/${selectedApplication}" style="width: 400px; height: 500px">`
 
@@ -125,7 +152,7 @@ const Applications = () => {
           {isApplicationDataLoading ? (
             <Spinner center medium />
           ) : (
-            <>
+            <div className="">
               <div className="mb-2 text-sm">Config:</div>
               <SimpleCodeEditor
                 language="json"
@@ -136,13 +163,38 @@ const Applications = () => {
               {!!applicationData?.questions?.length && (
                 <>
                   <div className="mt-3 text-sm mb-1">Questions:</div>
-                  <ul className='list-disc ml-4'>
-                    {applicationData?.questions?.map((question: string, index: number) => (
-                      <li className='text-sm font-medium' key={index}>{question}</li>
-                    ))}
+                  <ul className="list-disc ml-4">
+                    {applicationData?.questions?.map(
+                      (question: string, index: number) => (
+                        <li className="text-sm font-medium" key={index}>
+                          {question}
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </>
               )}
+
+              <button
+                onClick={() => setShowCurl(!showCurl)}
+                className="my-2 text-sm p-2 bg-[#6366F1] text-white rounded"
+              >
+                {showCurl ? 'Hide' : 'Show Curl Command'}
+              </button>
+
+              {showCurl && (
+                <div className="flex flex-col gap-2 mt-2">
+                  <h1>curl Request Example : </h1>
+                  <pre className="group overflow-scroll rounded-md p-4 bg-[#1e1e1e] text-white">
+                    <CopyField
+                      rawValue={curlCommand}
+                      className="hidden group-hover:block fixed top-[78%] right-6"
+                    />
+                    <code className="text-xs">{curlCommand}</code>
+                  </pre>
+                </div>
+              )}
+
               <div className="mt-4">
                 <div className="mb-1">
                   Use the below code to embed this application:
@@ -162,7 +214,7 @@ const Applications = () => {
                   onClick={() => setIsConfigModalOpen(false)}
                 />
               </div>
-            </>
+            </div>
           )}
         </div>
       </Modal>
