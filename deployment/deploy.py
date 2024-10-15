@@ -18,7 +18,13 @@ from deployment.unstructured_io import UnstructuredIO
 logging.basicConfig(level=logging.INFO)
 
 
-def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
+def run_deploy(
+    workspace_fqn,
+    application_set_name,
+    ml_repo,
+    base_domain_url,
+    dockerhub_images_registry,
+):
     workspace = workspace_fqn.split(":")[1]
     VECTOR_DB_CONFIG = json.dumps(
         {
@@ -46,12 +52,20 @@ def run_deploy(workspace_fqn, application_set_name, ml_repo, base_domain_url):
                 application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
             ).create_service(),
-            Qdrant(workspace=workspace, base_domain_url=base_domain_url).create_helm(),
+            Qdrant(
+                workspace=workspace,
+                base_domain_url=base_domain_url,
+                dockerhub_images_registry=dockerhub_images_registry,
+            ).create_helm(),
             QdrantUI(base_domain_url=base_domain_url).create_service(),
             UnstructuredIO().create_service(),
-            Infinity().create_service(),
-            PostgresDatabase().create_helm(),
-            Audio().create_service(),
+            Infinity(
+                dockerhub_images_registry=dockerhub_images_registry
+            ).create_service(),
+            PostgresDatabase(
+                dockerhub_images_registry=dockerhub_images_registry
+            ).create_helm(),
+            Audio(dockerhub_images_registry=dockerhub_images_registry).create_service(),
         ],
         workspace_fqn=workspace_fqn,
     )
@@ -85,10 +99,18 @@ if __name__ == "__main__":
         "--base_domain_url", type=str, required=True, help="cluster base domain url"
     )
 
+    parser.add_argument(
+        "--dockerhub-images-registry",
+        type=str,
+        required=False,
+        help="dockerhub images registry",
+        default="docker.io",
+    )
+
     args = parser.parse_args()
 
     run_deploy(**vars(args))
 
 
 ### To run the script, run the following command
-### python -m deployment.deploy --workspace_fqn <worksapce> --application_set_name <application_set_name> --ml_repo <ml_repo> --base_domain_url <cluster base domain url>
+### python -m deployment.deploy --workspace_fqn <worksapce> --application_set_name <application_set_name> --ml_repo <ml_repo> --base_domain_url <cluster base domain url> --dockerhub-images-registry <dockerhub images registry>
