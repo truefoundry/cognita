@@ -1,5 +1,4 @@
 import asyncio
-import json
 import re
 from typing import AsyncIterator
 
@@ -13,7 +12,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
 
 from backend.constants import (
-    DATA_POINT_FILE_PATH_METADATA_KEY,
     DATA_POINT_FQN_METADATA_KEY,
     DATA_POINT_HASH_METADATA_KEY,
     DATA_POINT_SIGNED_URL_METADATA_KEY,
@@ -24,7 +22,6 @@ from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.types import *
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.types import Collection
 from backend.utils import _get_read_signed_url_with_cache
 
 

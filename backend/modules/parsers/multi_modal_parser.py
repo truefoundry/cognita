@@ -8,7 +8,6 @@ import cv2
 import fitz
 import numpy as np
 from langchain.docstore.document import Document
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 
 from backend.constants import (

@@ -1,13 +1,11 @@
 import tempfile
 from concurrent.futures import Executor
-from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from langchain.docstore.document import Document
 from truefoundry.deploy import trigger_job
-from truefoundry.ml import DataDirectory
 
 from backend.constants import (
     DATA_POINT_FILE_PATH_METADATA_KEY,

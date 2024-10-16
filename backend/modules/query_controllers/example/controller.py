@@ -1,9 +1,8 @@
-from fastapi import Body, HTTPException
+from fastapi import Body
 from fastapi.responses import StreamingResponse
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
-from backend.logger import logger
 from backend.modules.query_controllers.base import BaseQueryController
 from backend.modules.query_controllers.example.payload import (
     QUERY_WITH_CONTEXTUAL_COMPRESSION_MULTI_QUERY_RETRIEVER_SIMILARITY_PAYLOAD,
