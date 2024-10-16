@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from langchain.docstore.document import Document
 
 from backend.logger import logger
-from backend.types import LoadedDataPoint
 
 PARSER_REGISTRY = {}
 PARSER_REGISTRY_EXTENSIONS = defaultdict(list)
@@ -51,7 +50,6 @@ class BaseParser(ABC):
         Returns:
             typing.List[Document]: A list of Document objects, each representing a chunk of the file.
         """
-        pass
 
 
 def get_parser_for_extension(

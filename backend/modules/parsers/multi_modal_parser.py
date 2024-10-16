@@ -10,7 +10,6 @@ import numpy as np
 from langchain.docstore.document import Document
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
-from PIL import Image
 
 from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway

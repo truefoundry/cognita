@@ -105,7 +105,6 @@ class BaseDataLoader(ABC):
         Returns:
             Iterator[List[LoadedDataPoint]]: An iterator of list of loaded data points.
         """
-        pass
 
 
 def get_loader_for_data_source(type, *args, **kwargs) -> BaseDataLoader:

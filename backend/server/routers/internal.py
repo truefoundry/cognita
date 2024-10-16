@@ -5,7 +5,6 @@ from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
-from truefoundry import ml
 from truefoundry.ml import DataDirectory
 
 from backend.logger import logger
