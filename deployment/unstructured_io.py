@@ -1,7 +1,3 @@
-import argparse
-import json
-import logging
-
 from truefoundry.deploy import Image, NodeSelector, Port, Resources, Service
 
 from deployment.config import UNSTRUCTURED_IO_SERVICE_NAME

@@ -1,7 +1,6 @@
 from truefoundry.deploy import (
     Build,
     DockerFileBuild,
-    Helm,
     Job,
     LocalSource,
     Manual,
