@@ -8,9 +8,14 @@ import cv2
 import fitz
 import numpy as np
 from langchain.docstore.document import Document
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 
+from backend.constants import (
+    MULTI_MODAL_PARSER_PROMPT,
+    MULTI_MODAL_PARSER_SUPPORTED_FILE_EXTENSIONS,
+    MULTI_MODAL_PARSER_SUPPORTED_IMAGE_EXTENSIONS,
+    MULTI_MODAL_PARSER_SUPPORTED_PDF_EXTENSION,
+)
 from backend.logger import logger
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.parsers.parser import BaseParser
@@ -20,7 +25,7 @@ from backend.types import ModelConfig
 
 class MultiModalParser(BaseParser):
     """
-    MultiModalParser is a multi-modal parser class for deep extraction of pdf documents.
+    MultiModalParser is a multi-modal parser class for deep extraction of pdf documents and images.
 
     Parser Configuration will look like the following while creating the collection:
     {
@@ -36,7 +41,7 @@ class MultiModalParser(BaseParser):
     }
     """
 
-    supported_file_extensions = [".pdf", ".png", ".jpeg", ".jpg"]
+    supported_file_extensions = MULTI_MODAL_PARSER_SUPPORTED_FILE_EXTENSIONS
 
     def __init__(self, *, model_configuration: ModelConfig, prompt: str = "", **kwargs):
         """
@@ -50,32 +55,21 @@ class MultiModalParser(BaseParser):
             self.prompt = prompt
             logger.info(f"Using custom prompt..., {self.prompt}")
         else:
-            self.prompt = """Given an image containing one or more charts/graphs, and texts, provide a detailed analysis of the data represented in the charts. Your task is to analyze the image and provide insights based on the data it represents.
-Specifically, the information should include but not limited to:
-Title of the Image: Provide a title from the charts or image if any.
-Type of Chart: Determine the type of each chart (e.g., bar chart, line chart, pie chart, scatter plot, etc.) and its key features (e.g., labels, legends, data points).
-Data Trends: Describe any notable trends or patterns visible in the data. This may include increasing/decreasing trends, seasonality, outliers, etc.
-Key Insights: Extract key insights or observations from the charts. What do the charts reveal about the underlying data? Are there any significant findings that stand out?
-Data Points: Identify specific data points or values represented in the charts, especially those that contribute to the overall analysis or insights.
-Comparisons: Compare different charts within the same image or compare data points within a single chart. Highlight similarities, differences, or correlations between datasets.
-Conclude with a summary of the key findings from your analysis and any recommendations based on those findings."""
+            self.prompt = MULTI_MODAL_PARSER_PROMPT
+
+        self.llm = model_gateway.get_llm_from_model_config(self.model_configuration)
 
         super().__init__(**kwargs)
 
     async def call_vlm_agent(
-        self,
-        llm: BaseChatModel,
-        base64_image: str,
-        page_number: int,
-        prompt: str = "Describe the information present in the image in a structured format.",
-    ):
+        self, base64_image: str, page_number: int
+    ) -> Dict[str, Any]:
+        logger.info(f"Processing Image... {page_number}")
+
         content = [
             HumanMessage(
-                [
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    },
+                content=[
+                    {"type": "text", "text": self.prompt},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -86,129 +80,89 @@ Conclude with a summary of the key findings from your analysis and any recommend
                 ]
             )
         ]
-        logger.info(f"Processing Image... {page_number}")
 
         try:
-            response = await llm.ainvoke(content)
-            return {
-                "response": [
-                    page_number,
-                    response.content,
-                ]
-            }
+            response = await self.llm.ainvoke(content)
+            return {"response": (page_number, response.content)}
         except Exception as e:
-            logger.exception(f"Error in page: {page_number} - {e}")
-            return {"error": f"Error in page: {page_number}"}
+            error_message = f"Error processing page {page_number}: {str(e)}"
+            logger.exception(error_message)
+            return {"error": error_message}
 
     async def get_chunks(
-        self, filepath: str, metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
+        self, filepath: str, _metadata: Optional[Dict[Any, Any]] = None, *args, **kwargs
     ):
         """
-        Asynchronously extracts text from a PDF file and returns it in chunks.
+        Asynchronously extracts text from a PDF or image file and returns it in chunks.
         """
+        _file_path, file_name = os.path.split(filepath)
+        pages = self._get_pages(filepath)
+
         final_texts = []
-        try:
-            if (
-                not filepath.endswith(".pdf")
-                and not filepath.endswith(".png")
-                and not filepath.endswith(".jpeg")
-                and not filepath.endswith(".jpg")
-            ):
-                raise Exception(
-                    "Invalid file extension. MultiModalParser only supports PDF, PNG, JPEG, JPG files."
-                )
 
-            # get file path & name
-            file_path, file_name = os.path.split(filepath)
+        for page_chunk in self._chunk_pages(pages):
+            tasks = [
+                self.call_vlm_agent(image_b64, page_number)
+                for page_number, image_b64 in page_chunk.items()
+            ]
+            responses = await asyncio.gather(*tasks)
 
-            if filepath.endswith(".pdf"):
-                # Open the PDF file using pdfplumber
-                doc = fitz.open(filepath)
-                pages = {}
-
-                # Iterate over each page in the PDF
-                logger.info(f"\n\nLoading all pages...")
-                for page in doc:
-                    page_number = page.number + 1
-                    try:
-                        # Convert the page to an image (RGB mode)
-                        pix = page.get_pixmap(alpha=False)
-                        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
-                            (pix.h, pix.w, pix.n)
+            for response in responses:
+                if response and "error" not in response:
+                    pg_no, page_content = response["response"]
+                    if contains_text(page_content):
+                        final_texts.append(
+                            self._create_document(
+                                file_name, pg_no, page_content, pages[pg_no]
+                            )
                         )
 
-                        # Convert the image to base64
-                        _, buffer = cv2.imencode(".png", img)
-                        image_base64 = base64.b64encode(buffer).decode("utf-8")
+            await asyncio.sleep(5)
 
-                        pages[page_number] = image_base64
-                    except Exception as e:
-                        logger.exception(f"Error in page: {page_number} - {e}")
-                        continue
+        return final_texts
 
-                logger.info(f"Total Pages: {len(pages)}")
+    def _get_pages(self, filepath: str) -> Dict[int, str]:
+        if filepath.endswith(MULTI_MODAL_PARSER_SUPPORTED_PDF_EXTENSION):
+            return self._get_pdf_pages(filepath)
+        elif filepath.endswith(MULTI_MODAL_PARSER_SUPPORTED_IMAGE_EXTENSIONS):
+            return self._get_image_page(filepath)
+        else:
+            raise ValueError(
+                "Invalid file extension. Supported formats: PDF, PNG, JPEG, JPG"
+            )
 
-            elif (
-                filepath.endswith(".png")
-                or filepath.endswith(".jpeg")
-                or filepath.endswith(".jpg")
-            ):
-                # Convert the image to base64
-                with open(filepath, "rb") as f:
-                    image_base64 = base64.b64encode(f.read()).decode("utf-8")
+    def _get_pdf_pages(self, filepath: str) -> Dict[int, str]:
+        pages = {}
+        doc = fitz.open(filepath)
+        for page in doc:
+            try:
+                pix = page.get_pixmap(alpha=False)
+                img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+                    (pix.h, pix.w, pix.n)
+                )
+                _, buffer = cv2.imencode(".png", img)
+                pages[page.number + 1] = base64.b64encode(buffer).decode("utf-8")
+            except Exception as e:
+                logger.exception(f"Error in page {page.number + 1}: {e}")
+        return pages
 
-                pages = {0: image_base64}
+    def _get_image_page(self, filepath: str) -> Dict[int, str]:
+        with open(filepath, "rb") as f:
+            return {0: base64.b64encode(f.read()).decode("utf-8")}
 
-            # make parallel requests to VLM for all pages
-            prompt = self.prompt
+    def _chunk_pages(self, data: Dict[int, str], size: int = 30):
+        it = iter(data)
+        for i in range(0, len(data), size):
+            yield {k: data[k] for k in islice(it, size)}
 
-            def break_chunks(data, size=30):
-                it = iter(data)
-                for i in range(0, len(data), size):
-                    yield {k: data[k] for k in islice(it, size)}
-
-            llm = model_gateway.get_llm_from_model_config(self.model_configuration)
-            for page_items in break_chunks(pages):
-                tasks = [
-                    self.call_vlm_agent(
-                        llm=llm,
-                        base64_image=image_b64,
-                        page_number=page_number,
-                        prompt=prompt,
-                    )
-                    for page_number, image_b64 in page_items.items()
-                ]
-                responses = await asyncio.gather(*tasks)
-
-                logger.info(f"Total Responses: {len(responses)}")
-
-                if responses is not None:
-                    for response in responses:
-                        if response is not None:
-                            if "error" in response:
-                                logger.error(f"Error in page: {response['error']}")
-                                continue
-                            else:
-                                pg_no, page_content = response["response"]
-                                if contains_text(page_content):
-                                    logger.debug(f"Processed page: {pg_no}")
-                                    final_texts.append(
-                                        Document(
-                                            page_content="File Name: "
-                                            + file_name
-                                            + "\n\n"
-                                            + page_content,
-                                            metadata={
-                                                "image_b64": pages[pg_no],
-                                                "page_number": pg_no,
-                                                "source": file_name,
-                                            },
-                                        )
-                                    )
-                else:
-                    logger.debug("No response from VLM...")
-                await asyncio.sleep(5)
-            return final_texts
-        except Exception as e:
-            logger.exception(f"Final Exception: {e}")
-            raise e
+    def _create_document(
+        self, file_name: str, pg_no: int, page_content: str, image_b64: str
+    ) -> Document:
+        return Document(
+            page_content=f"File Name: {file_name}\n\n{page_content}",
+            metadata={
+                "image_b64": image_b64,
+                "page_number": pg_no,
+                "source": file_name,
+            },
+        )

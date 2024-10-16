@@ -1,3 +1,5 @@
+import hashlib
+import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
@@ -50,6 +52,40 @@ class BaseParser(ABC):
         Returns:
             typing.List[Document]: A list of Document objects, each representing a chunk of the file.
         """
+
+
+def get_parser_for_extension_with_cache(
+    extension: str,
+    parsers_map: Dict[str, Any],
+    parser_cache: Dict[str, BaseParser],
+    *args: Any,
+    **kwargs: Any,
+) -> BaseParser:
+    # Create a cache key using MD5 hash
+    cache_key = _create_cache_key(extension, parsers_map, args, kwargs)
+
+    # Check if the parser is in the cache
+    if cache_key not in parser_cache:
+        # If not in cache, get the parser and store it
+        parser_cache[cache_key] = get_parser_for_extension(
+            extension, parsers_map, *args, **kwargs
+        )
+
+    # Return the cached parser
+    return parser_cache[cache_key]
+
+
+def _create_cache_key(
+    extension: str, parsers_map: Dict[str, Any], args: tuple, kwargs: dict
+) -> str:
+    # Convert parsers_map to a JSON string
+    parsers_json = json.dumps(parsers_map, sort_keys=True, default=lambda o: o.__dict__)
+
+    # Combine all elements into a single string
+    key_string = f"{extension}:{parsers_json}:{args}:{sorted(kwargs.items())}"
+
+    # Create MD5 hash
+    return hashlib.md5(key_string.encode()).hexdigest()
 
 
 def get_parser_for_extension(
