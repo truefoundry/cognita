@@ -121,6 +121,12 @@ class WebLoader(BaseDataLoader):
         """
         Loads data from a web URL and converts it to Markdown format.
         """
+
+        if not data_source.uri.startswith(("http://", "https://")):
+            raise ValueError(
+                f"Invalid URL: {data_source.uri}. URL must start with http:// or https://"
+            )
+
         urls = await extract_urls_from_sitemap(data_source.uri)
 
         logger.debug(f"Found a total of {len(urls)} URLs.")
