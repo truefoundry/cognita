@@ -61,7 +61,7 @@ const DocsQA = () => {
   const [modelConfig, setModelConfig] = useState(defaultModelConfig)
   const [retrieverConfig, setRetrieverConfig] = useState(defaultRetrieverConfig)
   const [promptTemplate, setPromptTemplate] = useState(defaultPrompt)
-  // const [isStreamEnabled, setIsStreamEnabled] = useState(true)
+
   const [isInternetSearchEnabled, setIsInternetSearchEnabled] = useState(false)
   const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
     useState(false)
