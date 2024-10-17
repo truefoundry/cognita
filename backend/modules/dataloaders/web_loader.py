@@ -3,16 +3,26 @@
 import hashlib
 import os
 import tempfile
+from asyncio import gather
 from typing import AsyncGenerator, Dict, List, Tuple
 from urllib.parse import urlparse
 
 import aiohttp
 from bs4 import BeautifulSoup
 from crawl4ai import AsyncWebCrawler
+from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 from backend.logger import logger
+from backend.modules import model_gateway
 from backend.modules.dataloaders.loader import BaseDataLoader
-from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
+from backend.types import (
+    DataIngestionMode,
+    DataPoint,
+    DataSource,
+    LoadedDataPoint,
+    ModelConfig,
+    ModelProviderConfig,
+)
 
 DEFAULT_BASE_DIR = os.path.join(
     tempfile.gettempdir(), "webloader"
@@ -43,16 +53,16 @@ async def extract_urls_from_sitemap(url: str) -> List[str]:
     return urls
 
 
-def calculate_full_path(url: str, dest_dir: str) -> Tuple[str, str]:
+def calculate_full_path(url: str, extension: str, dest_dir: str) -> Tuple[str, str]:
     parsed_url = urlparse(url)
     path = parsed_url.path.strip("/")
     if not path:
         path = "index"
-    filename = f"{path}.md"
+    filename = f"{path}{extension}"
     host = parsed_url.netloc
 
-    rel_path = os.path.join(host, filename)
-    full_path = os.path.join(dest_dir, rel_path)
+    rel_path = os.path.join(host, path)
+    full_path = os.path.join(dest_dir, rel_path + extension)
 
     return rel_path, full_path
 
@@ -78,6 +88,28 @@ class WebLoader(BaseDataLoader):
     Load data from a web URL
     """
 
+    def model_config_to_extraction_strategy(
+        model_config: ModelConfig, prompt: str
+    ) -> LLMExtractionStrategy:
+        model_provider_config: ModelProviderConfig = (
+            model_gateway.model_name_to_provider_config[model_config.name]
+        )
+        if not model_config.parameters:
+            model_config.parameters = {}
+        if not model_provider_config.api_key_env_var:
+            api_key = "EMPTY"
+        else:
+            api_key = os.environ.get(model_provider_config.api_key_env_var, "")
+
+        os.environ["LITELLM_PROXY_API_KEY"] = api_key
+        os.environ["LITELLM_PROXY_API_BASE"] = model_provider_config.base_url
+        model_id = "litellm_proxy" + "/".join(model_config.name.split("/")[1:])
+        return LLMExtractionStrategy(
+            model=model_id,
+            temperature=model_config.parameters.get("temperature", 0.1),
+            default_headers=model_provider_config.default_headers,
+        )
+
     async def load_filtered_data(
         self,
         data_source: DataSource,
@@ -96,44 +128,70 @@ class WebLoader(BaseDataLoader):
         loaded_data_points: List[LoadedDataPoint] = []
         dest_dir = DEFAULT_BASE_DIR
 
+        js_code = data_source.metadata.get("js_code", None)
+        wait_for = data_source.metadata.get("wait_for", None)
+        css_selector = data_source.metadata.get("css_selector", None)
+        extraction_strategy = None
+        if model_config := data_source.metadata.get("model_config", None):
+            extraction_strategy = self.model_config_to_extraction_strategy(
+                model_config, data_source.metadata.get("prompt", "")
+            )
+
         async with AsyncWebCrawler(verbose=True) as crawler:
-            for url in urls:
-                result = await crawler.arun(url=url, bypass_cache=True)
-                assert result.success, f"Failed to crawl the page: {url}"
+            for i in range(0, len(urls), batch_size):
+                batch_urls = urls[i : i + batch_size]
+                tasks = [
+                    crawler.arun(
+                        url=url,
+                        bypass_cache=True,
+                        js_code=js_code,
+                        wait_for=wait_for,
+                        css_selector=css_selector,
+                        extraction_strategy=extraction_strategy,
+                    )
+                    for url in batch_urls
+                ]
+                results = await gather(*tasks)
 
-                rel_path, full_path = calculate_full_path(url, dest_dir)
+                for url, result in zip(batch_urls, results):
+                    assert result.success, f"Failed to crawl the page: {url}"
 
-                file_hash = await write_file_and_create_hash(result.markdown, full_path)
+                    if extraction_strategy:
+                        data = result.extracted_content
+                        file_ext = ".json"
+                    else:
+                        data = result.markdown
+                        file_ext = ".md"
 
-                file_ext = ".md"
+                    rel_path, full_path = calculate_full_path(url, file_ext, dest_dir)
 
-                data_point = DataPoint(
-                    data_source_fqn=data_source.fqn,
-                    data_point_uri=rel_path,
-                    data_point_hash=file_hash,
-                    local_filepath=full_path,
-                    file_extension=file_ext,
-                )
+                    file_hash = await write_file_and_create_hash(data, full_path)
 
-                # If the data ingestion mode is incremental, check if the data point already exists.
-                if (
-                    data_ingestion_mode == DataIngestionMode.INCREMENTAL
-                    and previous_snapshot.get(data_point.data_point_fqn)
-                    and previous_snapshot.get(data_point.data_point_fqn)
-                    == data_point.data_point_hash
-                ):
-                    continue
-
-                loaded_data_points.append(
-                    LoadedDataPoint(
-                        data_point_hash=data_point.data_point_hash,
-                        data_point_uri=data_point.data_point_uri,
-                        data_source_fqn=data_point.data_source_fqn,
+                    data_point = DataPoint(
+                        data_source_fqn=data_source.fqn,
+                        data_point_uri=rel_path,
+                        data_point_hash=file_hash,
                         local_filepath=full_path,
                         file_extension=file_ext,
                     )
-                )
-                if len(loaded_data_points) >= batch_size:
+
+                    # If the data ingestion mode is incremental, check if the data point already exists.
+                    if (
+                        data_ingestion_mode == DataIngestionMode.INCREMENTAL
+                        and previous_snapshot.get(data_point.data_point_fqn)
+                        and previous_snapshot.get(data_point.data_point_fqn)
+                        == data_point.data_point_hash
+                    ):
+                        continue
+
+                    loaded_data_points.append(
+                        LoadedDataPoint(
+                            data_point_hash=data_point.data_point_hash,
+                            data_point_uri=data_point.data_point_uri,
+                            data_source_fqn=data_point.data_source_fqn,
+                            local_filepath=full_path,
+                            file_extension=file_ext,
+                        )
+                    )
                     yield loaded_data_points
                     loaded_data_points.clear()
-        yield loaded_data_points

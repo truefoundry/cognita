@@ -191,7 +191,6 @@ const config = {
       })
     }),
     typography,
-    forms,
     lineClamp,
     scrollbar,
     daisyui,
