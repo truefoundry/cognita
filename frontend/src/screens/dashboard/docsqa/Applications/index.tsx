@@ -194,7 +194,7 @@ const Applications = () => {
                 {showCurl && (
                   <div className="flex flex-col gap-2 mt-2 mb-4 relative">
                     <h1>cURL Request Example : </h1>
-                    <pre className="group overflow-scroll rounded-md p-4 bg-[#1e1e1e] text-white">
+                    <pre className="group overflow-scroll rounded-md p-4 bg-slate-900  text-white">
                       <CopyField
                         rawValue={curlCommand}
                         className="hidden group-hover:block absolute top-11 right-3"
