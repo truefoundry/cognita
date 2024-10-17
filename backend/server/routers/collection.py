@@ -16,6 +16,7 @@ from backend.types import (
     ListDataIngestionRunsDto,
     UnassociateDataSourceWithCollectionDto,
 )
+from backend.utils import run_in_executor
 
 router = APIRouter(prefix="/v1/collections", tags=["collections"])
 
@@ -118,7 +119,16 @@ async def unassociate_data_source_from_collection(
 ):
     """Remove a data source to the collection"""
     metadata_store_client = await get_client()
+    # Remove the association between datasource and collection
     collection = await metadata_store_client.aunassociate_data_source_with_collection(
+        collection_name=request.collection_name,
+        data_source_fqn=request.data_source_fqn,
+    )
+    # If there are any vector points attached to the collection due to the unassociated data source,
+    # asynchronously remove them from the vector database
+    await run_in_executor(
+        executor=None,
+        func=VECTOR_STORE_CLIENT.delete_data_point_vectors_by_data_source,
         collection_name=request.collection_name,
         data_source_fqn=request.data_source_fqn,
     )
