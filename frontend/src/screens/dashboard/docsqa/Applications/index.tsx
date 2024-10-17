@@ -220,7 +220,7 @@ const Applications = () => {
               <div className="absolute bottom-2 right-6 flex justify-end">
                 <Button
                   text="Close"
-                  className="bg-white border-1  btn-sm mt-4"
+                  className="bg-white border-1 btn-sm mt-4"
                   onClick={() => setIsConfigModalOpen(false)}
                 />
               </div>
