@@ -9,7 +9,7 @@ export type FormInputData = {
     uploadedFileIds: string[]
   }
   dataSourceUri: string
-  webConfig?: {
+  webConfig: {
     parserConfigs?: string
     waitConfigs?: string
     cssSelector?: string

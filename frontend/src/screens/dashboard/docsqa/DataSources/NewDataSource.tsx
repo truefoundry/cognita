@@ -127,10 +127,10 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
           if (IS_LOCAL_DEVELOPMENT) {
             res = await uploadDataToLocalDirectory({
               files: data.localdir.files.map((f) => f.file),
-              upload_name: uploadName,
+              upload_name: data.localdir.name,
             }).unwrap()
           } else {
-            const ddFqn = await uploadDocs(uploadName, data.localdir.files)
+            const ddFqn = await uploadDocs(data.localdir.name, data.localdir.files)
             res = await addDataSource({
               type: TFY_SOURCE_NAME,
               uri: ddFqn
@@ -152,13 +152,13 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
             uri: data.dataSourceUri,
             metadata: {
               customerId: customerId,
-              js_code: data.parserConfigs,
-              wait_for: data.waitConfigs,
-              css_selector: data.cssSelector,
-              model_config: data.aiModel && {
-                model_name: data.aiModel.model_id,
+              js_code: data.webConfig.parserConfigs,
+              wait_for: data.webConfig.waitConfigs,
+              css_selector: data.webConfig.cssSelector,
+              model_config: data.webConfig.aiModel && {
+                model_name: data.webConfig.aiModel.model_id,
               },
-              prompt: data.aiModel && data.aiModel.prompt
+              prompt: data.webConfig.aiModel && data.webConfig.aiModel.prompt
             },
           }).unwrap()
           break;
