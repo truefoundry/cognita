@@ -186,7 +186,7 @@ const Applications = () => {
 
                 <button
                   onClick={() => setShowCurl(!showCurl)}
-                  className="mb-2 mt-4 text-sm p-2 bg-[#6366F1] text-white rounded"
+                  className="mb-2 mt-4 text-sm p-2 bg-indigo-500 text-white rounded"
                 >
                   {showCurl ? 'Hide' : 'Show'} cURL Command
                 </button>
