@@ -8,6 +8,9 @@ import Spinner from '@/components/base/atoms/Spinner'
 import notify from '@/components/base/molecules/Notify'
 import {
   IS_LOCAL_DEVELOPMENT,
+  LOCAL_SOURCE_NAME,
+  TFY_SOURCE_NAME,
+  WEB_SOURCE_NAME,
 } from '@/stores/constants'
 import {
   customerId,
@@ -120,7 +123,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
       let fqn
       let res: { data_source: { fqn: string } }
       switch (data.dataSourceType) {
-        case 'localdir':
+        case LOCAL_SOURCE_NAME:
           if (IS_LOCAL_DEVELOPMENT) {
             res = await uploadDataToLocalDirectory({
               files: data.localdir.files.map((f) => f.file),
@@ -129,12 +132,12 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
           } else {
             const ddFqn = await uploadDocs(uploadName, data.localdir.files)
             res = await addDataSource({
-              type: 'truefoundry',
+              type: TFY_SOURCE_NAME,
               uri: ddFqn
             }).unwrap()
           }
           break;
-        case 'truefoundry':
+        case TFY_SOURCE_NAME:
           res = await addDataSource({
             type: selectedDataSourceType,
             uri: data.dataSourceUri,
@@ -143,9 +146,9 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
             },
           }).unwrap()
           break;
-        case 'web':
+        case WEB_SOURCE_NAME:
           res = await addDataSource({
-            type: 'web',
+            type: WEB_SOURCE_NAME,
             uri: data.dataSourceUri,
             metadata: {
               customerId: customerId,
@@ -205,7 +208,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
         />
       <CustomDrawer
         anchor={'right'}
-        open={isNewDataSourceDrawerOpen }
+        open={isNewDataSourceDrawerOpen}
         onClose={() => {
           close()
           resetForm()
@@ -274,13 +277,13 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
 
                 </div>
                 <div className="my-4 flex flex-col gap-2">
-                  {selectedDataSourceType === 'web' && (
+                  {selectedDataSourceType === WEB_SOURCE_NAME && (
                     <WebDataSource />
                   )}
-                  {selectedDataSourceType === 'localdir' && (
+                  {selectedDataSourceType === LOCAL_SOURCE_NAME && (
                     <FileUpload />
                   )}
-                  {["truefoundry"].includes(selectedDataSourceType) && (
+                  {[TFY_SOURCE_NAME].includes(selectedDataSourceType) && (
                     <label className="form-control">
                       <div className='label'>
                         <span className="label-text font-inter">
