@@ -1,18 +1,14 @@
 import asyncio
 import json
-import os
 import random
-import shutil
 import string
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from fastapi import HTTPException
 from prisma import Prisma
-from prisma.errors import RecordNotFoundError, UniqueViolationError
 
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore
-from backend.settings import settings
 from backend.types import (
     AssociateDataSourceWithCollection,
     AssociatedDataSources,
@@ -25,7 +21,6 @@ from backend.types import (
     DataSource,
     RagApplication,
 )
-from backend.utils import TRUEFOUNDRY_CLIENT
 
 if TYPE_CHECKING:
     # TODO (chiragjn): Can we import these safely even if the prisma client might not be generated yet?

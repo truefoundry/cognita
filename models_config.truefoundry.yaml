@@ -16,7 +16,7 @@ model_providers:
 
   - provider_name: local-infinity
     api_format: openai
-    base_url: http://cas-infinity.cognita-internal.svc.cluster.local:8000
+    base_url: http://infinity.cognita.svc.cluster.local:8000
     api_key_env_var: INFINITY_API_KEY
     llm_model_ids: []
     embedding_model_ids:
@@ -27,7 +27,7 @@ model_providers:
 
   - provider_name: faster-whisper
     api_format: openai
-    base_url: http://cas-whisper.cognita-internal.svc.cluster.local:8000
+    base_url: http://whisper.cognita.svc.cluster.local:8000
     api_key_env_var: ""
     llm_model_ids: []
     embedding_model_ids: []

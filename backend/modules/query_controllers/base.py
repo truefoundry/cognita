@@ -1,5 +1,5 @@
 import asyncio
-import json
+import re
 from typing import AsyncIterator
 
 import async_timeout
@@ -11,20 +11,28 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
 
+from backend.constants import (
+    DATA_POINT_FQN_METADATA_KEY,
+    DATA_POINT_HASH_METADATA_KEY,
+    DATA_POINT_SIGNED_URL_METADATA_KEY,
+)
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.types import *
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.types import Collection, ModelConfig
+from backend.utils import _get_read_signed_url_with_cache
 
 
 class BaseQueryController:
     required_metadata = [
-        "_data_point_fqn",
-        "filename",
         "_id",
+        DATA_POINT_FQN_METADATA_KEY,
+        DATA_POINT_HASH_METADATA_KEY,
+        DATA_POINT_SIGNED_URL_METADATA_KEY,
+        "_data_source_fqn",
+        "filename",
         "collection_name",
         "page_number",
         "pg_no",
@@ -39,17 +47,7 @@ class BaseQueryController:
         return PromptTemplate(input_variables=input_variables, template=template)
 
     def _format_docs(self, docs):
-        formatted_docs = list()
-        for doc in docs:
-            metadata = {
-                key: doc.metadata[key]
-                for key in self.required_metadata
-                if key in doc.metadata
-            }
-            formatted_docs.append(
-                {"page_content": doc.page_content, "metadata": metadata}
-            )
-        return "\n\n".join([f"{doc['page_content']}" for doc in formatted_docs])
+        return "\n\n".join([doc.page_content for doc in docs])
 
     def _get_llm(self, model_configuration: ModelConfig, stream=False) -> BaseChatModel:
         """
@@ -63,11 +61,6 @@ class BaseQueryController:
         """
         client = await get_client()
         collection = await client.aget_collection_by_name(collection_name)
-        if collection is None:
-            raise HTTPException(status_code=404, detail="Collection not found")
-
-        if not isinstance(collection, Collection):
-            collection = Collection(**collection.model_dump())
 
         return VECTOR_STORE_CLIENT.get_vector_store(
             collection_name=collection.name,
@@ -169,18 +162,88 @@ class BaseQueryController:
             raise HTTPException(status_code=404, detail="Retriever not found")
         return retriever
 
-    def _cleanup_metadata(self, docs):
-        formatted_docs = list()
+    def _enrich_context_for_stream_response(
+        self, docs, artifact_repo_cache, signed_url_cache
+    ):
+        """
+        Enrich the context for the stream response
+        """
+        enriched_docs = []
+
         for doc in docs:
-            metadata = {
-                key: doc.metadata[key]
-                for key in self.required_metadata
-                if key in doc.metadata
-            }
-            formatted_docs.append(
-                Document(page_content=doc.page_content, metadata=metadata)
+            # Enrich the original doc with signed URL
+            enriched_doc = self._enrich_metadata_with_signed_url(
+                doc, artifact_repo_cache, signed_url_cache
             )
-        return formatted_docs
+
+            # Create a new Document with only the required metadata
+            enriched_docs.append(
+                Document(
+                    page_content=enriched_doc.page_content,
+                    metadata={
+                        key: enriched_doc.metadata[key]
+                        for key in self.required_metadata
+                        if key in enriched_doc.metadata
+                    },
+                )
+            )
+
+        return enriched_docs
+
+    def _enrich_context_for_non_stream_response(self, outputs):
+        """
+        Enrich the context for the non stream response
+        """
+        if "context" not in outputs:
+            return []
+
+        # Cache to store the artifact repo paths for the current request
+        artifact_repo_cache = {}
+        # Cache to store the signed urls for the files for the current request
+        signed_url_cache = {}
+
+        return [
+            self._enrich_metadata_with_signed_url(
+                doc, artifact_repo_cache, signed_url_cache
+            )
+            for doc in outputs["context"]
+        ]
+
+    def _enrich_metadata_with_signed_url(
+        self, doc, artifact_repo_cache, signed_url_cache=None
+    ):
+        """
+        Enrich the metadata with the signed url
+        """
+        fqn_with_source = doc.metadata.get(DATA_POINT_FQN_METADATA_KEY)
+
+        # Return if FQN is not present or if it's already in the cache
+        if not fqn_with_source or fqn_with_source in signed_url_cache:
+            return doc
+
+        # Use a single regex to extract both data-dir FQN and file path
+        match = re.search(r"(data-dir:[^:]+).*?(files/.+)$", fqn_with_source)
+
+        # Return if the regex does not match
+        if not match:
+            return doc
+
+        # Extract the data-dir FQN and the file path from the FQN with source
+        data_dir_fqn, file_path = match.groups()
+
+        # Generate a signed url for the file
+        signed_url = _get_read_signed_url_with_cache(
+            fqn=data_dir_fqn,
+            file_path=file_path,
+            cache=artifact_repo_cache,
+        )
+
+        # Add the signed url to the metadata if it's not None
+        if signed_url:
+            doc.metadata[DATA_POINT_SIGNED_URL_METADATA_KEY] = signed_url[0].signed_url
+            signed_url_cache[fqn_with_source] = signed_url
+
+        return doc
 
     def _intent_summary_search(self, query: str):
         url = f"https://api.search.brave.com/res/v1/web/search?q={query}&summary=1"
@@ -222,15 +285,26 @@ class BaseQueryController:
     async def _sse_wrap(self, gen):
         async for data in gen:
             yield "event: data\n"
-            yield f"data: {json.dumps(data.dict())}\n\n"
+            yield f"data: {data.model_dump_json()}\n\n"
         yield "event: end\n"
 
     async def _stream_answer(self, rag_chain, query) -> AsyncIterator[BaseModel]:
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
+                # Caches to store the artifact repo paths and signed urls for the current request
+                artifact_repo_cache = {}
+                # Cache to store the signed urls for the files for the current request
+                signed_url_cache = {}
+                # Process each chunk of the stream
                 async for chunk in rag_chain.astream(query):
+                    # If the chunk has the context key, enrich the context with the signed urls
                     if "context" in chunk:
-                        yield Docs(content=self._cleanup_metadata(chunk["context"]))
+                        yield Docs(
+                            content=self._enrich_context_for_stream_response(
+                                chunk["context"], artifact_repo_cache, signed_url_cache
+                            )
+                        )
+                    # If the chunk has the answer key, yield the answer
                     elif "answer" in chunk:
                         yield Answer(content=chunk["answer"])
             except asyncio.TimeoutError:

@@ -3,8 +3,10 @@ import zipfile
 from concurrent.futures import Executor, Future, ProcessPoolExecutor
 from contextvars import copy_context
 from functools import partial
+from types import SimpleNamespace
 from typing import Callable, Optional, TypeVar, cast
 
+from truefoundry.ml import DataDirectory
 from truefoundry.ml import get_client as get_tfy_client
 from typing_extensions import ParamSpec
 
@@ -49,6 +51,20 @@ def unzip_file(file_path, dest_dir):
     """
     with zipfile.ZipFile(file_path, "r") as zip_ref:
         zip_ref.extractall(dest_dir)
+
+
+def _get_read_signed_url_with_cache(fqn: str, file_path: str, cache: dict):
+    if fqn not in cache:
+        cache[fqn] = DataDirectory.from_fqn(fqn=fqn)._get_artifacts_repo()
+    url = cache[fqn].get_signed_urls_for_read(
+        artifact_identifier=SimpleNamespace(
+            artifact_version_id=None,
+            dataset_fqn=fqn,
+        ),
+        paths=[file_path],
+    )
+
+    return url
 
 
 # Taken from https://github.com/langchain-ai/langchain/blob/987099cfcda6f20140228926e9d39eed5ccd35b4/libs/core/langchain_core/runnables/config.py#L528
