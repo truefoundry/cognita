@@ -143,74 +143,84 @@ const Applications = () => {
   const embedCode = `<embed src="${window.location.origin}/embed/${selectedApplication}" style="width: 400px; height: 500px">`
 
   return (
-    <div className="h-[calc(100%-50px)] overflow-auto bg-white">
+    <>
+      <div className="h-[calc(100%-50px)] overflow-auto bg-white">
+        <Table rows={rows} columns={columns} isLoading={isLoading} />
+      </div>
       <Modal
         open={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        <div className="modal-box">
+        <div className="relative modal-box py-6 pb-12 overflow-hidden border-2 max-w-[40rem]">
           {isApplicationDataLoading ? (
             <Spinner center medium />
           ) : (
-            <div className="">
-              <div className="mb-2 text-sm">Config:</div>
-              <SimpleCodeEditor
-                language="json"
-                height={350}
-                value={JSON.stringify(applicationData?.config, null, 2)}
-                readOnly
-              />
-              {!!applicationData?.questions?.length && (
-                <>
-                  <div className="mt-3 text-sm mb-1">Questions:</div>
-                  <ul className="list-disc ml-4">
-                    {applicationData?.questions?.map(
-                      (question: string, index: number) => (
-                        <li className="text-sm font-medium" key={index}>
-                          {question}
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </>
-              )}
+            <div className="max-h-[70vh] overflow-scroll">
+              <div className="h-full overflow-scroll mb-2">
+                <div className="mb-2 text-sm">Config:</div>
+                <SimpleCodeEditor
+                  language="json"
+                  height={350}
+                  value={JSON.stringify(applicationData?.config, null, 2)}
+                  readOnly
+                />
+                {!!applicationData?.questions?.length && (
+                  <>
+                    <div className="mt-3 text-sm mb-1">Questions:</div>
+                    <ul className="list-disc ml-4">
+                      {applicationData?.questions?.map(
+                        (question: string, index: number) => (
+                          <li className="text-sm font-medium" key={index}>
+                            {question}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </>
+                )}
 
-              <button
-                onClick={() => setShowCurl(!showCurl)}
-                className="my-2 text-sm p-2 bg-[#6366F1] text-white rounded"
-              >
-                {showCurl ? 'Hide' : 'Show Curl Command'}
-              </button>
+                <button
+                  onClick={() => setShowCurl(!showCurl)}
+                  className="mb-2 mt-4 text-sm p-2 bg-[#6366F1] text-white rounded"
+                >
+                  {showCurl ? 'Hide' : 'Show'} cURL Command
+                </button>
 
-              {showCurl && (
-                <div className="flex flex-col gap-2 mt-2">
-                  <h1>curl Request Example : </h1>
-                  <pre className="group overflow-scroll rounded-md p-4 bg-[#1e1e1e] text-white">
+                {showCurl && (
+                  <div className="flex flex-col gap-2 mt-2 mb-4 relative">
+                    <h1>cURL Request Example : </h1>
+                    <pre className="group overflow-scroll rounded-md p-4 bg-[#1e1e1e] text-white">
+                      <CopyField
+                        rawValue={curlCommand}
+                        className="hidden group-hover:block absolute top-11 right-3"
+                      />
+                      <code className="text-xs">{curlCommand}</code>
+                    </pre>
+                  </div>
+                )}
+
+                <div className="mt-2">
+                  <div className="mb-1">
+                    Use the below code to embed this application:
+                  </div>
+                  <div className="relative text-sm bg-gray-100 p-2 rounded font-medium italic group">
+                    {embedCode}
                     <CopyField
-                      rawValue={curlCommand}
-                      className="hidden group-hover:block fixed top-[78%] right-6"
+                      rawValue={embedCode}
+                      className="hidden group-hover:block absolute top-1 right-1"
                     />
-                    <code className="text-xs">{curlCommand}</code>
-                  </pre>
-                </div>
-              )}
-
-              <div className="mt-4">
-                <div className="mb-1">
-                  Use the below code to embed this application:
-                </div>
-                <div className="relative text-sm bg-gray-100 p-2 rounded font-medium italic group">
-                  {embedCode}
-                  <CopyField
-                    rawValue={embedCode}
-                    className="hidden group-hover:block absolute top-1 right-1"
-                  />
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-end">
+              <div className="absolute bottom-2 right-6 flex justify-end">
                 <Button
                   text="Close"
-                  className="btn-sm mt-4"
+                  className="bg-white border-1  btn-sm mt-4"
                   onClick={() => setIsConfigModalOpen(false)}
                 />
               </div>
@@ -218,8 +228,7 @@ const Applications = () => {
           )}
         </div>
       </Modal>
-      <Table rows={rows} columns={columns} isLoading={isLoading} />
-    </div>
+    </>
   )
 }
 
