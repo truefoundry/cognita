@@ -3,7 +3,6 @@
 import hashlib
 import os
 import tempfile
-from asyncio import gather
 from typing import AsyncGenerator, Dict, List, Tuple
 from urllib.parse import urlparse
 
@@ -144,60 +143,56 @@ class WebLoader(BaseDataLoader):
             )
 
         async with AsyncWebCrawler(verbose=True) as crawler:
-            for i in range(0, len(urls), batch_size):
-                batch_urls = urls[i : i + batch_size]
-                tasks = [
-                    crawler.arun(
-                        url=url,
-                        bypass_cache=True,
-                        js_code=js_code,
-                        wait_for=wait_for,
-                        css_selector=css_selector,
-                        extraction_strategy=extraction_strategy,
-                    )
-                    for url in batch_urls
-                ]
-                results = await gather(*tasks)
+            for url in urls:
+                result = await crawler.arun(
+                    url=url,
+                    bypass_cache=True,
+                    js_code=js_code,
+                    wait_for=wait_for,
+                    css_selector=css_selector,
+                    extraction_strategy=extraction_strategy,
+                )
+                assert result.success, f"Failed to crawl the page: {url}"
 
-                for url, result in zip(batch_urls, results):
-                    assert result.success, f"Failed to crawl the page: {url}"
+                if extraction_strategy:
+                    data = result.extracted_content
+                    file_ext = ".json"
+                else:
+                    data = result.markdown
+                    file_ext = ".md"
 
-                    if extraction_strategy:
-                        data = result.extracted_content
-                        file_ext = ".json"
-                    else:
-                        data = result.markdown
-                        file_ext = ".md"
+                rel_path, full_path = calculate_full_path(url, file_ext, dest_dir)
 
-                    rel_path, full_path = calculate_full_path(url, file_ext, dest_dir)
+                file_hash = await write_file_and_create_hash(data, full_path)
 
-                    file_hash = await write_file_and_create_hash(data, full_path)
+                data_point = DataPoint(
+                    data_source_fqn=data_source.fqn,
+                    data_point_uri=rel_path,
+                    data_point_hash=file_hash,
+                    local_filepath=full_path,
+                    file_extension=file_ext,
+                )
 
-                    data_point = DataPoint(
-                        data_source_fqn=data_source.fqn,
-                        data_point_uri=rel_path,
-                        data_point_hash=file_hash,
+                # If the data ingestion mode is incremental, check if the data point already exists.
+                if (
+                    data_ingestion_mode == DataIngestionMode.INCREMENTAL
+                    and previous_snapshot.get(data_point.data_point_fqn)
+                    and previous_snapshot.get(data_point.data_point_fqn)
+                    == data_point.data_point_hash
+                ):
+                    continue
+
+                loaded_data_points.append(
+                    LoadedDataPoint(
+                        data_point_hash=data_point.data_point_hash,
+                        data_point_uri=data_point.data_point_uri,
+                        data_source_fqn=data_point.data_source_fqn,
                         local_filepath=full_path,
                         file_extension=file_ext,
                     )
-
-                    # If the data ingestion mode is incremental, check if the data point already exists.
-                    if (
-                        data_ingestion_mode == DataIngestionMode.INCREMENTAL
-                        and previous_snapshot.get(data_point.data_point_fqn)
-                        and previous_snapshot.get(data_point.data_point_fqn)
-                        == data_point.data_point_hash
-                    ):
-                        continue
-
-                    loaded_data_points.append(
-                        LoadedDataPoint(
-                            data_point_hash=data_point.data_point_hash,
-                            data_point_uri=data_point.data_point_uri,
-                            data_source_fqn=data_point.data_source_fqn,
-                            local_filepath=full_path,
-                            file_extension=file_ext,
-                        )
-                    )
+                )
+                if len(loaded_data_points) >= batch_size:
                     yield loaded_data_points
                     loaded_data_points.clear()
+
+        yield loaded_data_points
