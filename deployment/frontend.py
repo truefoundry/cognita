@@ -17,7 +17,7 @@ class Frontend:
 
     def create_service(self):
         return Service(
-            name=FRONTEND_SERVICE_NAME,
+            name=f"{self.application_set_name}-{FRONTEND_SERVICE_NAME}",
             image=Build(
                 # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
                 # With local_build=False flag, docker image will be built on cloud instead of local

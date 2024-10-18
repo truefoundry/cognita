@@ -29,7 +29,7 @@ def run_deploy(
     VECTOR_DB_CONFIG = json.dumps(
         {
             "provider": "qdrant",
-            "url": f"http://{VECTOR_DB_HELM_NAME}.{workspace}.svc.cluster.local:6333",
+            "url": f"http://{application_set_name}-{VECTOR_DB_HELM_NAME}.{workspace}.svc.cluster.local:6333",
             "api_key": "",
         }
     )
@@ -38,7 +38,11 @@ def run_deploy(
         name=application_set_name,
         components=[
             Indexer(
-                ml_repo=ml_repo, workspace=workspace, VECTOR_DB_CONFIG=VECTOR_DB_CONFIG
+                ml_repo=ml_repo,
+                workspace=workspace,
+                application_set_name=application_set_name,
+                VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
+                base_domain_url=base_domain_url,
             ).create_job(),
             Backend(
                 ml_repo=ml_repo,
@@ -54,18 +58,29 @@ def run_deploy(
             ).create_service(),
             Qdrant(
                 workspace=workspace,
+                application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
                 dockerhub_images_registry=dockerhub_images_registry,
             ).create_helm(),
-            QdrantUI(base_domain_url=base_domain_url).create_service(),
-            UnstructuredIO().create_service(),
+            QdrantUI(
+                application_set_name=application_set_name,
+                base_domain_url=base_domain_url,
+            ).create_service(),
+            UnstructuredIO(
+                application_set_name=application_set_name,
+            ).create_service(),
             Infinity(
-                dockerhub_images_registry=dockerhub_images_registry
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
             ).create_service(),
             PostgresDatabase(
-                dockerhub_images_registry=dockerhub_images_registry
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
             ).create_helm(),
-            Audio(dockerhub_images_registry=dockerhub_images_registry).create_service(),
+            Audio(
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
+            ).create_service(),
         ],
         workspace_fqn=workspace_fqn,
     )

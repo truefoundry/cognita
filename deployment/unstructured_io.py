@@ -4,12 +4,12 @@ from deployment.config import UNSTRUCTURED_IO_SERVICE_NAME
 
 
 class UnstructuredIO:
-    def __init__(self):
-        pass
+    def __init__(self, application_set_name):
+        self.application_set_name = application_set_name
 
     def create_service(self):
         return Service(
-            name=UNSTRUCTURED_IO_SERVICE_NAME,
+            name=f"{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}",
             image=Image(
                 image_uri="downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73",
             ),

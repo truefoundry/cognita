@@ -18,15 +18,24 @@ from deployment.config import (
 
 
 class Indexer:
-    def __init__(self, ml_repo, workspace, VECTOR_DB_CONFIG):
+    def __init__(
+        self,
+        ml_repo,
+        workspace,
+        application_set_name,
+        VECTOR_DB_CONFIG,
+        base_domain_url,
+    ):
         self.ml_repo = ml_repo
         self.workspace = workspace
         self.VECTOR_DB_CONFIG = VECTOR_DB_CONFIG
+        self.application_set_name = application_set_name
+        self.base_domain_url = base_domain_url
 
     def create_job(self):
         INDEXER_COMMAND = """/bin/bash -c 'set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name "{{collection_name}}" --data_source_fqn "{{data_source_fqn}}" --data_ingestion_run_name "{{data_ingestion_run_name}}" --data_ingestion_mode "{{data_ingestion_mode}}" --raise_error_on_failure  "{{raise_error_on_failure}}"'"""
         return Job(
-            name=INDEXER_SERVICE_NAME,
+            name=f"{self.application_set_name}-{INDEXER_SERVICE_NAME}",
             image=Build(
                 build_source=LocalSource(local_build=False),
                 build_spec=DockerFileBuild(
@@ -52,13 +61,14 @@ class Indexer:
             ],
             env={
                 "LOG_LEVEL": "DEBUG",
-                "DATABASE_URL": f"postgresql://admin:password@{DATABASE_NAME}-postgresql.{self.workspace}.svc.cluster.local:5432/cognita-config",
-                "INFINITY_URL": f"http://{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
+                "DATABASE_URL": f"postgresql://admin:password@{self.application_set_name}-{DATABASE_NAME}-postgresql.{self.workspace}.svc.cluster.local:5432/cognita-config",
+                "INFINITY_URL": f"http://{self.application_set_name}-{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "ML_REPO_NAME": self.ml_repo,
+                "BRAVE_API_KEY": "tfy-secret://internal:cognita:BRAVE_API_KEY",
                 "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
                 "VECTOR_DB_CONFIG": self.VECTOR_DB_CONFIG,
                 "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
-                "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
+                "UNSTRUCTURED_IO_URL": f"http://{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
                 "UNSTRUCTURED_IO_API_KEY": "tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY",
             },
