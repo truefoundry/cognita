@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 public.ecr.aws/docker/library/python:3.11
+FROM --platform=linux/amd64 python:3.11
 
 # Required for opencv
 RUN apt-get update -y && \
@@ -14,7 +14,8 @@ COPY backend/vectordb.requirements.txt /tmp/vectordb.requirements.txt
 
 # Install Python packages
 RUN python3 -m pip install -U pip setuptools wheel uv && \
-    python3 -m uv pip install --no-cache-dir -r /tmp/requirements.txt --index-strategy unsafe-any-match
+    python3 -m uv pip install --no-cache-dir -r /tmp/requirements.txt --index-strategy unsafe-any-match && \
+    playwright install --with-deps
 
 # Install VectorDB packages
 ARG ADD_VECTORDB=0
