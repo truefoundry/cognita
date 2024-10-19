@@ -53,6 +53,7 @@ langchain-openai==0.1.25
 
 ## vector db
 qdrant-client==1.9.0
+chromadb==0.5.15
 
 ## dev
 autoflake==2.3.1
