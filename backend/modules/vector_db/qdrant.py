@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from langchain.embeddings.base import Embeddings
@@ -9,36 +9,42 @@ from qdrant_client.http.models import Distance, VectorParams
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
+from backend.types import DataPointVector, QdrantVectorDBConfig
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
 
 
 class QdrantVectorDB(BaseVectorDB):
-    def __init__(self, config: VectorDBConfig):
-        logger.debug(f"Connecting to qdrant using config: {config.model_dump()}")
-        if config.local is True:
-            # TODO: make this path customizable
-            self.qdrant_client = QdrantClient(
-                path="./qdrant_db",
-            )
-        else:
-            url = config.url
-            api_key = config.api_key
-            if not api_key:
-                api_key = None
-            qdrant_kwargs = QdrantClientConfig.model_validate(config.config or {})
-            if url.startswith("http://") or url.startswith("https://"):
-                if qdrant_kwargs.port is None:
-                    parsed_port = urlparse(url).port
-                    if parsed_port:
-                        qdrant_kwargs.port = parsed_port
-                    else:
-                        qdrant_kwargs.port = 443 if url.startswith("https://") else 6333
-            self.qdrant_client = QdrantClient(
-                url=url, api_key=api_key, **qdrant_kwargs.model_dump()
-            )
+    def __init__(self, db_config: QdrantVectorDBConfig):
+        logger.debug(f"Connecting to qdrant using config: {db_config.model_dump()}")
+        self.qdrant_client = self._create_client(db_config)
+
+    def _create_client(self, db_config: QdrantVectorDBConfig) -> QdrantClient:
+        # Local
+        if db_config.local:
+            return QdrantClient(path=db_config.path)
+
+        url = db_config.url
+
+        if url.startswith(("http://", "https://")):
+            db_config.config.port = self._get_port(url, db_config.config.port)
+
+        # If the Qdrant server is hosted on a remote server, create an http client
+        return QdrantClient(
+            url=url, api_key=db_config.api_key, **db_config.config.model_dump()
+        )
+
+    @staticmethod
+    def _get_port(url: str, existing_port: Optional[int]) -> int:
+        if existing_port:
+            return existing_port
+
+        parsed_port = urlparse(url).port
+        if parsed_port:
+            return parsed_port
+
+        return 443 if url.startswith("https://") else 6333
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
@@ -113,11 +119,11 @@ class QdrantVectorDB(BaseVectorDB):
     def upsert_documents(
         self,
         collection_name: str,
-        documents,
+        documents: list,
         embeddings: Embeddings,
         incremental: bool = True,
     ):
-        if len(documents) == 0:
+        if not documents:
             logger.warning("No documents to index")
             return
         # get record IDs to be upserted
@@ -219,11 +225,9 @@ class QdrantVectorDB(BaseVectorDB):
                 offset=offset,
             )
             for record in records:
-                metadata: dict = record.payload.get("metadata")
-                if (
-                    metadata
-                    and metadata.get(DATA_POINT_FQN_METADATA_KEY)
-                    and metadata.get(DATA_POINT_HASH_METADATA_KEY)
+                metadata: dict = record.payload.get("metadata", {})
+                if metadata.get(DATA_POINT_FQN_METADATA_KEY) and metadata.get(
+                    DATA_POINT_HASH_METADATA_KEY
                 ):
                     data_point_vectors.append(
                         DataPointVector(
