@@ -4,7 +4,8 @@ from deployment.config import INFINITY_SERVICE_NAME
 
 
 class Infinity:
-    def __init__(self, application_set_name, dockerhub_images_registry):
+    def __init__(self, secrets_base, application_set_name, dockerhub_images_registry):
+        self.secrets_base = secrets_base
         self.application_set_name = application_set_name
         self.dockerhub_images_registry = dockerhub_images_registry
 
@@ -26,7 +27,7 @@ class Infinity:
             ),
             env={
                 "PORT": "8000",
-                "API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
+                "API_KEY": f"{self.secrets_base}:INFINITY-API-KEY",
                 "BATCH_SIZE": "4",
             },
             ports=[Port(port=8000, protocol="TCP", expose=False, app_protocol="http")],

@@ -6,11 +6,13 @@ from deployment.config import QDRANT_SERVICE_UI_NAME, VECTOR_DB_HELM_NAME
 class Qdrant:
     def __init__(
         self,
+        secrets_base,
         application_set_name,
         workspace,
         base_domain_url,
         dockerhub_images_registry,
     ):
+        self.secrets_base = secrets_base
         self.workspace = workspace
         self.base_domain_url = base_domain_url
         self.application_set_name = application_set_name

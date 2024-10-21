@@ -23,6 +23,7 @@ from deployment.config import (
 class Backend:
     def __init__(
         self,
+        secrets_base,
         ml_repo,
         workspace_fqn,
         workspace,
@@ -30,6 +31,7 @@ class Backend:
         base_domain_url,
         VECTOR_DB_CONFIG,
     ):
+        self.secrets_base = secrets_base
         self.ml_repo = ml_repo
         self.workspace_fqn = workspace_fqn
         self.workspace = workspace
@@ -67,14 +69,14 @@ class Backend:
                 "DATABASE_URL": f"postgresql://admin:password@{self.application_set_name}-{DATABASE_NAME}-postgresql.{self.workspace}.svc.cluster.local:5432/cognita-config",
                 "INFINITY_URL": f"http://{self.application_set_name}-{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "ML_REPO_NAME": self.ml_repo,
-                "BRAVE_API_KEY": "tfy-secret://internal:cognita:BRAVE_API_KEY",
-                "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
+                "BRAVE_API_KEY": f"{self.secrets_base}:BRAVE-API-KEY",
+                "INFINITY_API_KEY": f"{self.secrets_base}:INFINITY-API-KEY",
                 "VECTOR_DB_CONFIG": self.VECTOR_DB_CONFIG,
                 "JOB_COMPONENT_NAME": f"{self.workspace}-{INDEXER_SERVICE_NAME}",
                 "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
                 "UNSTRUCTURED_IO_URL": f"http://{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
-                "UNSTRUCTURED_IO_API_KEY": "tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY",
+                "UNSTRUCTURED_IO_API_KEY": f"{self.secrets_base}:UNSTRUCTURED-IO-API-KEY",
             },
             ports=[
                 Port(

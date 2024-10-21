@@ -12,7 +12,8 @@ from deployment.config import QDRANT_SERVICE_UI_NAME
 
 
 class QdrantUI:
-    def __init__(self, application_set_name, base_domain_url):
+    def __init__(self, secrets_base, application_set_name, base_domain_url):
+        self.secrets_base = secrets_base
         self.application_set_name = application_set_name
         self.base_domain_url = base_domain_url
 

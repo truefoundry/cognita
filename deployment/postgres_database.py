@@ -4,7 +4,8 @@ from deployment.config import DATABASE_NAME
 
 
 class PostgresDatabase:
-    def __init__(self, application_set_name, dockerhub_images_registry):
+    def __init__(self, secrets_base, application_set_name, dockerhub_images_registry):
+        self.secrets_base = secrets_base
         self.application_set_name = application_set_name
         self.dockerhub_images_registry = dockerhub_images_registry
 
