@@ -130,12 +130,13 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(
             f"[Qdrant] Adding {len(documents)} documents to collection {collection_name}"
         )
-        data_point_fqns = []
-        for document in documents:
-            if document.metadata.get(DATA_POINT_FQN_METADATA_KEY):
-                data_point_fqns.append(
-                    document.metadata.get(DATA_POINT_FQN_METADATA_KEY)
-                )
+        # Collect the data point fqns from the documents
+        data_point_fqns = [
+            doc.metadata.get(DATA_POINT_FQN_METADATA_KEY)
+            for doc in documents
+            if doc.metadata.get(DATA_POINT_FQN_METADATA_KEY)
+        ]
+        # Get the record ids to be upserted
         record_ids_to_be_upserted: List[str] = self._get_records_to_be_upserted(
             collection_name=collection_name,
             data_point_fqns=data_point_fqns,
@@ -152,24 +153,28 @@ class QdrantVectorDB(BaseVectorDB):
             f"[Qdrant] Added {len(documents)} documents to collection {collection_name}"
         )
 
-        # Delete Documents
-        if len(record_ids_to_be_upserted):
-            logger.debug(
-                f"[Qdrant] Deleting {len(documents)} outdated documents from collection {collection_name}"
+        # Delete old documents
+        
+        # If there are no record ids to be upserted, return
+        if not len(record_ids_to_be_upserted):
+            return
+        
+        logger.debug(
+            f"[Qdrant] Deleting {len(documents)} outdated documents from collection {collection_name}"
+        )
+        for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
+            record_ids_to_be_processed = record_ids_to_be_upserted[
+                i : i + BATCH_SIZE
+            ]
+            self.qdrant_client.delete(
+                collection_name=collection_name,
+                points_selector=models.PointIdsList(
+                    points=record_ids_to_be_processed,
+                ),
             )
-            for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
-                record_ids_to_be_processed = record_ids_to_be_upserted[
-                    i : i + BATCH_SIZE
-                ]
-                self.qdrant_client.delete(
-                    collection_name=collection_name,
-                    points_selector=models.PointIdsList(
-                        points=record_ids_to_be_processed,
-                    ),
-                )
-            logger.debug(
-                f"[Qdrant] Deleted {len(documents)} outdated documents from collection {collection_name}"
-            )
+        logger.debug(
+            f"[Qdrant] Deleted {len(documents)} outdated documents from collection {collection_name}"
+        )
 
     def get_collections(self) -> List[str]:
         logger.debug(f"[Qdrant] Fetching collections")
@@ -415,3 +420,4 @@ class QdrantVectorDB(BaseVectorDB):
             f"[Qdrant] Listing {len(document_vector_points)} document vector points for collection {collection_name}"
         )
         return document_vector_points
+
