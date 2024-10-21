@@ -41,6 +41,8 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
   const [isNewDataSourceDrawerOpen, setIsNewDataSourceDrawerOpen] =
     React.useState(false)
 
+  const [localUploadedFileIds, setLocalUploadedFileIds] = useState<string[]>([])
+
   const { data: dataLoaders } = useGetDataLoadersQuery()
 
 
@@ -86,9 +88,8 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
         );
 
         // Update the uploaded file ids state, filtering out null values
-        methods.setValue(
-          "localdir.uploadedFileIds",
-          [...methods.getValues("localdir.uploadedFileIds"), ...uploadedFileIds.filter(Boolean)]
+        setLocalUploadedFileIds(
+          [...localUploadedFileIds, ...uploadedFileIds.filter(Boolean)]
         );
       }
       return dataDirectoryFqn
@@ -194,6 +195,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
       methods.reset({
         dataSourceType: dataLoaders[0].type,
       })
+      setLocalUploadedFileIds([])
     }
   }
 
@@ -281,7 +283,9 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
                     <WebDataSource />
                   )}
                   {selectedDataSourceType === LOCAL_SOURCE_NAME && (
-                    <FileUpload />
+                    <FileUpload
+                      uploadedFileIds={localUploadedFileIds}
+                    />
                   )}
                   {[TFY_SOURCE_NAME].includes(selectedDataSourceType) && (
                     <label className="form-control">

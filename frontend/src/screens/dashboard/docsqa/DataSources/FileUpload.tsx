@@ -26,13 +26,11 @@ const calcUploadSize = (files: FormInputData['localdir']['files']) =>
   files.reduce((acc, { file }) => acc + file.size, 0) / 1024 / 1024
 
 type Props =  {
-
+  uploadedFileIds: string[]
 }
 
-const FileUpload: React.FC<Props> = ({ }) => {
-  const { control, register, watch, formState: {errors, isSubmitting} } = useFormContext<FormInputData>()
-
-  const uploadedFileIds = watch('localdir.uploadedFileIds', [])
+const FileUpload: React.FC<Props> = ({ uploadedFileIds }) => {
+  const { control, register, formState: {errors, isSubmitting} } = useFormContext<FormInputData>()
 
   const { field, fieldState } = useController({
     name: 'localdir.files',
