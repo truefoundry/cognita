@@ -1,8 +1,11 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
+import type { Root } from 'mdast';
+import { visit } from 'unist-util-visit';
 
 import classNames from '@/utils/classNames'
 import { InfoType } from '@/types/enums'
+import CodeBlock from "./CodeBlock";
 
 export type MarkdownProps = React.ComponentProps<typeof ReactMarkdown> & {
   type?: InfoType
@@ -13,6 +16,13 @@ const Markdown: React.FC<MarkdownProps> = ({ children, className }) => {
   return (
     <ReactMarkdown
       className={classes}
+      remarkPlugins={[
+        () => (tree: Root) => {
+          visit(tree, 'code', (node) => {
+            node.lang = node.lang ?? 'plaintext';
+          });
+        },
+      ]}
       children={children}
       components={{
         li: ({
@@ -43,6 +53,7 @@ const Markdown: React.FC<MarkdownProps> = ({ children, className }) => {
             </span>
           )
         },
+        code: CodeBlock,
       }}
     />
   )
