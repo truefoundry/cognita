@@ -95,6 +95,7 @@
     "react-router-dom": "^6.2.2",
     "react-syntax-highlighter": "^15.6.1",
     "react-toastify": "^10.0.5",
+    "rehype-raw": "^7.0.0",
     "sse.js": "^2.5.0",
     "tailwind-merge": "^2.3.0",
     "use-react-router-breadcrumbs": "^4.0.1"

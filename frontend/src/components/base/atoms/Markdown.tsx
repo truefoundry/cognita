@@ -2,6 +2,7 @@ import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { Root } from 'mdast';
 import { visit } from 'unist-util-visit';
+import rehypeRaw from "rehype-raw";
 
 import classNames from '@/utils/classNames'
 import { InfoType } from '@/types/enums'
@@ -23,6 +24,7 @@ const Markdown: React.FC<MarkdownProps> = ({ children, className }) => {
           });
         },
       ]}
+      rehypePlugins={[rehypeRaw]}
       children={children}
       components={{
         li: ({

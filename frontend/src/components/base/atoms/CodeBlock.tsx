@@ -14,8 +14,6 @@ export type CodeBlockProps = {
 const CodeBlock: React.FC<ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps> = ({children, className, node, ...rest}) => {
   const match = /language-(\w+)/.exec(className || '')
 
-  console.log(JSON.stringify(rest), className)
-
   return match ? (
     <span className="relative">
       <CopyField rawValue={String(children)} className="absolute top-2 right-2" />
