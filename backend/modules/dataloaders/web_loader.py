@@ -88,7 +88,7 @@ class WebLoader(BaseDataLoader):
     """
 
     def model_config_to_extraction_strategy(
-        model_config: ModelConfig, prompt: str
+        self, model_config: ModelConfig, prompt: str
     ) -> LLMExtractionStrategy:
         model_provider_config: ModelProviderConfig = (
             model_gateway.model_name_to_provider_config[model_config.name]
@@ -104,6 +104,7 @@ class WebLoader(BaseDataLoader):
         os.environ["LITELLM_PROXY_API_BASE"] = model_provider_config.base_url
         model_id = "litellm_proxy" + "/".join(model_config.name.split("/")[1:])
         return LLMExtractionStrategy(
+            instruction=prompt,
             model=model_id,
             temperature=model_config.parameters.get("temperature", 0.1),
             default_headers=model_provider_config.default_headers,
