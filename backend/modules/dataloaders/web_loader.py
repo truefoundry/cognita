@@ -12,15 +12,14 @@ from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 from backend.logger import logger
-from backend.modules import model_gateway
 from backend.modules.dataloaders.loader import BaseDataLoader
+from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.types import (
     DataIngestionMode,
     DataPoint,
     DataSource,
     LoadedDataPoint,
     ModelConfig,
-    ModelProviderConfig,
 )
 
 DEFAULT_BASE_DIR = os.path.join(
@@ -90,11 +89,11 @@ class WebLoader(BaseDataLoader):
     def model_config_to_extraction_strategy(
         self, model_config: ModelConfig, prompt: str
     ) -> LLMExtractionStrategy:
-        model_provider_config: ModelProviderConfig = (
-            model_gateway.model_name_to_provider_config[model_config.name]
-        )
-        if not model_config.parameters:
-            model_config.parameters = {}
+        model_name = model_config.get("name", None)
+        model_provider_config = model_gateway.get_model_provider_config(model_name)
+
+        model_params = model_config.get("parameters", {})
+
         if not model_provider_config.api_key_env_var:
             api_key = "EMPTY"
         else:
@@ -102,11 +101,12 @@ class WebLoader(BaseDataLoader):
 
         os.environ["LITELLM_PROXY_API_KEY"] = api_key
         os.environ["LITELLM_PROXY_API_BASE"] = model_provider_config.base_url
-        model_id = "litellm_proxy" + "/".join(model_config.name.split("/")[1:])
+        model_id = "litellm_proxy" + "/".join(model_name.split("/")[1:])
         return LLMExtractionStrategy(
             instruction=prompt,
             model=model_id,
-            temperature=model_config.parameters.get("temperature", 0.1),
+            api_token=api_key,
+            temperature=model_params.get("temperature", 0.1),
             default_headers=model_provider_config.default_headers,
         )
 

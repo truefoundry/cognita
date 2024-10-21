@@ -110,12 +110,13 @@ class ModelGateway:
     def get_audio_models(self) -> List[ModelConfig]:
         return self.audio_models
 
-    def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
+    def get_model_provider_config(self, model_name: str) -> ModelProviderConfig:
         if model_name not in self.model_name_to_provider_config:
             raise ValueError(f"Model {model_name} not registered in the model gateway.")
-        model_provider_config: ModelProviderConfig = self.model_name_to_provider_config[
-            model_name
-        ]
+        return self.model_name_to_provider_config[model_name]
+
+    def get_embedder_from_model_config(self, model_name: str) -> Embeddings:
+        model_provider_config = self.get_model_provider_config(model_name)
         if not model_provider_config.api_key_env_var:
             api_key = "EMPTY"
         else:
@@ -133,13 +134,7 @@ class ModelGateway:
     def get_llm_from_model_config(
         self, model_config: ModelConfig, stream=False
     ) -> BaseChatModel:
-        if model_config.name not in self.model_name_to_provider_config:
-            raise ValueError(
-                f"Model {model_config.name} not registered in the model gateway."
-            )
-        model_provider_config: ModelProviderConfig = self.model_name_to_provider_config[
-            model_config.name
-        ]
+        model_provider_config = self.get_model_provider_config(model_config.name)
         if not model_config.parameters:
             model_config.parameters = {}
         if not model_provider_config.api_key_env_var:

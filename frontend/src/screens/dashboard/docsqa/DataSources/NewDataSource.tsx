@@ -157,7 +157,7 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
               wait_for: data.webConfig.waitConfigs,
               css_selector: data.webConfig.cssSelector,
               model_config: data.webConfig.aiModel && {
-                model_name: data.webConfig.aiModel.model_id,
+                name: data.webConfig.aiModel.model_id,
               },
               prompt: data.webConfig.aiModel && data.webConfig.aiModel.prompt
             },
