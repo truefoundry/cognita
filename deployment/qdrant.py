@@ -19,8 +19,9 @@ class Qdrant:
         self.dockerhub_images_registry = dockerhub_images_registry
 
     def create_helm(self):
+        name = f"{self.application_set_name}-{VECTOR_DB_HELM_NAME}"
         return Helm(
-            name=f"{self.application_set_name}-{VECTOR_DB_HELM_NAME}",
+            name=name,
             source=HelmRepo(
                 repo_url="https://qdrant.github.io/qdrant-helm",
                 chart="qdrant",
@@ -72,7 +73,7 @@ class Qdrant:
                     },
                 ],
                 "replicaCount": 2,
-                "fullnameOverride": VECTOR_DB_HELM_NAME,
+                "fullnameOverride": name,
             },
             kustomize=Kustomize(
                 additions=[
@@ -85,7 +86,7 @@ class Qdrant:
                                     "route": [
                                         {
                                             "destination": {
-                                                "host": f"{VECTOR_DB_HELM_NAME}.{self.workspace}.svc.cluster.local",
+                                                "host": f"{name}.{self.workspace}.svc.cluster.local",
                                                 "port": {"number": 6333},
                                             }
                                         }
@@ -105,7 +106,7 @@ class Qdrant:
                                     "route": [
                                         {
                                             "destination": {
-                                                "host": f"{VECTOR_DB_HELM_NAME}.{self.workspace}.svc.cluster.local",
+                                                "host": f"{name}.{self.workspace}.svc.cluster.local",
                                                 "port": {"number": 6333},
                                             }
                                         }
@@ -119,7 +120,7 @@ class Qdrant:
                             "gateways": ["istio-system/tfy-wildcard"],
                         },
                         "metadata": {
-                            "name": VECTOR_DB_HELM_NAME,
+                            "name": name,
                             "namespace": self.workspace,
                         },
                         "apiVersion": "networking.istio.io/v1alpha3",
