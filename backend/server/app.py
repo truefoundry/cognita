@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import multiprocessing as mp
 from contextlib import asynccontextmanager
 
@@ -97,6 +98,15 @@ async def catch_exceptions_middleware(_request: Request, exc: UniqueViolationErr
 @app.get("/health-check")
 def status():
     return JSONResponse(content={"status": "OK"})
+
+
+class HealthCheck(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().find("/health-check") == -1
+
+
+# Filter out /health-check
+logging.getLogger("uvicorn.access").addFilter(HealthCheck())
 
 
 app.include_router(components_router)
