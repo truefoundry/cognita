@@ -7,6 +7,7 @@ from truefoundry.deploy import (
     NodeSelector,
     Param,
     Resources,
+    StringDataMount,
 )
 
 from deployment.config import (
@@ -24,8 +25,9 @@ class Indexer:
         ml_repo,
         workspace,
         application_set_name,
-        VECTOR_DB_CONFIG,
         base_domain_url,
+        VECTOR_DB_CONFIG,
+        MODEL_CONFIG,
     ):
         self.secrets_base = secrets_base
         self.ml_repo = ml_repo
@@ -33,6 +35,7 @@ class Indexer:
         self.VECTOR_DB_CONFIG = VECTOR_DB_CONFIG
         self.application_set_name = application_set_name
         self.base_domain_url = base_domain_url
+        self.MODEL_CONFIG = MODEL_CONFIG
 
     def create_job(self):
         INDEXER_COMMAND = """/bin/bash -c 'set -e; prisma generate --schema ./backend/database/schema.prisma && python -m backend.indexer.main  --collection_name "{{collection_name}}" --data_source_fqn "{{data_source_fqn}}" --data_ingestion_run_name "{{data_ingestion_run_name}}" --data_ingestion_mode "{{data_ingestion_mode}}" --raise_error_on_failure  "{{raise_error_on_failure}}"'"""
@@ -69,13 +72,19 @@ class Indexer:
                 "BRAVE_API_KEY": f"{self.secrets_base}:BRAVE-API-KEY",
                 "INFINITY_API_KEY": f"{self.secrets_base}:INFINITY-API-KEY",
                 "VECTOR_DB_CONFIG": self.VECTOR_DB_CONFIG,
-                "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
+                "MODELS_CONFIG_PATH": "/models_config.truefoundry.yaml",
                 "UNSTRUCTURED_IO_URL": f"http://{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
                 "UNSTRUCTURED_IO_API_KEY": f"{self.secrets_base}:UNSTRUCTURED-IO-API-KEY",
                 "TFY_API_KEY": f"{self.secrets_base}:TFY-API-KEY",
                 "TFY_HOST": f"{self.secrets_base}:TFY-HOST",
             },
+            mounts=[
+                StringDataMount(
+                    mount_path="/models_config.truefoundry.yaml",
+                    data=self.MODEL_CONFIG,
+                )
+            ],
             resources=Resources(
                 cpu_request=1.0,
                 cpu_limit=1.5,
@@ -86,5 +95,4 @@ class Indexer:
                 node=NodeSelector(capacity_type="spot_fallback_on_demand"),
             ),
             retries=0,
-            mounts=[],
         )
