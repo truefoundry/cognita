@@ -1,4 +1,4 @@
-from truefoundry.deploy import Image, NodeSelector, Port, Resources, Service
+from truefoundry.deploy import Image, NodepoolSelector, Port, Resources, Service
 
 from deployment.config import UNSTRUCTURED_IO_SERVICE_NAME
 
@@ -21,7 +21,7 @@ class UnstructuredIO:
                 memory_limit=8000,
                 ephemeral_storage_request=1500,
                 ephemeral_storage_limit=2000,
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
             ),
             env={
                 "UNSTRUCTURED_API_KEY": f"{self.secrets_base}:UNSTRUCTURED-IO-API-KEY"

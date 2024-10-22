@@ -79,7 +79,7 @@ async def upload_to_data_directory(req: UploadToDataDirectoryDto):
         paths=req.filepaths,
     )
     # Serialize the signed urls.
-    data = [url.model_dump() for url in urls]
+    data = [url.dict() for url in urls]
     return JSONResponse(
         content={"data": data, "data_directory_fqn": dataset.fqn},
     )

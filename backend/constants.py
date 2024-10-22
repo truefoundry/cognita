@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 
 DATA_POINT_FQN_METADATA_KEY = "_data_point_fqn"
 
@@ -35,7 +35,7 @@ MULTI_MODAL_PARSER_SUPPORTED_FILE_EXTENSIONS = (
 
 
 ## Data source types
-class DataSourceType(Enum):
+class DataSourceType(StrEnum):
     TRUEFOUNDRY = "truefoundry"
     LOCAL = "localdir"
     WEB = "web"

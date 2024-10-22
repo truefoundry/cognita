@@ -4,7 +4,7 @@ from truefoundry.deploy import (
     Job,
     LocalSource,
     Manual,
-    NodeSelector,
+    NodepoolSelector,
     Param,
     Resources,
     StringDataMount,
@@ -92,7 +92,7 @@ class Indexer:
                 memory_limit=1500,
                 ephemeral_storage_request=1000,
                 ephemeral_storage_limit=2000,
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
             ),
             retries=0,
         )

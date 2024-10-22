@@ -4,7 +4,7 @@ from truefoundry.deploy import (
     HealthProbe,
     HttpProbe,
     LocalSource,
-    NodeSelector,
+    NodepoolSelector,
     Port,
     Resources,
     Service,
@@ -62,7 +62,7 @@ class Backend:
                 memory_limit=1000,
                 ephemeral_storage_request=1000,
                 ephemeral_storage_limit=2000,
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
             ),
             env={
                 "JOB_FQN": f"{self.workspace_fqn}:{self.application_set_name}-{INDEXER_SERVICE_NAME}",
