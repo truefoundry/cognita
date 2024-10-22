@@ -6,7 +6,11 @@ from truefoundry.deploy import ApplicationSet
 
 from deployment.audio import Audio
 from deployment.backend import Backend
-from deployment.config import INFINITY_SERVICE_NAME, VECTOR_DB_HELM_NAME
+from deployment.config import (
+    AUDIO_SERVICE_NAME,
+    INFINITY_SERVICE_NAME,
+    VECTOR_DB_HELM_NAME,
+)
 from deployment.frontend import Frontend
 from deployment.indexer import Indexer
 from deployment.infinity import Infinity
@@ -62,6 +66,17 @@ def run_deploy(
           - "mixedbread-ai/mxbai-embed-large-v1"
         reranking_model_ids:
           - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+        default_headers: {{}}
+
+      - provider_name: faster-whisper
+        api_format: openai
+        base_url: http://{application_set_name}-{AUDIO_SERVICE_NAME}.{workspace}.svc.cluster.local:8000
+        api_key_env_var: ""
+        llm_model_ids: []
+        embedding_model_ids: []
+        reranking_model_ids: []
+        audio_model_ids:
+          - "Systran/faster-distil-whisper-large-v3"
         default_headers: {{}}
 """
 
