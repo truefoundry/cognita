@@ -59,14 +59,11 @@ class Settings(BaseSettings):
         if tfy_host and not tfy_llm_gateway_url:
             tfy_llm_gateway_url = f"{tfy_host.rstrip('/')}/api/llm"
             values["TFY_LLM_GATEWAY_URL"] = tfy_llm_gateway_url
+        
+        # If the service is not running locally, then ML_REPO_NAME is required.
+        if not values.get("LOCAL") and not values.get("ML_REPO_NAME"):
+            raise ValueError("ML_REPO_NAME is not set in the environment for non local deployment")
 
         return values
-
-    @model_validator(mode="before")
-    def _validate_ml_repo_name(self):
-        # If the service is not running locally, then ML_REPO_NAME is required.
-        if not self.LOCAL and not self.ML_REPO_NAME:
-            raise ValueError("ML_REPO_NAME is not set in the environment")
-
 
 settings = Settings()
