@@ -1,3 +1,5 @@
+from enum import Enum
+
 DATA_POINT_FQN_METADATA_KEY = "_data_point_fqn"
 
 DATA_POINT_HASH_METADATA_KEY = "_data_point_hash"
@@ -31,5 +33,9 @@ MULTI_MODAL_PARSER_SUPPORTED_FILE_EXTENSIONS = (
     + MULTI_MODAL_PARSER_SUPPORTED_PDF_EXTENSION
 )
 
+
 ## Data source types
-DATA_SOURCE_TYPE_TRUEFOUNDRY = "truefoundry"
+class DataSourceType(Enum):
+    TRUEFOUNDRY = "truefoundry"
+    LOCAL = "localdir"
+    WEB = "web"
