@@ -22,7 +22,7 @@ from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.types import *
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.utils import _get_read_signed_url_with_cache
+from backend.utils import _get_read_signed_url
 
 
 class BaseQueryController:
@@ -232,7 +232,7 @@ class BaseQueryController:
         data_dir_fqn, file_path = match.groups()
 
         # Generate a signed url for the file
-        signed_url = _get_read_signed_url_with_cache(
+        signed_url = _get_read_signed_url(
             fqn=data_dir_fqn,
             file_path=file_path,
             cache=artifact_repo_cache,
