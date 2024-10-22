@@ -62,7 +62,7 @@ class Settings(BaseSettings):
 
         return values
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
     def _validate_ml_repo_name(self):
         # If the service is not running locally, then ML_REPO_NAME is required.
         if not self.LOCAL and not self.ML_REPO_NAME:
