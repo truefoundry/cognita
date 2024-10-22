@@ -40,11 +40,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"Unexpected Pydantic v2 Validation: values are of type {type(values)}"
             )
-        models_config_path = values.get("MODELS_CONFIG_PATH")
-        if not os.path.isabs(models_config_path):
-            this_dir = os.path.abspath(os.path.dirname(__file__))
-            root_dir = os.path.dirname(this_dir)
-            models_config_path = os.path.join(root_dir, models_config_path)
+
+        if not values.get("MODELS_CONFIG_PATH"):
+            raise ValueError("MODELS_CONFIG_PATH is not set in the environment")
+
+        models_config_path = os.path.abspath(values.get("MODELS_CONFIG_PATH"))
 
         if not models_config_path:
             raise ValueError(
@@ -60,13 +60,10 @@ class Settings(BaseSettings):
             tfy_llm_gateway_url = f"{tfy_host.rstrip('/')}/api/llm"
             values["TFY_LLM_GATEWAY_URL"] = tfy_llm_gateway_url
 
-        return values
-
-    @model_validator(mode="before")
-    def _validate_ml_repo_name(self):
-        # If the service is not running locally, then ML_REPO_NAME is required.
-        if not self.LOCAL and not self.ML_REPO_NAME:
+        if not values.get("LOCAL", False) and not values.get("ML_REPO_NAME", None):
             raise ValueError("ML_REPO_NAME is not set in the environment")
+
+        return values
 
 
 settings = Settings()

@@ -6,7 +6,7 @@ from truefoundry.deploy import ApplicationSet
 
 from deployment.audio import Audio
 from deployment.backend import Backend
-from deployment.config import VECTOR_DB_HELM_NAME
+from deployment.config import INFINITY_SERVICE_NAME, VECTOR_DB_HELM_NAME
 from deployment.frontend import Frontend
 from deployment.indexer import Indexer
 from deployment.infinity import Infinity
@@ -35,6 +35,36 @@ def run_deploy(
         }
     )
 
+    MODEL_CONFIG = f"""
+    model_providers:
+      - provider_name: truefoundry
+        api_format: openai
+        base_url: https://llm-gateway.truefoundry.com/api/inference/openai
+        api_key_env_var: TFY_API_KEY
+        llm_model_ids:
+          - "openai-main/gpt-4o-mini"
+          - "openai-main/gpt-4-turbo"
+          - "openai-main/gpt-3-5-turbo"
+          - "azure-openai/gpt-4"
+          - "together-ai/llama-3-70b-chat-hf"
+        embedding_model_ids:
+          - "openai-main/text-embedding-ada-002"
+        reranking_model_ids: []
+        default_headers:
+          "X-TFY-METADATA": '{{"tfy_log_request": "true", "Custom-Metadata": "Cognita-LLM-Request"}}'
+
+      - provider_name: local-infinity
+        api_format: openai
+        base_url: http://{application_set_name}-{INFINITY_SERVICE_NAME}.{workspace}.svc.cluster.local:8000
+        api_key_env_var: INFINITY_API_KEY
+        llm_model_ids: []
+        embedding_model_ids:
+          - "mixedbread-ai/mxbai-embed-large-v1"
+        reranking_model_ids:
+          - "mixedbread-ai/mxbai-rerank-xsmall-v1"
+        default_headers: {{}}
+"""
+
     application_set = ApplicationSet(
         name=application_set_name,
         components=[
@@ -43,8 +73,9 @@ def run_deploy(
                 ml_repo=ml_repo,
                 workspace=workspace,
                 application_set_name=application_set_name,
-                VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
                 base_domain_url=base_domain_url,
+                VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
+                MODEL_CONFIG=MODEL_CONFIG,
             ).create_job(),
             Backend(
                 secrets_base=secrets_base,
@@ -54,6 +85,7 @@ def run_deploy(
                 application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
                 VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
+                MODEL_CONFIG=MODEL_CONFIG,
             ).create_service(),
             Frontend(
                 secrets_base=secrets_base,
