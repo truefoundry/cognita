@@ -24,12 +24,13 @@ def run_deploy(
     ml_repo,
     base_domain_url,
     dockerhub_images_registry,
+    secrets_base,
 ):
     workspace = workspace_fqn.split(":")[1]
     VECTOR_DB_CONFIG = json.dumps(
         {
             "provider": "qdrant",
-            "url": f"http://{VECTOR_DB_HELM_NAME}.{workspace}.svc.cluster.local:6333",
+            "url": f"http://{application_set_name}-{VECTOR_DB_HELM_NAME}.{workspace}.svc.cluster.local:6333",
             "api_key": "",
         }
     )
@@ -38,9 +39,15 @@ def run_deploy(
         name=application_set_name,
         components=[
             Indexer(
-                ml_repo=ml_repo, workspace=workspace, VECTOR_DB_CONFIG=VECTOR_DB_CONFIG
+                secrets_base=secrets_base,
+                ml_repo=ml_repo,
+                workspace=workspace,
+                application_set_name=application_set_name,
+                VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
+                base_domain_url=base_domain_url,
             ).create_job(),
             Backend(
+                secrets_base=secrets_base,
                 ml_repo=ml_repo,
                 workspace_fqn=workspace_fqn,
                 workspace=workspace,
@@ -49,23 +56,41 @@ def run_deploy(
                 VECTOR_DB_CONFIG=VECTOR_DB_CONFIG,
             ).create_service(),
             Frontend(
+                secrets_base=secrets_base,
                 application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
             ).create_service(),
             Qdrant(
+                secrets_base=secrets_base,
                 workspace=workspace,
+                application_set_name=application_set_name,
                 base_domain_url=base_domain_url,
                 dockerhub_images_registry=dockerhub_images_registry,
             ).create_helm(),
-            QdrantUI(base_domain_url=base_domain_url).create_service(),
-            UnstructuredIO().create_service(),
+            QdrantUI(
+                secrets_base=secrets_base,
+                application_set_name=application_set_name,
+                base_domain_url=base_domain_url,
+            ).create_service(),
+            UnstructuredIO(
+                secrets_base=secrets_base,
+                application_set_name=application_set_name,
+            ).create_service(),
             Infinity(
-                dockerhub_images_registry=dockerhub_images_registry
+                secrets_base=secrets_base,
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
             ).create_service(),
             PostgresDatabase(
-                dockerhub_images_registry=dockerhub_images_registry
+                secrets_base=secrets_base,
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
             ).create_helm(),
-            Audio(dockerhub_images_registry=dockerhub_images_registry).create_service(),
+            Audio(
+                secrets_base=secrets_base,
+                application_set_name=application_set_name,
+                dockerhub_images_registry=dockerhub_images_registry,
+            ).create_service(),
         ],
         workspace_fqn=workspace_fqn,
     )
@@ -105,6 +130,14 @@ if __name__ == "__main__":
         required=False,
         help="dockerhub images registry",
         default="docker.io",
+    )
+
+    parser.add_argument(
+        "--secrets-base",
+        type=str,
+        required=False,
+        help="base path for secrets store",
+        default="tfy-secret://internal:cognita",
     )
 
     args = parser.parse_args()
