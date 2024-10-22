@@ -73,6 +73,8 @@ class Indexer:
                 "UNSTRUCTURED_IO_URL": f"http://{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
                 "UNSTRUCTURED_IO_API_KEY": f"{self.secrets_base}:UNSTRUCTURED-IO-API-KEY",
+                "TFY_API_KEY": f"{self.secrets_base}:TFY-API-KEY",
+                "TFY_HOST": f"{self.secrets_base}:TFY-HOST",
             },
             resources=Resources(
                 cpu_request=1.0,
