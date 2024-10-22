@@ -5,6 +5,7 @@ from urllib.parse import unquote
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from backend.constants import DATA_SOURCE_TYPE_TRUEFOUNDRY
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.client import get_client
@@ -37,9 +38,21 @@ async def list_data_sources():
 async def add_data_source(data_source: CreateDataSource):
     """Create a data source for the given collection"""
     metadata_store_client: BaseMetadataStore = await get_client()
+    # Validate URI before creating the data source
+    if data_source.type == DATA_SOURCE_TYPE_TRUEFOUNDRY:
+        try:
+            # TODO: Currently, if a TFY data directory does not exist, an exception is thrown.
+            # We need to raise a 404 error instead of failing generically.
+            data_dir = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(data_source.uri)
+        except Exception as e:
+            return JSONResponse(
+                content={"error": f"Invalid DataSource URI: {e}"}, status_code=400
+            )
+    # Create the data source record
     created_data_source = await metadata_store_client.acreate_data_source(
         data_source=data_source
     )
+    # Return the created data source
     return JSONResponse(
         content={"data_source": created_data_source.model_dump()}, status_code=201
     )
