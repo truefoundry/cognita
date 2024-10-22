@@ -4,10 +4,11 @@ from concurrent.futures import Executor, Future, ProcessPoolExecutor
 from contextvars import copy_context
 from functools import partial
 from types import SimpleNamespace
-from typing import Callable, Optional, TypeVar, cast
+from typing import Any, Callable, List, Optional, TypeVar, cast
 
 from truefoundry.ml import DataDirectory
 from truefoundry.ml import get_client as get_tfy_client
+from truefoundry.ml.autogen.client.models.signed_url_dto import SignedURLDto
 from typing_extensions import ParamSpec
 
 from backend.logger import logger
@@ -53,18 +54,26 @@ def unzip_file(file_path, dest_dir):
         zip_ref.extractall(dest_dir)
 
 
-def _get_read_signed_url_with_cache(fqn: str, file_path: str, cache: dict):
-    if fqn not in cache:
-        cache[fqn] = DataDirectory.from_fqn(fqn=fqn)._get_artifacts_repo()
-    url = cache[fqn].get_signed_urls_for_read(
+def _get_artifacts_repo(fqn: str, cache: Optional[dict] = None) -> Any:
+    if cache is not None and fqn in cache:
+        return cache[fqn]
+    artifacts_repo = DataDirectory.from_fqn(fqn=fqn)._get_artifacts_repo()
+    if cache is not None:
+        cache[fqn] = artifacts_repo
+    return artifacts_repo
+
+
+def _get_read_signed_url(
+    fqn: str, file_path: str, cache: Optional[dict] = None
+) -> List[SignedURLDto]:
+    artifacts_repo = _get_artifacts_repo(fqn, cache)
+    return artifacts_repo.get_signed_urls_for_read(
         artifact_identifier=SimpleNamespace(
             artifact_version_id=None,
             dataset_fqn=fqn,
         ),
         paths=[file_path],
     )
-
-    return url
 
 
 # Taken from https://github.com/langchain-ai/langchain/blob/987099cfcda6f20140228926e9d39eed5ccd35b4/libs/core/langchain_core/runnables/config.py#L528
@@ -130,6 +139,3 @@ class AsyncProcessPoolExecutor(ProcessPoolExecutor):
             logger.exception("Error in AsyncProcessPoolExecutor worker")
             future.set_exception(e)
         return future
-
-    def submit(self, fn, *args, **kwargs):
-        return super().submit(self._async_to_sync, fn, *args, **kwargs)
