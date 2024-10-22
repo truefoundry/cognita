@@ -1,4 +1,4 @@
-from truefoundry.deploy import Image, NodeSelector, Port, Resources, Service
+from truefoundry.deploy import Image, NodepoolSelector, Port, Resources, Service
 
 from deployment.config import INFINITY_SERVICE_NAME
 
@@ -23,7 +23,7 @@ class Infinity:
                 memory_limit=8000,
                 ephemeral_storage_request=1500,
                 ephemeral_storage_limit=2000,
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
             ),
             env={
                 "PORT": "8000",

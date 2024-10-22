@@ -2,7 +2,7 @@ from truefoundry.deploy import (
     HealthProbe,
     HttpProbe,
     Image,
-    NodeSelector,
+    NodepoolSelector,
     Port,
     Resources,
     Service,
@@ -25,7 +25,7 @@ class Audio:
                 image_uri=f"{self.dockerhub_images_registry}/fedirz/faster-whisper-server:latest-cpu",
             ),
             resources=Resources(
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
                 cpu_limit=1,
                 cpu_request=0.8,
                 memory_limit=8000,

@@ -2,7 +2,7 @@ from truefoundry.deploy import (
     Build,
     DockerFileBuild,
     GitSource,
-    NodeSelector,
+    NodepoolSelector,
     Port,
     Resources,
     Service,
@@ -42,7 +42,7 @@ class QdrantUI:
                 memory_limit=500,
                 ephemeral_storage_request=1000,
                 ephemeral_storage_limit=2000,
-                node=NodeSelector(capacity_type="spot_fallback_on_demand"),
+                node=NodepoolSelector(),
             ),
             ports=[
                 Port(
