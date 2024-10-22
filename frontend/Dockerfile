@@ -1,10 +1,13 @@
 # Build Stage
 FROM public.ecr.aws/docker/library/node:22 AS build-step
 WORKDIR /build
-COPY . .
 
 # Install dependencies
+COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
+
+# Copy the rest of the source code
+COPY . .
 
 # Define build arguments
 ARG VITE_DOCS_QA_DELETE_COLLECTIONS
