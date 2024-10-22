@@ -23,6 +23,7 @@ from deployment.config import (
 class Backend:
     def __init__(
         self,
+        secrets_base,
         ml_repo,
         workspace_fqn,
         workspace,
@@ -30,6 +31,7 @@ class Backend:
         base_domain_url,
         VECTOR_DB_CONFIG,
     ):
+        self.secrets_base = secrets_base
         self.ml_repo = ml_repo
         self.workspace_fqn = workspace_fqn
         self.workspace = workspace
@@ -39,7 +41,7 @@ class Backend:
 
     def create_service(self):
         return Service(
-            name=BACKEND_SERVICE_NAME,
+            name=f"{self.application_set_name}-{BACKEND_SERVICE_NAME}",
             image=Build(
                 # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
                 # With local_build=False flag, docker image will be built on cloud instead of local
@@ -61,19 +63,22 @@ class Backend:
                 node=NodeSelector(capacity_type="spot_fallback_on_demand"),
             ),
             env={
-                "JOB_FQN": f"{self.workspace_fqn}:{INDEXER_SERVICE_NAME}",
+                "JOB_FQN": f"{self.workspace_fqn}:{self.application_set_name}-{INDEXER_SERVICE_NAME}",
+                "JOB_COMPONENT_NAME": f"{self.workspace}-{self.application_set_name}-{INDEXER_SERVICE_NAME}",
                 "LOG_LEVEL": "DEBUG",
-                "DATABASE_URL": f"postgresql://admin:password@{DATABASE_NAME}-postgresql.{self.workspace}.svc.cluster.local:5432/cognita-config",
-                "INFINITY_URL": f"http://{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
+                "DATABASE_URL": f"postgresql://admin:password@{self.application_set_name}-{DATABASE_NAME}-postgresql.{self.workspace}.svc.cluster.local:5432/cognita-config",
+                "INFINITY_URL": f"http://{self.application_set_name}-{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "ML_REPO_NAME": self.ml_repo,
-                "BRAVE_API_KEY": "tfy-secret://internal:cognita:BRAVE_API_KEY",
-                "INFINITY_API_KEY": "tfy-secret://internal:cognita:INFINITY_API_KEY",
+                "BRAVE_API_KEY": f"{self.secrets_base}:BRAVE-API-KEY",
+                "INFINITY_API_KEY": f"{self.secrets_base}:INFINITY-API-KEY",
                 "VECTOR_DB_CONFIG": self.VECTOR_DB_CONFIG,
                 "JOB_COMPONENT_NAME": f"{self.workspace}-{INDEXER_SERVICE_NAME}",
                 "MODELS_CONFIG_PATH": "./models_config.truefoundry.yaml",
-                "UNSTRUCTURED_IO_URL": f"http://{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
+                "UNSTRUCTURED_IO_URL": f"http://{self.application_set_name}-{UNSTRUCTURED_IO_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000",
                 "METADATA_STORE_CONFIG": '{"provider":"prisma"}',
-                "UNSTRUCTURED_IO_API_KEY": "tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY",
+                "UNSTRUCTURED_IO_API_KEY": f"{self.secrets_base}:UNSTRUCTURED-IO-API-KEY",
+                "TFY_API_KEY": f"{self.secrets_base}:TFY-API-KEY",
+                "TFY_HOST": f"{self.secrets_base}:TFY-HOST",
             },
             ports=[
                 Port(
@@ -108,7 +113,7 @@ class Backend:
 
                             - provider_name: local-infinity
                                 api_format: openai
-                                base_url: http://{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000
+                                base_url: http://{self.application_set_name}-{INFINITY_SERVICE_NAME}.{self.workspace}.svc.cluster.local:8000
                                 api_key_env_var: INFINITY_API_KEY
                                 llm_model_ids: []
                                 embedding_model_ids:

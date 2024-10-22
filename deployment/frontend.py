@@ -11,13 +11,14 @@ from deployment.config import FRONTEND_SERVICE_NAME
 
 
 class Frontend:
-    def __init__(self, application_set_name, base_domain_url):
+    def __init__(self, secrets_base, application_set_name, base_domain_url):
+        self.secrets_base = secrets_base
         self.application_set_name = application_set_name
         self.base_domain_url = base_domain_url
 
     def create_service(self):
         return Service(
-            name=FRONTEND_SERVICE_NAME,
+            name=f"{self.application_set_name}-{FRONTEND_SERVICE_NAME}",
             image=Build(
                 # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
                 # With local_build=False flag, docker image will be built on cloud instead of local

@@ -4,14 +4,24 @@ from deployment.config import QDRANT_SERVICE_UI_NAME, VECTOR_DB_HELM_NAME
 
 
 class Qdrant:
-    def __init__(self, workspace, base_domain_url, dockerhub_images_registry):
+    def __init__(
+        self,
+        secrets_base,
+        application_set_name,
+        workspace,
+        base_domain_url,
+        dockerhub_images_registry,
+    ):
+        self.secrets_base = secrets_base
         self.workspace = workspace
         self.base_domain_url = base_domain_url
+        self.application_set_name = application_set_name
         self.dockerhub_images_registry = dockerhub_images_registry
 
     def create_helm(self):
+        name = f"{self.application_set_name}-{VECTOR_DB_HELM_NAME}"
         return Helm(
-            name=VECTOR_DB_HELM_NAME,
+            name=name,
             source=HelmRepo(
                 repo_url="https://qdrant.github.io/qdrant-helm",
                 chart="qdrant",
@@ -63,7 +73,7 @@ class Qdrant:
                     },
                 ],
                 "replicaCount": 2,
-                "fullnameOverride": VECTOR_DB_HELM_NAME,
+                "fullnameOverride": name,
             },
             kustomize=Kustomize(
                 additions=[
@@ -76,7 +86,7 @@ class Qdrant:
                                     "route": [
                                         {
                                             "destination": {
-                                                "host": f"{VECTOR_DB_HELM_NAME}.{self.workspace}.svc.cluster.local",
+                                                "host": f"{name}.{self.workspace}.svc.cluster.local",
                                                 "port": {"number": 6333},
                                             }
                                         }
@@ -96,7 +106,7 @@ class Qdrant:
                                     "route": [
                                         {
                                             "destination": {
-                                                "host": f"{VECTOR_DB_HELM_NAME}.{self.workspace}.svc.cluster.local",
+                                                "host": f"{name}.{self.workspace}.svc.cluster.local",
                                                 "port": {"number": 6333},
                                             }
                                         }
@@ -105,12 +115,12 @@ class Qdrant:
                                 },
                             ],
                             "hosts": [
-                                f"{QDRANT_SERVICE_UI_NAME}.{self.base_domain_url}"
+                                f"{self.application_set_name}-{QDRANT_SERVICE_UI_NAME}.{self.base_domain_url}"
                             ],
                             "gateways": ["istio-system/tfy-wildcard"],
                         },
                         "metadata": {
-                            "name": VECTOR_DB_HELM_NAME,
+                            "name": name,
                             "namespace": self.workspace,
                         },
                         "apiVersion": "networking.istio.io/v1alpha3",

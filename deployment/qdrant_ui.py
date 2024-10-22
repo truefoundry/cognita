@@ -12,12 +12,15 @@ from deployment.config import QDRANT_SERVICE_UI_NAME
 
 
 class QdrantUI:
-    def __init__(self, base_domain_url):
+    def __init__(self, secrets_base, application_set_name, base_domain_url):
+        self.secrets_base = secrets_base
+        self.application_set_name = application_set_name
         self.base_domain_url = base_domain_url
 
     def create_service(self):
+        name = f"{self.application_set_name}-{QDRANT_SERVICE_UI_NAME}"
         return Service(
-            name=QDRANT_SERVICE_UI_NAME,
+            name=name,
             image=Build(
                 # Set build_source=LocalSource(local_build=False), in order to deploy code from your local.
                 # With local_build=False flag, docker image will be built on cloud instead of local
@@ -47,7 +50,7 @@ class QdrantUI:
                     protocol="TCP",
                     expose=True,
                     app_protocol="http",
-                    host=f"{QDRANT_SERVICE_UI_NAME}.{self.base_domain_url}",
+                    host=f"{name}.{self.base_domain_url}",
                     path="/qdrant-ui/",
                 )
             ],
