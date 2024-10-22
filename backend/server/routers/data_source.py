@@ -5,6 +5,7 @@ from urllib.parse import unquote
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from backend.constants import DATA_SOURCE_TYPE_TRUEFOUNDRY
 from backend.logger import logger
 from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.client import get_client
@@ -38,7 +39,7 @@ async def add_data_source(data_source: CreateDataSource):
     """Create a data source for the given collection"""
     metadata_store_client: BaseMetadataStore = await get_client()
     # Validate URI before creating the data source
-    if data_source.type == "truefoundry":
+    if data_source.type == DATA_SOURCE_TYPE_TRUEFOUNDRY:
         try:
             # TODO: Currently, if a TFY data directory does not exist, an exception is thrown.
             # We need to raise a 404 error instead of failing generically.
