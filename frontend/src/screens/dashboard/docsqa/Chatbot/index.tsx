@@ -12,6 +12,7 @@ import {
 } from '@/stores/qafoundry'
 import { set, startCase } from 'lodash'
 import { SSE } from 'sse.js'
+import { notifyError } from '@/utils/error'
 
 interface Message {
   sender: 'user' | 'bot'
@@ -74,14 +75,37 @@ const DocsQAChatbot = () => {
             setIsRunningPrompt(false)
             setAnswer((prevAnswer) => prevAnswer + parsed.content)
           }
-        } catch (err) {}
+        } catch (err) {
+          throw new Error('An error occurred while processing the response.')
+        }
       })
 
       sseRequest.addEventListener('end', (event: any) => {
         sseRequest.close()
       })
+
+      sseRequest.addEventListener('error', (event: any) => {
+        sseRequest.close()
+        setPrompt('')
+        setIsRunningPrompt(false)
+        const message = JSON.parse(event.data).detail[0].msg
+        notifyError('Failed to retrieve answer', { message })
+      })
     } catch (err: any) {
       setErrorMessage(true)
+      setPrompt('')
+      setIsRunningPrompt(false)
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages]
+        if (
+          updatedMessages.length > 0 &&
+          updatedMessages[updatedMessages.length - 1].sender === 'bot'
+        )
+          updatedMessages.pop()
+
+        return updatedMessages
+      })
+      notifyError('Failed to retrieve answer', err)
     }
   }
 
