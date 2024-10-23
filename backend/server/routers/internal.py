@@ -35,7 +35,9 @@ async def upload_to_docker_directory(
     logger.info(f"Uploading files to directory: {upload_name}")
     # create a folder within `/volumes/user_data/` that maps to `/app/user_data/` in the docker volume
     # this folder will be used to store the uploaded files
-    folder_path = os.path.realpath(os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name))
+    folder_path = os.path.realpath(
+        os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name)
+    )
     if not folder_path.startswith(settings.LOCAL_DATA_DIRECTORY):
         return JSONResponse(
             content={"error": "Invalid upload path"},
