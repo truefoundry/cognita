@@ -122,9 +122,9 @@ class MultiModalParser(BaseParser):
         return final_texts
 
     def _get_pages(self, filepath: str) -> Dict[int, str]:
-        if filepath.endswith(MULTI_MODAL_PARSER_SUPPORTED_PDF_EXTENSION):
+        if filepath.endswith(tuple(MULTI_MODAL_PARSER_SUPPORTED_PDF_EXTENSION)):
             return self._get_pdf_pages(filepath)
-        elif filepath.endswith(MULTI_MODAL_PARSER_SUPPORTED_IMAGE_EXTENSIONS):
+        elif filepath.endswith(tuple(MULTI_MODAL_PARSER_SUPPORTED_IMAGE_EXTENSIONS)):
             return self._get_image_page(filepath)
         else:
             raise ValueError(
