@@ -35,7 +35,12 @@ async def upload_to_docker_directory(
     logger.info(f"Uploading files to directory: {upload_name}")
     # create a folder within `/volumes/user_data/` that maps to `/app/user_data/` in the docker volume
     # this folder will be used to store the uploaded files
-    folder_path = os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name)
+    folder_path = os.path.realpath(os.path.join(settings.LOCAL_DATA_DIRECTORY, upload_name))
+    if not folder_path.startswith(settings.LOCAL_DATA_DIRECTORY):
+        return JSONResponse(
+            content={"error": "Invalid upload path"},
+            status_code=400,
+        )
 
     # Create the folder if it does not exist, else raise an exception
     if os.path.exists(folder_path):
@@ -50,7 +55,13 @@ async def upload_to_docker_directory(
     # Upload the files to the folder
     for file in files:
         logger.info(f"Copying file: {file.filename}, to folder: {folder_path}")
-        file_path = os.path.join(folder_path, file.filename)
+        file_path = os.path.realpath(os.path.join(folder_path, file.filename))
+        if not file_path.startswith(folder_path):
+            return JSONResponse(
+                content={"error": "Invalid file path during upload"},
+                status_code=400,
+            )
+
         with open(file_path, "wb") as f:
             f.write(file.file.read())
 
