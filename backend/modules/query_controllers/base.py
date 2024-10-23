@@ -1,5 +1,4 @@
 import asyncio
-import re
 from typing import AsyncIterator
 
 import async_timeout
@@ -11,18 +10,13 @@ from langchain.schema.vectorstore import VectorStoreRetriever
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel
 
-from backend.constants import (
-    DATA_POINT_FQN_METADATA_KEY,
-    DATA_POINT_HASH_METADATA_KEY,
-    DATA_POINT_SIGNED_URL_METADATA_KEY,
-)
+from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.metadata_store.client import get_client
 from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.modules.query_controllers.types import *
 from backend.modules.vector_db.client import VECTOR_STORE_CLIENT
 from backend.settings import settings
-from backend.utils import _get_read_signed_url
 
 
 class BaseQueryController:
@@ -30,7 +24,6 @@ class BaseQueryController:
         "_id",
         DATA_POINT_FQN_METADATA_KEY,
         DATA_POINT_HASH_METADATA_KEY,
-        DATA_POINT_SIGNED_URL_METADATA_KEY,
         "_data_source_fqn",
         "filename",
         "collection_name",
@@ -162,33 +155,23 @@ class BaseQueryController:
             raise HTTPException(status_code=404, detail="Retriever not found")
         return retriever
 
-    def _enrich_context_for_stream_response(
-        self, docs, artifact_repo_cache, signed_url_cache
-    ):
+    def _enrich_context_for_stream_response(self, docs):
         """
         Enrich the context for the stream response
         """
-        enriched_docs = []
 
-        for doc in docs:
-            # Enrich the original doc with signed URL
-            enriched_doc = self._enrich_metadata_with_signed_url(
-                doc, artifact_repo_cache, signed_url_cache
+        # Create a new Document with only the required metadata
+        return [
+            Document(
+                page_content=doc.page_content,
+                metadata={
+                    key: doc.metadata[key]
+                    for key in self.required_metadata
+                    if key in doc.metadata
+                },
             )
-
-            # Create a new Document with only the required metadata
-            enriched_docs.append(
-                Document(
-                    page_content=enriched_doc.page_content,
-                    metadata={
-                        key: enriched_doc.metadata[key]
-                        for key in self.required_metadata
-                        if key in enriched_doc.metadata
-                    },
-                )
-            )
-
-        return enriched_docs
+            for doc in docs
+        ]
 
     def _enrich_context_for_non_stream_response(self, outputs):
         """
@@ -197,53 +180,7 @@ class BaseQueryController:
         if "context" not in outputs:
             return []
 
-        # Cache to store the artifact repo paths for the current request
-        artifact_repo_cache = {}
-        # Cache to store the signed urls for the files for the current request
-        signed_url_cache = {}
-
-        return [
-            self._enrich_metadata_with_signed_url(
-                doc, artifact_repo_cache, signed_url_cache
-            )
-            for doc in outputs["context"]
-        ]
-
-    def _enrich_metadata_with_signed_url(
-        self, doc, artifact_repo_cache, signed_url_cache=None
-    ):
-        """
-        Enrich the metadata with the signed url
-        """
-        fqn_with_source = doc.metadata.get(DATA_POINT_FQN_METADATA_KEY)
-
-        # Return if FQN is not present or if it's already in the cache
-        if not fqn_with_source or fqn_with_source in signed_url_cache:
-            return doc
-
-        # Use a single regex to extract both data-dir FQN and file path
-        match = re.search(r"(data-dir:[^:]+).*?(files/.+)$", fqn_with_source)
-
-        # Return if the regex does not match
-        if not match:
-            return doc
-
-        # Extract the data-dir FQN and the file path from the FQN with source
-        data_dir_fqn, file_path = match.groups()
-
-        # Generate a signed url for the file
-        signed_url = _get_read_signed_url(
-            fqn=data_dir_fqn,
-            file_path=file_path,
-            cache=artifact_repo_cache,
-        )
-
-        # Add the signed url to the metadata if it's not None
-        if signed_url:
-            doc.metadata[DATA_POINT_SIGNED_URL_METADATA_KEY] = signed_url[0].signed_url
-            signed_url_cache[fqn_with_source] = signed_url
-
-        return doc
+        return [doc for doc in outputs["context"]]
 
     def _intent_summary_search(self, query: str):
         url = f"https://api.search.brave.com/res/v1/web/search?q={query}&summary=1"
@@ -291,17 +228,13 @@ class BaseQueryController:
     async def _stream_answer(self, rag_chain, query) -> AsyncIterator[BaseModel]:
         async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
             try:
-                # Caches to store the artifact repo paths and signed urls for the current request
-                artifact_repo_cache = {}
-                # Cache to store the signed urls for the files for the current request
-                signed_url_cache = {}
                 # Process each chunk of the stream
                 async for chunk in rag_chain.astream(query):
-                    # If the chunk has the context key, enrich the context with the signed urls
+                    # If the chunk has the context key, enrich the context of the chunk
                     if "context" in chunk:
                         yield Docs(
                             content=self._enrich_context_for_stream_response(
-                                chunk["context"], artifact_repo_cache, signed_url_cache
+                                chunk["context"]
                             )
                         )
                     # If the chunk has the answer key, yield the answer
