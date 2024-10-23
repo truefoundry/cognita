@@ -139,3 +139,6 @@ class AsyncProcessPoolExecutor(ProcessPoolExecutor):
             logger.exception("Error in AsyncProcessPoolExecutor worker")
             future.set_exception(e)
         return future
+
+    def submit(self, fn, *args, **kwargs):
+        return super().submit(self._async_to_sync, fn, *args, **kwargs)
