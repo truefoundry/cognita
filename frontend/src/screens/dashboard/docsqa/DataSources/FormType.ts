@@ -10,12 +10,6 @@ export type FormInputData = {
   }
   dataSourceUri: string
   webConfig: {
-    parserConfigs?: string
-    waitConfigs?: string
-    cssSelector?: string
-    aiModel?: {
-      model_id: string
-      prompt: string
-    }
+    use_sitemap: boolean
   }
 }

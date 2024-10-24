@@ -152,17 +152,12 @@ const NewDataSource: React.FC<NewDataSourceProps> = ({ onClose }) => {
             type: WEB_SOURCE_NAME,
             uri: data.dataSourceUri,
             metadata: {
-              customerId: customerId,
-              js_code: data.webConfig.parserConfigs,
-              wait_for: data.webConfig.waitConfigs,
-              css_selector: data.webConfig.cssSelector,
-              model_config: data.webConfig.aiModel && {
-                name: data.webConfig.aiModel.model_id,
-              },
-              prompt: data.webConfig.aiModel && data.webConfig.aiModel.prompt
+              use_sitemap: data.webConfig.use_sitemap,
             },
           }).unwrap()
           break;
+        default:
+          throw new Error('Invalid data source type')
       }
 
       fqn = res.data_source?.fqn

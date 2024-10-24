@@ -5,12 +5,13 @@ interface SwitchProps {
   onChange: (checked: boolean) => void;
 }
 
-const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(({ checked, onChange }, ref) => {
+const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(({ checked, onChange, ...rest }, ref) => {
   return (
     <input
       ref={ref}
       type="checkbox"
       className="toggle toggle-primary"
+      {...rest}
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
     />
