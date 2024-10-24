@@ -10,6 +10,7 @@ import {
   useGetApplicationDetailsByNameQuery,
   useGetApplicationsQuery,
 } from '@/stores/qafoundry'
+import { notifyError } from '@/utils/error'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import React, { useEffect, useMemo, useState } from 'react'
 
@@ -21,11 +22,9 @@ const DeleteApplication = ({ appName }: { appName: string }) => {
       await deleteApplication({ app_name: appName }).unwrap()
       notify('success', 'RAG Application is successfully deleted!')
     } catch (e) {
-      notify(
-        'error',
-        'Something went wrong!',
-        e?.data?.detail ??
-          'The RAG Application deletion failed. Please try again later.',
+      notifyError(
+        'The RAG Application deletion failed. Please try again later.',
+        e,
       )
     }
   }

@@ -10,6 +10,7 @@ import {
   useGetDataSourcesQuery,
   useIngestDataSourceMutation,
 } from '@/stores/qafoundry'
+import { notifyError } from '@/utils/error'
 import { MenuItem, Select } from '@mui/material'
 import React, { useState } from 'react'
 
@@ -72,16 +73,13 @@ const AddDataSourceToCollection = ({
       notify(
         'success',
         'Data Source is successfully added!',
-        'Updated collection will be available to use after 3-5 minutes.'
+        'Updated collection will be available to use after 3-5 minutes.',
       )
     } catch (err: any) {
-      notify(
-        'error',
+      notifyError(
         'Failed to add documents to collection!',
-        err?.error ||
-          err?.details?.msg ||
-          err?.message ||
-          'There was an error while adding documents to collection.'
+        err,
+        'There was an error while adding documents to collection',
       )
     }
     setIsSaving(false)
@@ -173,7 +171,7 @@ const AddDataSourceToCollection = ({
                       <div>
                         {
                           dataSources?.filter(
-                            (source) => source.fqn === selectedDataSource
+                            (source) => source.fqn === selectedDataSource,
                           )[0].type
                         }
                       </div>
@@ -184,7 +182,7 @@ const AddDataSourceToCollection = ({
                       <div>
                         {
                           dataSources?.filter(
-                            (source) => source.fqn === selectedDataSource
+                            (source) => source.fqn === selectedDataSource,
                           )[0].uri
                         }
                       </div>

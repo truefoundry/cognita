@@ -10,6 +10,7 @@ import NewDataSource from './NewDataSource'
 import CopyField from '@/components/base/atoms/CopyField'
 import { IS_LOCAL_DEVELOPMENT } from '@/stores/constants'
 import notify from '@/components/base/molecules/Notify'
+import { notifyError } from '@/utils/error'
 
 const DeleteDataSource = ({ fqn }: { fqn: string }) => {
   const [deleteDataSource, { isLoading }] = useDeleteDataSourceMutation()
@@ -19,12 +20,7 @@ const DeleteDataSource = ({ fqn }: { fqn: string }) => {
       await deleteDataSource({ data_source_fqn: fqn }).unwrap()
       notify('success', 'Data Source is successfully deleted!')
     } catch (e) {
-      notify(
-        'error',
-        'Something went wrong!',
-        e?.data?.detail ??
-          'The data source deletion failed. Please try again later.'
-      )
+      notifyError('Data source deletion failed. Please try again later', e)
     }
   }
 
@@ -95,7 +91,7 @@ const DataHub = () => {
             fqn: source.fqn,
           }))
         : [],
-    [dataSources]
+    [dataSources],
   )
 
   return (

@@ -14,6 +14,7 @@ import classNames from 'classnames'
 import React, { useEffect, useState } from 'react'
 import { defaultParserConfigs } from './AddDataSourceToCollection'
 import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
+import { notifyError } from '@/utils/error'
 
 interface NewCollectionProps {
   open: boolean
@@ -112,15 +113,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         'Collection will be available to use after 3-5 minutes.',
       )
     } catch (err: any) {
-      notify(
-        'error',
-        'Failed to create the collection',
-        err?.error ||
-          err?.details?.msg ||
-          err?.message ||
-          err?.data?.error ||
-          'There was an error while creating the new collection',
-      )
+      notifyError('Failed to create the colllection', err)
     }
     setIsSaving(false)
   }

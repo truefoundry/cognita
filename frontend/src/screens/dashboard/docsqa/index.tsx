@@ -23,6 +23,7 @@ import notify from '@/components/base/molecules/Notify'
 import { SSE } from 'sse.js'
 import { LightTooltip } from '@/components/base/atoms/Tooltip'
 import SourceDocsPreview from './DocsQA/SourceDocsPreview'
+import { notifyError } from '@/utils/error'
 
 const defaultRetrieverConfig = `{
   "search_type": "similarity",
@@ -127,6 +128,7 @@ const DocsQA = () => {
       } catch (err: any) {
         throw new Error('Invalid Retriever Configuration')
       }
+
       const params: CollectionQueryDto = Object.assign(
         {
           collection_name: selectedCollection,
@@ -166,14 +168,26 @@ const DocsQA = () => {
           } else if (parsed?.type === 'docs') {
             setSourceDocs((prevDocs) => [...prevDocs, ...parsed.content])
           }
-        } catch (err) {}
+        } catch (err: any) {
+          throw new Error('An error occurred while processing the response.')
+        }
       })
 
       sseRequest.addEventListener('end', (event: any) => {
         sseRequest.close()
       })
+
+      sseRequest.addEventListener('error', (event: any) => {
+        sseRequest.close()
+        setPrompt('')
+        setIsRunningPrompt(false)
+        const message = JSON.parse(event.data).detail[0].msg
+        notifyError('Failed to retrieve answer', { message })
+      })
     } catch (err: any) {
-      setErrorMessage(true)
+      setPrompt('')
+      setIsRunningPrompt(false)
+      notifyError('Failed to retrieve answer', err)
     }
   }
 
@@ -206,7 +220,7 @@ const DocsQA = () => {
       setIsCreateApplicationModalOpen(false)
       notify('success', 'Application created successfully')
     } catch (err) {
-      notify('error', 'Failed to create application', err?.data?.detail)
+      notifyError('Failed to create application', err)
     }
   }
 
