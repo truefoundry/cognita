@@ -1,8 +1,18 @@
+import { MenuItem, Select, TextareaAutosize } from '@mui/material'
+import React, { useEffect, useMemo, useState } from 'react'
+import { SSE } from 'sse.js'
+
 import IconProvider from '@/components/assets/IconProvider'
 import Button from '@/components/base/atoms/Button'
 import Input from '@/components/base/atoms/Input'
 import Markdown from '@/components/base/atoms/Markdown'
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
+import { LightTooltip } from '@/components/base/atoms/Tooltip'
+import Switch from '@/components/base/atoms/Switch'
+import Picker from '@/components/base/atoms/Picker'
+import Modal from '@/components/base/atoms/Modal'
+import notify from '@/components/base/molecules/Notify'
+import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import {
   CollectionQueryDto,
   SourceDocs,
@@ -13,15 +23,8 @@ import {
   useGetOpenapiSpecsQuery,
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
-import { MenuItem, Select, Switch, TextareaAutosize } from '@mui/material'
-import React, { useEffect, useMemo, useState } from 'react'
 import NoCollections from './NoCollections'
-import SimpleCodeEditor from '@/components/base/molecules/SimpleCodeEditor'
 import DocsQaInformation from './DocsQaInformation'
-import Modal from '@/components/base/atoms/Modal'
-import notify from '@/components/base/molecules/Notify'
-import { SSE } from 'sse.js'
-import { LightTooltip } from '@/components/base/atoms/Tooltip'
 import SourceDocsPreview from './DocsQA/SourceDocsPreview'
 import { notifyError } from '@/utils/error'
 
@@ -431,29 +434,15 @@ const DocsQA = () => {
               </div>
               <div className="flex justify-between items-center mb-1 mt-3">
                 <div className="text-sm">Model:</div>
-                <Select
-                  value={selectedQueryModel}
-                  onChange={(e) => {
-                    setSelectedQueryModel(e.target.value)
-                  }}
-                  placeholder="Select Model..."
-                  sx={{
-                    background: 'white',
-                    height: '2rem',
-                    width: '13.1875rem',
-                    border: '1px solid #CEE0F8 !important',
-                    outline: 'none !important',
-                    '& fieldset': {
-                      border: 'none !important',
-                    },
-                  }}
-                >
-                  {allEnabledModels?.map((model: any) => (
-                    <MenuItem value={model.name} key={model.name}>
-                      {model.name}
-                    </MenuItem>
-                  ))}
-                </Select>
+                {allEnabledModels &&
+                  <Picker
+                    options={allEnabledModels.map((model: any) => model.name) ?? []}
+                    value={selectedQueryModel}
+                    onChange={(e: any) => {
+                      setSelectedQueryModel(e.target.value as string)
+                    }}
+                  />
+                }
               </div>
               <div className="mb-1 mt-3 text-sm">Model Configuration:</div>
               <SimpleCodeEditor
@@ -506,14 +495,13 @@ const DocsQA = () => {
                   setRetrieverConfig(updatedConfig ?? '')
                 }
               />
-
-              <div className="flex justify-between items-center mt-1.5">
-                <div className="text-sm">Internet Search</div>
+              <label className="label flex justify-between items-center mt-1.5">
+                <span className="label-text text-sm">Internet Search</span>
                 <Switch
                   checked={isInternetSearchEnabled}
-                  onChange={(e) => setIsInternetSearchEnabled(e.target.checked)}
+                  onChange={(checked) => setIsInternetSearchEnabled(checked)}
                 />
-              </div>
+              </label>
               <div className="mb-1 mt-2 text-sm">Prompt Template:</div>
               <TextareaAutosize
                 className="w-full h-20 bg-[#f0f7ff] border border-[#CEE0F8] rounded-lg p-2 text-sm"

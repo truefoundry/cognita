@@ -198,6 +198,8 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BRAVE_API_KEY=${BRAVE_API_KEY}
     entrypoint: /bin/bash
+    security_opt:
+      - seccomp:./seccomp.json
     command: -c "set -e; prisma db push --schema ./backend/database/schema.prisma && uvicorn --host 0.0.0.0 --port 8000 backend.server.app:app --reload"
     networks:
       - cognita-docker

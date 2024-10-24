@@ -24,7 +24,7 @@ const DocsQaInformation = ({ header, subHeader }: DocsQaInformationProps) => {
         </div>
         <div className="flex items-center">
           <div className="w-[2.5rem] h-[0.0625rem] bg-black"></div>
-          <div className="border w-0 h-0 border-t border-t-[transparent] border-t-[0.25rem] border-b border-b-[transparent] border-b-[0.25rem] border-l border-l-[0.375rem] border-l-black"></div>
+          <div className="border w-0 h-0 border-t-[transparent] border-t-[0.25rem] border-b-[transparent] border-b-[0.25rem] border-l-[0.375rem] border-l-black"></div>
         </div>
         <div className="h-[10rem] w-[10rem] rounded-xl border border-gray-250 flex justify-end items-center flex-col pt-6">
           <img src={SearchIcon} className="h-[70.0625rem]" />
@@ -32,7 +32,7 @@ const DocsQaInformation = ({ header, subHeader }: DocsQaInformationProps) => {
         </div>
         <div className="flex items-center">
           <div className="w-[2.5rem] h-[0.0625rem] bg-black"></div>
-          <div className="border w-0 h-0 border-t border-t-[transparent] border-t-[0.25rem] border-b border-b-[transparent] border-b-[0.25rem] border-l border-l-[0.375rem] border-l-black"></div>
+          <div className="border w-0 h-0 border-t-[transparent] border-t-[0.25rem] border-b-[transparent] border-b-[0.25rem] border-l-[0.375rem] border-l-black"></div>
         </div>
         <div className="h-[10rem] w-[10rem] rounded-xl border border-gray-250 flex justify-end items-center flex-col pt-6">
           <div>
@@ -41,7 +41,7 @@ const DocsQaInformation = ({ header, subHeader }: DocsQaInformationProps) => {
             </div>
             <div className="flex flex-col justify-center items-center">
               <div className="h-[0.625rem] w-[0.0625rem] bg-black"></div>
-              <div className="border w-0 h-0 border-l border-l-[transparent] border-l-[0.25rem] border-r border-r-[transparent] border-r-[0.25rem] border-t border-t-[0.375rem] border-t-black"></div>
+              <div className="border w-0 h-0 border-l-[transparent] border-l-[0.25rem] border-r-[transparent] border-r-[0.25rem] border-t-[0.375rem] border-t-black"></div>
             </div>
             <div className="w-[5.75rem] py-2 rounded border border-gray-500 text-center text-white text-sm bg-indigo-500">
               Response
