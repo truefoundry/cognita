@@ -2,7 +2,7 @@ import React from 'react'
 
 import { MenuItem, Select } from '@mui/material'
 
-interface OptionProps {
+interface ConfigProps {
   title: string
   placeholder: string
   initialValue: string
@@ -10,7 +10,7 @@ interface OptionProps {
   handleOnChange: (e: any) => void
 }
 
-const Option = (props: OptionProps) => {
+const Option = (props: ConfigProps) => {
   const { title, placeholder, initialValue, data, handleOnChange } = props
 
   return (

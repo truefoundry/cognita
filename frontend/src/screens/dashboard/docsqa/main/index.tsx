@@ -20,9 +20,9 @@ import {
   useQueryCollectionMutation,
 } from '@/stores/qafoundry'
 import {
-  Option,
+  ConfigSelector,
   ApplicationModal,
-  Form,
+  PromptForm,
   NoAnswer,
   ErrorAnswer,
   Answer,
@@ -68,7 +68,6 @@ const DocsQA = () => {
     useGetCollectionNamesQuery()
   const { data: allEnabledModels } = useGetAllEnabledChatModelsQuery()
   const { data: openapiSpecs } = useGetOpenapiSpecsQuery()
-  const [searchAnswer] = useQueryCollectionMutation()
   const [createApplication, { isLoading: isCreateApplicationLoading }] =
     useCreateApplicationMutation()
 
@@ -227,22 +226,20 @@ const DocsQA = () => {
   }
 
   useEffect(() => {
-    if (collections && collections.length) {
-      setSelectedCollection(collections[0])
-    }
-    if (allQueryControllers && allQueryControllers.length) {
+    if (collections && collections.length) setSelectedCollection(collections[0])
+
+    if (allQueryControllers && allQueryControllers.length)
       setSelectedQueryController(allQueryControllers[0])
-    }
-    if (allEnabledModels && allEnabledModels.length) {
+
+    if (allEnabledModels && allEnabledModels.length)
       setSelectedQueryModel(allEnabledModels[0].name)
-    }
+
     if (allRetrieverOptions && allRetrieverOptions.length) {
       setSelectedRetriever(allRetrieverOptions[0])
       setPromptTemplate(allRetrieverOptions[0].promptTemplate)
     }
-    if (selectedRetriever) {
+    if (selectedRetriever)
       setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
-    }
   }, [
     collections,
     allQueryControllers,
@@ -270,7 +267,7 @@ const DocsQA = () => {
           <>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
               <div className="flex flex-col gap-3">
-                <Option
+                <ConfigSelector
                   title="Collection"
                   placeholder="Select Collection..."
                   initialValue={selectedCollection}
@@ -280,7 +277,7 @@ const DocsQA = () => {
                     setSelectedCollection(e.target.value)
                   }}
                 />
-                <Option
+                <ConfigSelector
                   title="Query Controller"
                   placeholder="Select Query Controller..."
                   initialValue={selectedQueryController}
@@ -290,7 +287,7 @@ const DocsQA = () => {
                     setSelectedQueryController(e.target.value)
                   }}
                 />
-                <Option
+                <ConfigSelector
                   title="Model"
                   placeholder="Select Model..."
                   initialValue={selectedQueryModel}
@@ -312,7 +309,7 @@ const DocsQA = () => {
                 }
               />
               {allRetrieverOptions && selectedRetriever?.key && (
-                <Option
+                <ConfigSelector
                   title="Retriever"
                   placeholder="Select Retriever..."
                   initialValue={selectedRetriever?.key}
@@ -359,7 +356,7 @@ const DocsQA = () => {
               />
             </div>
             <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
-              <Form
+              <PromptForm
                 setPrompt={setPrompt}
                 handlePromptSubmit={handlePromptSubmit}
                 isRunningPrompt={isRunningPrompt}
