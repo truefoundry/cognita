@@ -85,23 +85,65 @@ class ModelGateway:
         """
         Register models from a provider config into their respective type lists.
 
+        This method creates a mapping between model types and their corresponding
+        configuration attributes and storage lists. For each model type:
+        1. Gets the list of model IDs from the provider config
+        2. Creates a fully qualified model name (provider/model_id)
+        3. Maps the model name to its provider config
+        4. Adds a new ModelConfig to the appropriate type-specific list
+
         Args:
             provider_config (ModelProviderConfig): Configuration for a model provider
-                containing model IDs for different types
+                containing model IDs for different types (embedding, chat, reranking, audio)
 
-        Side effects:
-            - Populates self.model_name_to_provider_config mapping
-            - Adds ModelConfig objects to respective model type lists
+        Examples:
+            For a provider config with:
+                provider_name: "openai"
+                embedding_model_ids: ["text-embedding-3-small"]
+                llm_model_ids: ["gpt-4", "gpt-3.5-turbo"]
+                reranking_model_ids: ["rerank-english-v2.0"]
+                audio_model_ids: ["whisper-1"]
+
+            Creates the following ModelConfigs:
+
+            1. Embedding model:
+                name: "openai/text-embedding-3-small"
+                type: ModelType.embedding
+                -> Added to self.embedding_models
+
+            2. LLM models:
+                name: "openai/gpt-4"
+                type: ModelType.chat
+                -> Added to self.llm_models
+
+                name: "openai/gpt-3.5-turbo"
+                type: ModelType.chat
+                -> Added to self.llm_models
+
+            3. Reranking model:
+                name: "openai/rerank-english-v2.0"
+                type: ModelType.reranking
+                -> Added to self.reranker_models
+
+            4. Audio model:
+                name: "openai/whisper-1"
+                type: ModelType.audio
+                -> Added to self.audio_models
+
+            Each model name is also mapped in self.model_name_to_provider_config to
+            its provider configuration for later access to API keys and base URLs.
         """
-        model_lists = {
-            ModelType.embedding: self.embedding_models,
-            ModelType.chat: self.llm_models,
-            ModelType.reranking: self.reranker_models,
-            ModelType.audio: self.audio_models,
+        # Combined mapping of model types to their attributes and lists
+        model_mappings = {
+            ModelType.embedding: ("embedding_model_ids", self.embedding_models),
+            ModelType.chat: ("llm_model_ids", self.llm_models),
+            ModelType.reranking: ("reranking_model_ids", self.reranker_models),
+            ModelType.audio: ("audio_model_ids", self.audio_models),
         }
 
-        for model_type, model_list in model_lists.items():
-            model_ids = getattr(provider_config, f"{model_type.value}_model_ids")
+        # Process each model type using the mapping
+        for model_type, (attr_name, model_list) in model_mappings.items():
+            model_ids = getattr(provider_config, attr_name, [])
             for model_id in model_ids:
                 model_name = f"{provider_config.provider_name}/{model_id}"
                 self.model_name_to_provider_config[model_name] = provider_config
