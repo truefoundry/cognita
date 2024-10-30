@@ -4,6 +4,7 @@ from urllib.parse import unquote
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from truefoundry.ml import get_client as get_tfy_client
 
 from backend.constants import DataSourceType
 from backend.logger import logger
@@ -11,7 +12,6 @@ from backend.modules.metadata_store.base import BaseMetadataStore
 from backend.modules.metadata_store.client import get_client
 from backend.settings import settings
 from backend.types import CreateDataSource
-from backend.utils import TRUEFOUNDRY_CLIENT
 
 router = APIRouter(prefix="/v1/data_source", tags=["data_source"])
 
@@ -41,9 +41,11 @@ async def add_data_source(data_source: CreateDataSource):
     # Validate URI before creating the data source
     if data_source.type == DataSourceType.TRUEFOUNDRY:
         try:
+            # Log into TrueFoundry
+            tfy_client = get_tfy_client()
             # TODO: Currently, if a TFY data directory does not exist, an exception is thrown.
             # We need to raise a 404 error instead of failing generically.
-            data_dir = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(data_source.uri)
+            data_dir = tfy_client.get_data_directory_by_fqn(data_source.uri)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Invalid DataSource URI: {e}"}, status_code=400
@@ -88,9 +90,11 @@ async def delete_data_source(
     if deleted_data_source.type == DataSourceType.TRUEFOUNDRY:
         # Delete the data directory from truefoundry data directory
         try:
+            # Log into TrueFoundry
+            tfy_client = get_tfy_client()
             # When the data source is of type `truefoundry`, the uri contains the fqn of the data directory
             # Fetch the data directory object
-            data_directory = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(
+            data_directory = tfy_client.get_data_directory_by_fqn(
                 deleted_data_source.uri
             )
             # Delete the data directory

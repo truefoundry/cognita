@@ -7,6 +7,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 from truefoundry.ml import DataDirectory
+from truefoundry.ml import get_client as get_tfy_client
 from truefoundry.ml.autogen.client.models.signed_url_dto import SignedURLDto
 
 from backend.logger import logger
@@ -14,7 +15,7 @@ from backend.modules.model_gateway.model_gateway import model_gateway
 from backend.server.routers.data_source import add_data_source
 from backend.settings import settings
 from backend.types import CreateDataSource, ModelType, UploadToDataDirectoryDto
-from backend.utils import TRUEFOUNDRY_CLIENT, _get_read_signed_url
+from backend.utils import _get_read_signed_url
 
 router = APIRouter(prefix="/v1/internal", tags=["internal"])
 
@@ -78,8 +79,10 @@ async def upload_to_docker_directory(
 
 @router.post("/upload-to-data-directory")
 async def upload_to_data_directory(req: UploadToDataDirectoryDto):
+    # Log into TrueFoundry
+    tfy_client = get_tfy_client()
     # Create a new data directory.
-    dataset = TRUEFOUNDRY_CLIENT.create_data_directory(
+    dataset = tfy_client.create_data_directory(
         settings.ML_REPO_NAME,
         req.upload_name,
     )

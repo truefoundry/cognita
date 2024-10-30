@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from typing import Any, Callable, List, Optional, TypeVar, cast
 
 from truefoundry.ml import DataDirectory
-from truefoundry.ml import get_client as get_tfy_client
 from truefoundry.ml.autogen.client.models.signed_url_dto import SignedURLDto
 from typing_extensions import ParamSpec
 
@@ -15,8 +14,6 @@ from backend.logger import logger
 
 P = ParamSpec("P")
 T = TypeVar("T")
-
-TRUEFOUNDRY_CLIENT = get_tfy_client()
 
 
 def flatten(dct, sub_dct_key_name, prefix=None):
