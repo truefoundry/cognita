@@ -1,10 +1,12 @@
 import os
 from typing import Dict, Iterator, List
 
+from truefoundry.ml import get_client as get_tfy_client
+
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
 from backend.types import DataIngestionMode, DataPoint, DataSource, LoadedDataPoint
-from backend.utils import TRUEFOUNDRY_CLIENT, unzip_file
+from backend.utils import unzip_file
 
 
 class TrueFoundryLoader(BaseDataLoader):
@@ -31,9 +33,11 @@ class TrueFoundryLoader(BaseDataLoader):
 
         # Since only data-dir is allowed, we can directly use the FQN to get the data directory.
         try:
+            # Log into TrueFoundry
+            tfy_client = get_tfy_client()
             # Data source URI contains the Truefoundry FQN(Fully Qualified Name) of the data directory.
             # Use the FQN to get the data directory from TrueFoundry.
-            dataset = TRUEFOUNDRY_CLIENT.get_data_directory_by_fqn(data_source.uri)
+            dataset = tfy_client.get_data_directory_by_fqn(data_source.uri)
             # Download the data directory to the destination directory.
             tfy_files_dir = dataset.download(path=dest_dir)
             logger.debug(f"Data directory download info: {tfy_files_dir}")
