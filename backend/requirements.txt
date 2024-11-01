@@ -11,7 +11,7 @@ python-dotenv==1.0.1
 
 ## pydantic
 pydantic==2.7.4
-pydantic-settings==2.3.3
+pydantic-settings==2.6.1
 
 ## pdf
 PyMuPDF==1.23.6
@@ -49,10 +49,10 @@ prisma==0.13.1
 moviepy==1.0.3
 
 ## langchain
-langchain==0.2.16
-langchain-community==0.2.17
-langchain-core==0.2.41
-langchain-openai==0.1.25
+langchain==0.3.6
+langchain-community==0.3.4
+langchain-core==0.3.15
+langchain-openai==0.2.5
 
 ## vector db
 qdrant-client==1.9.0
