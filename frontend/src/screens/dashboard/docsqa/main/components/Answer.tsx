@@ -3,9 +3,10 @@ import React from 'react'
 import SourceDocsPreview from '../../DocsQA/SourceDocsPreview'
 import IconProvider from '@/components/assets/IconProvider'
 import Markdown from 'react-markdown'
+import { useDocsQAContext } from '../context'
 
-const Answer = (props: any) => {
-  const { answer, sourceDocs } = props
+const Answer = () => {
+  const { answer, sourceDocs } = useDocsQAContext()
 
   return (
     <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">

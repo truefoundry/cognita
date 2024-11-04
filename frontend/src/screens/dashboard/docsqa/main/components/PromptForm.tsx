@@ -2,15 +2,16 @@ import React from 'react'
 
 import Input from '@/components/base/atoms/Input'
 import Button from '@/components/base/atoms/Button'
+import { useDocsQAContext } from '../context'
 
-const Form = (props: any) => {
+const Form = () => {
   const {
     setPrompt,
     handlePromptSubmit,
-    isRunningPrompt,
-    prompt,
     selectedQueryModel,
-  } = props
+    prompt,
+    isRunningPrompt,
+  } = useDocsQAContext()
 
   return (
     <div className="flex gap-4 items-center">

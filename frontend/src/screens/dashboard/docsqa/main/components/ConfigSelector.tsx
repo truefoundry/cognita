@@ -8,13 +8,22 @@ interface ConfigProps {
   initialValue: string
   data: any[] | undefined
   handleOnChange: (e: any) => void
+  renderItem?: (e: any) => React.ReactNode
+  className?: string
 }
 
-const Option = (props: ConfigProps) => {
-  const { title, placeholder, initialValue, data, handleOnChange } = props
-
+const ConfigSelector = (props: ConfigProps) => {
+  const {
+    title,
+    placeholder,
+    initialValue,
+    data,
+    className,
+    handleOnChange,
+    renderItem,
+  } = props
   return (
-    <div className={`flex justify-between items-center`}>
+    <div className={`flex justify-between items-center ${className}`}>
       <div className="text-sm">{title}:</div>
       <Select
         value={initialValue}
@@ -32,10 +41,8 @@ const Option = (props: ConfigProps) => {
         }}
       >
         {data?.map((item: any) =>
-          typeof item === 'object' ? (
-            <MenuItem value={item.name | item.key} key={item.name | item.key}>
-              {item.name | item.summary}
-            </MenuItem>
+          renderItem ? (
+            renderItem(item)
           ) : (
             <MenuItem value={item} key={item}>
               {item}
@@ -47,4 +54,4 @@ const Option = (props: ConfigProps) => {
   )
 }
 
-export default Option
+export default ConfigSelector
