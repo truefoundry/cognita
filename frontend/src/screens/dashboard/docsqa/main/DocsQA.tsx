@@ -1,56 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import Spinner from '@/components/base/atoms/Spinner/Spinner'
 import ApplicationModal from './components/ApplicationModal'
 import NoCollections from '../NoCollections'
 import { useDocsQAContext } from './context'
-import Left from './components/Left'
-import Right from './components/Right'
+import ConfigSidebar from './components/ConfigSidebar'
+import Chat from './components/Chat'
 
 const DocsQA = () => {
-  const {
-    selectedQueryModel,
-    setSelectedQueryModel,
-    selectedCollection,
-    setSelectedCollection,
-    selectedQueryController,
-    setSelectedQueryController,
-    selectedRetriever,
-    setSelectedRetriever,
-    prompt,
-    setPrompt,
-    isRunningPrompt,
-    setIsRunningPrompt,
-    answer,
-    setAnswer,
-    sourceDocs,
-    setSourceDocs,
-    errorMessage,
-    setErrorMessage,
-    modelConfig,
-    setModelConfig,
-    retrieverConfig,
-    setRetrieverConfig,
-    promptTemplate,
-    setPromptTemplate,
-    isInternetSearchEnabled,
-    setIsInternetSearchEnabled,
-    isCreateApplicationModalOpen,
-    setIsCreateApplicationModalOpen,
-    collections,
-    isCollectionsLoading,
-    allEnabledModels,
-    allQueryControllers,
-    allRetrieverOptions,
-    handlePromptSubmit,
-    resetQA,
-    isCreateApplicationLoading,
-    createChatApplication,
-  } = useDocsQAContext()
+  const { selectedCollection, isCollectionsLoading } = useDocsQAContext()
+
+  const [isCreateApplicationModalOpen, setIsCreateApplicationModalOpen] =
+    useState(false)
 
   return (
     <>
-      <ApplicationModal />
+      {isCreateApplicationModalOpen && (
+        <ApplicationModal
+          isCreateApplicationModalOpen={isCreateApplicationModalOpen}
+          setIsCreateApplicationModalOpen={setIsCreateApplicationModalOpen}
+        />
+      )}
       <div className="flex gap-5 h-[calc(100vh-6.5rem)] w-full">
         {isCollectionsLoading ? (
           <div className="h-full w-full flex items-center">
@@ -58,8 +28,10 @@ const DocsQA = () => {
           </div>
         ) : selectedCollection ? (
           <>
-            <Left />
-            <Right />
+            <ConfigSidebar
+              setIsCreateApplicationModalOpen={setIsCreateApplicationModalOpen}
+            />
+            <Chat />
           </>
         ) : (
           <NoCollections fullWidth />

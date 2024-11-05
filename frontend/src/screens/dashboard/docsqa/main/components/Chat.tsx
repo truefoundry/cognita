@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import Spinner from '@/components/base/atoms/Spinner'
 import { useDocsQAContext } from '../context'
@@ -8,10 +8,16 @@ import Answer from './Answer'
 import NoAnswer from './NoAnswer'
 
 const Right = () => {
-  const { answer, isRunningPrompt, errorMessage } = useDocsQAContext()
+  const { errorMessage, answer } = useDocsQAContext()
+
+  const [isRunningPrompt, setIsRunningPrompt] = useState(false)
+
   return (
     <div className="h-full border rounded-lg border-[#CEE0F8] w-[calc(100%-25rem)] bg-white p-4">
-      <PromptForm />
+      <PromptForm
+        isRunningPrompt={isRunningPrompt}
+        setIsRunningPrompt={setIsRunningPrompt}
+      />
       {answer ? (
         <Answer />
       ) : isRunningPrompt ? (

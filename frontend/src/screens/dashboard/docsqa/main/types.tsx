@@ -7,42 +7,36 @@ export interface SelectedRetrieverType {
 
 export interface DocsQAContextType {
   selectedQueryModel: string
-  setSelectedQueryModel: React.Dispatch<React.SetStateAction<string>>
   selectedCollection: string
-  setSelectedCollection: React.Dispatch<React.SetStateAction<string>>
   selectedQueryController: string
-  setSelectedQueryController: React.Dispatch<React.SetStateAction<string>>
   selectedRetriever: SelectedRetrieverType | undefined
-  setSelectedRetriever: React.Dispatch<
-    React.SetStateAction<SelectedRetrieverType | undefined>
-  >
   prompt: string
-  setPrompt: React.Dispatch<React.SetStateAction<string>>
-  isRunningPrompt: boolean
-  setIsRunningPrompt: React.Dispatch<React.SetStateAction<boolean>>
   answer: string
-  setAnswer: React.Dispatch<React.SetStateAction<string>>
   sourceDocs: any[]
-  setSourceDocs: React.Dispatch<React.SetStateAction<any[]>>
   errorMessage: boolean
-  setErrorMessage: React.Dispatch<React.SetStateAction<boolean>>
   modelConfig: string
-  setModelConfig: React.Dispatch<React.SetStateAction<string>>
   retrieverConfig: string
-  setRetrieverConfig: React.Dispatch<React.SetStateAction<string>>
   promptTemplate: string
-  setPromptTemplate: React.Dispatch<React.SetStateAction<string>>
   isInternetSearchEnabled: boolean
-  setIsInternetSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>
-  isCreateApplicationModalOpen: boolean
-  setIsCreateApplicationModalOpen: React.Dispatch<React.SetStateAction<boolean>>
   collections: any[] | undefined
   isCollectionsLoading: boolean
   allEnabledModels: any
   allQueryControllers: string[]
   allRetrieverOptions: SelectedRetrieverType[]
-  handlePromptSubmit: () => Promise<void>
+
+  setSelectedQueryModel: React.Dispatch<React.SetStateAction<string>>
+  setSelectedCollection: React.Dispatch<React.SetStateAction<string>>
+  setSelectedQueryController: React.Dispatch<React.SetStateAction<string>>
+  setSelectedRetriever: React.Dispatch<
+    React.SetStateAction<SelectedRetrieverType | undefined>
+  >
+  setAnswer: React.Dispatch<React.SetStateAction<string>>
+  setPrompt: React.Dispatch<React.SetStateAction<string>>
+  setSourceDocs: React.Dispatch<React.SetStateAction<any[]>>
+  setErrorMessage: React.Dispatch<React.SetStateAction<boolean>>
+  setModelConfig: React.Dispatch<React.SetStateAction<string>>
+  setRetrieverConfig: React.Dispatch<React.SetStateAction<string>>
+  setPromptTemplate: React.Dispatch<React.SetStateAction<string>>
+  setIsInternetSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>
   resetQA: () => void
-  isCreateApplicationLoading: boolean
-  createChatApplication: any
 }

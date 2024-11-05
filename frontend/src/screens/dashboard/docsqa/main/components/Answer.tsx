@@ -5,8 +5,8 @@ import IconProvider from '@/components/assets/IconProvider'
 import Markdown from 'react-markdown'
 import { useDocsQAContext } from '../context'
 
-const Answer = () => {
-  const { answer, sourceDocs } = useDocsQAContext()
+const Answer = (props: any) => {
+  const { sourceDocs, answer } = useDocsQAContext()
 
   return (
     <div className="overflow-y-auto flex flex-col gap-4 mt-7 h-[calc(100%-70px)]">

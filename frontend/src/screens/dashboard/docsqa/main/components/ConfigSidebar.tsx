@@ -12,7 +12,7 @@ const defaultModelConfig = `{
   }
 }`
 
-const Left = () => {
+const Left = (props: any) => {
   const {
     selectedCollection,
     selectedQueryController,
@@ -33,9 +33,10 @@ const Left = () => {
     setModelConfig,
     setRetrieverConfig,
     setPromptTemplate,
-    setIsCreateApplicationModalOpen,
     resetQA,
   } = useDocsQAContext()
+
+  const { setIsCreateApplicationModalOpen } = props
 
   return (
     <div className="h-full border rounded-lg border-[#CEE0F8] w-[23.75rem] bg-white p-4 overflow-auto">
