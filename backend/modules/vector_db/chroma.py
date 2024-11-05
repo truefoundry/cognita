@@ -8,7 +8,10 @@ from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores import Chroma
 
-from backend.constants import DATA_POINT_FQN_METADATA_KEY, DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+from backend.constants import (
+    DATA_POINT_FQN_METADATA_KEY,
+    DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE,
+)
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
 from backend.types import ChromaVectorDBConfig, DataPointVector
@@ -104,7 +107,6 @@ class ChromaVectorDB(BaseVectorDB):
             for doc in documents
             if doc.metadata.get(DATA_POINT_FQN_METADATA_KEY)
         ]
-           
 
     def delete_documents(self, collection_name: str, document_ids: List[str]):
         # Fetch the collection

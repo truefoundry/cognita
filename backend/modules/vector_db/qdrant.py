@@ -154,18 +154,16 @@ class QdrantVectorDB(BaseVectorDB):
         )
 
         # Delete old documents
-        
+
         # If there are no record ids to be upserted, return
         if not len(record_ids_to_be_upserted):
             return
-        
+
         logger.debug(
             f"[Qdrant] Deleting {len(documents)} outdated documents from collection {collection_name}"
         )
         for i in range(0, len(record_ids_to_be_upserted), BATCH_SIZE):
-            record_ids_to_be_processed = record_ids_to_be_upserted[
-                i : i + BATCH_SIZE
-            ]
+            record_ids_to_be_processed = record_ids_to_be_upserted[i : i + BATCH_SIZE]
             self.qdrant_client.delete(
                 collection_name=collection_name,
                 points_selector=models.PointIdsList(
@@ -420,4 +418,3 @@ class QdrantVectorDB(BaseVectorDB):
             f"[Qdrant] Listing {len(document_vector_points)} document vector points for collection {collection_name}"
         )
         return document_vector_points
-
