@@ -133,8 +133,7 @@ const FileUpload: React.FC<Props> = ({ uploadedFileIds }) => {
               Click or Drag &amp; Drop to upload files
             </span>
             <span className="block">
-              Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total • zip,
-              txt, md
+              Limit {DOCS_QA_MAX_UPLOAD_SIZE_MB}MB in total
             </span>
           </p>
         </div>
