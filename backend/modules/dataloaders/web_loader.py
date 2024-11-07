@@ -1,5 +1,6 @@
 # Author: https://github.com/paulpierre/markdown-crawler/
 # Description: A multithreaded web crawler that recursively crawls a website and creates a markdown file for each page.
+import mimetypes
 import os
 import tempfile
 from datetime import date
@@ -100,15 +101,18 @@ class WebLoader(BaseDataLoader):
                 # If last modified date is not available, fetch it from the web url
                 if not content_hash:
                     logger.debug(f"Cannot find last modified date for {url}.")
-                    async with session.get(url) as response:
+                    async with session.head(url) as response:
                         if response.status != 200:
                             logger.warning(
                                 f"Failed to fetch {url}: Status {response.status}"
                             )
                             continue
 
-                        content_hash = response.headers.get(
-                            "Last-Modified", date.today().isoformat()
+                        # Use ETag or Last-Modified header as the content hash
+                        content_hash = (
+                            response.headers.get("ETag", None)
+                            or response.headers.get("Last-Modified", None)
+                            or date.today().isoformat()
                         )
                         logger.debug(
                             f"Last modified date for {url}: {response.headers.get('Last-Modified', 'today')}"
@@ -121,13 +125,31 @@ class WebLoader(BaseDataLoader):
                     logger.debug(f"No changes detected for {url}")
                     continue
 
+                extension = "url"
+                local_filepath = url
+                if mime := mimetypes.guess_type(url)[0]:
+                    extension = mimetypes.guess_extension(mime) or "url"
+
+                if extension != ".url":
+                    rel_path, full_path = calculate_full_path(url, extension, dest_dir)
+                    async with session.get(url) as response:
+                        if response.status != 200:
+                            logger.warning(
+                                f"Failed to fetch {url}: Status {response.status}"
+                            )
+                            continue
+                        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                        with open(full_path, "wb") as f:
+                            f.write(await response.read())
+                    local_filepath = full_path
+
                 loaded_data_points.append(
                     LoadedDataPoint(
                         data_point_hash=content_hash,
                         data_point_uri=url,
                         data_source_fqn=f"web:{url}",
-                        local_filepath=url,
-                        file_extension="url",
+                        local_filepath=local_filepath,
+                        file_extension=extension,
                     )
                 )
 
