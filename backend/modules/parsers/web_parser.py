@@ -24,6 +24,12 @@ class FinalParserConfig(BaseModel):
 
 
 class WebParserConfig(BaseModel):
+    magic: bool = False
+    simulate_user: bool = False
+    override_navigator: bool = False
+    remove_overlay: bool = False
+    page_timeout: int = 6000
+    use_markdown: bool = False
     js_code: Optional[str] = None
     wait_for: Optional[str] = None
     css_selector: Optional[str] = None
@@ -41,6 +47,12 @@ class WebParser(BaseParser):
         "url": {
             "name": "WebParser",
             "parameters": {
+                "magic": false,
+                "simulate_user": false,
+                "override_navigator": false,
+                "remove_overlay": false,
+                "page_timeout": 6000,
+                "use_markdown": false,
                 "js_code": "",
                 "wait_for": "",
                 "css_selector": "article",
@@ -121,6 +133,11 @@ class WebParser(BaseParser):
                 result = await crawler.arun(
                     url=url,
                     bypass_cache=True,
+                    magic=self.config.magic,
+                    simulate_user=self.config.simulate_user,
+                    override_navigator=self.config.override_navigator,
+                    remove_overlay=self.config.remove_overlay,
+                    page_timeout=self.config.page_timeout,
                     js_code=self.config.js_code,
                     wait_for=self.config.wait_for,
                     css_selector=self.config.css_selector,
@@ -128,8 +145,15 @@ class WebParser(BaseParser):
                 )
                 assert result.success, f"Failed to crawl the page: {url}"
 
-                data = result.extracted_content
-                file_ext = ".json"
+                if extraction_strategy:
+                    data = result.extracted_content
+                    file_ext = ".json"
+                elif self.config.use_markdown:
+                    data = result.fit_markdown
+                    file_ext = ".md"
+                else:
+                    data = result.fit_html
+                    file_ext = ".html"
 
                 tempfile_name = None
 
@@ -145,7 +169,11 @@ class WebParser(BaseParser):
                 )
 
                 final_texts = await parser.get_chunks(
-                    filepath=tempfile_name, metadata=metadata
+                    filepath=tempfile_name,
+                    metadata={
+                        **result.metadata,
+                        **(metadata or {}),
+                    },
                 )
 
                 # Remove the temporary file

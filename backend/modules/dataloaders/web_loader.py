@@ -5,7 +5,6 @@ import os
 import tempfile
 from datetime import date
 from typing import AsyncGenerator, Dict, List, Tuple
-from urllib.parse import urlparse
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -49,20 +48,6 @@ async def extract_urls_from_sitemap(url: str) -> List[Tuple[str, str]]:
         for loc in soup.find_all("loc")
     ]
     return urls
-
-
-def calculate_full_path(url: str, extension: str, dest_dir: str) -> Tuple[str, str]:
-    parsed_url = urlparse(url)
-    path = parsed_url.path.strip("/")
-    if not path:
-        path = "index"
-    filename = f"{path}{extension}"
-    host = parsed_url.netloc
-
-    rel_path = os.path.join(host, path)
-    full_path = os.path.join(dest_dir, rel_path + extension)
-
-    return rel_path, full_path
 
 
 class WebLoader(BaseDataLoader):
@@ -130,24 +115,26 @@ class WebLoader(BaseDataLoader):
                 if mime := mimetypes.guess_type(url)[0]:
                     extension = mimetypes.guess_extension(mime) or "url"
 
-                if extension != ".url":
-                    rel_path, full_path = calculate_full_path(url, extension, dest_dir)
+                if extension != "url":
                     async with session.get(url) as response:
                         if response.status != 200:
                             logger.warning(
                                 f"Failed to fetch {url}: Status {response.status}"
                             )
                             continue
-                        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                        with open(full_path, "wb") as f:
-                            f.write(await response.read())
-                    local_filepath = full_path
+                        # Could have used path as per URL but that makes us vulnerable to path traversal attacks
+                        with tempfile.NamedTemporaryFile(
+                            delete=False, suffix=extension, dir=dest_dir, mode="wb"
+                        ) as temp_file:
+                            temp_file.write(await response.read())
+                            temp_file.write
+                            local_filepath = temp_file.name
 
                 loaded_data_points.append(
                     LoadedDataPoint(
                         data_point_hash=content_hash,
                         data_point_uri=url,
-                        data_source_fqn=f"web:{url}",
+                        data_source_fqn=f"web::{url}",
                         local_filepath=local_filepath,
                         file_extension=extension,
                     )

@@ -39,7 +39,7 @@ const DocLink = ({ pageNumber, fqn, fileFormat, loadPreview }: DocLinkProps) => 
           'cursor-pointer': isUrlHandlerSupport || isDirectLink
         })
       }
-      href={isDirectLink ? `https://${splittedFqn[2]}` : '#'}
+      href={isDirectLink ? splittedFqn[2] : '#'}
       referrerPolicy='no-referrer'
       target='_blank'
       onClick={clickHandler}
