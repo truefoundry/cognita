@@ -8,6 +8,7 @@ from typing import AsyncGenerator, Dict, List, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup
+from fastapi import HTTPException
 
 from backend.logger import logger
 from backend.modules.dataloaders.loader import BaseDataLoader
@@ -118,10 +119,11 @@ class WebLoader(BaseDataLoader):
                 if extension != "url":
                     async with session.get(url) as response:
                         if response.status != 200:
-                            logger.warning(
-                                f"Failed to fetch {url}: Status {response.status}"
+                            message = f"Failed to obtain data from {url}: Status {response.status}"
+                            logger.error(message)
+                            raise HTTPException(
+                                status_code=response.status, message=message
                             )
-                            continue
                         # Could have used path as per URL but that makes us vulnerable to path traversal attacks
                         with tempfile.NamedTemporaryFile(
                             delete=False, suffix=extension, dir=dest_dir, mode="wb"
