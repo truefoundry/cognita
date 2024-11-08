@@ -340,6 +340,7 @@ export const qafoundryApi = createApi({
         data_ingestion_mode: string
         raise_error_on_failure: boolean
         run_as_job: boolean
+        batch_size?: number
       }) => ({
         url: '/v1/collections/ingest',
         body: payload,

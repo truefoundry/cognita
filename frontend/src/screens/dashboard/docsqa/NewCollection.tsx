@@ -91,6 +91,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         data_ingestion_mode: 'INCREMENTAL',
         raise_error_on_failure: true,
         run_as_job: true,
+        batch_size: 30,
       })
 
       const allCollectionToJobNames = JSON.parse(

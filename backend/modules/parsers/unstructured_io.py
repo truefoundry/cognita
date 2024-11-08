@@ -20,7 +20,6 @@ class UnstructuredIoParser(BaseParser):
         ".html",
         ".md",
         ".rst",
-        ".json",
         ".rtf",
         ".jpeg",
         ".png",

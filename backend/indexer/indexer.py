@@ -163,7 +163,7 @@ async def _sync_data_source_to_collection(
             data_ingestion_mode=inputs.data_ingestion_mode,
         )
 
-        for loaded_data_points_batch in loaded_data_points_batch_iterator:
+        async for loaded_data_points_batch in loaded_data_points_batch_iterator:
             try:
                 await ingest_data_points(
                     inputs=inputs,

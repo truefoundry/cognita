@@ -88,8 +88,8 @@ class Indexer:
             resources=Resources(
                 cpu_request=1.0,
                 cpu_limit=1.5,
-                memory_request=1000,
-                memory_limit=1500,
+                memory_request=2000,
+                memory_limit=4000,
                 ephemeral_storage_request=1000,
                 ephemeral_storage_limit=2000,
                 node=NodepoolSelector(),
