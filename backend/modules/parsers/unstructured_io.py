@@ -87,6 +87,8 @@ class UnstructuredIoParser(BaseParser):
             parsed_data = response.json()
             for payload in parsed_data:
                 text = payload["text"]
+                if text == None or len(text) == 0:
+                    continue
                 metadata = payload["metadata"]
                 final_texts.append(Document(page_content=text, metadata=metadata))
             return final_texts
