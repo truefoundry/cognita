@@ -80,6 +80,8 @@ const DocsQASettings = () => {
       ) {
         setSelectedCollection(collectionsNames[0])
       }
+    } else {
+      setSelectedCollection(undefined)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionsNames])
