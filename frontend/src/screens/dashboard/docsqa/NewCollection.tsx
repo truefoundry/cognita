@@ -18,7 +18,7 @@ import { notifyError } from '@/utils/error'
 
 interface NewCollectionProps {
   open: boolean
-  onClose: () => void
+  onClose: (collectionName?: string) => void
   onSuccess?: () => void
 }
 
@@ -105,7 +105,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         }),
       )
 
-      onClose()
+      onClose(collectionName)
       resetForm()
       onSuccess?.()
       notify(

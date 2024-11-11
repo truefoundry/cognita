@@ -182,10 +182,13 @@ const DocsQASettings = () => {
       {newCollectionModalOpen && (
         <NewCollection
           open={newCollectionModalOpen}
-          onClose={() => {
+          onClose={(newCollectionName) => {
             if (searchParams.has('newCollectionOpen')) {
               searchParams.delete('newCollectionOpen')
               setSearchParams(searchParams)
+            }
+            if (newCollectionName) {
+              setSelectedCollection(newCollectionName)
             }
             setNewCollectionModalOpen(false)
           }}
