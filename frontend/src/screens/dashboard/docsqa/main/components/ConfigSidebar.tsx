@@ -36,6 +36,8 @@ const Left = (props: any) => {
     resetQA,
   } = useDocsQAContext()
 
+  console.log(selectedQueryModel)
+
   const { setIsCreateApplicationModalOpen } = props
 
   return (

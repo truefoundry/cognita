@@ -102,6 +102,12 @@ export const DocsQAProvider: React.FC<DocsQAProviderProps> = ({ children }) => {
   }, [allQueryControllers])
 
   useEffect(() => {
+    if (allEnabledModels && allEnabledModels.length) {
+      setSelectedQueryModel(allEnabledModels[0].name)
+    }
+  }, [allEnabledModels])
+
+  useEffect(() => {
     if (allRetrieverOptions && allRetrieverOptions.length) {
       setSelectedRetriever(allRetrieverOptions[0])
       setPromptTemplate(allRetrieverOptions[0].promptTemplate)
