@@ -6,7 +6,7 @@ import ScreenFallbackLoader from '@/components/base/molecules/ScreenFallbackLoad
 import DataHub from '@/screens/dashboard/docsqa/DataSources'
 import NavBar from '@/screens/dashboard/docsqa/Navbar'
 import Applications from '@/screens/dashboard/docsqa/Applications'
-const DocsQA = lazy(() => import('@/screens/dashboard/docsqa'))
+const DocsQA = lazy(() => import('@/screens/dashboard/docsqa/main'))
 const DocsQAChatbot = lazy(() => import('@/screens/dashboard/docsqa/Chatbot'))
 const DocsQASettings = lazy(() => import('@/screens/dashboard/docsqa/settings'))
 
