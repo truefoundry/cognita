@@ -94,26 +94,24 @@ export const DocsQAProvider: React.FC<DocsQAProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (collections && collections.length) setSelectedCollection(collections[0])
+  }, [collections])
 
+  useEffect(() => {
     if (allQueryControllers && allQueryControllers.length)
       setSelectedQueryController(allQueryControllers[0])
+  }, [allQueryControllers])
 
-    if (allEnabledModels && allEnabledModels.length)
-      setSelectedQueryModel(allEnabledModels[0].name)
-
+  useEffect(() => {
     if (allRetrieverOptions && allRetrieverOptions.length) {
       setSelectedRetriever(allRetrieverOptions[0])
       setPromptTemplate(allRetrieverOptions[0].promptTemplate)
     }
+  }, [allRetrieverOptions])
+
+  useEffect(() => {
     if (selectedRetriever)
       setRetrieverConfig(JSON.stringify(selectedRetriever.config, null, 2))
-  }, [
-    collections,
-    allQueryControllers,
-    allEnabledModels,
-    allRetrieverOptions,
-    selectedRetriever,
-  ])
+  }, [selectedRetriever])
 
   const value = {
     selectedQueryModel,
