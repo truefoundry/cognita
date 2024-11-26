@@ -88,11 +88,12 @@ const Left = (props: any) => {
       {allRetrieverOptions && selectedRetriever?.key && (
         <ConfigSelector
           title="Retriever"
-          placeholder="Select Retriever..."
-          initialValue={selectedRetriever?.summary}
+          placeholder="Select Retriever"
+          initialValue={selectedRetriever?.key}
           data={allRetrieverOptions}
           className="mt-4"
           handleOnChange={(e) => {
+            console.log(allRetrieverOptions.map((retriever) => retriever.key))
             const retriever = allRetrieverOptions.find(
               (retriever) => retriever.key === e.target.value,
             )
@@ -100,7 +101,7 @@ const Left = (props: any) => {
             setPromptTemplate(retriever?.promptTemplate)
           }}
           renderItem={(item) => (
-            <MenuItem key={item.key} value={item.summary}>
+            <MenuItem key={item.key} value={item.key}>
               {item.summary}
             </MenuItem>
           )}
