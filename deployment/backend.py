@@ -88,8 +88,7 @@ class Backend:
                     protocol="TCP",
                     expose=True,
                     app_protocol="http",
-                    host=f"{self.application_set_name}.{self.base_domain_url}",
-                    path="/api/",
+                    host=f"{self.application_set_name}-{BACKEND_SERVICE_NAME}.{self.base_domain_url}",
                 )
             ],
             mounts=[

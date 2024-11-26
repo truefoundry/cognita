@@ -7,7 +7,7 @@ from truefoundry.deploy import (
     Service,
 )
 
-from deployment.config import FRONTEND_SERVICE_NAME
+from deployment.config import BACKEND_SERVICE_NAME, FRONTEND_SERVICE_NAME
 
 
 class Frontend:
@@ -28,7 +28,7 @@ class Frontend:
                     dockerfile_path="./frontend/Dockerfile",
                     build_context_path="./frontend",
                     build_args={
-                        "VITE_QA_FOUNDRY_URL": f"https://{self.application_set_name}.{self.base_domain_url}/api",
+                        "VITE_QA_FOUNDRY_URL": f"https://{self.application_set_name}-{BACKEND_SERVICE_NAME}.{self.base_domain_url}",
                         "VITE_DOCS_QA_STANDALONE_PATH": "/",
                         "VITE_DOCS_QA_ENABLE_STANDALONE": "true",
                         "VITE_DOCS_QA_DELETE_COLLECTIONS": "true",
