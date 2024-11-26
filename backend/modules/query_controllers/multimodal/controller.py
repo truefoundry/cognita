@@ -30,7 +30,7 @@ class MultiModalRAGQueryController(BaseQueryController):
     async def _stream_vlm_answer(self, llm, message_payload, docs):
         try:
             async with async_timeout.timeout(GENERATION_TIMEOUT_SEC):
-                yield Docs(content=self._cleanup_metadata(docs))
+                yield Docs(content=self._enrich_context_for_stream_response(docs))
                 async for chunk in llm.astream(message_payload):
                     yield Answer(content=chunk.content)
         except asyncio.TimeoutError:
