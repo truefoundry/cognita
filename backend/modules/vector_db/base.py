@@ -83,3 +83,9 @@ class BaseVectorDB(ABC):
         Delete vectors from the collection
         """
         raise NotImplementedError()
+
+    def get_embedding_dimensions(self, embeddings: Embeddings) -> int:
+        """
+        Fetch embedding dimensions
+        """
+        raise NotImplementedError()
