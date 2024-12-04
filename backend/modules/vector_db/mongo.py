@@ -1,4 +1,5 @@
 from typing import List, Optional
+from langchain_openai import OpenAIEmbeddings
 from pymongo import MongoClient, UpdateOne
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
@@ -14,7 +15,7 @@ from backend.modules.vector_db.base import BaseVectorDB
 class MongoVectorDB(BaseVectorDB):
     def __init__(self, config: VectorDBConfig):
         """Initialize MongoDB vector database client"""
-        self.client = MongoClient(host=config.host, port=config.port)
+        self.client = MongoClient(config.url)
         self.db = self.client[config.database_name]
 
     def create_collection(self, collection_name: str, embeddings: Embeddings) -> None:
