@@ -6,6 +6,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.schema.vectorstore import VectorStore
 
 from backend.constants import DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+from backend.logger import logger
 from backend.types import DataPointVector
 
 
@@ -83,3 +84,14 @@ class BaseVectorDB(ABC):
         Delete vectors from the collection
         """
         raise NotImplementedError()
+
+    def get_embedding_dimensions(self, embeddings: Embeddings) -> int:
+        """
+        Fetch embedding dimensions
+        """
+        # Calculate embedding size
+        logger.debug(f"[VectorDB] Embedding a dummy doc to get vector dimensions")
+        partial_embeddings = embeddings.embed_documents(["Initial document"])
+        vector_size = len(partial_embeddings[0])
+        logger.debug(f"Vector size: {vector_size}")
+        return vector_size
