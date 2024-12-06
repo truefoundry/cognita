@@ -231,36 +231,6 @@ services:
     networks:
       - cognita-docker
 
-  mongo:
-    image: mongo
-    pull_policy: if_not_present
-    restart: unless-stopped
-    container_name: mongo
-    profiles:
-      - mongo
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-    networks:
-      - cognita-docker
-
-  mongo-express:
-    image: mongo-express
-    pull_policy: if_not_present
-    restart: unless-stopped
-    container_name: mongo-express
-    profiles:
-      - mongo-express
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_BASICAUTH: false
-    networks:
-      - cognita-docker
-
 networks:
   cognita-docker:
     external: false

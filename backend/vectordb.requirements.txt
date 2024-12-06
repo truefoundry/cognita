@@ -4,5 +4,6 @@ singlestoredb==1.0.4
 ### Weaviate client (in progress)
 weaviate-client==3.25.3
 
-### MongoDB client
+### MongoDB
 pymongo==4.10.1
+langchain-mongodb==0.2.0
