@@ -45,6 +45,7 @@ class MilvusVectorDB(BaseVectorDB):
         # TODO: create an extended config for Milvus like done in Qdrant
         logger.debug(f"Connecting to Milvus using config: {config.model_dump()}")
         if config.local is True:
+            # TODO: make this path customizable
             self.milvus_client = MilvusClient(
                 "./cognita_milvus.db",
                 db_name=config.config.get("db_name", "milvus_default_db"),
@@ -55,6 +56,7 @@ class MilvusVectorDB(BaseVectorDB):
             if not api_key:
                 api_key = None
 
+            self.metric_type = config.config.get("metric_type", "COSINE")
             self.milvus_client = MilvusClient(
                 uri=url,
                 token=api_key,
@@ -89,14 +91,14 @@ class MilvusVectorDB(BaseVectorDB):
         self.milvus_client.create_collection(
             collection_name=collection_name,
             dimension=vector_size,
-            metric_type="COSINE",  # https://milvus.io/docs/metric.md#Metric-Types : check for other supported metrics
+            metric_type=self.metric_type,  # https://milvus.io/docs/metric.md#Metric-Types : check for other supported metrics
             schema=schema,
         )
 
         # Can use this to create custom multiple indices
         index_params = self.milvus_client.prepare_index_params()
         index_params.add_index(
-            field_name="vector", index_type="IVF_FLAT", metric_type="L2"
+            field_name="vector", index_type="IVF_FLAT", metric_type=self.metric_type
         )
         self.milvus_client.create_index(
             collection_name=collection_name, index_params=index_params
@@ -104,7 +106,32 @@ class MilvusVectorDB(BaseVectorDB):
 
         logger.debug(f"[Milvus] Created new collection {collection_name}")
 
-    # TODO: take a look at this again. Have Doubts
+    def _delete_existing_documents(
+        self, collection_name: str, documents: List[Document]
+    ):
+        """
+        Delete existing documents from the collection
+        """
+        # Instead of using document IDs, we'll delete based on metadata matching
+        for doc in documents:
+            if (
+                DATA_POINT_FQN_METADATA_KEY in doc.metadata
+                and DATA_POINT_HASH_METADATA_KEY in doc.metadata
+            ):
+                delete_expr = (
+                    f'metadata["{DATA_POINT_FQN_METADATA_KEY}"] == "{doc.metadata[DATA_POINT_FQN_METADATA_KEY]}" && '
+                    f'metadata["{DATA_POINT_HASH_METADATA_KEY}"] == "{doc.metadata[DATA_POINT_HASH_METADATA_KEY]}"'
+                )
+
+                logger.debug(
+                    f"[Milvus] Deleting records matching expression: {delete_expr}"
+                )
+
+                self.milvus_client.delete(
+                    collection_name=collection_name,
+                    filter=delete_expr,
+                )
+
     def upsert_documents(
         self,
         collection_name: str,
@@ -124,40 +151,16 @@ class MilvusVectorDB(BaseVectorDB):
         )
 
         if not self.milvus_client.has_collection(collection_name):
-            self.create_collection(
-                collection_name=collection_name, embeddings=embeddings
+            raise Exception(
+                f"Collection {collection_name} does not exist. Please create it first using `create_collection`."
             )
-            return
 
         if incremental and len(documents) > 0:
-            # Instead of using document IDs, we'll delete based on metadata matching
-            for doc in documents:
-                if (
-                    DATA_POINT_FQN_METADATA_KEY in doc.metadata
-                    and DATA_POINT_HASH_METADATA_KEY in doc.metadata
-                ):
-                    delete_expr = (
-                        f'metadata["{DATA_POINT_FQN_METADATA_KEY}"] == "{doc.metadata[DATA_POINT_FQN_METADATA_KEY]}" && '
-                        f'metadata["{DATA_POINT_HASH_METADATA_KEY}"] == "{doc.metadata[DATA_POINT_HASH_METADATA_KEY]}"'
-                    )
+            self._delete_existing_documents(collection_name, documents)
 
-                    logger.debug(
-                        f"[Milvus] Deleting records matching expression: {delete_expr}"
-                    )
-
-                    self.milvus_client.delete(
-                        collection_name=collection_name,
-                        filter=delete_expr,
-                    )
-
-        Milvus(
-            collection_name=collection_name,
-            connection_args={
-                "uri": self.milvus_client.uri,
-                "token": self.milvus_client.token,
-            },
-            embedding_function=embeddings,
-        ).add_documents(documents=documents)
+        self.get_vector_store(collection_name, embeddings).add_documents(
+            documents=documents
+        )
 
         logger.debug(
             f"[Milvus] Added {len(documents)} documents to collection {collection_name}"
@@ -273,13 +276,3 @@ class MilvusVectorDB(BaseVectorDB):
             )
 
         logger.debug(f"[Milvus] Deleted {len(data_point_vectors)} data point vectors")
-
-    def get_embedding_dimensions(self, embeddings: Embeddings) -> int:
-        """
-        Fetch embedding dimensions
-        """
-        logger.debug("[Milvus] Embedding a dummy doc to get vector dimensions")
-        partial_embeddings = embeddings.embed_documents(["This is a dummy document"])
-        vector_size = len(partial_embeddings[0])
-        logger.debug(f"Vector size: {vector_size}")
-        return vector_size
