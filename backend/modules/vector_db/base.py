@@ -90,7 +90,7 @@ class BaseVectorDB(ABC):
         Fetch embedding dimensions
         """
         # Calculate embedding size
-        logger.debug(f"[VectorDB] Embedding a dummy doc to get vector dimensions")
+        logger.debug("Embedding a dummy doc to get vector dimensions")
         partial_embeddings = embeddings.embed_documents(["Initial document"])
         vector_size = len(partial_embeddings[0])
         logger.debug(f"Vector size: {vector_size}")
