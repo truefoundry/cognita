@@ -44,21 +44,25 @@ class MilvusVectorDB(BaseVectorDB):
         """
         # TODO: create an extended config for Milvus like done in Qdrant
         logger.debug(f"Connecting to Milvus using config: {config.model_dump()}")
+        self.config = config
+        self.metric_type = config.config.get("metric_type", "COSINE")
+        # Milvus-lite is used for local == True
         if config.local is True:
             # TODO: make this path customizable
+            self.url = "./cognita_milvus.db"
+            self.api_key = ""
             self.milvus_client = MilvusClient(
-                "./cognita_milvus.db",
+                uri=self.url,
                 db_name=config.config.get("db_name", "milvus_default_db"),
             )
         else:
-            url = config.url
-            api_key = config.api_key
-            if not api_key:
+            self.url = config.url
+            self.api_key = config.api_key
+            if not self.api_key:
                 api_key = None
 
-            self.metric_type = config.config.get("metric_type", "COSINE")
             self.milvus_client = MilvusClient(
-                uri=url,
+                uri=self.url,
                 token=api_key,
                 db_name=config.config.get("db_name", "milvus_default_db"),
             )
@@ -93,12 +97,13 @@ class MilvusVectorDB(BaseVectorDB):
             dimension=vector_size,
             metric_type=self.metric_type,  # https://milvus.io/docs/metric.md#Metric-Types : check for other supported metrics
             schema=schema,
+            auto_id=True,
         )
 
         # Can use this to create custom multiple indices
         index_params = self.milvus_client.prepare_index_params()
         index_params.add_index(
-            field_name="vector", index_type="IVF_FLAT", metric_type=self.metric_type
+            field_name="vector", index_type="FLAT", metric_type=self.metric_type
         )
         self.milvus_client.create_index(
             collection_name=collection_name, index_params=index_params
@@ -140,7 +145,12 @@ class MilvusVectorDB(BaseVectorDB):
         incremental: bool = True,
     ):
         """
-        Upsert documents in the database
+        Upsert documents in the database.
+        Upsert =  Insert / update
+        - Check if collection exists or not
+        - Check if collection is empty or not
+        - If collection is empty, insert all documents
+        - If collection is not empty, delete existing documents and insert new documents
         """
         if len(documents) == 0:
             logger.warning("No documents to index")
@@ -155,6 +165,15 @@ class MilvusVectorDB(BaseVectorDB):
                 f"Collection {collection_name} does not exist. Please create it first using `create_collection`."
             )
 
+        stats = self.milvus_client.get_collection_stats(collection_name=collection_name)
+        if stats["row_count"] == 0:
+            logger.warning(
+                f"[Milvus] Collection {collection_name} is empty. Inserting all documents."
+            )
+            self.get_vector_store(collection_name, embeddings).add_documents(
+                documents=documents
+            )
+
         if incremental and len(documents) > 0:
             self._delete_existing_documents(collection_name, documents)
 
@@ -163,7 +182,7 @@ class MilvusVectorDB(BaseVectorDB):
         )
 
         logger.debug(
-            f"[Milvus] Added {len(documents)} documents to collection {collection_name}"
+            f"[Milvus] Upserted {len(documents)} documents to collection {collection_name}"
         )
 
     def get_collections(self) -> List[str]:
@@ -182,10 +201,14 @@ class MilvusVectorDB(BaseVectorDB):
         return Milvus(
             collection_name=collection_name,
             connection_args={
-                "uri": self.milvus_client.uri,
-                "token": self.milvus_client.token,
+                "uri": self.url,
+                "token": self.api_key,
             },
             embedding_function=embeddings,
+            auto_id=True,
+            primary_field="id",
+            text_field="text",
+            metadata_field="metadata",
         )
 
     def get_vector_client(self):
@@ -217,10 +240,8 @@ class MilvusVectorDB(BaseVectorDB):
                 collection_name=collection_name,
                 filter=filter_expr,
                 output_fields=[
-                    "id",
-                    f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
-                    f"metadata.{DATA_POINT_HASH_METADATA_KEY}",
-                ],
+                    "*"
+                ],  # returning all the fields of the entity / data point
                 limit=batch_size,
                 offset=offset,
             )
@@ -231,7 +252,7 @@ class MilvusVectorDB(BaseVectorDB):
                 ) and result.get("metadata", {}).get(DATA_POINT_HASH_METADATA_KEY):
                     data_point_vectors.append(
                         DataPointVector(
-                            data_point_vector_id=result["id"],
+                            data_point_vector_id=str(result["id"]),
                             data_point_fqn=result["metadata"][
                                 DATA_POINT_FQN_METADATA_KEY
                             ],
