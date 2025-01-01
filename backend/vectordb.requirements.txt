@@ -9,6 +9,6 @@ pymongo==4.10.1
 langchain-mongodb==0.2.0
 
 
-### Milvus 
+### Milvus
 pymilvus==2.4.10
-langchain-milvus==0.1.7 
+langchain-milvus==0.1.7

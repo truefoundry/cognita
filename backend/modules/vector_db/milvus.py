@@ -1,8 +1,9 @@
 from typing import List
-from langchain.embeddings.base import Embeddings
+
 from langchain.docstore.document import Document
+from langchain.embeddings.base import Embeddings
 from langchain_milvus import Milvus
-from pymilvus import MilvusClient, DataType, CollectionSchema, FieldSchema
+from pymilvus import CollectionSchema, DataType, FieldSchema, MilvusClient
 
 from backend.constants import (
     DATA_POINT_FQN_METADATA_KEY,
