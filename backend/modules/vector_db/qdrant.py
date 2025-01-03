@@ -44,7 +44,6 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size
-        logger.debug(f"[Qdrant] Embedding a dummy doc to get vector dimensions")
         partial_embeddings = embeddings.embed_documents(["Initial document"])
         vector_size = len(partial_embeddings[0])
         logger.debug(f"Vector size: {vector_size}")
@@ -166,7 +165,7 @@ class QdrantVectorDB(BaseVectorDB):
             )
 
     def get_collections(self) -> List[str]:
-        logger.debug(f"[Qdrant] Fetching collections")
+        logger.debug("[Qdrant] Fetching collections")
         collections = self.qdrant_client.get_collections().collections
         logger.debug(f"[Qdrant] Fetched {len(collections)} collections")
         return [collection.name for collection in collections]
@@ -185,7 +184,7 @@ class QdrantVectorDB(BaseVectorDB):
         )
 
     def get_vector_client(self):
-        logger.debug(f"[Qdrant] Getting Qdrant client")
+        logger.debug("[Qdrant] Getting Qdrant client")
         return self.qdrant_client
 
     def list_data_point_vectors(

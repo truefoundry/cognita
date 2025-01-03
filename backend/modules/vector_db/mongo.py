@@ -64,14 +64,14 @@ class MongoVectorDB(BaseVectorDB):
         result = self.db[collection_name].create_search_index(model=search_index_model)
         logger.debug(f"New search index named {result} is building.")
 
-        # Immediate avaialbility of the index is not guaranteed upon creation.
+        # Immediate availability of the index is not guaranteed upon creation.
         # MongoDB documentation recommends polling for the index to be ready.
         # Ensure this check to provide a seamless experience.
         # TODO (mnvsk97): We might want to introduce a new status in the ingestion runs to reflex this.
         logger.debug(
             "Polling to check if the index is ready. This may take up to a minute."
         )
-        predicate = lambda index: index.get("queryable") is True
+        predicate = lambda index: index.get("queryable") is True  # noqa: E731
         while True:
             indices = list(
                 self.db[collection_name].list_search_indexes("vector_search_index")
@@ -96,7 +96,7 @@ class MongoVectorDB(BaseVectorDB):
             f"[Mongo] Adding {len(documents)} documents to collection {collection_name}"
         )
 
-        """Upsert documenlots with their embeddings"""
+        """Upsert documents with their embeddings"""
         collection = self.db[collection_name]
 
         data_point_fqns = []
