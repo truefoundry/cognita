@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     CORS_CONFIG: Dict[str, Any] = Field(
         default_factory=lambda: {
             "allow_origins": ["*"],
-            "allow_credentials": True,
+            "allow_credentials": False,
             "allow_methods": ["*"],
             "allow_headers": ["*"],
         }
