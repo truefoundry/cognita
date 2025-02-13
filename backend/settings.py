@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict
 
-from pydantic import ConfigDict, model_validator
+from pydantic import ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings
 
 from backend.types import MetadataStoreConfig, VectorDBConfig
@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     PROCESS_POOL_WORKERS: int = 1
     LOCAL_DATA_DIRECTORY: str = os.path.abspath(
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "user_data")
+    )
+    ALLOW_CORS: bool = False
+    CORS_CONFIG: Dict[str, Any] = Field(
+        default_factory=lambda: {
+            "allow_origins": ["*"],
+            "allow_credentials": True,
+            "allow_methods": ["*"],
+            "allow_headers": ["*"],
+        }
     )
 
     @model_validator(mode="before")

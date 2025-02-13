@@ -62,13 +62,12 @@ app = FastAPI(
     lifespan=_process_pool_lifespan_manager,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+if settings.ALLOW_CORS:
+    app.add_middleware(
+        CORSMiddleware,
+        **settings.CORS_CONFIG,
+    )
 
 
 @app.exception_handler(Exception)
