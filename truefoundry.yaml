@@ -74,6 +74,7 @@ components:
       UNSTRUCTURED_IO_URL: http://cas-unstructured-io.cognita-internal.svc.cluster.local:8000
       UNSTRUCTURED_IO_API_KEY: tfy-secret://internal:cognita:UNSTRUCTURED_IO_API_KEY
       BRAVE_API_KEY: tfy-secret://internal:cognita:BRAVE_API_KEY
+      ALLOW_CORS: "true"
     type: service
     image:
       type: build
