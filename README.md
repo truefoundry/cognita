@@ -243,7 +243,7 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 ### Customizing Embedder:
 
 - The codebase currently uses [`OpenAIEmbeddings` by `Langchain`](https://python.langchain.com/docs/integrations/text_embedding/openai/) by default to generate embeddings
-- You can register any OpenAI-compatible custom embeddings in the `models_config.yaml` file and restart the server to make it work. 
+- You can register any OpenAI-compatible custom embeddings in the `models_config.yaml` file and restart the server to make it work.
 
 ### Customizing Parsers:
 
