@@ -242,9 +242,8 @@ Cognita makes it really easy to switch between parsers, loaders, models and retr
 
 ### Customizing Embedder:
 
-- The codebase currently uses `OpenAIEmbeddings` you can registered as `default`.
-- You can register your custom embeddings in `backend/modules/embedder/__init__.py`
-- You can also add your own embedder an example of which is given under `backend/modules/embedder/mixbread_embedder.py`. It inherits langchain embedding class.
+- The codebase currently uses [`OpenAIEmbeddings` by `Langchain`](https://python.langchain.com/docs/integrations/text_embedding/openai/) by default to generate embeddings
+- You can register any OpenAI-compatible custom embeddings in the `models_config.yaml` file and restart the server to make it work. 
 
 ### Customizing Parsers:
 
