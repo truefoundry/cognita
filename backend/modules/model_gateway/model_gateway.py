@@ -121,7 +121,7 @@ class ModelGateway:
                 -> Added to self.llm_models
 
             3. Reranking model:
-                name: "openai/rerank-english-v2.0"
+                name: "cohere/rerank-english-v2.0"
                 type: ModelType.reranking
                 -> Added to self.reranker_models
 
