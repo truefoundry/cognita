@@ -31,19 +31,18 @@ class Neo4jVectorDB(BaseVectorDB):
         self.node_label = config.config.get("node_label", "Document")
         self.embedding_property = config.config.get("embedding_property", "embedding")
         self.text_property = config.config.get("text_property", "text")
-        
+
         # Initialize Neo4j driver
         self.driver = GraphDatabase.driver(
-            self.url, 
-            auth=(self.username, self.password)
+            self.url, auth=(self.username, self.password)
         )
 
     def create_collection(self, collection_name: str, embeddings: Embeddings) -> None:
         """Create a collection (index) in Neo4j"""
         logger.debug(f"[Neo4j] Creating new collection {collection_name}")
-        
+
         vector_size = self.get_embedding_dimensions(embeddings)
-        
+
         # Create vector index
         with self.driver.session(database=self.database) as session:
             # Create vector index for the collection
@@ -60,14 +59,14 @@ class Neo4jVectorDB(BaseVectorDB):
             }}
             """
             session.run(query)
-            
+
             # Create index for metadata querying
             metadata_index = f"{collection_name}_metadata_index"
             session.run(
                 f"CREATE INDEX {metadata_index} IF NOT EXISTS "
                 f"FOR (n:{self.node_label}) ON (n.{DATA_POINT_FQN_METADATA_KEY})"
             )
-            
+
         logger.debug(f"[Neo4j] Created new collection {collection_name}")
 
     def upsert_documents(
@@ -81,7 +80,7 @@ class Neo4jVectorDB(BaseVectorDB):
         if len(documents) == 0:
             logger.warning("No documents to index")
             return
-            
+
         logger.debug(
             f"[Neo4j] Adding {len(documents)} documents to collection {collection_name}"
         )
@@ -111,7 +110,7 @@ class Neo4jVectorDB(BaseVectorDB):
             text_node_property=self.text_property,
             embedding_node_property=self.embedding_property,
         )
-        
+
         logger.debug(
             f"[Neo4j] Added {len(documents)} documents to collection {collection_name}"
         )
@@ -138,24 +137,28 @@ class Neo4jVectorDB(BaseVectorDB):
         )
 
         record_ids_to_be_upserted = []
-        
+
         with self.driver.session(database=self.database) as session:
-            for i in range(0, len(data_point_fqns), DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE):
-                batch_fqns = data_point_fqns[i : i + DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE]
-                
+            for i in range(
+                0, len(data_point_fqns), DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+            ):
+                batch_fqns = data_point_fqns[
+                    i : i + DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE
+                ]
+
                 query = f"""
                 MATCH (n:{self.node_label})
                 WHERE n.{DATA_POINT_FQN_METADATA_KEY} IN $fqns
                 RETURN elementId(n) as id
                 LIMIT {MAX_SCROLL_LIMIT}
                 """
-                
+
                 result = session.run(query, fqns=batch_fqns)
                 for record in result:
                     record_ids_to_be_upserted.append(record["id"])
                     if len(record_ids_to_be_upserted) > MAX_SCROLL_LIMIT:
                         break
-                        
+
                 if len(record_ids_to_be_upserted) > MAX_SCROLL_LIMIT:
                     break
 
@@ -169,7 +172,7 @@ class Neo4jVectorDB(BaseVectorDB):
         with self.driver.session(database=self.database) as session:
             for i in range(0, len(record_ids), DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE):
                 batch_ids = record_ids[i : i + DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE]
-                
+
                 query = f"""
                 MATCH (n:{self.node_label})
                 WHERE elementId(n) IN $ids
@@ -180,7 +183,7 @@ class Neo4jVectorDB(BaseVectorDB):
     def get_collections(self) -> List[str]:
         """Get all collection names (vector indexes)"""
         logger.debug("[Neo4j] Fetching collections")
-        
+
         with self.driver.session(database=self.database) as session:
             result = session.run("SHOW VECTOR INDEXES")
             collections = []
@@ -189,32 +192,34 @@ class Neo4jVectorDB(BaseVectorDB):
                 if index_name.endswith("_vector_index"):
                     collection_name = index_name.replace("_vector_index", "")
                     collections.append(collection_name)
-        
+
         logger.debug(f"[Neo4j] Fetched {len(collections)} collections")
         return collections
 
     def delete_collection(self, collection_name: str):
         """Delete a collection (drop indexes and delete nodes)"""
         logger.debug(f"[Neo4j] Deleting {collection_name} collection")
-        
+
         with self.driver.session(database=self.database) as session:
             # Drop vector index
             vector_index = f"{collection_name}_vector_index"
             session.run(f"DROP INDEX {vector_index} IF EXISTS")
-            
+
             # Drop metadata index
             metadata_index = f"{collection_name}_metadata_index"
             session.run(f"DROP INDEX {metadata_index} IF EXISTS")
-            
+
             # Delete all nodes (optional - you might want to keep the data)
             # session.run(f"MATCH (n:{self.node_label}) DELETE n")
-            
+
         logger.debug(f"[Neo4j] Deleted {collection_name} collection")
 
-    def get_vector_store(self, collection_name: str, embeddings: Embeddings) -> VectorStore:
+    def get_vector_store(
+        self, collection_name: str, embeddings: Embeddings
+    ) -> VectorStore:
         """Get Neo4j vector store instance"""
         logger.debug(f"[Neo4j] Getting vector store for collection {collection_name}")
-        
+
         return Neo4jVector(
             embedding=embeddings,
             url=self.url,
@@ -241,10 +246,10 @@ class Neo4jVectorDB(BaseVectorDB):
         logger.debug(
             f"[Neo4j] Listing all data point vectors for collection {collection_name}"
         )
-        
+
         data_point_vectors: List[DataPointVector] = []
         skip = 0
-        
+
         with self.driver.session(database=self.database) as session:
             while True:
                 query = f"""
@@ -256,20 +261,17 @@ class Neo4jVectorDB(BaseVectorDB):
                 SKIP $skip
                 LIMIT $limit
                 """
-                
+
                 result = session.run(
-                    query,
-                    data_source_fqn=data_source_fqn,
-                    skip=skip,
-                    limit=batch_size
+                    query, data_source_fqn=data_source_fqn, skip=skip, limit=batch_size
                 )
-                
+
                 batch_results = list(result)
                 if not batch_results:
                     break
-                
+
                 for record in batch_results:
-                    if (record["data_point_fqn"] and record["data_point_hash"]):
+                    if record["data_point_fqn"] and record["data_point_hash"]:
                         data_point_vectors.append(
                             DataPointVector(
                                 data_point_vector_id=record["id"],
@@ -277,13 +279,16 @@ class Neo4jVectorDB(BaseVectorDB):
                                 data_point_hash=record["data_point_hash"],
                             )
                         )
-                    
+
                     if len(data_point_vectors) > MAX_SCROLL_LIMIT:
                         break
-                
-                if len(batch_results) < batch_size or len(data_point_vectors) > MAX_SCROLL_LIMIT:
+
+                if (
+                    len(batch_results) < batch_size
+                    or len(data_point_vectors) > MAX_SCROLL_LIMIT
+                ):
                     break
-                    
+
                 skip += batch_size
 
         logger.debug(
@@ -301,21 +306,21 @@ class Neo4jVectorDB(BaseVectorDB):
         logger.debug(
             f"[Neo4j] Deleting {len(data_point_vectors)} data point vectors from collection {collection_name}"
         )
-        
+
         vector_ids = [vector.data_point_vector_id for vector in data_point_vectors]
 
         # Delete in batches
         with self.driver.session(database=self.database) as session:
             for i in range(0, len(vector_ids), batch_size):
                 batch = vector_ids[i : i + batch_size]
-                
+
                 query = f"""
                 MATCH (n:{self.node_label})
                 WHERE elementId(n) IN $ids
                 DELETE n
                 """
                 session.run(query, ids=batch)
-        
+
         logger.debug(
             f"[Neo4j] Deleted {len(data_point_vectors)} data point vectors from collection {collection_name}"
         )
@@ -327,10 +332,10 @@ class Neo4jVectorDB(BaseVectorDB):
         logger.debug(
             f"[Neo4j] Listing all documents with base document id {base_document_id} for collection {collection_name}"
         )
-        
+
         document_ids_set = set()
         skip = 0
-        
+
         with self.driver.session(database=self.database) as session:
             while True:
                 if base_document_id:
@@ -345,7 +350,7 @@ class Neo4jVectorDB(BaseVectorDB):
                         query,
                         base_document_id=base_document_id,
                         skip=skip,
-                        limit=BATCH_SIZE
+                        limit=BATCH_SIZE,
                     )
                 else:
                     query = f"""
@@ -355,21 +360,24 @@ class Neo4jVectorDB(BaseVectorDB):
                     LIMIT $limit
                     """
                     result = session.run(query, skip=skip, limit=BATCH_SIZE)
-                
+
                 batch_results = list(result)
                 if not batch_results:
                     break
-                    
+
                 for record in batch_results:
                     if record["fqn"]:
                         document_ids_set.add(record["fqn"])
-                        
+
                     if len(document_ids_set) > MAX_SCROLL_LIMIT:
                         break
-                
-                if len(batch_results) < BATCH_SIZE or len(document_ids_set) > MAX_SCROLL_LIMIT:
+
+                if (
+                    len(batch_results) < BATCH_SIZE
+                    or len(document_ids_set) > MAX_SCROLL_LIMIT
+                ):
                     break
-                    
+
                 skip += BATCH_SIZE
 
         logger.debug(
@@ -382,23 +390,23 @@ class Neo4jVectorDB(BaseVectorDB):
         logger.debug(
             f"[Neo4j] Deleting {len(document_ids)} documents from collection {collection_name}"
         )
-        
+
         with self.driver.session(database=self.database) as session:
             for i in range(0, len(document_ids), DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE):
                 batch_ids = document_ids[i : i + DEFAULT_BATCH_SIZE_FOR_VECTOR_STORE]
-                
+
                 query = f"""
                 MATCH (n:{self.node_label})
                 WHERE n.{DATA_POINT_FQN_METADATA_KEY} IN $document_ids
                 DELETE n
                 """
                 session.run(query, document_ids=batch_ids)
-        
+
         logger.debug(
             f"[Neo4j] Deleted {len(document_ids)} documents from collection {collection_name}"
         )
 
     def __del__(self):
         """Close the Neo4j driver when the object is destroyed"""
-        if hasattr(self, 'driver'):
+        if hasattr(self, "driver"):
             self.driver.close()
