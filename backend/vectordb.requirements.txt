@@ -8,6 +8,9 @@ weaviate-client==3.25.3
 pymongo==4.10.1
 langchain-mongodb==0.2.0
 
+### Neo4j
+neo4j==5.25.0
+langchain-community>=0.0.29
 
 ### Milvus
 pymilvus==2.4.10
