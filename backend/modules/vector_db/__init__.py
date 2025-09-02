@@ -2,6 +2,7 @@ from backend.modules.vector_db.base import BaseVectorDB
 
 # from backend.modules.vector_db.mongo import MongoVectorDB
 from backend.modules.vector_db.qdrant import QdrantVectorDB
+from backend.modules.vector_db.chroma import ChromaVectorDB
 
 # from backend.modules.vector_db.singlestore import SingleStoreVectorDB
 # from backend.modules.vector_db.weaviate import WeaviateVectorDB
@@ -9,6 +10,7 @@ from backend.types import VectorDBConfig
 
 SUPPORTED_VECTOR_DBS = {
     "qdrant": QdrantVectorDB,
+    "chroma": ChromaVectorDB,
     # "mongo": MongoVectorDB,
     # "weaviate": WeaviateVectorDB,
     # "singlestore": SingleStoreVectorDB,
