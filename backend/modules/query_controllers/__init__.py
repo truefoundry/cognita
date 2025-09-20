@@ -2,7 +2,11 @@ from backend.modules.query_controllers.example.controller import BasicRAGQueryCo
 from backend.modules.query_controllers.multimodal.controller import (
     MultiModalRAGQueryController,
 )
+from backend.modules.query_controllers.rag_visualization.controller import (
+    RAGVisualizationController,
+)
 from backend.modules.query_controllers.query_controller import register_query_controller
 
 register_query_controller("basic-rag", BasicRAGQueryController)
 register_query_controller("multimodal", MultiModalRAGQueryController)
+register_query_controller("rag-visualization", RAGVisualizationController)
