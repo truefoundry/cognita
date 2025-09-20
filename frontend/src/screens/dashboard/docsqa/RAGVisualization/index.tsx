@@ -50,10 +50,19 @@ interface RAGVisualizationResponse {
     docs: any[]
 }
 
+interface AvailableModel {
+    name: string
+    type: string
+    parameters: Record<string, any>
+}
+
 const RAGVisualization: React.FC = () => {
     const [query, setQuery] = useState('What are credit cards?')
     const [collectionName, setCollectionName] = useState('test-rag-collection')
+    const [selectedModel, setSelectedModel] = useState('local-ollama/qwen2:1.5b')
+    const [availableModels, setAvailableModels] = useState<AvailableModel[]>([])
     const [isLoading, setIsLoading] = useState(false)
+    const [isLoadingModels, setIsLoadingModels] = useState(false)
     const [visualizationData, setVisualizationData] = useState<RAGVisualizationData | null>(null)
     const [answer, setAnswer] = useState('')
     const [activeTab, setActiveTab] = useState('query')
@@ -84,6 +93,29 @@ const RAGVisualization: React.FC = () => {
         }
     }
 
+    const fetchAvailableModels = async () => {
+        setIsLoadingModels(true)
+        try {
+            const response = await fetch(`${baseQAFoundryPath}/v1/internal/models?model_type=chat`)
+            if (response.ok) {
+                const data = await response.json()
+                setAvailableModels(data.models)
+                // If current selected model is not in the list, select the first available one
+                if (data.models.length > 0 && !data.models.find((model: AvailableModel) => model.name === selectedModel)) {
+                    setSelectedModel(data.models[0].name)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching models:', error)
+        } finally {
+            setIsLoadingModels(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchAvailableModels()
+    }, [])
+
     const handleSubmit = async () => {
         if (!query.trim() || !collectionName.trim()) return
 
@@ -96,7 +128,7 @@ const RAGVisualization: React.FC = () => {
                 collection_name: collectionName,
                 query: query,
                 model_configuration: {
-                    name: "local-ollama/qwen2:1.5b",
+                    name: selectedModel,
                     type: "chat"
                 },
                 prompt_template: "Based on the context below, answer the question.\n\nContext: {context}\n\nQuestion: {question}\n\nAnswer:",
@@ -168,9 +200,36 @@ const RAGVisualization: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Model</label>
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            disabled={isLoadingModels}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {isLoadingModels ? (
+                                <option value="">Loading models...</option>
+                            ) : availableModels.length === 0 ? (
+                                <option value="">No models available</option>
+                            ) : (
+                                availableModels.map((model) => (
+                                    <option key={model.name} value={model.name}>
+                                        {model.name}
+                                    </option>
+                                ))
+                            )}
+                        </select>
+                        {isLoadingModels && (
+                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                                <IconProvider icon="fa-clock" className="animate-spin" size={0.75} />
+                                Loading available models...
+                            </div>
+                        )}
+                    </div>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isLoading || !query.trim() || !collectionName.trim()}
+                        disabled={isLoading || !query.trim() || !collectionName.trim() || !selectedModel}
                         className="w-full"
                         text={isLoading ? "Processing..." : "Run RAG Pipeline"}
                         icon={isLoading ? "fa-clock" : "fa-play"}
