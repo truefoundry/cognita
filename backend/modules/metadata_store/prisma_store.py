@@ -69,10 +69,19 @@ class PrismaStore(BaseMetadataStore):
 
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
         logger.info(f"Creating collection: {collection.model_dump()}")
-        collection_data = collection.model_dump()
+        collection_data = collection.model_dump(exclude_unset=True)
         collection_data["embedder_config"] = json.dumps(
             collection_data["embedder_config"]
         )
+        # Handle quantization_config - serialize to JSON if present, remove if None
+        if collection_data.get("quantization_config") is not None:
+            collection_data["quantization_config"] = json.dumps(
+                collection_data["quantization_config"]
+            )
+        elif "quantization_config" in collection_data:
+            # Remove None values to let Prisma handle the optional field
+            collection_data.pop("quantization_config")
+        
         collection: "PrismaCollection" = await self.db.collection.create(
             data=collection_data
         )

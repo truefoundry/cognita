@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from langchain.embeddings.base import Embeddings
@@ -9,7 +9,7 @@ from qdrant_client.http.models import Distance, VectorParams
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig
+from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig, QuantizationConfig, QuantizationType
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
@@ -40,13 +40,15 @@ class QdrantVectorDB(BaseVectorDB):
                 url=url, api_key=api_key, **qdrant_kwargs.model_dump()
             )
 
+    def supports_quantization(self) -> bool:
+        """Qdrant supports quantization"""
+        return True
+
     def create_collection(self, collection_name: str, embeddings: Embeddings):
         logger.debug(f"[Qdrant] Creating new collection {collection_name}")
 
         # Calculate embedding size
-        partial_embeddings = embeddings.embed_documents(["Initial document"])
-        vector_size = len(partial_embeddings[0])
-        logger.debug(f"Vector size: {vector_size}")
+        vector_size = self.get_embedding_dimensions(embeddings)
 
         self.qdrant_client.create_collection(
             collection_name=collection_name,
@@ -63,6 +65,59 @@ class QdrantVectorDB(BaseVectorDB):
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
         logger.debug(f"[Qdrant] Created new collection {collection_name}")
+
+    def _create_quantized_collection(
+        self, 
+        collection_name: str, 
+        embeddings: Embeddings,
+        quantization_config: QuantizationConfig
+    ):
+        logger.debug(f"[Qdrant] Creating quantized collection {collection_name} with {quantization_config.type} quantization")
+
+        # Calculate embedding size
+        vector_size = self.get_embedding_dimensions(embeddings)
+
+        # Configure quantization based on type
+        quantization = None
+        if quantization_config.type == QuantizationType.SCALAR:
+            quantization = models.ScalarQuantization(
+                scalar=models.ScalarQuantizationConfig(
+                    type=models.ScalarType.INT8,
+                    quantile=0.99,
+                    always_ram=quantization_config.always_ram,
+                )
+            )
+            logger.debug(f"[Qdrant] Using scalar quantization (INT8) for collection {collection_name}")
+        elif quantization_config.type == QuantizationType.BINARY:
+            quantization = models.BinaryQuantization(
+                binary=models.BinaryQuantizationConfig(
+                    always_ram=quantization_config.always_ram,
+                )
+            )
+            logger.debug(f"[Qdrant] Using binary quantization for collection {collection_name}")
+        else:
+            logger.warning(f"[Qdrant] Unsupported quantization type: {quantization_config.type}, falling back to no quantization")
+
+        # Create collection with quantization
+        self.qdrant_client.create_collection(
+            collection_name=collection_name,
+            vectors_config=VectorParams(
+                size=vector_size,
+                distance=Distance.COSINE,
+                on_disk=True,
+                quantization_config=quantization,
+            ),
+            replication_factor=3,
+        )
+
+        # Create payload index for metadata
+        self.qdrant_client.create_payload_index(
+            collection_name=collection_name,
+            field_name=f"metadata.{DATA_POINT_FQN_METADATA_KEY}",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+
+        logger.info(f"[Qdrant] Successfully created quantized collection {collection_name} with {quantization_config.type} quantization")
 
     def _get_records_to_be_upserted(
         self, collection_name: str, data_point_fqns: List[str], incremental: bool

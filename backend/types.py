@@ -118,6 +118,16 @@ class ModelType(str, Enum):
     audio = "audio"
 
 
+class QuantizationType(str, Enum):
+    """
+    Quantization types for embeddings
+    """
+    
+    SCALAR = "scalar"
+    BINARY = "binary"
+    PRODUCT = "product"
+
+
 class ModelConfig(ConfiguredBaseModel):
     name: str
     # TODO (chiragjn): This should not be Optional! Changing might break backward compatibility
@@ -136,6 +146,28 @@ class ModelProviderConfig(ConfiguredBaseModel):
     embedding_model_ids: List[str] = Field(default_factory=list)
     reranking_model_ids: List[str] = Field(default_factory=list)
     audio_model_ids: List[str] = Field(default_factory=list)
+
+
+class QuantizationConfig(ConfiguredBaseModel):
+    """
+    Quantization configuration for embeddings
+    """
+    
+    type: QuantizationType = Field(
+        title="Type of quantization to apply"
+    )
+    rescore: bool = Field(
+        default=True, 
+        title="Enable rescoring with original vectors for better accuracy"
+    )
+    oversampling: Optional[float] = Field(
+        default=None, 
+        title="Oversampling factor for binary quantization"
+    )
+    always_ram: bool = Field(
+        default=True,
+        title="Keep quantized vectors in RAM for faster access"
+    )
 
 
 class EmbedderConfig(ConfiguredBaseModel):
@@ -457,6 +489,15 @@ class BaseCollection(ConfiguredBaseModel):
             "name": "truefoundry/openai-main/text-embedding-3-small",
             "type": "embedding",
         },
+    )
+    quantization_config: Optional[QuantizationConfig] = Field(
+        None,
+        title="Quantization configuration for embeddings to reduce memory usage and improve search speed",
+        example={
+            "type": "scalar",
+            "rescore": True,
+            "always_ram": True
+        }
     )
 
 
