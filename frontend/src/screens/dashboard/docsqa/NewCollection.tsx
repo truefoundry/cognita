@@ -29,6 +29,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
   const [chunkSize, setChunkSize] = React.useState(1000)
   const [selectedDataSource, setSelectedDataSource] = useState('none')
   const [parserConfigs, setParserConfigs] = useState(defaultParserConfigs)
+  const [quantizationType, setQuantizationType] = useState('none')
 
   const { data: dataSources } = useGetDataSourcesQuery()
   const { data: allEmbeddingModels } = useGetAllEnabledEmbeddingModelsQuery()
@@ -52,6 +53,7 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
     }
     setChunkSize(1000)
     setSelectedDataSource('none')
+    setQuantizationType('none')
     setIsSaving(false)
   }
 
@@ -75,6 +77,11 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
         embedder_config: {
           name: embeddingModel.name,
         },
+        ...(quantizationType !== 'none' && {
+          quantization_config: {
+            type: quantizationType,
+          },
+        }),
         associated_data_sources: [
           {
             data_source_fqn: selectedDataSource,
@@ -206,6 +213,45 @@ const NewCollection = ({ open, onClose, onSuccess }: NewCollectionProps) => {
                   </MenuItem>
                 ))}
               </Select>
+            </div>
+          </div>
+          <div className="flex gap-7 w-full mb-4">
+            <div className="w-full">
+              <span className="label-text font-inter mb-1">
+                Vector Quantization <small>(Optional - for memory optimization)</small>
+              </span>
+              <Select
+                id="quantization-type"
+                value={quantizationType}
+                onChange={(e) => {
+                  setQuantizationType(e.target.value)
+                }}
+                placeholder="Select Quantization Type..."
+                sx={{
+                  background: 'white',
+                  height: '2.6rem',
+                  width: '100%',
+                  border: '1px solid #CEE0F8 !important',
+                  outline: 'none !important',
+                  '& fieldset': {
+                    border: 'none !important',
+                  },
+                }}
+              >
+                <MenuItem value="none">No Quantization (Full Precision)</MenuItem>
+                <MenuItem value="scalar">Scalar Quantization (INT8 - 4x smaller)</MenuItem>
+                <MenuItem value="binary">Binary Quantization (1-bit - 32x smaller)</MenuItem>
+              </Select>
+              {quantizationType !== 'none' && (
+                <div className="text-xs text-gray-600 mt-1">
+                  {quantizationType === 'scalar' && (
+                    <span>Reduces memory usage by 4x while maintaining good search quality</span>
+                  )}
+                  {quantizationType === 'binary' && (
+                    <span>Reduces memory usage by 32x with slight quality trade-off</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="mb-3">

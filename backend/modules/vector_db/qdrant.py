@@ -9,7 +9,13 @@ from qdrant_client.http.models import Distance, VectorParams
 from backend.constants import DATA_POINT_FQN_METADATA_KEY, DATA_POINT_HASH_METADATA_KEY
 from backend.logger import logger
 from backend.modules.vector_db.base import BaseVectorDB
-from backend.types import DataPointVector, QdrantClientConfig, VectorDBConfig, QuantizationConfig, QuantizationType
+from backend.types import (
+    DataPointVector,
+    QdrantClientConfig,
+    VectorDBConfig,
+    QuantizationConfig,
+    QuantizationType,
+)
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
@@ -67,12 +73,14 @@ class QdrantVectorDB(BaseVectorDB):
         logger.debug(f"[Qdrant] Created new collection {collection_name}")
 
     def _create_quantized_collection(
-        self, 
-        collection_name: str, 
+        self,
+        collection_name: str,
         embeddings: Embeddings,
-        quantization_config: QuantizationConfig
+        quantization_config: QuantizationConfig,
     ):
-        logger.debug(f"[Qdrant] Creating quantized collection {collection_name} with {quantization_config.type} quantization")
+        logger.debug(
+            f"[Qdrant] Creating quantized collection {collection_name} with {quantization_config.type} quantization"
+        )
 
         # Calculate embedding size
         vector_size = self.get_embedding_dimensions(embeddings)
@@ -87,16 +95,22 @@ class QdrantVectorDB(BaseVectorDB):
                     always_ram=quantization_config.always_ram,
                 )
             )
-            logger.debug(f"[Qdrant] Using scalar quantization (INT8) for collection {collection_name}")
+            logger.debug(
+                f"[Qdrant] Using scalar quantization (INT8) for collection {collection_name}"
+            )
         elif quantization_config.type == QuantizationType.BINARY:
             quantization = models.BinaryQuantization(
                 binary=models.BinaryQuantizationConfig(
                     always_ram=quantization_config.always_ram,
                 )
             )
-            logger.debug(f"[Qdrant] Using binary quantization for collection {collection_name}")
+            logger.debug(
+                f"[Qdrant] Using binary quantization for collection {collection_name}"
+            )
         else:
-            logger.warning(f"[Qdrant] Unsupported quantization type: {quantization_config.type}, falling back to no quantization")
+            logger.warning(
+                f"[Qdrant] Unsupported quantization type: {quantization_config.type}, falling back to no quantization"
+            )
 
         # Create collection with quantization
         self.qdrant_client.create_collection(
@@ -117,7 +131,9 @@ class QdrantVectorDB(BaseVectorDB):
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
 
-        logger.info(f"[Qdrant] Successfully created quantized collection {collection_name} with {quantization_config.type} quantization")
+        logger.info(
+            f"[Qdrant] Successfully created quantized collection {collection_name} with {quantization_config.type} quantization"
+        )
 
     def _get_records_to_be_upserted(
         self, collection_name: str, data_point_fqns: List[str], incremental: bool

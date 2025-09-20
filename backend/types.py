@@ -122,7 +122,7 @@ class QuantizationType(str, Enum):
     """
     Quantization types for embeddings
     """
-    
+
     SCALAR = "scalar"
     BINARY = "binary"
     PRODUCT = "product"
@@ -152,21 +152,16 @@ class QuantizationConfig(ConfiguredBaseModel):
     """
     Quantization configuration for embeddings
     """
-    
-    type: QuantizationType = Field(
-        title="Type of quantization to apply"
-    )
+
+    type: QuantizationType = Field(title="Type of quantization to apply")
     rescore: bool = Field(
-        default=True, 
-        title="Enable rescoring with original vectors for better accuracy"
+        default=True, title="Enable rescoring with original vectors for better accuracy"
     )
     oversampling: Optional[float] = Field(
-        default=None, 
-        title="Oversampling factor for binary quantization"
+        default=None, title="Oversampling factor for binary quantization"
     )
     always_ram: bool = Field(
-        default=True,
-        title="Keep quantized vectors in RAM for faster access"
+        default=True, title="Keep quantized vectors in RAM for faster access"
     )
 
 
@@ -493,11 +488,7 @@ class BaseCollection(ConfiguredBaseModel):
     quantization_config: Optional[QuantizationConfig] = Field(
         None,
         title="Quantization configuration for embeddings to reduce memory usage and improve search speed",
-        example={
-            "type": "scalar",
-            "rescore": True,
-            "always_ram": True
-        }
+        example={"type": "scalar", "rescore": True, "always_ram": True},
     )
 
 
@@ -529,11 +520,11 @@ class CreateCollectionDto(CreateCollection):
 class UploadToDataDirectoryDto(ConfiguredBaseModel):
     filepaths: List[str]
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
-    upload_name: Annotated[
-        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
-    ] = Field(  # type:ignore
-        title="Name of the upload",
-        default=str(uuid.uuid4()),
+    upload_name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")] = (
+        Field(  # type:ignore
+            title="Name of the upload",
+            default=str(uuid.uuid4()),
+        )
     )
 
 
@@ -553,10 +544,10 @@ class ListDataIngestionRunsDto(ConfiguredBaseModel):
 
 class RagApplication(ConfiguredBaseModel):
     # allow only small case alphanumeric and hyphen, should contain at least one alphabet and begin with alphabet
-    name: Annotated[
-        str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")
-    ] = Field(  # type:ignore
-        title="Name of the rag app",
+    name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]*$")] = (
+        Field(  # type:ignore
+            title="Name of the rag app",
+        )
     )
     config: Dict[str, Any] = Field(
         title="Configuration for the rag app",

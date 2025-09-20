@@ -66,15 +66,17 @@ async def create_collection(
         )
     )
     logger.info(f"Creating collection {collection.name} on vector db...")
-    
+
     # Get embeddings model
     embeddings = model_gateway.get_embedder_from_model_config(
         model_name=collection.embedder_config.name
     )
-    
+
     # Create collection with quantization support if specified
     if collection.quantization_config:
-        logger.info(f"Creating collection {collection.name} with {collection.quantization_config.type} quantization...")
+        logger.info(
+            f"Creating collection {collection.name} with {collection.quantization_config.type} quantization..."
+        )
         VECTOR_STORE_CLIENT.create_collection_with_quantization(
             collection_name=collection.name,
             embeddings=embeddings,
@@ -85,7 +87,7 @@ async def create_collection(
             collection_name=collection.name,
             embeddings=embeddings,
         )
-    
+
     logger.info(f"Created collection... {created_collection}")
 
     if collection.associated_data_sources:

@@ -150,10 +150,30 @@ const DocsQASettings = () => {
                       collection
                     </div>
                     {collectionDetails && (
-                      <div className="text-sm">
-                        Embedder Used :{' '}
-                        {collectionDetails?.embedder_config?.name}
-                      </div>
+                      <>
+                        <div className="text-sm">
+                          Embedder Used :{' '}
+                          {collectionDetails?.embedder_config?.name}
+                        </div>
+                        {collectionDetails?.quantization_config && (
+                          <div className="text-sm mt-1 flex items-center gap-2">
+                            <span>Quantization :</span>
+                            <span className="capitalize font-medium text-blue-600">
+                              {collectionDetails.quantization_config.type}
+                            </span>
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                              {collectionDetails.quantization_config.type === 'scalar' ? '4x smaller' : 
+                               collectionDetails.quantization_config.type === 'binary' ? '32x smaller' : 
+                               'optimized'}
+                            </span>
+                          </div>
+                        )}
+                        {!collectionDetails?.quantization_config && (
+                          <div className="text-sm mt-1 text-gray-500">
+                            Quantization : None (Full precision)
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   <Button

@@ -19,20 +19,24 @@ class BaseVectorDB(ABC):
         raise NotImplementedError()
 
     def create_collection_with_quantization(
-        self, 
-        collection_name: str, 
+        self,
+        collection_name: str,
         embeddings: Embeddings,
-        quantization_config: Optional[QuantizationConfig] = None
+        quantization_config: Optional[QuantizationConfig] = None,
     ):
         """
         Create a collection with quantization support in the vector database.
         Falls back to regular collection creation if quantization is not supported.
         """
         if quantization_config and self.supports_quantization():
-            return self._create_quantized_collection(collection_name, embeddings, quantization_config)
+            return self._create_quantized_collection(
+                collection_name, embeddings, quantization_config
+            )
         else:
             if quantization_config:
-                logger.warning(f"Quantization not supported by {self.__class__.__name__}, creating regular collection")
+                logger.warning(
+                    f"Quantization not supported by {self.__class__.__name__}, creating regular collection"
+                )
             return self.create_collection(collection_name, embeddings)
 
     def supports_quantization(self) -> bool:
@@ -43,16 +47,18 @@ class BaseVectorDB(ABC):
         return False
 
     def _create_quantized_collection(
-        self, 
-        collection_name: str, 
+        self,
+        collection_name: str,
         embeddings: Embeddings,
-        quantization_config: QuantizationConfig
+        quantization_config: QuantizationConfig,
     ):
         """
         Internal method to create quantized collection.
         Should be implemented by subclasses that support quantization.
         """
-        raise NotImplementedError(f"Quantization not implemented for {self.__class__.__name__}")
+        raise NotImplementedError(
+            f"Quantization not implemented for {self.__class__.__name__}"
+        )
 
     @abstractmethod
     def upsert_documents(

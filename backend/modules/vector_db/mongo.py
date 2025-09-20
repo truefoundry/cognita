@@ -289,9 +289,11 @@ class MongoVectorDB(BaseVectorDB):
         while stop is not True:
             batch_cursor = (
                 collection.find(
-                    {f"metadata.{DATA_POINT_FQN_METADATA_KEY}": base_document_id}
-                    if base_document_id
-                    else {},
+                    (
+                        {f"metadata.{DATA_POINT_FQN_METADATA_KEY}": base_document_id}
+                        if base_document_id
+                        else {}
+                    ),
                     {f"metadata.{DATA_POINT_FQN_METADATA_KEY}": 1},
                 )
                 .skip(offset if offset else 0)
