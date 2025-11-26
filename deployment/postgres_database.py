@@ -14,7 +14,7 @@ class PostgresDatabase:
             name=f"{self.application_set_name}-{DATABASE_NAME}",
             source=OCIRepo(
                 oci_chart_url="oci://registry-1.docker.io/bitnamicharts/postgresql",
-                version="13.4.3",
+                version="18.1.13",
             ),
             values={
                 "global": {"imageRegistry": self.dockerhub_images_registry},
