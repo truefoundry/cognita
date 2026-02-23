@@ -10,7 +10,7 @@ interface DocsQaInformationProps {
 const DocsQaInformation = ({ header, subHeader }: DocsQaInformationProps) => {
   return (
     <div className="flex flex-col items-center">
-      <p className="font-semibold text-[1.5rem]">{header}</p>
+      <h1 className="font-semibold text-[1.5rem]">{header}</h1>
       {subHeader}
       <p className="text-center font-[700] text-xl mt-[3.125rem] mb-4">
         How it works?
