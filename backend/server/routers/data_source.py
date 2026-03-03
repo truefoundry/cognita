@@ -45,10 +45,11 @@ async def add_data_source(data_source: CreateDataSource):
             tfy_client = get_tfy_client()
             # TODO: Currently, if a TFY data directory does not exist, an exception is thrown.
             # We need to raise a 404 error instead of failing generically.
-            data_dir = tfy_client.get_data_directory_by_fqn(data_source.uri)
+            tfy_client.get_data_directory_by_fqn(data_source.uri)
         except Exception as e:
+            logger.error(f"Failed to validate TrueFoundry DataSource URI: {e}")
             return JSONResponse(
-                content={"error": f"Invalid DataSource URI: {e}"}, status_code=400
+                content={"error": "Invalid DataSource URI or failed to connect to provider"}, status_code=400
             )
     # Create the data source record
     created_data_source = await metadata_store_client.acreate_data_source(

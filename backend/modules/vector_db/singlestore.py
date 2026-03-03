@@ -235,9 +235,11 @@ class SingleStoreVectorDB(BaseVectorDB):
         try:
             curr = conn.cursor()
 
-            # Remove all data point vectors with the same data_source_fqn
+            # Using parameterized query to prevent SQL injection
+            query = f"SELECT id, content, vector, metadata FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, %s) LIKE %s LIMIT %s"
             curr.execute(
-                f"SELECT * FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, '{DATA_POINT_FQN_METADATA_KEY}') LIKE '%{data_source_fqn}%' LIMIT {MAX_SCROLL_LIMIT}"
+                query,
+                (DATA_POINT_FQN_METADATA_KEY, f"%{data_source_fqn}%", MAX_SCROLL_LIMIT),
             )
 
             for record in curr:
@@ -286,8 +288,15 @@ class SingleStoreVectorDB(BaseVectorDB):
                 vectors_to_be_deleted_count = len(data_point_vectors)
                 curr = conn.cursor()
 
+                # Using parameterized query for multiple IDs
+                placeholders = ", ".join(["%s"] * len(data_point_vectors))
+                query = f"DELETE FROM {collection_name} WHERE id in ({placeholders})"
                 curr.execute(
-                    f"DELETE FROM {collection_name} WHERE id in ({', '.join(data_point_vector.data_point_vector_id for data_point_vector in data_point_vectors)})"
+                    query,
+                    tuple(
+                        data_point_vector.data_point_vector_id
+                        for data_point_vector in data_point_vectors
+                    ),
                 )
                 logger.debug(
                     f"[SingleStore] Deleted {vectors_to_be_deleted_count} data point vectors"
