@@ -12,3 +12,7 @@ langchain-mongodb==0.2.0
 ### Milvus
 pymilvus==2.4.10
 langchain-milvus==0.1.7
+
+### Chroma
+chromadb==0.5.23
+langchain-chroma==0.1.4

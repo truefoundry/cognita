@@ -156,7 +156,7 @@ Overall the architecture of Cognita is composed of several entities
 
 3. **LLM Gateway** - This is a central proxy that allows proxying requests to various Embedding and LLM models across many providers with a unified API format. This can be OpenAIChat, OllamaChat, or even TruefoundryChat that uses TF LLM Gateway.
 
-4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We are currently supporting `Qdrant` and `SingleStore` as our choice of vector database.
+4. **Vector DB** - This stores the embeddings and metadata for parsed files for the collection. It can be queried to get similar chunks or exact matches based on filters. We currently support `Qdrant`, `ChromaDB`, `SingleStore`, `MongoDB`, `Milvus`, and `Weaviate` as vector database options.
 
 5. **Indexing Job** - This is an asynchronous Job responsible for orchestrating the indexing flow. Indexing can be started manually or run regularly on a cron schedule. It will
 
@@ -420,7 +420,7 @@ Your contributions are always welcome! Feel free to contribute ideas, feedback, 
 
 Contributions are welcomed for the following upcoming developments:
 
-- Support for other vector databases like `Chroma`, `Weaviate`, etc
+- ✅ Support for additional vector databases (`ChromaDB` support added)
 - Support for `Scalar + Binary Quantization` embeddings.
 - Support for `RAG Evalutaion` of different retrievers.
 - Support for `RAG Visualization`.
