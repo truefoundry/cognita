@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any, Dict, Iterable, List, Optional
 
 import singlestoredb as s2
@@ -13,6 +14,15 @@ from backend.types import DataPointVector, VectorDBConfig
 
 MAX_SCROLL_LIMIT = int(1e6)
 BATCH_SIZE = 1000
+
+# Allowlist for collection names (identifiers cannot be parameterized in SQL)
+COLLECTION_NAME_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+
+
+def _validate_collection_name(collection_name: str) -> None:
+    """Validate collection name to prevent SQL injection. Raises ValueError if invalid."""
+    if not collection_name or not COLLECTION_NAME_PATTERN.match(collection_name):
+        raise ValueError(f"Invalid collection name: {collection_name!r}")
 
 
 class SSDB(SingleStoreDB):
@@ -117,6 +127,7 @@ class SingleStoreVectorDB(BaseVectorDB):
         self.host = config.url
 
     def create_collection(self, collection_name: str, embeddings: Embeddings):
+        _validate_collection_name(collection_name)
         logger.debug(f"[SingleStore] Creating new collection {collection_name}...")
 
         # Calculate embedding size
@@ -143,6 +154,7 @@ class SingleStoreVectorDB(BaseVectorDB):
         embeddings: Embeddings,
         incremental: bool = True,
     ):
+        _validate_collection_name(collection_name)
         if len(documents) == 0:
             logger.warning("No documents to index")
             return
@@ -189,11 +201,12 @@ class SingleStoreVectorDB(BaseVectorDB):
             conn.close()
 
     def delete_collection(self, collection_name: str):
+        _validate_collection_name(collection_name)
         conn = s2.connect(self.host)
         try:
             cur = conn.cursor()
             try:
-                cur.execute(f"DROP TABLE {collection_name}")
+                cur.execute(f"DROP TABLE `{collection_name}`")
                 logger.debug(f"[SingleStore] Deleted collection {collection_name}")
             except Exception as e:
                 logger.exception(
@@ -209,6 +222,7 @@ class SingleStoreVectorDB(BaseVectorDB):
             conn.close()
 
     def get_vector_store(self, collection_name: str, embeddings: Embeddings):
+        _validate_collection_name(collection_name)
         return SSDB(
             embedding=embeddings,
             host=self.host,
@@ -224,6 +238,7 @@ class SingleStoreVectorDB(BaseVectorDB):
         data_source_fqn: str,
         batch_size: int = BATCH_SIZE,
     ) -> List[DataPointVector]:
+        _validate_collection_name(collection_name)
         logger.debug(
             f"[SingleStore] Listing all data point vectors for collection {collection_name}"
         )
@@ -235,9 +250,10 @@ class SingleStoreVectorDB(BaseVectorDB):
         try:
             curr = conn.cursor()
 
-            # Remove all data point vectors with the same data_source_fqn
+            # Parameterized query: table name validated above, LIKE value and LIMIT parameterized
             curr.execute(
-                f"SELECT * FROM {collection_name} WHERE JSON_EXTRACT_JSON(metadata, '{DATA_POINT_FQN_METADATA_KEY}') LIKE '%{data_source_fqn}%' LIMIT {MAX_SCROLL_LIMIT}"
+                f"SELECT * FROM `{collection_name}` WHERE JSON_EXTRACT_JSON(metadata, %s) LIKE %s LIMIT %s",
+                (DATA_POINT_FQN_METADATA_KEY, f"%{data_source_fqn}%", MAX_SCROLL_LIMIT),
             )
 
             for record in curr:
@@ -274,20 +290,33 @@ class SingleStoreVectorDB(BaseVectorDB):
         """
         Delete data point vectors from the collection
         """
+        _validate_collection_name(collection_name)
         logger.debug(
             f"[SingleStore] Deleting {len(data_point_vectors)} data point vectors"
         )
 
         if len(data_point_vectors) > 0:
-            # Delete data point vectors from table
+            # Validate all ids are integers to prevent SQL injection
+            ids: List[int] = []
+            for dpv in data_point_vectors:
+                try:
+                    ids.append(int(dpv.data_point_vector_id))
+                except (TypeError, ValueError) as e:
+                    raise ValueError(
+                        f"Invalid data point vector id: {dpv.data_point_vector_id!r}"
+                    ) from e
+
+            # Delete data point vectors from table using parameterized query
             conn = s2.connect(self.host)
 
             try:
                 vectors_to_be_deleted_count = len(data_point_vectors)
                 curr = conn.cursor()
 
+                placeholders = ", ".join(["%s"] * len(ids))
                 curr.execute(
-                    f"DELETE FROM {collection_name} WHERE id in ({', '.join(data_point_vector.data_point_vector_id for data_point_vector in data_point_vectors)})"
+                    f"DELETE FROM `{collection_name}` WHERE id IN ({placeholders})",
+                    ids,
                 )
                 logger.debug(
                     f"[SingleStore] Deleted {vectors_to_be_deleted_count} data point vectors"
