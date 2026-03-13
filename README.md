@@ -1,3 +1,6 @@
+> [!Note]
+> This project is no longer actively maintained.
+
 # [Cognita](<(https://cognita.truefoundry.com)>)
 
 ![RAG_TF](./docs/images/readme-banner.png)
