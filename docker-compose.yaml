@@ -99,6 +99,32 @@ services:
     networks:
       - cognita-docker
 
+  neo4j-server:
+    image: neo4j:5.25.1
+    pull_policy: if_not_present
+    restart: unless-stopped
+    container_name: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/password
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=2G
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./volumes/neo4j_data:/data
+      - ./volumes/neo4j_logs:/logs
+    networks:
+      - cognita-docker
+
   unstructured-io-parsers:
     # Docs: http://localhost:9500/general/docs
     image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
@@ -155,6 +181,8 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+      args:
+        ADD_VECTORDB: 1
     restart: unless-stopped
     container_name: cognita-backend
     ports:
@@ -166,6 +194,9 @@ services:
       qdrant-server:
         condition: service_healthy
         restart: true
+      # neo4j-server:
+      #   condition: service_healthy
+      #   restart: true
       unstructured-io-parsers:
         condition: service_healthy
         restart: true
