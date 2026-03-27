@@ -23,6 +23,7 @@ model Collection {
     name                    String  @unique
     description             String?
     embedder_config         Json
+    quantization_config     Json?
     // Collection can have multiple data sources
     associated_data_sources Json    @default("{}")
 

@@ -69,10 +69,19 @@ class PrismaStore(BaseMetadataStore):
 
     async def acreate_collection(self, collection: CreateCollection) -> Collection:
         logger.info(f"Creating collection: {collection.model_dump()}")
-        collection_data = collection.model_dump()
+        collection_data = collection.model_dump(exclude_unset=True)
         collection_data["embedder_config"] = json.dumps(
             collection_data["embedder_config"]
         )
+        # Handle quantization_config - serialize to JSON if present, remove if None
+        if collection_data.get("quantization_config") is not None:
+            collection_data["quantization_config"] = json.dumps(
+                collection_data["quantization_config"]
+            )
+        elif "quantization_config" in collection_data:
+            # Remove None values to let Prisma handle the optional field
+            collection_data.pop("quantization_config")
+
         collection: "PrismaCollection" = await self.db.collection.create(
             data=collection_data
         )
@@ -183,9 +192,9 @@ class PrismaStore(BaseMetadataStore):
                 parser_config=assoc.parser_config,
                 data_source=DataSource.model_validate(data_source.model_dump()),
             )
-            existing_associated_data_sources[
-                assoc.data_source_fqn
-            ] = data_src_to_associate
+            existing_associated_data_sources[assoc.data_source_fqn] = (
+                data_src_to_associate
+            )
 
         # Convert the existing associated data sources to a dictionary
         associated_data_sources = {
@@ -274,9 +283,9 @@ class PrismaStore(BaseMetadataStore):
                 )
 
         # Delete the data source
-        deleted_datasource: Optional[
-            PrismaDataSource
-        ] = await self.db.datasource.delete(where={"fqn": data_source_fqn})
+        deleted_datasource: Optional[PrismaDataSource] = (
+            await self.db.datasource.delete(where={"fqn": data_source_fqn})
+        )
 
         if not deleted_datasource:
             raise HTTPException(
@@ -319,10 +328,10 @@ class PrismaStore(BaseMetadataStore):
     async def aget_data_ingestion_run(
         self, data_ingestion_run_name: str, no_cache: bool = False
     ) -> Optional[DataIngestionRun]:
-        data_ingestion_run: Optional[
-            "PrismaDataIngestionRun"
-        ] = await self.db.ingestionruns.find_first(
-            where={"name": data_ingestion_run_name}
+        data_ingestion_run: Optional["PrismaDataIngestionRun"] = (
+            await self.db.ingestionruns.find_first(
+                where={"name": data_ingestion_run_name}
+            )
         )
         logger.info(f"Data ingestion run: {data_ingestion_run}")
         if data_ingestion_run:
@@ -333,10 +342,10 @@ class PrismaStore(BaseMetadataStore):
         self, collection_name: str, data_source_fqn: str = None
     ) -> List[DataIngestionRun]:
         """Get all data ingestion runs for a collection"""
-        data_ingestion_runs: List[
-            "PrismaDataIngestionRun"
-        ] = await self.db.ingestionruns.find_many(
-            where={"collection_name": collection_name}, order={"id": "desc"}
+        data_ingestion_runs: List["PrismaDataIngestionRun"] = (
+            await self.db.ingestionruns.find_many(
+                where={"collection_name": collection_name}, order={"id": "desc"}
+            )
         )
         return [
             DataIngestionRun.model_validate(data_ir.model_dump())
@@ -347,10 +356,10 @@ class PrismaStore(BaseMetadataStore):
         self, data_ingestion_run_name: str, status: DataIngestionRunStatus
     ) -> DataIngestionRun:
         """Update the status of a data ingestion run"""
-        updated_data_ingestion_run: Optional[
-            "PrismaDataIngestionRun"
-        ] = await self.db.ingestionruns.update(
-            where={"name": data_ingestion_run_name}, data={"status": status}
+        updated_data_ingestion_run: Optional["PrismaDataIngestionRun"] = (
+            await self.db.ingestionruns.update(
+                where={"name": data_ingestion_run_name}, data={"status": status}
+            )
         )
         if not updated_data_ingestion_run:
             raise HTTPException(
@@ -364,11 +373,11 @@ class PrismaStore(BaseMetadataStore):
         self, data_ingestion_run_name: str, errors: Dict[str, Any]
     ) -> None:
         """Log errors for the given data ingestion run"""
-        updated_data_ingestion_run: Optional[
-            "PrismaDataIngestionRun"
-        ] = await self.db.ingestionruns.update(
-            where={"name": data_ingestion_run_name},
-            data={"errors": json.dumps(errors)},
+        updated_data_ingestion_run: Optional["PrismaDataIngestionRun"] = (
+            await self.db.ingestionruns.update(
+                where={"name": data_ingestion_run_name},
+                data={"errors": json.dumps(errors)},
+            )
         )
         if not updated_data_ingestion_run:
             raise HTTPException(
@@ -381,9 +390,9 @@ class PrismaStore(BaseMetadataStore):
     ######
     async def aget_rag_app(self, app_name: str) -> Optional[RagApplication]:
         """Get a RAG application from the metadata store"""
-        rag_app: Optional[
-            "PrismaRagApplication"
-        ] = await self.db.ragapps.find_first_or_raise(where={"name": app_name})
+        rag_app: Optional["PrismaRagApplication"] = (
+            await self.db.ragapps.find_first_or_raise(where={"name": app_name})
+        )
 
         return RagApplication.model_validate(rag_app.model_dump())
 
@@ -403,9 +412,9 @@ class PrismaStore(BaseMetadataStore):
 
     async def adelete_rag_app(self, app_name: str):
         """Delete a RAG application from the metadata store"""
-        deleted_rag_app: Optional[
-            "PrismaRagApplication"
-        ] = await self.db.ragapps.delete(where={"name": app_name})
+        deleted_rag_app: Optional["PrismaRagApplication"] = (
+            await self.db.ragapps.delete(where={"name": app_name})
+        )
         if not deleted_rag_app:
             raise HTTPException(
                 status_code=404,

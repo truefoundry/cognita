@@ -42,9 +42,11 @@ async def extract_urls_from_sitemap(url: str) -> List[Tuple[str, str]]:
     urls = [
         (
             loc.text,
-            loc.find_next_sibling("lastmod").text
-            if loc.find_next_sibling("lastmod")
-            else None,
+            (
+                loc.find_next_sibling("lastmod").text
+                if loc.find_next_sibling("lastmod")
+                else None
+            ),
         )
         for loc in soup.find_all("loc")
     ]
