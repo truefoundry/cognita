@@ -197,6 +197,7 @@ services:
       - TFY_API_KEY=${TFY_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - ALLOW_CORS=${ALLOW_CORS}
     entrypoint: /bin/bash
     security_opt:
       - seccomp:./seccomp.json

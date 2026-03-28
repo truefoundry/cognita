@@ -8,6 +8,7 @@ import {
   faRocket,
   faGear,
   faPlay,
+  faEye,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Drawer } from '@mui/material'
@@ -45,6 +46,11 @@ function getMenuOptions(): {
       label: 'Applications',
       route: '/applications',
       icon: faRocket,
+    },
+    {
+      label: 'RAG Visualization',
+      route: '/rag-visualization',
+      icon: faEye,
     },
   ]
 }
